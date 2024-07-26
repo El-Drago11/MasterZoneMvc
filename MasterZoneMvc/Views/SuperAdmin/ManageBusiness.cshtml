@@ -1,0 +1,272 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+    ViewData["Title"] = "Manage Business";
+}
+@section Styles{
+    <style>
+        .img-fluid {
+            max-width: 15%;
+            height: auto;
+        }
+
+        .col-md-9 {
+            max-width: 100%;
+        }
+
+        .image-small {
+            width: 75px;
+            height: 75px;
+        }
+    </style>
+}
+
+
+<div id="ManageBusiness">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Manage Businesses</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active">Manage Businesses</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12" id="ViewDetailForBusiness">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title">Manage Businesses</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <a href="#" onclick="AddNewManageBusiness();">
+                                                <button type="submit" class="btn btn-primary">
+                                                    &plus; Add New Business
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <span class="text-muted font-weight-bold">@Resources.SuperAdminPanel.HomePageVisibilityDefination</span>
+                                            </div>
+                                        </div>
+                                        <table id="ViewBusinessDetailForSuperAdmin" class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>S.No</th>
+                                                    <th>BusinessLogo</th>
+                                                    <th>Category</th>
+                                                    <th>Sub-Category</th>
+                                                    <th>Owner</th>
+                                                    <th>Email</th>
+                                                    <th>PhoneNumber</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>S.No</th>
+                                                    <th>BusinessLogo</th>
+                                                    <th>Category</th>
+                                                    <th>Sub-Category</th>
+                                                    <th>Owner</th>
+                                                    <th>Email</th>
+                                                    <th>PhoneNumber</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <!-- /.card-body -->
+                                </div>
+                                <!-- /.card -->
+                                <!-- /.card -->
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                        <!-- /.row -->
+                    </div>
+                <!-- /.container-fluid -->
+            </section>
+
+
+            <section class="content" id="sectionAddUpdate_ManageBusiness" style="display: none;">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Default box -->
+                            <div class="card card-default">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-9 d-flex align-items-center">
+                                            <h3 class="card-title" id="ChangePageTextForEdit">Add New Business</h3>
+                                        </div>
+                                        <div class="col-sm-3 d-flex justify-content-end">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="btnClickCancel_ManageBusiness();">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <form>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Category</label>
+                                                    <select name="ddlBusinessCategory" id="ddlBusinessCategory" form="carform" default="unslected" class="form-control" onchange="onParentCategoryChange();">
+                                                        <option value="0" selected disabled hidden>Select a Category</option>
+                                                        @*<option value="3">Instructor</option>*@
+                                                    </select>
+
+                                                    <div class="error-class" id="error_ddlBusinessCategory"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Sub Category</label>
+                                                    <select name="ddlBusinessCategorySub" id="ddlBusinessSubCategory" form="carform" default="unslected" class="form-control">
+                                                        <option value="0" selected disabled hidden>Select a Category</option>
+                                                        @*<option value="3">Instructor</option>*@
+                                                    </select>
+
+                                                    <div class="error-class" id="error_ddlBusinessSubCategory"></div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>First Name</label>
+                                                    <input type="text" id="txtFirstName" class="form-control" />
+                                                    <div class="error-class" id="error_txtFirstName"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Last Name</label>
+
+                                                    <input type="text" id="txtLastName" class="form-control" />
+                                                    <div class="error-class" id="error_txtLastName"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Email ID</label>
+                                                    <input type="text" id="txtEmail" class="form-control" />
+                                                    <div class="error-class" id="error_txtEmail"></div>
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Contact No.</label>
+                                                    <input type="number" id="txtPhoneNumber" class="form-control" />
+                                                    <div class="error-class" id="error_txtPhoneNumber"></div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Password</label>
+                                                    <input type="password" id="txtPassword" class="form-control" />
+                                                    <div class="error-class" id="error_txtPassowrd"></div>
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Confirm Password</label>
+                                                    <input type="password" id="txtConfirmPassword" class="form-control" />
+                                                    <div class="error-class" id="error_txtConfirmPassword"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="ddlBusiness_ManageBusinessVerified">Select Verified</label>
+                                                    <select name="ddlBusiness_ManageBusinessVerified" id="ddlBusiness_ManageBusinessVerified" form="carform" default="unslected" class="form-control" disabled>
+                                                        <option value="0">Select  Verified</option>
+                                                        <option value="1">Verified</option>
+                                                        <option value="2">R</option>
+                                                        <option value="3">TM</option>
+
+                                                    </select>
+
+                                                    <div class="error-class" id="error_ddlBusiness_ManageBusinessVerified"></div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </form>
+                                    <!-- /.row -->
+                                </div>
+
+                                <div class="card-footer">
+                                    <button type="button" id="pageTextchange" class="btn btn-primary" onclick="btnRegisterFormClick()">Save</button>
+                                    <button type="button" id="btnCancel_ManageCategories" class="btn btn-danger" onclick="btnClickCancel_ManageBusiness()">Cancel</button>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+
+    </div>
+</div>
+
+<!-- Control Sidebar -->
+<aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+</aside>
+
+@section Scripts{
+    <script src="/Content/superadmin-panel/plugins/select2/js/select2.full.min.js"></script>
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    @Html.Partial("~/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageBusinessScriptPartial.cshtml")
+}

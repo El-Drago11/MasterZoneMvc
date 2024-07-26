@@ -1,0 +1,958 @@
+﻿<script>
+    var PlanId_Global = 0;
+    var PlanType_Global = 0;
+    var UserToken_Global = "";
+    var SelectedPermissionArr_Global = [];
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+                GetAllMainPlans();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+
+                        UserToken_Global = dataAdminToken;
+                        GetAllMainPlans();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+
+            }
+        });
+    });
+    function showAddUpdatePackageSection() {
+        $('#sectionView_ManagePackage').addClass('d-none');
+        $('#sectionAddUpdate_ManagePackage').removeClass('d-none');
+        GetAllBusinessPanelPermissions();
+
+    }
+
+    function togglePackageType() {
+
+        
+        if ($("#ddlPackagesfor").val() === '1') {
+            GetAllBusinessPanelPermissions();
+        } else {
+            GetAllUserPanelPermissions();
+        }
+    }
+
+    // ------------- PERMISSIONS FUNCTIONALITY --------------------
+
+    $(document).on('change', '.chk_permission', function () {
+        var $checkbox = $(this);
+        var _checkboxProp = false;
+        if ($checkbox.is(':checked')) {
+            //console.log('checked!');
+            _checkboxProp = true;
+        }
+        else {
+            //console.log('unchecked!');
+            _checkboxProp = false;
+        }
+        var _parentCheckboxId = $checkbox.attr('data-parent-id');
+        var _id = $checkbox.attr('data-id');
+
+        // if this checkbox is parent checkbox then check/uncheck all sub checkboxes
+        if (_parentCheckboxId == 0) {
+            var subPermissionCheckboxes = getAllSubPermissionCheckboxes(_id);
+            if (subPermissionCheckboxes.length > 0) {
+                subPermissionCheckboxes.prop('checked', _checkboxProp);
+            }
+        }
+        // else it is a sub-checkbox then check the parent if atleaset one is selected and uncheck if all are unselected
+        else {
+            var subPermissionCheckboxes = getAllSubPermissionCheckboxes(_parentCheckboxId);
+            var subPermissionCheckboxes_Checked = getAllCheckedSubPermissionCheckboxes(_parentCheckboxId);
+            var flag_check_parent = false;
+            if (subPermissionCheckboxes_Checked.length > 0) {
+                flag_check_parent = true;
+            }
+            else {
+                flag_check_parent = false;
+            }
+            $('#chk_permission_' + _parentCheckboxId).prop('checked', flag_check_parent);
+        }
+
+        // update global array of selections
+        onPermissionSelectionChange();
+    });
+
+function GetAllBusinessPanelPermissions() {
+    var _url = "/api/Permisssions/GetAll/BusinessPanel";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $("#BusinessPanelPermissions_ManagePackage").html('');
+            var checkboxesData = '';
+            for (var i = 0; i < response.data.length; i++) {
+                var permission = response.data[i];
+
+                var _permissionId = String(permission.Id);
+
+                // Check if the permission ID is in the SelectedPermissionArr_Global array
+                var isChecked = SelectedPermissionArr_Global.includes(_permissionId) ? 'checked="checked"' : '';
+
+                // Print parent permission checkbox
+                checkboxesData += `
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input chk_permission" ${isChecked} data-id="${permission.Id}" data-parent-id="0" id="chk_permission_${permission.Id}">
+                        <label class="form-check-label" for="chk_permission_${permission.Id}" style="cursor:pointer;">${permission.TextValue}</label>
+                    </div>
+                `;
+
+                // Check and print sub permissions checkboxes
+                if (permission.SubPermissions != null && permission.SubPermissions.length > 0) {
+                    for (var spi = 0; spi < permission.SubPermissions.length; spi++) {
+                        var subPermission = permission.SubPermissions[spi];
+                        var subPermissionId = String(subPermission.Id);
+
+                        // Check if the sub permission ID is in the SelectedPermissionArr_Global array
+                        var isSubChecked = SelectedPermissionArr_Global.includes(subPermissionId) ? 'checked="checked"' : '';
+
+                        checkboxesData += `
+                            <div class="ml-4 form-check">
+                                <input type="checkbox" class="form-check-input chk_permission" ${isSubChecked} data-id="${subPermission.Id}" data-parent-id="${permission.Id}" id="chk_permission_${subPermission.Id}">
+                                <label class="form-check-label" for="chk_permission_${subPermission.Id}" style="cursor:pointer;">${subPermission.TextValue}</label>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            $("#BusinessPanelPermissions_ManagePackage").html('').append(checkboxesData);
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+function clearPermissionsArray() {
+    SelectedPermissionArr_Global = [];
+}
+
+function onPermissionSelectionChange() {
+    clearPermissionsArray();
+    // readd all checked permissions
+    $(".chk_permission").each(function () {
+        var self = $(this);
+        if (self.is(':checked')) {
+            SelectedPermissionArr_Global.push(self.attr("data-id"));
+        }
+    });
+}
+
+        function resetMainPlanPermissionSelectionsFromObj(permissions) {
+            clearPermissionsArray();
+            for (var i = 0; i < permissions.length; i++) {
+                SelectedPermissionArr_Global.push(permissions[i].MainPlanPermissions);
+            }
+        }
+
+function updateCheckboxes() {
+    clearPermissionCheckboxes();
+    for (var i = 0; i < SelectedPermissionArr_Global.length; i++) {
+        $('.chk_permission[data-id="' + SelectedPermissionArr_Global[i] + '"]').prop('checked', true);
+    }
+}
+
+function clearPermissionCheckboxes() {
+    $('.chk_permission').prop('checked', false);
+}
+
+function getAllSubPermissionCheckboxes(parentId) {
+    return $('.chk_permission[data-parent-id="' + parentId + '"]');
+}
+function getAllCheckedSubPermissionCheckboxes(parentId) {
+    return $('.chk_permission[data-parent-id="' + parentId + '"]:checked');
+    }
+
+
+// ---------------------------------------------------------------
+    function btnSubmitFormClick() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+    let _planName = $("#txtPlanName").val().trim();
+    let _durationTypeKey = $("#ddlDurationType").val().trim();
+    let _price = $("#txtPrice").val().trim();
+    let _compareAtPrice = $("#txtCompareAtPrice").val().trim();
+    let _description = $("#txtDescription .ql-editor").html();
+    let _discount = $("#txtDiscount").val();
+    let _Plantype = $("#ddlPackagesfor").val().trim();
+
+
+    let _error_planName = $("#error_txtPlanName");
+    let _error_durationTypeId = $("#error_ddlDurationType");
+   let _error_ddlPackagesforId = $("#error_ddlPackagesfor");
+    let _error_price = $("#error_txtPrice");
+    let _error_compareAtPrice = $("#error_txtCompareAtPrice");
+   let _error_description = $("#error_txtDescription");
+
+    var _isActivePlan = 0;
+    if ($('#chkIsActive').is(':checked')) {
+        // checked
+        _isActivePlan = 1;
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_planName)) {
+        is_valid = false;
+        _error_planName.html('@(Resources.SuperAdminPanel.PlanNameRequired)');
+    }
+    if (validate_IsEmptySelectInputFieldValue(_durationTypeKey)) {
+        is_valid = false;
+        _error_durationTypeId.html('@(Resources.SuperAdminPanel.PlanDurationTypeRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_price) || isNaN(_price)) {
+        is_valid = false;
+        _error_price.html('@(Resources.SuperAdminPanel.PlanPriceRequired)');
+    }
+    else if (parseFloat(_price) <= 0) {
+        is_valid = false;
+        _error_price.html('@(Resources.SuperAdminPanel.PlanPriceValueRequired)');
+    }
+    if ($("#txtDescription .ql-editor").text() =="") {
+        is_valid = false;
+        _error_description.html('@(Resources.SuperAdminPanel.PlanDescriptionRequired)');
+    }
+        if (validate_IsEmptySelectInputFieldValue(_Plantype)) {
+       is_valid = false;
+       _error_ddlPackagesforId.html('@(Resources.SuperAdminPanel.PlanTypeRequired)');
+        }
+
+        if (is_valid) {
+        var encodedDescription = encodeURIComponent(_description);
+        var _mode = (PlanId_Global > 0) ? 2 : 1;
+        var data = new FormData();
+        data.append("Id", PlanId_Global);
+        data.append("planType", _Plantype);
+        data.append("Name", _planName);
+        data.append("PlanDurationTypeKey", _durationTypeKey);
+        data.append("Description", encodedDescription);
+        data.append("Price", _price);
+        data.append("CompareAtPrice", _compareAtPrice);
+        data.append("Discount", _discount);
+        data.append("Status", _isActivePlan);
+        data.append("Mode", _mode);
+        data.append("PermissionIds", SelectedPermissionArr_Global.join(","));
+
+        var _packageImageFile_MC = $("#filePackageImage_ManagePackage").get(0);
+        var _packageImageFiles = _packageImageFile_MC.files;
+        data.append('PackageImage', _packageImageFiles[0]);
+
+         $.ajax({
+            url: '/api/SuperAdminPlan/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllMainPlans();
+                    ResetAddUpdateView();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+                ResetAddUpdateView();
+                StopLoading();
+                GetAllBusinessPlans();
+            },
+            error: function (result) {
+                StopLoading();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+         });
+        }
+
+    }
+
+    function GetAllMainPlans() {
+        var _url = "/api/SuperAdminPlan/GetAllList";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            //$('#MainPlanCardList').html('');
+            //var cardsData = "";
+            //for (var i = 0; i < response.data.length; i++) {
+            //    cardsData += bindPlanDataToCard(response.data[i]);
+            //}
+
+            //if (response.data.length <= 0) {
+            //    cardsData += `<div class="w-100 text-center"><i> No Plan/Packages </i><div>`;
+            //}
+
+            //$('#MainPlanCardList').append(cardsData);
+
+            var _table = $('#tblMainPackages').DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _action = '';
+            var _showOnHomePage = '';
+            var data = [];
+            for (var i = 0; i < response.data.length; i++) {
+                var _item = response.data[i];
+                sno++;
+                var _status = (_item.Status == 1) ? `<span class="badge badge-success">Active</span>` : `<span class="badge badge-danger">Inactive</span>`;
+                var compareAtPriceHTML = (_item.CompareAtPrice <= 0) ? '' : `<p class="h5 mb-2 text-danger"><strike>Rs. ${_item.CompareAtPrice}</strike></p>`;
+                var PlanDurationTypename = '';
+                var plantype = '';
+                var discount = '';
+                if (_item.PlanDurationTypeKey == "per_monthly") {
+                    PlanDurationTypename = `<p class="">Per Month</p>`;
+                }
+                else {
+                    PlanDurationTypename = `<p class="">Per Year</p>`;
+                }
+                if (_item.Discount <= 0) {
+                    discount = '';
+                }
+                else {
+                    discount = ` <div class="font-weight-bold">${_item.Discount}% Off</div>`;
+                }
+
+                if (_item.PlanType == 1) {
+                    plantype = 'Business';
+                }
+                else if (_item.PlanType == 2) {
+                    plantype = `User`;
+                }
+                else {
+                    plantype = ``;
+                }
+
+                var _priceWithDiscount = `<div>${_item.Price}</div><div class="font-weight-bold"> ${discount}<div>`;
+
+                var _planTitle = `
+                            <div class="d-flex flex-grow-1">
+                                <div class="mr-2"><img src="${_item.PlanImageWithPath}" class="img-size-sm" /></div>
+                                <div class="mb-1">${_item.Name}</div>
+                            </div>
+                    `;
+            
+                var _icon = (_item.ShowOnHomePage == 1) ? '<span class="d-none">1</span><i class="fas fa-check-square text-success" title="Change visibility on Home Page"></i>' : '<span class="d-none">0</span><i class="far fa-square"  title="Change visibility on Home Page"></i>';
+
+                if (_item.PlanType == 1) {
+
+                    _showOnHomePage = `<button class="btn disabled" >${_icon}</button>`;
+                } else {
+                    _showOnHomePage = `<button class="btn" onclick="ConfirmToggleHomePageVisibilityStatus(${_item.Id})">${_icon}</button>`;
+                }
+
+                _action = '<div class="edbt">';
+                _action += '<a href="javascript:EditPackage(' + _item.Id + ');"><i class="fas fa-edit"></i></a>';
+                _action += `<a href="javascript:ConfirmDeletePackage(${_item.Id},'${ _item.Name }');"><i class="fas fa-trash "></i></a>`;
+                _action += '</div>';
+
+                data.push([
+                    sno,
+                    _showOnHomePage,
+                    _status,
+                    _planTitle,
+                    _priceWithDiscount,
+                    PlanDurationTypename,
+                    plantype,
+                    _action
+                ]);
+            }
+
+            $('#tblMainPackages').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+
+            GetAllBusinessPanelPermissions();
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function bindPlanDataToCard(mainPlan) {
+        var compareAtPriceHTML = (mainPlan.CompareAtPrice <= 0) ? '' : `<p class="h5 mb-2 text-danger"><strike>Rs. ${mainPlan.CompareAtPrice}</strike></p>`;
+        var PlanDurationTypename = '';
+        var discount = '';
+        var mainPlanImageWithPath = '';
+        if (mainPlan.PlanDurationTypeKey == "per_monthly") {
+            PlanDurationTypename = `<p class="text-muted text-small">Per Month</p>`;
+        }
+        else {
+            PlanDurationTypename = `<p class="text-muted text-small">Per Year</p>`;
+        }
+        if (mainPlan.Discount <= 0) {
+            discount = '';
+
+        }
+        else {
+            discount = ` <div class="float-lg-right font-weight-bold">${mainPlan.Discount}% 0ff</div>`;
+        }
+        if (mainPlan.PlanImageWithPath != "")
+        {
+            mainPlanImageWithPath = ` <img src="${mainPlan.PlanImageWithPath}" class="packageIcon">`;
+        }
+        else
+        {
+            mainPlanImageWithPath = "";
+        }
+        var cardData = `
+        <div class="col-md-12 col-lg-4 mb-4 col-item">
+                <div class="card">
+                    <div class="card-body  pb-5 d-flex flex-lg-column flex-md-row flex-sm-row flex-column">
+                                ${discount}
+                        <div class="price-top-part text-center">
+                            <!--<i class="iconsminds-male large-icon"></i>-->
+                            ${mainPlanImageWithPath}
+
+                            <h5 class="mb-0 font-weight-semibold color-theme-1 mb-4">${mainPlan.Name}</h5>
+                            ${compareAtPriceHTML}
+                            <p class="text-large mb-2 text-default">Rs. ${mainPlan.Price}</p>
+                            ${PlanDurationTypename}
+                        </div>
+                        <div class="pl-0 pr-3 pt-3 pb-0 d-flex price-feature-list flex-column flex-grow-1">
+                            <ul class="list-unstyled">
+                                <li>
+                                    <p class="mb-0 float-lg-left">
+                                        ${mainPlan.Description}
+                                    </p>
+                                </li>
+                            </ul>
+                            <div class="d-flex justify-content-around">
+                                <button type="button" class="btn btn-md btn-outline-info" onclick="EditPackage(${mainPlan.Id})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button type="button" class="btn btn-md btn-outline-danger" onclick="ConfirmDeletePackage(${mainPlan.Id},'${mainPlan.Name}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    `;
+        return cardData;
+    }
+    function showEditPackageView() {
+
+        $('#sectionView_ManagePackage').addClass('d-none');
+        $('#sectionAddUpdate_ManagePackage').removeClass('d-none');
+        document.getElementById("ChnageTitleName").innerHTML = "Edit Package";
+        document.getElementById("ChangeUpdateText").innerHTML = "Update";
+
+        $(".error-class").html('');
+
+    };
+    function EditPackage(id) {
+        var _url = "/api/SuperAdminPlan/GetById?id=" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            $('.error-class').html('');
+
+            $("#txtPlanName").val(response.data.Name);
+            $("#ddlDurationType").val(response.data.PlanDurationTypeKey);
+            $("#ddlPackagesfor").val(response.data.PlanType);
+            $("#txtPrice").val(response.data.Price);
+            $("#txtDescription .ql-editor").html(response.data.Description);
+            $("#txtCompareAtPrice").val(response.data.CompareAtPrice);
+            $("#previewImage").attr('src', response.data.PlanImageWithPath);
+            $("#previewImage").removeClass('d-none');
+            $("#txtDiscount").val(response.data.Discount);
+            if (response.data.PlanImageWithPath != "") {
+                $("#previewImage").attr('src', response.data.PlanImageWithPath);
+                $("#previewImage").removeClass('d-none');
+            }
+            else
+            {
+                $("#previewImage").attr('src','');
+                $("#previewImage").addClass('d-none');
+            }
+
+            //---Check Staff-Status
+            if (response.data.Status == 1) {
+                $('#chkIsActive').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive').prop('checked', false);
+            }
+
+            PlanId_Global = response.data.Id;
+            PlanType_Global = response.data.PlanType;
+
+            resetMainPlanPermissionSelectionsFromObj(response.data.MainPlanPermissionsList);
+            if (PlanType_Global == 1) {
+                GetAllBusinessPanelPermissions();
+
+            } else {
+                GetAllUserPanelPermissions();
+
+            }
+            //updateCheckboxes();
+            showEditPackageView();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function ConfirmDeletePackage(sid, packageName) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeletePackageTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeletePackageText) '"+packageName+"'?",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "Yes",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeletePackage(sid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeletePackage(sid) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/SuperAdminPlan/DeleteById?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllMainPlans();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg:'@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    function ResetAddUpdateView() {
+        $(".error-class").html('');
+
+        $("#txtPlanName").val('');
+        $("#ddlDurationType").val(0);
+        $("#ddlPackagesfor").val(0);
+        $("#txtPrice").val('');
+        $("#txtDescription .ql-editor").text('');
+        $("#previewImage").attr('src', '');
+        $("#previewImage").addClass('d-none');
+        $("#txtCompareAtPrice").val('');
+        $("#filePackageImage_ManagePackage").val('');
+        $('#chkIsActive').prop('checked', true);
+        $("#txtDiscount").val('');
+        PlanId_Global = 0;
+        $('#sectionView_ManagePackage').removeClass('d-none');
+        $('#sectionAddUpdate_ManagePackage').addClass('d-none');
+        document.getElementById("ChangeUpdateText").innerHTML = "Save";
+
+        document.getElementById("pageTextchange").innerHTML = "Package";
+        document.getElementById("pageStageChange").innerHTML = "Package";
+
+    }
+
+
+    function CalculateDiscount() {
+        const price = $("#txtPrice").val();
+        const comparePrice = $("#txtCompareAtPrice").val();
+
+        const discount = ((comparePrice - price) / comparePrice) * 100;
+        const discountPercentage = Math.round(discount);
+        $("#txtDiscount").val(discountPercentage);
+
+    }
+
+
+
+    function ConfirmToggleHomePageVisibilityStatus(id) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTitleMessage)",
+            text: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: "@(Resources.ErrorMessage.No)",
+                confirm: "@(Resources.ErrorMessage.Yes)"
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                ToggleHomePageVisibilityStatus(id);
+            } else {
+
+            }
+        });
+    }
+
+    function ToggleHomePageVisibilityStatus(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/SuperAdminPlan/ToggleHomePageVisibilityStatus/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllMainPlans();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+  function GetAllUserPanelPermissions() {
+
+      var _url = "/api/Permisssions/GetAll/GetAllUserPanelPermissions";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            //console.log(response.data);
+
+            $("#BusinessPanelPermissions_ManagePackage").html('');
+            var checkboxesData = '';
+            for (var i = 0; i < response.data.length; i++) {
+                var permission = response.data[i];
+
+                var _permissionId = String(permission.Id);
+                
+                if (SelectedPermissionArr_Global.includes(_permissionId)) {
+
+
+                    // print parent Permission
+                    checkboxesData += `
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input chk_permission" checked="checked" data-id="${permission.Id}" data-parent-id="0" id="chk_permission_${permission.Id}">
+                        <label class="form-check-label" for="chk_permission_${permission.Id}" style="cursor:pointer;">${permission.TextValue}</label>
+                    </div>
+                `;
+                } else {
+
+                        // print parent Permission
+                        checkboxesData += `
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input chk_permission " data-id="${permission.Id}" data-parent-id="0" id="chk_permission_${permission.Id}">
+                            <label class="form-check-label" for="chk_permission_${permission.Id}" style="cursor:pointer;">${permission.TextValue}</label>
+                        </div>
+                    `;
+                }
+
+
+
+            }
+
+            $("#BusinessPanelPermissions_ManagePackage").html('').append(checkboxesData); //.select2();
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+    // Image File Preview -------------------------------------------------------------
+    document.getElementById('filePackageImage_ManagePackage').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 5 * 1024 * 1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.SuperAdminPanel.ValidImageFile_ErrorMessage)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.SuperAdminPanel.ValidFileSize_ErrorMessage, "5 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+</script>

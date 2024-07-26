@@ -1,0 +1,379 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Enquiry";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+@section Styles {
+    <style>
+        .previousComments {
+            background: #f1f1f1f1;
+            width: auto;
+        }
+
+        .manageComments {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Enquiries</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Enquiry">Manage Enquiry</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Enquiries</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageEnquiries_ViewEnquiries_AddEnquiries"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEnquiry">Add Enquiry</a>
+                        </div>
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewEnquiry" class="d-none">*@
+        <div id="sectionViewEnquiry">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblEnquiry" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Notes</th>
+                                        <th>Assigned To</th>
+                                        <th>Enquiry Date</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddUpdateEnquiry" style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Enquiry</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <h4 class="text-primary font-italic">Personal Details:</h4>
+                                        <hr />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="Name">Name</label>
+                                            <input type="text" id="txtName" class="form-control" />
+                                            <div class="error-class" id="error_txtName"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="ddlGender">Gender</label>
+                                            <select id="ddlGender" class="form-control select2" data-width="100%">
+                                                <option value="0">Select Gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlGender"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtEmail">Email</label>
+                                            <input type="text" id="txtEmail" class="form-control" />
+                                            <div class="error-class" id="error_txtEmail"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtDOB">DOB</label>
+                                            <input type="date" id="txtDOB" class="form-control" />
+                                            <div class="error-class" id="error_txtDOB"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtPhoneNumber">Phone Number</label>
+                                            <input type="number" id="txtPhoneNumber" class="form-control" />
+                                            <div class="error-class" id="error_txtPhoneNumber"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtAlternatePhoneNumber">Alternate Phone Number</label>
+                                            <input type="number" id="txtAlternatePhoneNumber" class="form-control" />
+                                            <div class="error-class" id="error_txtAlternatePhoneNumber"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label for="txtAddress">Address</label>
+                                            <textarea id="txtAddress" class="form-control" rows="3"></textarea>
+                                            <div class="error-class" id="error_txtAddress"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-sm-12">
+                                        <h4 class="text-primary font-italic">Enquired For:</h4>
+                                        <hr />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtActivity">Activity</label>
+                                            <input type="text" id="txtActivity" class="form-control" />
+                                            <div class="error-class" id="error_txtActivity"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="ddlLevel">Level</label>
+                                            <select id="ddlLevel" class="form-control select2" data-width="100%">
+                                                <option value="0">Select Level</option>
+                                                <option value="1">Basic</option>
+                                                <option value="2">Intermediate</option>
+                                                <option value="3">Advance</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlLevel"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="ddlPlan">Plan</label>
+                                            <select id="ddlPlan" class="form-control select2" data-width="100%">
+                                                <option value="0">Select Plan</option>
+                                                <option value="1">Basic</option>
+                                                <option value="2">Intermediate</option>
+                                                <option value="3">Advance</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlPlan"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="ddlClass">Class</label>
+                                            <select id="ddlClass" class="form-control select2" data-width="100%">
+                                                <option value="0">Select Class</option>
+                                                <option value="1">Basic</option>
+                                                <option value="2">Intermediate</option>
+                                                <option value="3">Advance</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlClass"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtStartFrom">Start From</label>
+                                            <input type="date" id="txtStartFrom" class="form-control" />
+                                            <div class="error-class" id="error_txtStartFrom"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="ddlStatus">Select Status</label>
+                                            <select id="ddlStatus" class="form-control select2" data-width="100%">
+                                                <option value="0">Select Status</option>
+                                                <option value="Hot">Hot</option>
+                                                <option value="Warm">Warm</option>
+                                                <option value="Cold">Cold</option>
+                                                <option value="Waitlisted">Waitlisted</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlStatus"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @*<div class="row mt-4">
+                                    <div class="col-sm-12">
+                                        <h4 class="text-primary font-italic">Other Details:</h4>
+                                        <hr />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="ddlStaff">Select Staff</label>
+                                            <select id="ddlStaff" class="form-control select2" data-width="100%">
+                                                <option value="0">Select Staff</option>
+                                                <option value="1">Hot</option>
+                                                <option value="2">Warm</option>
+                                                <option value="3">Cold</option>
+                                                <option value="4">Waitlisted</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlStaff"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="txtFollowUpDate">Follow-Up Date</label>
+                                            <input type="date" id="txtFollowUpDate" class="form-control" />
+                                            <div class="error-class" id="error_txtFollowUpDate"></div>
+                                        </div>
+                                    </div>
+                                </div>*@
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label for="txtNote">Note</label>
+                                            <textarea id="txtNote" class="form-control" rows="3"></textarea>
+                                            <div class="error-class" id="error_txtNote"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <button type="button" class="btn btn-primary mb-0" id="btnSubmitEnquiry" onclick="btnSubmitFormClick()">Submit</button>
+                                        <a href="javascript:;" class="btn btn-danger mb-0" onclick="cancelAddUpdateForm()">Cancel</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+@*------------------------------------- Edit Enquiry-Follow-Up Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="EditBusinessEnquiryModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">Edit Follow Up Detail</h2>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div id="BusinessDetails_EditBusinessEnquiryModal">
+                    @* Data will be appended *@
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="ddlStaff">Select Staff</label>
+                            <select id="ddlStaffList" class="form-control select2" data-width="100%">
+                                @*<option value="0">Select Staff</option>*@
+                            </select>
+                            <div class="error-class" id="error_ddlStaffList"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="txtFollowUpDate">Follow-Up Date</label>
+                            <input type="date" id="txtFollowUpDateStaff" class="form-control" />
+                            <div class="error-class" id="error_txtFollowUpDateStaff"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnSubmitFormStaffClick();">
+                    Update
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="ResetBusinessView()" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Edit Enquiry-Follow-Up Details Modal ------------------------------------------------------ *@
+
+@*------------------------------------- Edit Business Enquiry Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="enquiryDetailModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">View Enquiry Detail</h2>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div id="BusinessDetails_BusinessEnquiryModal">
+                    @* Data will be appended *@
+                </div>
+                <br />
+                <div class="row">
+                    <strong>Previous Comments</strong> <br />
+                    <div class="col-md-12 manageComments">
+
+                        <div id="CommentsList"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*------------------------------------- Edit Enquiry Details Modal ------------------------------------------------------ *@
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_EnquiryScriptPartial.cshtml")
+}

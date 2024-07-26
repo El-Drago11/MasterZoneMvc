@@ -1,0 +1,157 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "ManageBusinessImages";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+@section Styles{
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Manage Images</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Manage Images</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("Miscellaneous_ManageBusinessImages_AddImages"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" onclick="ShowModelAddUpdateBusinessImage();">Add Image</a>
+                        </div>
+
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        @if (permissionKeys.Contains("Miscellaneous_ManageBusinessImages_ViewImages"))
+        {
+            <div id="sectionViewBusinessManageImages">
+
+                <div class="row mb-4">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                @*<div class="row">
+                                        <div class="col-6">
+                                            <h5 class="mb-4">Event Sponsor</h5>
+                                        </div>
+                                        <div class="col-6 text-right">
+                                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventSponsor" onclick="ShowAddUpdateEventSponsor();">Add Event Sponsor</a>
+                                        </div>
+                                    </div>*@
+
+                                <table id="tblBusinessImages" class="mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>SNo.</th>
+                                            <th> Image Title</th>
+                                            <th>Image</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div id="sectionNotImageShow">
+                <div class="row mb-4">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-body text-center h6">
+                                Only <b>Permission Satff</b> can Manage Images!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        @*------------------------------------- Add Update Business Image Model ------------------------------------------------------ *@
+        <div class="modal fade" id="AddBusinessImage">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="Modal_Title" class="modal-title"> Add Image</h5>
+                        <button type="button" class="close" data-dismiss="modal" onclick="ResetAddViewBusinessImage()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="txtTitle_BusinessImage">Image Title</label>
+                                    <input type="text" id="txtTitle_BusinessImage" class="form-control" />
+                                    <div class="error-class" id="error_txtTitle_BusinessImage"></div>
+
+                                </div>
+
+                                <div class="col-12 form-group">
+                                    <label for="ManageBusinessImages">Image</label>
+                                    <div class="imagePreview">
+                                        <img id="previewManageBusinessImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="ManageBusinessImages" class="form-control" accept="image/*" />
+                                    <div class="error-class" id="error_ManageBusinessImages"></div>
+                                </div>
+                            </div>
+
+
+
+
+                            <button type="button" class="btn btn-primary mb-0" onclick="AddUpdateBusinessImage()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewBusinessImage()">Cancel</a>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                            data-dismiss="modal">Save</button>*@
+                        @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageBusinessImagesScriptPartial.cshtml")
+}

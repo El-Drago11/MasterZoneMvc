@@ -1,0 +1,206 @@
+﻿
+@{
+    ViewBag.Title = "ManageExpense";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    string UserRole = ViewBag.UserRole;
+}
+@section Styles{
+    <style>
+        .ExpensePointer {
+            cursor: pointer;
+        }
+    </style>
+}
+
+<h2>ExpenseModule</h2>
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Expense </h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageExpense">Manage Expense</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Expense </li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-4 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddExpense">Add Expense </a>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        <input type="hidden" id="GetUserRoleName" value="@UserRole" />
+        @if (UserRole == "BusinessAdmin")
+        {
+            <div id="sectionViewBusinessExpense">
+                <div class="row mb-4">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <table id="ViewForBusinessExpense" class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>SNo.</th>
+                                            <th>Staff Name</th>
+                                            <th>Expense Amount</th>
+                                            <th> Expense Description</th>
+                                            <th>Expense Date</th>
+                                            <th>Remarks</th>
+                                            <th>Status</th>
+                                            <th class="text-center">Action</th>
+
+                                        </tr>
+                                    </thead>
+
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (UserRole == "Staff")
+        {
+            <div id="sectionViewStaffExpense">
+                <div class="row mb-4">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <table id="ViewForExpense" class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>SNo.</th>
+                                            @*<th>Staff Name</th>*@
+                                            <th>Expense Amount</th>
+                                            <th>Expense Description</th>
+                                            <th>Expense Date</th>
+                                            <th>Remarks</th>
+                                            <th>Status</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+            <div id="sectionAddStaffExpenseModule" Style="display: none">
+                <div class="row mb-4">
+                    <div class="col-12 mb-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4" id="myText">Add Expense Module</h5>
+                                <form>
+                                    <div class="form-group d-none" id="ddlSelectedStaffList">
+
+                                        <label>Select Staff</label>
+                                        <select id="ddlSelectedStaffId" class="form-control" placeholder="Select Staff" data-width="100%">
+
+                                            @*<option label="&nbsp;">&nbsp;</option>*@
+                                        </select>
+                                        <div class="error-class" id="error_ddlSelectedStaffId"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ExpenseAmount">Expense Amount</label>
+                                        <input type="number" class="form-control" id="ExpenseAmount_price" required />
+                                        <div class="error-class" id="error_ExpenseAmount_price"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="Description">Expense Description</label>
+                                        <input type="text" id="txtDescription" class="form-control" />
+
+                                        <div class="error-class" id="error_txtDescription"></div>
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="ExpenseDate">Expense Date</label>
+                                        <input type="date" id="txtExpenseDate" class="form-control" onchange="ExpenseDate();" />
+                                        <div class="error-class" id="error_txtExpenseDate"></div>
+
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitToExpenseModule()">Save</button>
+                                    <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetBusinessView()">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+</main>
+
+@*------------------------------------- Edit Business Expense Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="EditBusinessExpenseModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">Edit Expense</h2>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div id="BusinessDetails_EditBusinessExpenseModal">
+                    @* Data will be appended *@
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="Remark" style="font-size: 20px;">Remarks</label>
+                            <textarea name="description" maxlength="125" class="form-control" rows="6" id="text_Remarkbody"></textarea>
+                            <div class="error-class" id="error_text_Remarkbody"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="ddlSelectedStatus">Select Status</label>
+                            <select name="ddlSelectedStatus" id="ddlSelectedStatus" form="carform" default="unslected" class="form-control">
+                                <option value="0">Select Status</option>
+                                <option value="1">Accepted</option>
+                                <option value="2">Rejected</option>
+
+                            </select>
+
+                            <div class="error-class" id="error_ddlSelectedStatus"></div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                        onclick="btnSubmitToBusinessExpense();">
+                    Update
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="ResetBusinessView()" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Edit Business Expense  Details Modal ------------------------------------------------------ *@
+
+
+
+@section Scripts{
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageExpenseScriptPartial.cshtml")
+}

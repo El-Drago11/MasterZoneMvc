@@ -1,0 +1,202 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Package";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.bubble.css" />
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .plan-discount-bubble {
+            position: absolute;
+            margin-left: -28px;
+            margin-top: -48px;
+            background: #f84545;
+            padding: 8px 20px;
+            border-radius: 6%;
+            color: #fff;
+            font-weight: bold;
+        }
+        #txtDescription {
+            padding: 55px;
+        }
+    </style>
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange"> View Package</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Package">Plans/Packages</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">View Package</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageBusinessPlans_ViewPackages_AddPackages"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddPackage">Add Package</a>
+                        </div>
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewStaff">
+            <div id="BusinessPlanCardList" class="row equal-height-container">
+
+                @*----------------------- Bind Plan Cards ----------------*@
+
+                @*----------------------- Bind Plan Cards ----------------*@
+
+            </div>
+        </div>
+
+        <div id="sectionAddStaff" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Package</h5>
+                            <form>
+                                <div class="form-group d-flex flex-column">
+                                    <label>Package Image</label>
+                                    <div class="imagePreview">
+                                        <img id="previewPlanImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="filePlanImage_ManagePlan" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_filePlanImage_ManagePlan"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="txtPlanName">Name</label>
+                                    <input type="text" id="txtPlanName" class="form-control" />
+                                    <div class="error-class" id="error_txtPlanName"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlDurationType">Duration Type</label>
+                                    <select name="ddlDurationType" id="ddlDurationType" form="carform" default="unslected" class="form-control">
+                                        <option value="0" selected disabled hidden>Select</option>
+                                    </select>
+                                    <div class="error-class" id="error_ddlDurationType"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlplanType">Plan Type</label>
+                                    <select name="ddlplanType" id="ddlplanType" form="carform" default="unslected" class="form-control">
+                                        <option value="#">Select an option</option>
+                                        <option value="1" selected>Beginner</option>
+                                        <option value="2">Advance</option>
+                                    </select>
+                                    <div class="error-class" id="error_ddlplanType"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="txtPrice">Compare At Price</label>
+                                    <input type="number" id="txtCompareAtPrice" class="form-control" oninput="CalculateDiscountPercentage()" />
+                                    <div class="error-class" id="error_txtCompareAtPrice"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="txtPrice">Price</label>
+                                    <input type="number" id="txtPrice" class="form-control" oninput="CalculateDiscountPercentage()" />
+                                    <div class="error-class" id="error_txtPrice"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="txtDiscountPrice">Discount (%)</label>
+                                    <input type="number" id="txtDiscountPercent" class="form-control" disabled />
+                                    <div class="error-class" id="error_txtDiscountPrice"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="txtDescription">Description</label>
+                                    <div id="txtDescription" class="html-editor form-control" style="height:auto"></div>
+                                    <div class="error-class" id="error_txtDescription"></div>
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="chkIsActive" checked>
+                                        <label class="form-check-label" for="chkIsActive" style="cursor:pointer;">Is Active</label>
+                                    </div>
+                                </div>
+                                <!-- /.form-group -->
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitFormClick()">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddUpdateView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+
+@section Scripts{
+
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_PackageScriptPartial.cshtml")
+
+    <script>
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillDescription = new Quill('#txtDescription', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+
+    </script>
+}

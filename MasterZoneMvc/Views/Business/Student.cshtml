@@ -1,0 +1,339 @@
+﻿@{
+    ViewBag.Title = "Student";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .img-small {
+            width: 50px;
+            height: 50px;
+        }
+
+        .imagePreview {
+            width: 75px;
+            height: 75px;
+            padding: 2px;
+            border: 2px dashed #cecece;
+        }
+
+            .imagePreview img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Manage Student</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Manage Student</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-4 text-right">
+                        <a href="javascript:;" data-toggle="modal" data-target="#addStudentModal" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStudent">Add Student</a>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewStaff">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblBusinessStudent" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Student Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+@*------------------------------------- Add Student Modal ------------------------------------------------------ *@
+<div class="modal fade" id="addStudentModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Add Student</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <form autocomplete="off">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="chkMasterId">
+                                    <label class="form-check-label" for="chkMasterId" style="cursor:pointer;">Do you have Master-Id?</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group d-none">
+                                <label class="form-check-label w-100" for="txtMasterId" style="cursor:pointer;">Master User Id <button type="button" class="btn btn-xs btn-info float-right mb-1" onclick="VerifyUserMasterId();">Verify</button></label>
+                                <input type="text" class="form-control" id="txtMasterId">
+                                <div class="error-class" id="error_txtMasterId"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group d-flex flex-column">
+                                <label>Profile Image</label>
+                                <div class="imagePreview">
+                                    <img id="previewImageStudent" class="d-none" style="width:100%; height:100%;">
+                                </div>
+                                <input type="file" id="fileBusinessStudentProfileImage" class="border form-control" accept="image/*">
+                                <div class="error-class" id="error_fileBusinessStudentProfileImage"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="sectionUserDetail">
+
+                    </div>
+                    <div id="formSectionNewStudent">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="vs-lb">First Name</label>
+                                    <input type="text" id="txtFirstName" class="form-control" autocomplete="false">
+                                    <div class="error-class" id="error_txtFirstName"></div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="vs-lb">Last Name</label>
+                                    <input type="text" id="txtLastName" class="form-control" autocomplete="false">
+                                    <div class="error-class" id="error_txtLastName"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <!-- <i class='bx bx-mail-send'></i> -->
+                                    <label class="vs-lb">Phone Number</label>
+                                    <input type="email" id="txtPhoneNumber" class="form-control" autocomplete="false">
+                                    <div class="error-class" id="error_txtPhoneNumber"></div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <!-- <i class='bx bx-mail-send'></i> -->
+                                    <label>Gender</label>
+                                    <select id="ddlGender" class="form-control">
+                                        <option value="0" style="color: gray;">Select</option>
+                                        <option value="1">Male</option>
+                                        <option value="2">Female</option>
+                                    </select>
+                                    <div class="error-class" id="error_ddlGender"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <!-- <i class='bx bx-mail-send'></i> -->
+                                    <label class="vs-lb">Email</label>
+                                    <input type="email" id="txtEmail" class="form-control" autocomplete="false">
+                                    <div class="error-class" id="error_txtEmail"></div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="vs-lb">Password</label>
+                                    <input type="password" id="txtPassword" class="form-control" autocomplete="false">
+                                    <div class="error-class" id="error_txtPassword"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="vs-lb">Confirm Password</label>
+                                    <input type="password" id="txtConfirmPassword" class="form-control" autocomplete="false">
+                                    <div class="error-class" id="error_txtConfirmPassword"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSubmitStudentModal" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnAddStudent();">Add</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Add Student Modal ------------------------------------------------------ *@
+
+
+
+@*------------------------------------- Class Booking Modal ------------------------------------------------------ *@
+<div class="modal fade" id="modalClassBooking">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Class Booking</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <form autocomplete="off">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <select id="ddlClassList" class="form-control">
+                                    <option value="0">Select Class</option>
+                                </select>
+                                <div class="error-class" id="error_ddlClassList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnSubmitBookClass();">Checkout</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Class Booking Modal ------------------------------------------------------ *@
+
+
+@*------------------------------------- Plan Booking Modal ------------------------------------------------------ *@
+<div class="modal fade" id="modalPlanBooking">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Plan Booking</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <form autocomplete="off">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <select id="ddlPlanList" class="form-control">
+                                    <option value="0">Select Plan</option>
+                                </select>
+                                <div class="error-class" id="error_ddlPlanList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnSubmitBookPlan();">Checkout</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Plan Booking Modal ------------------------------------------------------ *@
+
+
+@*------------------------------------- Event Booking Modal ------------------------------------------------------ *@
+<div class="modal fade" id="modalEventBooking">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Event Booking</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <form autocomplete="off">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <select id="ddlEventList" class="form-control">
+                                    <option value="0">Select Event</option>
+                                </select>
+                                <div class="error-class" id="error_ddlEventList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnSubmitBookEvent();">Checkout</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Event Booking Modal ------------------------------------------------------ *@
+
+@*------------------------------------- Training Booking Modal ------------------------------------------------------ *@
+<div class="modal fade" id="modalTrainingBooking">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Training Booking</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <form autocomplete="off">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <select id="ddlTrainingList" class="form-control">
+                                    <option value="0">Select Event</option>
+                                </select>
+                                <div class="error-class" id="error_ddlTrainingList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnSubmitBookTraining();">Checkout</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Training Booking Modal ------------------------------------------------------ *@
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_StudentScriptPartial.cshtml")
+}

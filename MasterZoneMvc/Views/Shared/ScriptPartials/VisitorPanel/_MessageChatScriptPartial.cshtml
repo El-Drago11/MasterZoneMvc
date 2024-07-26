@@ -1,0 +1,340 @@
+﻿
+<script>
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                var businessLoginId = $('#hiddenBusinessLoginId').val();
+                GetMessageDetailById(businessLoginId);
+                StopLoading();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                window.location.href = '/home/login';
+                StopLoading();
+            }
+        });
+        setInterval(() => {
+            $.get("/Home/GetStudentToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                    var businessLoginId = $('#hiddenBusinessLoginId').val();
+                    GetMessageDetailById(businessLoginId);
+                    StopLoading();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    window.location.href = '/home/login';
+                    StopLoading();
+                }
+            });
+        }, 2000);
+    });
+
+    function ResetBtn() {
+        $('#MessageBodyText').val('');
+    }
+
+    function btnSubmitMessage(id) {
+
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = 1;
+
+        let _Messagebodytext = $("#MessageBodyText").val().trim();
+
+        //let _error_Messagebodytext = $("#error_MessageBodyText");
+
+
+        if (validate_IsEmptyStringInputFieldValue(_Messagebodytext)) {
+                is_valid = false;
+            //_error_Messagebodytext.html('@(Resources.BusinessPanel.MessageTextRequired)');
+
+            }
+
+
+         if (is_valid) {
+             var data = new FormData();
+
+             data.append("Messagebody", _Messagebodytext);
+             data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/Message/AddUpdate?toUserLoginId=' +id,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        $.iaoAlert({
+                            msg: dataResponse.message,
+                            type: "success",
+                            mode: "dark",
+                        });
+                        $('#MessageBodyText').val('');
+                        GetMessageDetailById(id);
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+                        ResetBtn();
+                        return;
+                    }
+
+
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function GetMessageDetailById(id) {
+
+        $('#btnAddMessage').val('');
+
+        var _url = "/api/Message/MessageChatGetById?id=" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var htmlData3 = '';
+
+            if (response.data.RecevierUserLoginDetail) {
+                htmlData3 += `
+                <div class="col-md-12">
+                    <div class="d-flex flex-row justify-content-end mb-3">
+                        <div class="d-flex flex-row">
+                            <img alt="Profile Picture" src="${response.data.RecevierUserLoginDetail.ProfileImageWithPath}"
+                                 class="img-thumbnail border-0 rounded-circle ml-0 mr-4 list-thumbnail align-self-center small" style=">
+                            <div class=" d-flex min-width-zero">
+                                <div class=" pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                    <div class="min-width-zero">
+                                        <p class="list-item-heading mb-1 truncate">${response.data.RecevierUserLoginDetail.FirstName}  ${response.data.RecevierUserLoginDetail.LastName} </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            $('#MainStudentUser').html(htmlData3);
+
+            var htmlData1 = '';
+
+
+            for (var i = 0; i < response.data.MessageList.length; i++) {
+
+                //var UserInfo1 = response.data.RecevierUserLoginDetail;
+                var UserInfo = response.data.RecevierUserLoginDetail;
+                if (response.data.MessageList[i].SenderUserLoginId == id) {
+                    htmlData1 += `
+                            <div class="card  col-md-9 d-inline-block mb-3 mr-2" style="float: left;">
+                                <div class=" pt-1 pr-2 r-0" style="float: right">
+                                    <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}    ${response.data.MessageList[i].Time}</span>
+                                </div>
+                                <div class="card-body p-0 pb-2">
+                                    <div class="d-flex flex-row pt-2">
+                                        <img alt="Profile Picture" src="${UserInfo.ProfileImageWithPath}"
+                                            class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall">
+                                        <div class="d-flex flex-grow-1 min-width-zero">
+                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                                <div class="min-width-zero">
+                                                    <p class="mb-0"> ${response.data.MessageList[i].Messagebody}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                 </div>`;
+                }
+
+                else {
+                   // var UserInfo1 = response.data.SenderUserLoginDetail;
+                    htmlData1 += `<div class="card  col-md-9 d-inline-block mb-3 mr-2" style="float: right;">
+                                <div class="pt-1 pr-2 r-0" style="float: right">
+                                    <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}   ${response.data.MessageList[i].Time}</span>
+                                </div>
+                                <div class="card-body p-0 pb-2">
+                                    <div class="d-flex flex-row pb-2">
+
+                                        <div class=" d-flex flex-grow-1 min-width-zero">
+                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                                <div class="min-width-zero">
+                                                    <p class="mb-0 truncate list-item-heading"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-text-left">
+                                        <p class="mb-0 text-semi-muted">
+                                            ${response.data.MessageList[i].Messagebody}
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>`;
+
+                }
+
+            }
+
+            if (response.data.MessageList.length <= 0) {
+                htmlData1 = `<div class="w-100 text-center font-italic"><span class="w-auto py-2 px-5 bg-primary text-white rounded">@(Resources.VisitorPanel.Message_StartANewConversation)</span></div>`;
+            }
+
+            $('#MessageView').html(htmlData1);
+            $("#MessageView").animate({
+                scrollTop: $('#MessageView').get(0).scrollHeight
+            }, 100);
+            btnMarkAsReadOrUnread(id);
+
+        },
+        error: function(result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+    ///Read  status
+    function btnMarkAsReadOrUnread(id) {
+
+        var _Params = {
+            "Id": id,
+            "SenderStatus": 1,
+        };
+
+        $.ajax({
+            url: '/api/Message/MarkAsReadUnread',
+            data: JSON.stringify(_Params),
+            processData: false,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+
+                }
+                else {
+                    swal({
+                        title: '',
+                        imageUrl: '/Content/svg/error.svg',
+                        text: dataResponse.message
+                    });
+
+                }
+            },
+            error: function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+</script>
+

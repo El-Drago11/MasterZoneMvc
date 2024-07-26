@@ -1,0 +1,145 @@
+﻿<script>
+    var NotificationDetail = 0;
+    var _NotificationDetailTable = "";
+
+    function initializeDataTable_NotificationDetail() {
+        _NotificationDetailTable = $("#ViewForNotificationDetail").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+
+                initializeDataTable_NotificationDetail();
+                GetAllViewNotificationDetail();
+                //StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+
+                        initializeDataTable_NotificationDetail();
+                        GetAllViewNotificationDetail();
+
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetAllViewNotificationDetail() {
+        
+            
+            // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/NotificationTransfer/GetAllNotificationDetailByPagination";
+         _NotificationDetailTable.clear().destroy();
+         _NotificationDetailTable = $("#ViewForNotificationDetail").DataTable({
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "orderMulti": false,
+                "ordering": true,
+                "paginate": true,
+                "order": [[3, "desc"]],
+                "ajax": {
+                    "headers": {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    "url": _url_val,
+                    "type": "POST",
+                    "error": function (result) {
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": "NotificationMessage", "name": "NotificationMessage", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": null, "": "Status", "autoWidth": true,
+                        "render": function (data, type, row) {
+                            return `${row.Action}`;
+                        }
+                    }
+                    , {
+                        "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                        }
+                    }
+
+                    , {
+                        "data": null, "": "action", "autowidth": true
+                        , "render": function (data, type, row) {
+                            //---Check Rating-Status
+                            var _Action = '';
+                            var _status = '';
+                            if (row.Status == 1) {
+                               var _status = '<a class="btn btn-warning text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusRating(' + row.Id + ');">Accept</a>';
+                            }
+                            else if (row.Status == 2) {
+                              var  _Action = '<a class="btn btn-success text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusTransferPackage(' + row.Id + ');">Reject</a>';
+                            }
+                            var _action = `<div class="edbt">
+                         ${_status}
+                         ${_Action}
+                     </div>`;
+                            return _action;
+                        }
+                       
+
+                    }
+
+                ],
+
+                "responsive": true,
+                "autoWidth": false,
+
+                "columnDefs": [{
+                    "targets": [0,5], // column index (start from 0)
+                    "orderable": false, // set orderable false for selected columns
+                }]
+            });
+
+            // for enabling search box only send requet on pressing enter
+         $('#ViewForNotificationDetail_filter input').unbind();
+         $('#ViewForNotificationDetail_filter input').bind('keyup', function (e) {
+                if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                  _NotificationDetailTable.search(this.value).draw();
+                }
+            });
+
+
+    }
+</script>

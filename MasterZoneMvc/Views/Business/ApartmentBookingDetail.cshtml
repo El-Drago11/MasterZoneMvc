@@ -1,0 +1,183 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "Apartment Booking Detail";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles {
+    <style>
+        .user-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+        
+        .user-img-lg {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .trainer-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .custom-border-dashed {
+            border: 3px dashed #808080;
+        }
+
+    </style>
+}
+<input type="hidden" id="hdnApartmentBookinId" value="@ViewBag.ApartmentBookingId" />
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Apartment Booking Detail</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageApartmentBooking">Manage Apartment Booking</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Apartment Booking Detail</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="sectionViewApartmentBookingDetail">
+            <div class="row mb-4">
+                <div class="col-8 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-12 font-weight-bold">
+                                            <div class="d-flex justify-content-between">
+                                                <h4 class="font-weight-bold p-2 data-block-name">@*BlockA*@</h4>
+                                                <div class="p-2 ml-5">
+                                                    <div class="d-flex flex-column">
+                                                        <h4 class="font-weight-bold data-flat-number">@*R111*@</h4>
+                                                        <h6 class="data-occupant-type">@*TENANT*@</h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <h2 class="font-weight-bold">Family Members</h2>
+                                                </div>
+                                                <div id="sectionFamilyMembers">
+
+                                                @*<div class="col-12">
+                                                    <div class="align-items-center d-flex">
+                                                        <img src="/Content/images/defaultProfileImg.png" class="mr-3 user-img">
+                                                        <div class="d-flex flex-column">
+                                                            <h4 class="font-weight-bold">Soanal Garg</h4>
+                                                            <h6>Daughter</h6>
+                                                        </div>
+                                                    </div>
+                                                </div>*@
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="row text-center">
+                                        <div class="col-12 mb-5">
+                                            <h5 class="flex-grow-1 font-weight-bold data-apartment-name">@*Apartment Name*@</h5>
+                                        </div>
+                                        <div class="col-12">
+                                            <h3 class="font-weight-bold">ACTIVITY</h3>
+                                        </div>
+                                        <div class="col-12">
+                                            <h4 class="font-weight-bold border-radius custom-border-dashed p-2 data-activity">@*CARROM BOARD*@</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="align-items-center d-flex">
+                                        <img src="/Content/images/defaultProfileImg.png" class="mr-3 user-img-lg data-person-profileimage">
+                                        <div class="d-flex flex-column">
+                                            <h2 class="data-person-fullname">@*Soanal Garg*@</h2>
+                                            @*<h4>Daughter</h4>*@
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 row">
+                                <div class="col-12">
+                                    <div class="bg-warning border-radius d-flex justify-content-between p-3">
+                                        <div class="d-flex flex-column">
+                                            <h4 class="flex-grow-1 font-weight-bold data-class-name">@*ZUMBA*@</h4>
+                                            <h4 class="data-class-price">@*Rs. 2000*@</h4>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <h4 class="data-class-days">@*M W F*@</h4>
+                                            <h4 class="data-batch-time">@*6:30 TO 7:00 PM*@</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="d-flex flex-column">
+                                        <h2 class="">Trainer</h2>
+                                        <div class="align-items-center d-flex">
+                                            <img src="/Content/images/defaultProfileImg.png" class="trainer-img data-instructor-img">
+                                            <h2 class="ml-2 text-success data-certified-icon"><i class="fas fa-check-circle"></i></h2>
+                                        </div>
+                                        <h4 class="data-instructor-name">@*Rima Nayak*@</h4>
+                                        <span class="data-instructor-category">@*Fitness Trainer*@</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ApartmentBookingDetailScriptPartial.cshtml")
+
+}

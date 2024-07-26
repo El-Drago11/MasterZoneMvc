@@ -1,0 +1,276 @@
+﻿
+@{
+    ViewBag.Title = "Manage Package";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+
+    <style>
+        .packageIcon {
+            width: 75px;
+            height: 75px;
+        }
+
+        .packageIconPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Manage Plan/Package</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                        <li class="breadcrumb-item active">Manage Plan/Package</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- View content -->
+    <section class="content" id="sectionView_ManagePackage">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-sm-9 d-flex align-items-center">
+                                    <h3 class="card-title">View Plan/Package</h3>
+                                </div>
+                                <div class="col-sm-3 d-flex justify-content-end">
+                                    <button type="button" class="btn btn-primary" onclick="showAddUpdatePackageSection();">
+                                        &plus; Add New Package
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <span class="text-muted font-weight-bold">@Resources.SuperAdminPanel.HomePageVisibilityDefination</span>
+                                </div>
+                            </div>
+
+                            <table id="tblMainPackages" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>HPV</th>
+                                        <th>Status</th>
+                                        <th>Title</th>
+                                        <th>Price</th>
+                                        <th>Duration</th>
+                                        <th>Plan Type</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>HPV</th>
+                                        <th>Status</th>
+                                        <th>Title</th>
+                                        <th>Price</th>
+                                        <th>Duration</th>
+                                        <th>Plan Type</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <div id="MainPlanCardList" class="row equal-height-container">
+
+                                @*----------------------- Bind Plan Cards ----------------*@
+
+                                @*----------------------- Bind Plan Cards ----------------*@
+
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- Main content -->
+    <section class="content d-none" id="sectionAddUpdate_ManagePackage">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Default box -->
+                    <div class="card card-default">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-sm-9 d-flex align-items-center">
+                                    <h3 id="ChnageTitleName" class="card-title">Add New Package</h3>
+                                </div>
+                                <div class="col-sm-3 d-flex justify-content-end">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="ResetAddUpdateView();">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12 ">
+                                    <form>
+                                        <div class="row">
+                                            <div class="form-group col-4">
+                                                <label for="ddlPackagesfor">Plan/Packages For</label>
+                                                <select name="ddlPackagesfor" id="ddlPackagesfor" form="carform"  class="form-control" onchange="togglePackageType();">
+                                                    <option value="1">Business</option>
+                                                    <option value="2">User</option>
+                                                </select>
+                                                <div class="error-class" id="error_ddlPackagesfor"></div>
+                                            </div>
+                                        </div>
+
+                                            <div class="row">
+                                                <div class="form-group col-6">
+                                                    <label for="txtPlanName">Name</label>
+                                                    <input type="text" id="txtPlanName" class="form-control" />
+                                                    <div class="error-class" id="error_txtPlanName"></div>
+                                                </div>
+                                                <div class="form-group col-6">
+                                                    <label for="ddlDurationType">Duration Type</label>
+                                                    <select name="ddlDurationType" id="ddlDurationType" form="carform" default="unslected" class="form-control">
+                                                        <option value="0">Select</option>
+                                                        <option value="per_monthly">Monthly</option>
+                                                        <option value="per_Yearly">Yearly</option>
+                                                    </select>
+                                                    <div class="error-class" id="error_ddlDurationType"></div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="form-group col-4">
+                                                    <label for="txtPrice">Compare At Price</label>
+                                                    <input type="text" id="txtCompareAtPrice" class="form-control" oninput="CalculateDiscount()" />
+                                                    <div class="error-class" id="error_txtCompareAtPrice"></div>
+                                                </div>
+                                                <div class="form-group col-4">
+                                                    <label for="txtPrice">Price</label>
+                                                    <input type="text" id="txtPrice" class="form-control" oninput="CalculateDiscount()" />
+                                                    <div class="error-class" id="error_txtPrice"></div>
+                                                </div>
+                                                <div class="form-group col-4">
+                                                    <label for="txtDiscount">Discount (%)</label>
+                                                    <input type="number" id="txtDiscount" class="form-control" disabled />
+                                                    <div class="error-class" id="error_txtDiscount"></div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="txtDescription">Description</label>
+                                                <div class="html-editor form-control" id="txtDescription" style="height:170px"></div>
+                                                <div class="error-class" id="error_txtDescription"></div>
+                                            </div>
+                                            <div class="form-group d-flex flex-column">
+                                                <label>Package Icon</label>
+                                                <div class="packageIconPreview">
+                                                    <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                                </div>
+                                                <input type="file" id="filePackageImage_ManagePackage" class="border form-control" accept="image/*">
+                                                <div class="error-class" id="error_filePackageImage_ManagePackage"></div>
+                                            </div>
+
+                                            <div class="form-group d-flex flex-column">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="chkIsActive" checked>
+                                                    <label class="form-check-label" for="chkIsActive" style="cursor:pointer;">Is Active</label>
+                                                </div>
+                                            </div>
+                                            <!-- /.form-group -->
+                                            <h1>Package Permissions</h1>
+                                            <div id="BusinessPanelPermissions_ManagePackage">
+
+                                            </div>
+                                            <div id="UserPanelPermissions_ManagePackage">
+
+                                            </div>
+                                    </form>
+                                </div>
+                                <!-- /.col -->
+                            </div>
+                            <!-- /.row -->
+
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitFormClick()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddUpdateView()">Cancel</a>
+                        </div>
+                        <!-- /.card-body -->
+                        <!-- <div class="card-footer">
+                          Visit <a href="https://select2.github.io/">Select2 documentation</a> for more examples and information about
+                          the plugin.
+                        </div> -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <!-- /.content -->
+</div>
+@section Scripts {
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_PackageScriptPartial.cshtml")
+
+    <script>
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAbout = new Quill('#txtDescription', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+
+
+    </script>
+}
+

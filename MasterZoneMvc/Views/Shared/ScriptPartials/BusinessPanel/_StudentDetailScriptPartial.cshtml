@@ -1,0 +1,631 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var StudentLoginId_Global = 0;
+    var _StudentClassesTable;
+    var _StudentPlansTable;
+    var _StudentTrainingsTable;
+    var _StudentEventsTable;
+
+    function initializeDataTable_StudentClasses() {
+        _StudentClassesTable = $("#tblStudentClasses").DataTable();
+    }
+    function initializeDataTable_StudentPlans() {
+        _StudentPlansTable = $("#tblStudentPlans").DataTable();
+    }
+    function initializeDataTable_StudentTrainings() {
+        _StudentTrainingsTable = $("#tblStudentTrainings").DataTable();
+    }
+    function initializeDataTable_StudentEvents() {
+        _StudentEventsTable = $("#tblStudentEvents").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                onPageLoad();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        onPageLoad();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function onPageLoad() {
+        var studentLoginId = $('#hiddenStudentLoginId').val();
+        StudentLoginId_Global = studentLoginId;
+        GetStudentData();
+        initializeDataTable_StudentClasses();
+        initializeDataTable_StudentPlans();
+        initializeDataTable_StudentTrainings();
+        initializeDataTable_StudentEvents();
+    }
+
+    $(document).on('click', '#profile-tab', function () {
+        StartLoading();
+        GetStudentData();
+    });
+    $(document).on('click', '#classes-tab', function () {
+        GetAllStudentClasses();
+    });
+    $(document).on('click', '#plans-tab', function () {
+        GetAllStudentPlans();
+    });
+    $(document).on('click', '#trainings-tab', function () {
+        GetAllStudentTrainings();
+    });
+    $(document).on('click', '#events-tab', function () {
+        GetAllStudentEvents();
+    });
+
+    function GetStudentData() {
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Student/GetUserBasicDataById?userLoginId=" + StudentLoginId_Global,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+
+                if (response.status == 1) {
+                    if (response.data) {
+                        var item = response.data;
+                        var cardBodyHTML = ``;
+                        $('#imgStudentProfile').attr('src', item.BusinessStudentProfileImageWithPath);
+
+                        cardBodyHTML += `
+                            <p><button class="btn btn-sm btn-primary" onclick="MessageStudent();"><i class="fas fa-envelope"></i> Message</button></p>
+                            <p class="text-muted text-small mb-2">Master ID</p>
+                            <p class="mb-3">${item.MasterId}</p>
+
+                            <p class="text-muted text-small mb-2">Name</p>
+                            <p class="mb-3">${item.FirstName} ${item.LastName}</p>
+
+                            <p class="text-muted text-small mb-2">Email</p>
+                            <p class="mb-3">${item.Email}</p>
+
+                            <p class="text-muted text-small mb-2">Phone</p>
+                            <p class="mb-3">${item.PhoneNumber}</p>
+
+                            <p class="text-muted text-small mb-2">Gender</p>
+                            <p class="mb-3">${item.GenderString}</p>
+                        `;
+
+                        $('#studentDetail_Card').html(cardBodyHTML);
+                    }
+
+                }
+                else {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllStudentClasses() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetStudentClassesListForBusiness_ByPagination?studentLoginId="+StudentLoginId_Global;
+    _StudentClassesTable.clear().destroy();
+    _StudentClassesTable = $("#tblStudentClasses").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[3, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+            }
+            , {
+                "data": null, "name": "ClassName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <div class="d-flex flex-column flex-grow-1">
+                            <div class="mb-2"><img src="${row.ClassImageWithPath}" class="img-small" /></div>
+                            <div class="mb-1"><b>Name: </b> ${row.Name}</div>
+                            <div class="mb-1"><b>Class Mode: </b> ${row.ClassMode}</div>
+                            <div class="mb-1"><b>Days: </b> ${row.ClassDays_ShortForm}</div>
+                        </div>
+                    `;
+                }
+            }
+            , {
+                "data": "BatchName", "name": "BatchName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <div class="d-flex flex-column">
+                            <div class="mb-1"><b>Name: </b> ${row.BatchName}</div>
+                            <div class="mb-1"><b>Start Time: </b> ${row.ScheduledStartOnTime_24HF}</div>
+                            <div class="mb-1"><b>End Time: </b> ${row.ScheduledEndOnTime_24HF}</div>
+                        </div>
+                    `;
+                }
+            }
+            , {
+                "data": null, "name": "OrderTotalAmount", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <div class="d-flex flex-column">
+                            <div class="mb-1"><b>OrderId: </b> ${row.OrderId}</div>
+                            <div class="mb-1"><b>Total Amount: </b> ${row.OrderTotalAmount}</div>
+                            <div class="mb-1"><b>Payment Method: </b> ${row.OrderPaymentMethod}</div>
+                        </div>
+                    `;
+                }
+            }
+            , {
+                "data": null, "name": "StartDate", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `<div class="d-flex flex-column">
+                        <div><b>Start Date:</b> ${row.StartDate}</div>
+                        <div><b>End Date:</b> ${row.EndDate}</div>
+                    </div>`;
+                }
+            }
+            , {
+                "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `${row.CreatedOn_FormatDate}`;
+                }
+            }
+
+               ],
+
+        "responsive": true,
+        "autoWidth": false,
+
+        "columnDefs": [{
+            "targets": [0], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblStudentClasses_filter input').unbind();
+    $('#tblStudentClasses_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _StudentClassesTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+
+    function GetAllStudentPlans() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetStudentPlanListForBusiness_ByPagination?studentLoginId="+StudentLoginId_Global;
+        _StudentPlansTable.clear().destroy();
+        _StudentPlansTable = $("#tblStudentPlans").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[5, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+                }
+                , {
+                    "data": null, "name": "PlanName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `
+                            <div class="d-flex flex-column flex-grow-1">
+                                <div class="mb-2"><img src="${row.PlanImageWithPath}" class="img-small" /></div>
+                                <div class="mb-1"><b>Name: </b> ${row.PlanName}</div>
+                                <div class="mb-1"><b>Description: </b> ${row.PlanDescription}</div>
+                            </div>
+                        `;
+                    }
+                }
+                , {
+                    "data": "PlanDurationTypeName", "name": "PlanDurationTypeName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `${row.PlanDurationTypeName}`;
+                    }
+                }
+                , {
+                    "data": null, "name": "StartDate", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _transferStatus = (row.IsTransfered == 1) ? `<span class="badge badge-info">Transfered</span>` : "";
+                        return `<div class="d-flex flex-column">
+                            <div><b>Start Date:</b> ${row.StartDate}</div>
+                            <div><b>End Date:</b> ${row.EndDate}</div>
+                            <div>${_transferStatus}</div>
+                        </div>`;
+                    }
+                }
+                , {
+                    "data": null, "name": "OrderTotalAmount", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `
+                                <div class="d-flex flex-column">
+                                    <div class="mb-1"><b>OrderId: </b> ${row.OrderId}</div>
+                                    <div class="mb-1"><b>Total Amount: </b> ${row.OrderTotalAmount}</div>
+                                    <div class="mb-1"><b>Payment Method: </b> ${row.OrderPaymentMethod}</div>
+                                </div>
+                            `;
+                    }
+                }
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `${row.CreatedOn_FormatDate}`;
+                    }
+                }
+
+                   ],
+
+            "responsive": true,
+            "autoWidth": false,
+
+            "columnDefs": [{
+                "targets": [0], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblStudentPlans_filter input').unbind();
+        $('#tblStudentPlans_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _StudentPlansTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    function GetAllStudentEvents() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetStudentEventListForBusiness_ByPagination?studentLoginId="+StudentLoginId_Global;
+        _StudentEventsTable.clear().destroy();
+        _StudentEventsTable = $("#tblStudentEvents").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+                }
+                , {
+                    "data": null, "name": "EventTitle", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `
+                            <div class="d-flex flex-column flex-grow-1">
+                                <div class="mb-2"><img src="${row.EventFeaturedImageWithPath}" class="img-small" /></div>
+                                <div class="mb-1"><b>Name: </b> <a href="/Home/Event?eventId=${row.EventId}">${row.EventTitle} <i class="fas fa-external-link-alt"></i></a></div>
+                                <div class="mb-1"><b>Description: </b> ${row.EventShortDescription}</div>
+                            </div>
+                        `;
+                    }
+                }
+                , {
+                    "data": null, "name": "StartDate", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `<div class="d-flex flex-column">
+                            <div><b>Start Date:</b> ${row.StartDate}</div>
+                            <div><b>End Date:</b> ${row.EndDate}</div>
+                        </div>`;
+                    }
+                }
+                , {
+                    "data": null, "name": "OrderTotalAmount", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `
+                                <div class="d-flex flex-column">
+                                    <div class="mb-1"><b>OrderId: </b> ${row.OrderId}</div>
+                                    <div class="mb-1"><b>Total Amount: </b> ${row.OrderTotalAmount}</div>
+                                    <div class="mb-1"><b>Payment Method: </b> ${row.OrderPaymentMethod}</div>
+                                </div>
+                            `;
+                    }
+                }
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `${row.CreatedOn_FormatDate}`;
+                    }
+                }
+
+                   ],
+
+            "responsive": true,
+            "autoWidth": false,
+
+            "columnDefs": [{
+                "targets": [0], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblStudentEvents_filter input').unbind();
+        $('#tblStudentEvents_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _StudentEventsTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    function GetAllStudentTrainings() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Business/GetStudentTrainingListForBusiness_ByPagination?studentLoginId="+StudentLoginId_Global;
+        _StudentTrainingsTable.clear().destroy();
+        _StudentTrainingsTable = $("#tblStudentTrainings").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[4, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+            }
+            , {
+                "data": null, "name": "TrainingName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <div class="d-flex flex-column flex-grow-1">
+                            <div class="mb-2"><img src="${row.TrainingImageWithPath}" class="img-small" /></div>
+                            <div class="mb-1"><b>Name: </b> ${row.TrainingName}</div>
+                            <div class="mb-1"><b>Description: </b> ${row.TrainingShortDescription}</div>
+                        </div>
+                    `;
+                }
+            }
+            , {
+                "data": null, "name": "StartDate", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `<div class="d-flex flex-column">
+                        <div><b>Start Date:</b> ${row.StartDate}</div>
+                        <div><b>End Date:</b> ${row.EndDate}</div>
+                    </div>`;
+                }
+            }
+            , {
+                "data": null, "name": "OrderTotalAmount", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                            <div class="d-flex flex-column">
+                                <div class="mb-1"><b>OrderId: </b> ${row.OrderId}</div>
+                                <div class="mb-1"><b>Total Amount: </b> ${row.OrderTotalAmount}</div>
+                                <div class="mb-1"><b>Payment Method: </b> ${row.OrderPaymentMethod}</div>
+                            </div>
+                        `;
+                }
+            }
+            , {
+                "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `${row.CreatedOn_FormatDate}`;
+                }
+            }
+
+               ],
+
+        "responsive": true,
+        "autoWidth": false,
+
+        "columnDefs": [{
+            "targets": [0], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblStudentTrainings_filter input').unbind();
+    $('#tblStudentTrainings_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _StudentTrainingsTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+    }
+
+
+function MessageStudent() {
+    StartLoading();
+    let _url = "/api/Encryption/Encrypt?value=" + StudentLoginId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+                var studentId = encodeURIComponent(response.data);
+                window.location.href = `/Business/MessageChat?toUserLoginId=${studentId}`;
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+</script>

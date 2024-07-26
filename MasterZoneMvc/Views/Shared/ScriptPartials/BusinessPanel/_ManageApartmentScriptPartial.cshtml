@@ -1,0 +1,1032 @@
+﻿
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var ApartmentId_Global = 0;
+    var _apartmentTable;
+    var ApartmentGroupId_Global = 0;
+    var BlockNumberCount_Global = 0;
+    var AreaNumberCount_Global = 0;
+
+    function initializeDataTable_Apartment() {
+        _apartmentTable = $("#tblApartment").DataTable();
+    }
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_Apartment();
+                GetAllApartment();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_Apartment();
+                        GetAllApartment();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+        $('#btnAddApartment').click(function () {
+            $('#sectionAddApartment').show();
+            $('#btnAddApartment').hide();
+            $('#sectionViewApartment').hide();
+            document.getElementById("myText").innerHTML = "Add Apartment";
+            document.getElementById("pageTextchange").innerHTML = "Add Apartment";
+            document.getElementById("pageStageChange").innerHTML = "Add Apartment";
+            $('#btnUpdateCredential').addClass('d-none');
+        });
+
+    });
+
+    function GetAllApartment() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Apartment/GetAllApartmentByPagination";
+        _apartmentTable.clear().destroy();
+        _apartmentTable = $("#tblApartment").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[1, "asc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , { "data": "Name", "name": "Name", "autoWidth": true }
+                //, { "data": "Blocks", "name": "Blocks", "autoWidth": true }
+                //, { "data": "Areas", "name": "Areas", "autoWidth": true }
+                , {
+                    "data": null, "": "Status", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _status = '';
+                        if (row.Status == 1) {
+                            _status = '<button class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStatusApartment(' + row.Id + ');">Active</button>';
+                        }
+                        else {
+                            _status = '<button class="btn btn-danger text-white btn-sm" style="width:80px;" onclick="ConfirmChangeStatusApartment(' + row.Id + ');">Inactive</button>';
+                        }
+                        return _status;
+                    }
+                }
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                        var _delete = '';
+
+                        _edit = `<a href="javascript:EditApartment(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                        _delete = `<a href="javascript:confrimDeleteApartment(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                        var _action = `<div class="edbt">
+                                        ${_edit}
+                                        ${_delete}
+                                    </div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,3], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblApartment_filter input').unbind();
+        $('#tblApartment_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _eventTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+function showEditApartmentPage() {
+    $('#sectionAddApartment').show();
+    $('#sectionViewApartment').hide();
+    document.getElementById("myText").innerHTML = "Edit Apartment";
+    document.getElementById("ChangeUpdateText").innerHTML = "Update";
+    document.getElementById("pageTextchange").innerHTML = "Edit Apartment";
+    document.getElementById("pageStageChange").innerHTML = "Edit Apartment";
+    $('#ChangeUpdateText').show();
+    $('#btnAddApartment').hide();
+    $(".error-class").html('');
+
+    $('#btnUpdateCredential').removeClass('d-none');
+    $('#sectionManageBlock').removeClass('d-none');
+    $('#sectionManageArea').removeClass('d-none');
+};
+
+function EditApartment(id) {
+    var _url = "/api/Apartment/GetById?apartmentId="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            ResetAddView();
+
+            ApartmentId_Global = id;
+
+            $("#txtName").val(response.data.Name);
+
+            ////---Check Apartment-Status
+            if (response.data.Status == 1) {
+                $('#chkIsActive').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive').prop('checked', false);
+            }
+            GetAllApartmentBlocks();
+            GetAllApartmentAreas();
+            showEditApartmentPage();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function ShowingViewApartmentList() {
+
+    $('#sectionViewApartment').show();
+}
+
+function ResetAddView() {
+    // Reset data
+    $("#txtName").val('');
+    $("#formBlockSection").html('');
+    $("#formAreaSection").html('');
+    $('#chkIsActive').prop('checked', true);
+
+    ApartmentId_Global = 0;
+    BlockNumberCount_Global = 0;
+    AreaNumberCount_Global = 0;
+
+    //generateBlockInputGroup();
+    //generateAreaInputGroup();
+
+    // show hide panel
+    $('#sectionViewApartment').show();
+    $('#sectionAddApartment').hide();
+    $('#btnAddApartment').show();
+    document.getElementById("pageTextchange").innerHTML = "View Apartment";
+    document.getElementById("pageStageChange").innerHTML = "View Apartment";
+    document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+    $(".error-class").html('');
+    $('#sectionManageBlock').addClass('d-none');
+    $('#sectionManageArea').addClass('d-none');
+}
+
+function btnAddUpdateApartment() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+    var _Mode = (ApartmentId_Global > 0) ? 2 : 1;
+
+    let _Name = $("#txtName").val();
+    let _Blocks = $("#LimitOfStudentForClass").val();
+
+    let _error_Name = $("#error_txtName");
+
+    if (validate_IsEmptyStringInputFieldValue(_Name)) {
+        is_valid = false;
+        _error_Name.html('@(Resources.BusinessPanel.ApartmentNameRequired)');
+    }
+
+    var BlockNames = [];
+    $(".txtBlockName").each(function (i, v) {
+        var value = $(this).val().trim();
+        if(value != "")
+            BlockNames.push(value);
+    });
+    var strBlockNames = BlockNames.join(',');
+
+    var AreaNames = [];
+    $(".txtAreaName").each(function (i, v) {
+        var value = $(this).val().trim();
+        if(value != "")
+            AreaNames.push(value);
+    });
+
+    var strAreaNames = AreaNames.join(',');
+
+    var _isActiveApartment = 0;
+    if ($('#chkIsActive').is(':checked')) {
+        // checked
+        _isActiveApartment = 1;
+    }
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        data.append("Id", ApartmentId_Global);
+        data.append("Name", _Name);
+        data.append("Blocks", strBlockNames);
+        data.append("Areas", strAreaNames);
+        data.append("Status", _isActiveApartment);
+        data.append("Mode", _Mode);
+
+        $.ajax({
+            url: '/api/Apartment/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+                ResetAddView();
+                StopLoading();
+                GetAllApartment();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+function confrimDeleteApartment(id) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteApartmentTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteApartmentText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteApartment(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteApartment(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Apartment/Delete?apartmentId=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get Apartment List
+                    GetAllApartment();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function ConfirmChangeStatusApartment(id) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmChangeStatusApartmentTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmChangeStatusApartmentText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            ChangeStatusApartment(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function ChangeStatusApartment(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Apartment/ChangeStatus?apartmentId=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get Apartment List
+                    GetAllApartment();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function generateBlockInputGroup(val = "", id = "0") {
+        BlockNumberCount_Global += 1;
+        if ($('#formBlockSection > .form-group').length == 0) {
+            $('#formBlockSection').html('');
+        } 
+        var _inputFormGroup = `
+            <div class="form-group col-12" data-block-id="${id}" data-block-number="${BlockNumberCount_Global}">
+                <div class="d-flex align-items-baseline">
+                    <input type="text" id="txtBlockName_${BlockNumberCount_Global}" class="form-control mx-3 txtBlockName" placeholder="Block Name" value="${val}" />
+                    <button type="button" class="btn btn-sm btn-info btnSaveBlock"><i class="fa fa-check" title="Save"></i></button>
+                    <button type="button" class="btn btn-sm btn-danger ml-2 btnDeleteBlock"><i class="fa fa-trash" title="Delete"></i></button>
+                </div>
+                <div class="error-class" id="error_txtBlockName_${BlockNumberCount_Global}"></div>
+            </div>
+        `;
+        $('#formBlockSection').append(_inputFormGroup);
+    }
+
+
+    function generateAreaInputGroup(val = "", id="0") {
+        AreaNumberCount_Global += 1;
+        if ($('#formAreaSection > .form-group').length == 0) {
+            $('#formAreaSection').html('');
+        } 
+
+        var _inputFormGroup = `
+            <div class="form-group col-12" data-area-id="${id}" data-area-number="${AreaNumberCount_Global}">
+                <div class="d-flex align-items-baseline">
+                    <input type="text" id="txtAreaName_${AreaNumberCount_Global}" class="form-control mx-3 txtAreaName" placeholder="Area/Ground/Room Name" value="${val}" />
+                    <button type="button" class="btn btn-sm btn-info btnSaveArea"><i class="fa fa-check" title="Save"></i></button>
+                    <button type="button" class="btn btn-sm btn-danger btnDeleteArea ml-2"><i class="fa fa-trash"></i></button>
+                </div>
+                <div class="error-class" id="error_txtAreaName_${AreaNumberCount_Global}"></div>
+            </div>
+        `;
+
+         $('#formAreaSection').append(_inputFormGroup);
+    }
+
+    $(document).on('click', '.btnDeleteBlock', function() {
+        $parentElement = $(this).parents('.form-group');
+        var _blockId = $parentElement.data('block-id');
+        console.log(_blockId);
+
+        if (_blockId <= 0) {
+            $parentElement.remove();
+        }
+        else {
+            confrimDeleteBlock(_blockId);
+        }
+        checkNoBlockRecords();
+    });
+
+    $(document).on('click', '.btnSaveBlock', function() {
+        $parentElement = $(this).parents('.form-group');
+        var _blockId = $parentElement.data('block-id');
+        var _blockNumber = $parentElement.data('block-number');
+        var _blockName = $parentElement.find('input[type="text"]').val();
+
+        $('#formBlockSection > .error-class').html('');
+
+        var _isValid = true;
+        if (validate_IsEmptyStringInputFieldValue(_blockName)) {
+            _isValid = false;
+            $('#error_txtBlockName_' + _blockNumber).html('@(Resources.BusinessPanel.ApartmentBlockNameRequired)');
+        }
+
+        if (_isValid) {
+            StartLoading();
+            disableAllActionButtons();
+
+            var _Mode = (_blockId > 0) ? 2 : 1;
+            var _isActive = 1;
+            var data = new FormData();
+            data.append("Id", _blockId);
+            data.append("ApartmentId", ApartmentId_Global);
+            data.append("Name", _blockName);
+            data.append("IsActive", _isActive);
+            data.append("Mode", _Mode);
+
+            $.ajax({
+                url: '/api/Apartment/Block/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                type: 'POST',
+                success: function (dataResponse) {
+                    StopLoading();
+                    enableAllActionButtons();
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        return;
+                    }
+
+                    GetAllApartmentBlocks();
+                },
+                error: function (result) {
+                    StopLoading();
+                    enableAllActionButtons();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.btnDeleteArea', function() {
+        $parentElement = $(this).parents('.form-group');
+        var _areaId = $parentElement.data('area-id');
+
+        if (_areaId <= 0) {
+            $parentElement.remove();
+        }
+        else {
+            confrimDeleteArea(_areaId);
+        }
+        checkNoAreaRecords();
+    });
+
+    $(document).on('click', '.btnSaveArea', function() {
+        $parentElement = $(this).parents('.form-group');
+        var _areaId = $parentElement.data('area-id');
+        var _areaNumber = $parentElement.data('area-number');
+        var _areaName = $parentElement.find('input[type="text"]').val();
+
+        $('#formAreaSection > .error-class').html('');
+
+        var _isValid = true;
+        if (validate_IsEmptyStringInputFieldValue(_areaName)) {
+            _isValid = false;
+            $('#error_txtAreaName_' + _areaNumber).html('@(Resources.BusinessPanel.ApartmentAreaNameRequired)');
+        }
+
+        if (_isValid) {
+            StartLoading();
+            disableAllActionButtons();
+
+            var _Mode = (_areaId > 0) ? 2 : 1;
+            var _isActive = 1;
+            var data = new FormData();
+            data.append("Id", _areaId);
+            data.append("ApartmentId", ApartmentId_Global);
+            data.append("Name", _areaName);
+            data.append("IsActive", _isActive);
+            data.append("Mode", _Mode);
+
+            $.ajax({
+                url: '/api/Apartment/Area/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                type: 'POST',
+                success: function (dataResponse) {
+                    StopLoading();
+                    enableAllActionButtons();
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        return;
+                    }
+
+                    GetAllApartmentAreas();
+                },
+                error: function (result) {
+                    StopLoading();
+                    enableAllActionButtons();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+
+
+
+    function confrimDeleteBlock(id) {
+
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteBlockTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteBlockText)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeleteBlock(id);
+            } else {
+
+            }
+        });
+    }
+
+    function DeleteBlock(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Apartment/Block/Delete?blockId=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Apartment List
+                        //GetAllApartment();
+                        $('.form-group[data-block-id="' + id + '"]').remove();
+                        checkNoBlockRecords();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function confrimDeleteArea(id) {
+
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteAreaTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteAreaText)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeleteArea(id);
+            } else {
+
+            }
+        });
+    }
+
+    function DeleteArea(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Apartment/Area/Delete?areaId=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        $('.form-group[data-area-id="' + id + '"]').remove();
+                        checkNoAreaRecords();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllApartmentBlocks() {
+        var _url = "/api/Apartment/Block/GetAll?apartmentId=" + ApartmentId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('#formBlockSection').html('');
+                BlockNumberCount_Global = 0;
+
+                var BlockList = response.data;
+                for (var bi = 0; bi < BlockList.length; bi++) {
+                    generateBlockInputGroup(BlockList[bi].Name, BlockList[bi].Id);
+                }
+
+                checkNoBlockRecords();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllApartmentAreas() {
+        var _url = "/api/Apartment/Area/GetAll?apartmentId=" + ApartmentId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('#formAreaSection').html('');
+                AreaNumberCount_Global = 0;
+
+                var AreaList = response.data;
+                for (var bi = 0; bi < AreaList.length; bi++) {
+                    generateAreaInputGroup(AreaList[bi].Name, AreaList[bi].Id);
+                }
+
+                checkNoAreaRecords();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function checkNoBlockRecords() {
+        $elems = $('#formBlockSection > .form-group');
+        if($elems.length <= 0)
+            $('#formBlockSection').html(`<div class="col-12 w-100 text-center"><i>No Records</i></div>`);
+    }
+
+    function checkNoAreaRecords() {
+        $elems = $('#formAreaSection > .form-group');
+        if($elems.length <= 0)
+            $('#formAreaSection').html(`<div class="col-12 w-100 text-center"><i>No Records</i></div>`);
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function disableAllActionButtons() {
+        $('button').prop('disabled', true);
+    }
+    function enableAllActionButtons() {
+        $('button').prop('disabled', false);
+    }
+</script>

@@ -1,0 +1,477 @@
+﻿<script>
+    var UserToken_Global = "";
+    var _pauseClassRequestTable;
+    var _pauseClassRequestGlobalId = 0;
+    var ClassBookingIdGlobal = 0;
+    var ClassEndDateGlobal = "";
+    var ClassStartDateGlobal = "";
+    function initializeDataTable() {
+      _pauseClassRequestTable =  $("#ViewPauseClassRequest").DataTable();
+    }
+
+
+$(document).ready(function () {
+    StartLoading();
+    $.get("/Home/GetStudentToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            initializeDataTable();
+            getAllStudentPauseClassViewList();
+            StopLoading();
+        }
+        else {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+            window.location.href = '/home/login';
+            StopLoading();
+        }
+    });
+});
+
+    function getAllStudentPauseClassViewList() {
+    
+
+    var _url_val = "/api/PauseClass/GetAllPauseClassRequestsByPagination";
+    _pauseClassRequestTable.clear().destroy();
+
+        _pauseClassRequestTable = $("#ViewPauseClassRequest").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[7, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                "error": function (result) {
+                    if (result.status == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    } else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                { "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true },
+                {
+                    "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+                    , render: function (data, type, row) {
+                        var _data = `
+                            <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.BusinessOwnerLoginId}">
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        <img src="${row.BusinessLogoWithPath}" class="img-size-sm" />
+                                    </div>
+                                    <div>${row.BusinessName} </div>
+                                </div>
+                            </a>
+                        `;
+                        return _data;
+                    }
+                },
+                { "data": "ClassName", "name": "ClassName", "autoWidth": true },
+                {
+                    "data": null, "name": "PauseStartDate", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                    <span>${row.PauseStartDate} <br><strong>To</strong> <br>${row.PauseEndDate}</span>
+
+                                </div>`;
+                        return _data;
+                    }
+                },
+                { "data": "Reason", "name": "Reason", "autoWidth": true },
+
+                { "data": "BusinessReply", "name": "BusinessReply", "autoWidth": true },
+                {
+                "data": null, "name": "Status", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _status = '';
+                    if (row.Status == 1) {
+                        _status = '<a class="badge badge-warning text-white" style="width:max-content; text-decoration: none;" >Pending</a>';
+                    } else if (row.Status == 2) {
+                        _status = '<a class="badge badge-success text-white" style="width:max-content;  text-decoration: none;" >Approved</a>';
+                    } else if (row.Status == 3) {
+                        _status = '<a class="badge badge-danger text-white" style="width:max-content;  text-decoration: none;" >Rejected</a>';
+                    }
+                    return _status;
+                    }
+
+            },
+
+                {
+                    "data": null,
+                    "name": "Action",
+                    "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                        var _delete = '';
+                        var _action = ''; // Declare _action outside the if block
+
+                        if (row.Status == 1) {
+                            _edit = `<a href="javascript:;"><i class="fas fa-edit m-1" title="Edit" onclick="EditClassPauseRequestDetail(` + row.Id + ` ,` + row.ClassBookingId + `,'` + row.ClassName + `' ,'` + row.StartDate + `','` + row.EndDate + `');" style="color: black;"></i></a>`;
+                            _delete = `<a href="javascript:;" onclick="confirmdeleteclasspausedetail(` + row.Id + `);"><i class="fas fa-trash" title="Delete" style="color: black;"></i></a>`;
+                            _action = `<div class="edbt d-flex">${_edit} ${_delete}</div>`; // Assign value to _action
+                        }
+
+                        return _action; // Return _action outside the if block
+                    }
+                }
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [
+            { "targets": [0, 6], "orderable": false } // column index (start from 0)
+        ]
+    });
+
+    // Enable search box to send request only on pressing enter
+    $('#ViewPauseClassRequest_filter input').unbind();
+    $('#ViewPauseClassRequest_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _pauseClassRequestTable.search(this.value).draw();
+        }
+    });
+}
+
+
+     function confirmdeleteclasspausedetail(id) {
+
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeletedClassPauseTitleMessage)",
+            text: "@(Resources.BusinessPanel.ConfirmDeletedClassPauseTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    Deleteclasspause(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+
+    function Deleteclasspause(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/PauseClass/DeletePauseClassDetailById?id=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+   
+
+    function EditClassPauseRequestDetail(id, classBookingId, name, startDate, endDate) {
+
+        ClassBookingIdGlobal = classBookingId;
+        $('#EditBusinessPauseClassModal').modal('show');
+        $("#BusinessDetails_EditBusinessPauseModal").html('');
+        $("#BusinessDetails_EditBusinessPauseModal").append(name);
+        ClassEndDateGlobal = endDate;
+        ClassStartDateGlobal = startDate;
+
+          var _url = "/api/Business/GetClassPauseRequestDetailById?id=" + id;
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+
+                }
+
+                $("#Business_StartDate").val(response.data.PauseStartDate);
+                $("#Business_EndDate").val(response.data.PauseEndDate);
+                $("#Business_PauseDays").val(response.data.PauseDays);
+                $("#txtDescription").val(response.data.Reason);
+                _pauseClassRequestGlobalId = response.data.Id;
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+   function btnPauseClassFormClick() {
+    //console.log('submission disabled!');
+    //return;
+    let is_valid = true;
+      $(".error-class").html('');
+        var _mode = 5;
+
+        let _startDate = $("#Business_StartDate").val();
+        let _endDate = $("#Business_EndDate").val().trim();
+        let _reason = $("#txtDescription").val().trim();
+        let _pausedays = $("#Business_PauseDays").val();
+
+        let _error_startDate = $("#error_Business_StartDate");
+        let _error_endDate = $("#error_Business_EndDate");
+        let _error_reason = $("#error_txtDescription");
+
+
+
+        if (validate_IsEmptyStringInputFieldValue(_startDate)) {
+        is_valid = false;
+            _error_startDate.html('@(Resources.VisitorPanel.StartDateRequired)');
+    }
+        if (validate_IsEmptyStringInputFieldValue(_endDate)) {
+        is_valid = false;
+            _error_endDate.html('@(Resources.VisitorPanel.EndDateRequired)');
+    }
+        if (validate_IsEmptyStringInputFieldValue(_reason)) {
+        is_valid = false;
+            _error_reason.html('@(Resources.VisitorPanel.ReasonRequired)');
+        }
+
+
+
+    if (is_valid) {
+
+
+        var data = new FormData();
+        data.append("Id", _pauseClassRequestGlobalId);
+        data.append("PauseStartDate", _startDate);
+        data.append("PauseEndDate", _endDate);
+        data.append("PauseDays", _pausedays);
+        data.append("Reason", _reason);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/Class/AddPauseRequest?classBookingId=' + ClassBookingIdGlobal,
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    ResetAddPauseClassView();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    StopLoading();
+
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+
+
+
+
+    function updatePauseDays() {
+        var startDateValue = document.getElementById('Business_StartDate').value;
+        var endDateValue = document.getElementById('Business_EndDate').value;
+
+        // Check if both StartDate and EndDate are selected
+        if (startDateValue && endDateValue) {
+            var startDate = new Date(startDateValue);
+            var endDate = new Date(endDateValue);
+
+            // Check if the dates are valid
+            if (!isNaN(startDate) && !isNaN(endDate)) {
+                // Calculate the difference in days
+                var timeDiff = endDate - startDate;
+                var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                // Update the "Pause Days" field
+                document.getElementById('Business_PauseDays').value = daysDiff;
+            } else {
+                // If either StartDate or EndDate is not valid, display a message or handle it as needed
+                document.getElementById('Business_PauseDays').value = "Invalid date(s)";
+            }
+        } else {
+            // If either StartDate or EndDate is not selected, display nothing
+            document.getElementById('Business_PauseDays').value = "";
+        }
+    }
+
+    // Attach the function to the change event of the start and end date inputs
+    document.getElementById('Business_StartDate').addEventListener('change', updatePauseDays);
+    document.getElementById('Business_EndDate').addEventListener('change', updatePauseDays);
+
+
+
+    function datepicker() {
+        var startDate = new Date(ClassStartDateGlobal);
+        var endDate = new Date(ClassEndDateGlobal);
+
+        var formattedStartDate = formatDate(startDate);
+        var formattedEndDate = formatDate(endDate);
+
+        // Set the min and max attributes for the date input
+        document.getElementById('Business_StartDate').setAttribute('min', formattedStartDate);
+        document.getElementById('Business_StartDate').setAttribute('max', formattedEndDate);
+    }
+    function formatDate(date) {
+        var day = date.getDate().toString().padStart(2, '0');
+        var month = (date.getMonth() + 1).toString().padStart(2, '0');
+        var year = date.getFullYear();
+
+        return `${year}-${month}-${day}`;
+    }
+    function ChooseEndDate() {
+        var StartDate = $("#Business_StartDate").val();
+
+        var start_Date = new Date(StartDate);
+        var endDate = new Date(ClassEndDateGlobal);
+
+        var formattedStartDate = formatDate(start_Date);
+        var formattedEndDate = formatDate(endDate);
+
+        // Set the min and max attributes for the date input
+        document.getElementById('Business_EndDate').setAttribute('min', formattedStartDate);
+        document.getElementById('Business_EndDate').setAttribute('max', formattedEndDate);
+    }
+
+   
+
+
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>
+

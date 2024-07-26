@@ -1,0 +1,923 @@
+﻿<script>
+
+    var UserToken_Global = "";
+    var ExpenseId_Global = 0;
+    var _userRoleName = $("#GetUserRoleName").val();
+
+    function initializeDataTable_Expense() {
+        _expenseTable = $("#ViewForExpense").DataTable();
+    }
+    function initializeDataTable_BusinessExpense() {
+        _expenseBusinessTable = $("#ViewForBusinessExpense").DataTable();
+    }
+
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+
+
+                initializeDataTable_BusinessExpense();
+                GetAllBusinessExpense();
+                initializeDataTable_Expense();
+                GetAllCreatedExpense();
+                getAllStaffLists();
+                ShowTableUserRole();
+                StopLoading();
+                // Call the function to disable future dates on page load
+                ExpenseDate();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_BusinessExpense();
+                        ShowTableUserRole();
+
+                        GetAllBusinessExpense();
+                        getAllStaffLists();
+                        initializeDataTable_Expense();
+                        GetAllCreatedExpense();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+
+        });
+    });
+    function ShowTableUserRole() {
+
+        if (_userRoleName == "BusinessAdmin") {
+            $("#sectionViewBusinessExpense").removeClass('d-none');
+            $("#sectionViewStaffExpense").addClass('d-none');
+        }
+        else {
+            $("#sectionViewBusinessExpense").addClass('d-none');
+            $("#sectionViewStaffExpense").removeClass('d-none');
+        }
+
+    };
+
+     function getAllStaffLists() {
+
+         let _url =  "/api/Staff/GetAll";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var _selectList = '<option value="0">Select Staff</option>';
+                $("#ddlSelectedStaffId").html('');
+                for (var i = 0; i < response.data.length; i++) {
+                    var _StafffName =  response.data[i].FirstName  + response.data[i].LastName;
+                    _selectList += '<option value="' + response.data[i].UserLoginId + '">' + _StafffName + '</option>';
+                }
+                $("#ddlSelectedStaffId").html('').append(_selectList); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    $('#btnAddExpense').click(function () {
+        $('#sectionAddStaffExpenseModule').show();
+        $('#btnAddExpense').hide();
+        document.getElementById("pageTextchange").innerHTML = "Add Expense";
+        document.getElementById("pageStageChange").innerHTML = "Add Expense";
+        $("#sectionViewBusinessExpense").addClass('d-none');
+        $('#sectionViewStaffExpense').addClass('d-none');
+        if (_userRoleName == "BusinessAdmin") {
+            $("#ddlSelectedStaffList").removeClass('d-none');
+        }
+        else {
+            $("#ddlSelectedStaffList").addClass('d-none');
+
+        }
+    });
+
+    function ResetBusinessView() {
+        $('#btnAddExpense').show();
+        $('#text_Remarkbody').val('');
+        $('#ddlSelectedStatus').val('0');
+        $(".error-class").html('');
+        $("#sectionViewBusinessExpense").removeClass('d-none');
+        $("#sectionViewStaffExpense").removeClass('d-none');
+        $("#sectionAddStaffExpenseModule").hide();
+        ExpenseId_Global = 0;
+    }
+
+
+    function ResetAddView() {
+        $('#btnAddExpense').show();
+        $('#sectionAddStaffExpenseModule').hide();
+        $("#sectionViewStaffExpense").show();
+        $('#ExpenseAmount_price').val('');
+        $('#txtDescription').val('');
+        $('#txtExpenseDate').val('');
+        $(".error-class").html('');
+        ExpenseId_Global = 0;
+        $("#sectionViewBusinessExpense").removeClass('d-none');
+        document.getElementById("pageTextchange").innerHTML = "View Expense";
+        document.getElementById("pageStageChange").innerHTML = "View Expense";
+
+    }
+
+    function GetAllCreatedExpense() {
+
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Expense/GetAllByPagination";
+        _expenseTable.clear().destroy();
+        _expenseTable = $("#ViewForExpense").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true   }
+                //, { "data": "StaffName", "name": "StaffName", "autoWidth": true }
+                , { "data": "Amount", "name": "Amount", "autoWidth": true }
+                , { "data": "Description", "name": "Description", "autoWidth": true }
+                , {
+                    "data": "ExpenseDate_DateTimeFormat", "name": "ExpenseDate_DateTimeFormat", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return row.Expense_DateTimeFormat; `<span style="display:none;">${moment(row.Expense_DateTimeFormat).format('yyyy-mm-dd')}</span> ${row.Expense_DateTimeFormat}`;
+                    }
+                }
+                , { "data": "Remarks", "name": "Remarks", "autoWidth": true }
+                , {
+                    "data": null, "": "Status", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Rating-Status
+                        var _status = '';
+                        if (row.Status == 0) {
+                            _status = '<a class=" badge badge-warning  text-white" style="width:max-content;">Pending</a>';
+                        }
+                        else if (row.Status == 1) {
+                            _status = '<a class=" badge badge-success text-white" style="width:max-content;">Accepted</a>';
+                        }
+                        else if(row.Status == 2) {
+                            _status = '<a class=" badge badge-danger text-white" style="width:max-content;">Rejected</a>';
+                        }
+
+                        return _status;
+                    }
+                }
+
+                , {
+                    "data": null, "": "action", "autowidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+
+                        /* var _view = `<a href="javascript:viewgroupdetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;*/
+                        if (row.Status == 0) {
+                            _edit = `<a href="javascript:EditExpense(${row.Id});"><i class="fas fa-edit" title="Edit"></i>Edit</a>`;
+
+                        }
+
+                        var _delete = `<a href="javascript:ConfirmDeletedExpense(${row.Id});"><i class="fas fa-trash" title="Delete"></i>Delete</a>`;
+
+                        var _action = `<div class="edbt">
+
+
+                                    ${_edit}
+                                    ${_delete}
+                                </div>`;
+                        return _action;
+                    }
+                }
+
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,5,6], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#ViewForExpense_filter input').unbind();
+        $('#ViewForExpense_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _expenseTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    function ExpenseDate() {
+        // Get the current date
+        const currentDate = new Date().toISOString().split("T")[0];
+
+        // Get the input element
+        var endDateInput = document.getElementById("txtExpenseDate");
+
+        // Set the max attribute to the current date
+        endDateInput.max = currentDate;
+    }
+
+   
+    function btnSubmitToExpenseModule() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = (ExpenseId_Global > 0) ? 2 : 1;
+
+        let _expenseamountprice = $("#ExpenseAmount_price").val().trim();
+        let _expensedescription = $("#txtDescription").val().trim();
+        let _expenseDate = $("#txtExpenseDate").val().trim();
+
+        let _error_expenseamountprice = $("#error_ExpenseAmount_price");
+        let _error_expensedescription = $("#error_txtDescription");
+        let _error_expenseDate = $("#error_txtExpenseDate");
+
+
+        let _SelectedStaffName = $("#ddlSelectedStaffId").val();
+        let _error_SelectedStaffName = $("#error_ddlSelectedStaffId");
+
+
+
+        if (_userRoleName == "BusinessAdmin") {
+            if (_SelectedStaffName <= 0) {
+                is_valid = false;
+                _error_SelectedStaffName.html('@(Resources.BusinessPanel.SelectedStaffRequired)');
+            }
+        }
+        else {
+            _SelectedStaffName = "";
+
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_expenseamountprice)) {
+                is_valid = false;
+            _error_expenseamountprice.html('@(Resources.BusinessPanel.Expense_AmountRequired)');
+
+            }
+
+        //else {
+        //    _expenseamountprice = '';
+        //}
+
+        if (validate_IsEmptyStringInputFieldValue(_expensedescription)) {
+            is_valid = false;
+            _error_expensedescription.html('@(Resources.BusinessPanel.Expense_DescriptionRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_expenseDate)) {
+            is_valid = false;
+            _error_expenseDate.html('@(Resources.BusinessPanel.Expense_DateRequired)');
+        }
+
+        
+
+
+        if (is_valid) {
+            var data = new FormData();
+            data.append("Id", ExpenseId_Global);
+
+            if (_userRoleName == "BusinessAdmin") {
+                data.append("UserLoginId", _SelectedStaffName);
+
+            }
+             data.append("ExpenseAmount", _expenseamountprice);
+             data.append("ExpenseDescription", _expensedescription);
+             data.append("ExpenseDate", _expenseDate);
+             data.append('Mode', _mode);
+
+
+            $.ajax({
+                url: '/api/Expense/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        ResetAddView();
+                            GetAllBusinessExpense();
+
+                            GetAllCreatedExpense();
+
+                        //ShowTableUserRole();
+
+
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    //StopLoading();
+
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+     function EditExpense(Id) {
+
+         
+         $('#sectionAddStaffExpenseModule').show();
+         $('#sectionViewStaffExpense').hide();
+         document.getElementById("myText").innerHTML = "Edit Expense";
+        document.getElementById("ChangeUpdateText").innerHTML = "Update";
+         document.getElementById("pageTextchange").innerHTML = "Edit Expense";
+         document.getElementById("pageStageChange").innerHTML = "Edit Expense";
+        $('#ChangeUpdateText').show();
+         $('#btnAddExpense').hide();
+        $(".error-class").html('');
+         $('#btnAddExpense').click(function () {
+             document.getElementById("myText").innerHTML = "Add Expense";
+            document.getElementById("ChangeUpdateText").innerHTML = "Save";
+            $(".error-class").html('');
+         });
+
+        var _url = "/api/Expense/ExpenseDetailGetById?id=" + Id;
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                   /* getAllActiveStudentsLists();*/
+                }
+
+                $("#ExpenseAmount_price").val(response.data.Amount);
+                $("#txtDescription").val(response.data.Description);
+                $("#txtExpenseDate").val(response.data.ExpenseDate);
+                ExpenseId_Global = response.data.Id;
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+    function ConfirmDeletedExpense(id) {
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeletedExpenseTitleMessage)",
+            text: "@(Resources.BusinessPanel.ConfirmDeletedExpenseTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeletedExpense(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeletedExpense(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Expense/ExpenseDeleteById/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllCreatedExpense();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+      function GetAllBusinessExpense() {
+
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Expense/GetAllBusinessExpenseByPagination";
+          _expenseBusinessTable.clear().destroy();
+          _expenseBusinessTable = $("#ViewForBusinessExpense").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true   }
+                , { "data": "StaffName", "name": "StaffName", "autoWidth": true }
+                , { "data": "Amount", "name": "Amount", "autoWidth": true }
+                , {
+                    "data": "Description",
+                    "name": "Description",
+                    "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var maxLength = 150; // Maximum length to show initially
+                        var description = data;
+                        var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                        var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                        if (description.length > maxLength) {
+                            var trimmedDescription = description.substr(0, maxLength);
+
+                        }
+                        if (description.length < maxLength) {
+                            return '<span class="description"><span class="full-description">' + description + '.';
+
+                        } else {
+
+                            return '<span class="description"><span class="full-description d-none">' + description + '...' + showLessHtml + '</span ><span class="truncated-description">' + trimmedDescription + '...' + readMoreHtml + '</span></span> ';
+                        }
+                    }
+                }
+                , {
+                    "data": "ExpenseDate_DateTimeFormat", "name": "Expense_DateTimeFormat", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return row.Expense_DateTimeFormat; `<span style="display:none;">${moment(row.Expense_DateTimeFormat).format('yyyy-mm-dd')}</span> ${row.Expense_DateTimeFormat}`;
+                    }
+                }
+                , { "data": "Remarks", "name": "Remarks", "autoWidth": true }
+
+                , {
+                    "data": null, "": "Status", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Rating-Status
+                        var _status = '';
+                        if (row.Status == 0) {
+                            _status = '<a class="badge badge-warning text-white" style="width:max-content;">Pending</a>';
+                        }
+                        else if (row.Status == 1) {
+                            _status = '<a class="badge badge-success text-white" style="width:max-content;">Accepted</a>';
+                        }
+                        else if(row.Status == 2) {
+                            _status = '<a class="badge badge-danger text-white" style="width:max-content;">Rejected</a>';
+                        }
+
+                        return _status;
+                    }
+                }
+
+                , {
+                    "data": null, "": "action", "autowidth": true,
+                    "render": function (data, type, row) {
+                        var _taskaction = '';
+
+                        _taskaction =  '<a class="btn btn-sm btn-info text-white ExpensePointer" style="width:max-content;" onclick="ViewChangeStatus(' + row.Id + ');">Take Action</a>';
+
+
+
+                        var _action = `<div class="edbt">
+
+                                    ${_taskaction}
+
+                                </div>`;
+                        return _action;
+                    }
+                }
+
+
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,6,7], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+
+
+          // for read more show less functionality of description
+          $(document).on('click', '.read-more', function (e) {
+              e.preventDefault();
+              $(this).closest('.description').find('.full-description').removeClass('d-none');
+              $(this).closest('.description').find('.truncated-description').addClass('d-none');
+          });
+          $(document).on('click', '.read-less', function (e) {
+              e.preventDefault();
+              $(this).closest('.description').find('.full-description').addClass('d-none');
+              $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+          });
+        // for enabling search box only send requet on pressing enter
+          $('#ViewForBusinessExpense_filter input').unbind();
+          $('#ViewForBusinessExpense_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _expenseBusinessTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    $('#EditBusinessExpenseModal').on('hide.bs.modal', function () {
+        ResetViewBusinessExpenseDetialModal();
+    });
+
+
+    function ResetViewBusinessExpenseDetialModal() {
+        ExpenseId_Global = 0;
+        $('#BusinessDetails_EditBusinessExpenseModal').html('');
+    }
+
+    function ViewChangeStatus(Id) {
+        
+        ExpenseId_Global = Id;
+        $('#BusinessDetails_EditBusinessExpenseModal').html('');
+        getBusinessExpenseDetail(callbackBusinessExpenseDetailDataModal);
+    }
+
+    function callbackBusinessExpenseDetailDataModal(apiResponse) {
+        ExpenseId_Global = apiResponse.data.Id;
+
+
+
+
+        var _htmlData = ``;
+        _htmlData += `<div class="row"><div class="col-md-8">
+                   <h4>Staff Name</h4> <div> ${apiResponse.data.StaffName}</div>
+                </div><div class="col-md-4"><h4>ExpenseDate</h4>
+                    <div> ${apiResponse.data.Expense_DateTimeFormat}</div>
+                </div></div><div class="row">
+            <div class="col-sm-8">
+
+                         <h4>Expense Amount</h4>
+                        <p>${apiResponse.data.Amount}</p></div>
+      <div class="col-sm-4">
+      <h4>Expense Description</h4>
+   <p>${apiResponse.data.Description}</p>
+
+                    </div></div> `;
+
+
+        //if (apiResponse.data.DiscountStudent.length <= 0) {
+        //    _htmlData += `<div class="w-100 font-italic text-center text-black-50 py-2">No Coupon in this Discount.</div>`;
+        //}
+        _htmlData += `</div>`;
+        $('#BusinessDetails_EditBusinessExpenseModal').html(_htmlData);
+        $('#EditBusinessExpenseModal').modal('show');
+    }
+
+    function getBusinessExpenseDetail(callbackFunction) {
+        let _url = "/api/Expense/BusinessExpenseDetailGetById?id=" + ExpenseId_Global;
+        StartLoading();
+        //showSpinnerInAddMemberModal();
+        //$('#addGroupMemberModal').modal('show');
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+               // $("#ddlSelectedStatus").val(response.data[i].ReviewBody);
+                ExpenseId_Global = response.data.Id;
+
+                callbackFunction(response);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+       function btnSubmitToBusinessExpense() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+
+
+        let _SelectedRemarks = $("#text_Remarkbody").val().trim();
+        let _error_SelectedRemarks = $("#error_text_Remarkbody");
+        let _SelectedChangeStatus = $("#ddlSelectedStatus").val();
+        let _error_SelectedChangeStatus = $("#error_ddlSelectedStatus");
+
+
+
+            if (validate_IsEmptyStringInputFieldValue(_SelectedRemarks)) {
+                is_valid = false;
+                _error_SelectedRemarks.html('@(Resources.BusinessPanel.Expense_RemarkDescriptionRequired)');
+            }
+            if (validate_IsEmptySelectInputFieldValue(_SelectedChangeStatus)) {
+
+                  is_valid = false;
+                _error_SelectedChangeStatus.html('@(Resources.BusinessPanel.Expense_StatusRequired)');
+            }
+
+
+
+           if (is_valid) {
+               var data = new FormData();
+               data.append("Id", ExpenseId_Global);
+               data.append("Remarks", _SelectedRemarks);
+               data.append("Status", _SelectedChangeStatus);
+
+
+
+               $.ajax({
+                   url: '/api/Expense/BusinessUpdateExpense',
+                   headers: {
+                       "Authorization": "Bearer " + UserToken_Global,
+
+                   },
+                   data: data,
+                   processData: false,
+                   mimeType: 'multipart/form-data',
+                   contentType: false,
+                   //contentType: 'application/json',
+                   type: 'POST',
+                   success: function (dataResponse) {
+
+                       //--Parse into Json of response-json-string
+                       dataResponse = JSON.parse(dataResponse);
+
+                       //--If successfully added/updated
+                       if (dataResponse.status === 1) {
+                           swal("Success!", dataResponse.message, "success");
+                           ResetAddView();
+                           GetAllBusinessExpense();
+                       }
+                       else {
+                           swal({
+                               title: 'Error!',
+                               icon: 'error',
+                               text: dataResponse.message
+                           });
+                           StopLoading();
+
+                           return;
+                       }
+
+                       ResetAddView()
+                       StopLoading();
+
+                   },
+                   error: function (result) {
+                       //StopLoading();
+
+
+                       if (result["status"] == 401) {
+                           $.iaoAlert({
+                               msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                               type: "error",
+                               mode: "dark",
+                           });
+                       }
+                       else {
+                           $.iaoAlert({
+                               msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                               type: "error",
+                               mode: "dark",
+                           });
+                       }
+                   }
+               });
+           }
+        }
+
+
+
+
+
+</script>
+
+
+

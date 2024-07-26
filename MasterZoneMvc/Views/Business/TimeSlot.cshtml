@@ -1,0 +1,525 @@
+﻿
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "TimeSlot";
+}
+
+@section Styles{
+    <style>
+        p.day_wise {
+            color: #1C2126;
+            font-size: 20px;
+            font-weight: 500;
+            width: 110px;
+        }
+
+        span.business_wraps-open-close {
+            padding-left: 10px;
+        }
+
+        .switch.round_wraps {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .round_wraps input:checked + .slider {
+            background-color: #0f2c4a;
+        }
+
+        .round_wraps .slider.round {
+            border-radius: 34px;
+            padding: 0px;
+        }
+
+        .round_wraps .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .round_wraps input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        .round_wraps .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .round_wraps .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 21px;
+            left: 1px;
+            bottom: 2px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        span.weekly_name {
+            color: #929292;
+            padding-left: 15px;
+            font-size: 20px;
+            font-weight: 500;
+            position: relative;
+            top: -4px;
+        }
+
+        .business_timings-frm-to {
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            margin-left:70px;
+        }
+        .business_timings2-frm-to {
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            margin-left: 70px;
+        }
+
+        p.from_time {
+            padding: 0px 10px;
+            margin-bottom: 0px;
+        }
+        #attendence-header {
+            border-bottom: 1px solid #d0d0d0;
+            padding: 0 !important;
+        }
+        .attendance-column-heading {
+            color: #1C2126;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .card-body>.row{
+            align-items:flex-end !important;
+        }
+    </style>
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Business Timing</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Business Timing</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @*<div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStaff">Add TimeSlot</a>
+                        </div>*@
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewBusinessTiming">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row p-4" id="attendence-header">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center text-center">
+                                        <p class="day_wise mg-bottom-0 font-weight-bolder">Day</p>
+                                        <p class="day_wise mg-bottom-0 font-weight-bolder">Status</p>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Sunday_BusinessTiming" class="col-md-7 col-lg-7 col-sm-7 d-flex justify-content-around" style="padding:0px;">
+                                    <div class="business_timings-frm-to d-block">
+                                        <p class="attendance-column-heading">Timing 1</p>
+
+                                    </div>
+                                    <div class="business_timings-frm-to d-block">
+                                        <p class="attendance-column-heading">Timing 2</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Sunday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkSunday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(1);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span>
+                                        <span id="lblOpenCloseStatus_Sunday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Sunday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Sunday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Sunday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+
+                                        </div>
+                                    </div>
+                                    <div class="business_timings2-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Sunday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Sunday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="sunday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Monday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkMonday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(2);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span> <span id="lblOpenCloseStatus_Monday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Monday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Monday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Monday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Monday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Monday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="monday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Tuesday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkTuesday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(3);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span> <span id="lblOpenCloseStatus_Tuesday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Tuesday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Tuesday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Tuesday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Tuesday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Tuesday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="tuesday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Wednesday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkWednesday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(4);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span> <span id="lblOpenCloseStatus_Wednesday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Wednesday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Wednesday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Wednesday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Wednesday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Wednesday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="wedensday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Thursday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkThursday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(5);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span> <span id="lblOpenCloseStatus_Thursday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Thursday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Thursday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Thursday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Thursday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Thursday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="thursday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Friday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkFriday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(6);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span> <span id="lblOpenCloseStatus_Friday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Friday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Friday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Friday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Friday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Friday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="friday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Saturday</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkSaturday_BusinessTiming" type="checkbox" class="d-none" onchange="BusinessDayStatus_Change(7);" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span> <span id="lblOpenCloseStatus_Saturday_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+
+                                <div id="dv_TimingSection_Saturday_BusinessTiming" class="col-md-8 col-lg-8 col-sm-8 d-flex" style="padding:0px;">
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime_Saturday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime_Saturday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+
+                                        </div>
+
+                                    </div>
+                                    <div class="business_timings-frm-to">
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Opening</level>
+                                            <input type="time" id="ddlOpeningTime2_Saturday_BusinessTiming" class="form-control OpeningTimeCommonClass">
+
+                                        </div>
+                                        <p class="from_time"><span> to </span></p>
+                                        <div class="select_box timing_etc-wraps">
+                                            <level>Closing</level>
+                                            <input type="time" id="ddlClosingTime2_Saturday_BusinessTiming" class="form-control ClosingTimeCommonClass">
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            <div id="saturday_error_BusinessTiming" class="error-class errClassBusinessTiming"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-4">
+                                <div class="col-md-4 col-lg-4 col-sm-4" style="display:flex;">
+                                    <div class="day_wraps d-flex justify-content-center">
+                                        <p class="day_wise mg-bottom-0">Today Off</p>
+                                        <span class="business_wraps-open-close">
+                                            <label class="switch round_wraps">
+                                                <input id="chkTodayOff_BusinessTiming" type="checkbox" class="d-none"  onchange="BusinessDayStatus_Change(0);">
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span>  <span id="lblOpenCloseStatus_Today_BusinessTiming" class="weekly_name">Open</span>
+                                    </div>
+                                </div>
+                                
+                                <div  class="col-md-4 col-lg-4 col-sm-4 d-flex" style="padding:0px;">
+                                    <div class="input-group">
+                                        <span class="input-group-text fs-3 font-weight-bold">Note</span>
+                                        <textarea class="form-control" aria-label="With textarea" id="Notes_BusinessTiming"></textarea>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="float-right pr-5">
+                                <button type="button" class="btn btn-primary mb-0 pl-5 pr-5 pt-3 pb-3" id="ChangeUpdateText" onclick="Save_BusinessTiming();">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</main>
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_BusinessTimingScriptPartial.cshtml")
+}

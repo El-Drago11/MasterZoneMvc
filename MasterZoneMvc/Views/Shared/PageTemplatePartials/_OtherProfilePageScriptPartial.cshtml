@@ -1,0 +1,632 @@
+﻿
+<style>
+
+    .previewReviewImage {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imageReviewPreview {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+</style>
+<input type="hidden" id="hiddenBusinessOwnerLoginIds" value="@ViewBag.BusinessOwnerLoginId">
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Business Review   section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseReview" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseReview">
+                    <div class="card-body">
+                        <form>
+
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="description"></textarea>
+                                    <div class="error-class" id="error_description"></div>
+                                </div>
+                            </div>
+                            <div class="form-group d-flex flex-column">
+                                <label>  Review Image</label>
+                                <div class="imageReviewPreview">
+
+                                    <img id="previewReviewImage" class="d-none" style="width:100%; height:100%;">
+                                </div>
+                                <input type="file" id="fileProfileImage_ManageSportsReviewImage" class="border form-control" accept="imageReview/*">
+                                <div class="error-class" id="error_fileProfileImage_ManageSportsReviewImage"></div>
+                            </div>
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitSportsReviewClick()">Save</button>
+                        </form>
+
+
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> To Manage the Business Reviews then Go to  Business Review Section.</h5>
+                        <a class="btn btn-primary" href="/Business/ManageReviews">
+                            Business Reviews Section
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Business Other Profile   section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseOtherProfile" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseOtherProfile">
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="summary"> Summary</label>
+                                        <textarea name="description" class="form-control" rows="6" id="txt_summary"></textarea>
+                                        <div class="error-class" id="error_txt_summary"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddlSkills_Managetag">Skills</label>
+
+                                        <input data-role="tagsinput" id="text_tagSkills" type="text">
+                                        <div class="error-class" id="error_text_tagSkills"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddl_ManageFreelance">Select Freelance</label>
+                                        <select name="ddl_ManageFreelance" id="txt_freelance" form="carform" default="unslected" class="form-control">
+                                            <option value="-1">SelectFreelance </option>
+                                            <option value="1">Avaiable</option>
+                                            <option value="2"> Not Avaiable</option>
+
+                                        </select>
+
+                                        <div class="error-class" id="error_txt_freelance"></div>
+
+                                    </div>
+
+                                    @*<div class="form-group">
+                                            <label for="freelance"> Freelance</label>
+                                            <input type="number" id="txt_freelance" class="form-control" />
+                                            <div class="error-class" id="error_txt_freelance"></div>
+                                        </div>*@
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+
+                                    <div class="form-group">
+                                        <label>Select Students</label>
+                                        <select id="ddlLanguage_LanguageList" class="form-control select2-multiple" multiple="multiple" data-width="100%">
+                                            @*<option label="&nbsp;">&nbsp;</option>*@
+                                        </select>
+                                        <div class="error-class" id="error_ddlLanguage_LanguageList"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateUserResume()">Submit</button>
+
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">Our Classes</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseClasses" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseClasses">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="Title">  Title</label>
+                                <input type="text" id="txtTitle_OurClassesSection" class="form-control" />
+
+
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description"> SubTitle</label>
+                                <input type="text" id="txt_description_OurClassesSection" class="form-control" />
+
+
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessContentClassClick()">Save</button>
+                        </form>
+                        <h5> You can manage the business Classes session in the ManageClasses</h5>
+                        <a class="btn btn-primary" href="/Business/ScheduleClass">
+                            Business Classes Session
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4"> Add Experience  Details Section  </h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseDetailsss" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </p>
+                </div>
+                <div class="collapse" id="collapseDetailsss">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-12 ">
+                                    <a href="javascript:;" class="btn btn-primary m-4 " id="btnAddExperienceStaff">Add Experience</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sectionAddStaffExperience" Style="display: none">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card mb-4 ml-4">
+                                    <div class="card-body">
+                                        <h5 class="mb-4" id="myText">Add Experience</h5>
+                                        <form>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="Title">  Title</label>
+                                                        <input type="text" id="txtTitle" class="form-control" />
+                                                        <div class="error-class" id="error_txtTitle"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="CompanyName">CompanyName</label>
+                                                        <input type="text" id="txtCompanyName" class="form-control" />
+                                                        <div class="error-class" id="error_txtCompanyName"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="ButtonText">StartMonth</label>
+                                                        <div class="input-daterange input-group" id="datepickerStartMonth">
+                                                            <select class="input-sm form-control" id="StartMonth" name="start">
+                                                                <option selected value=''>--Select Month--</option>
+                                                                <option value='Janaury'>Janaury</option>
+                                                                <option value='February'>February</option>
+                                                                <option value='March'>March</option>
+                                                                <option value='April'>April</option>
+                                                                <option value='May'>May</option>
+                                                                <option value='June'>June</option>
+                                                                <option value='July'>July</option>
+                                                                <option value='August'>August</option>
+                                                                <option value='September'>September</option>
+                                                                <option value='October'>October</option>
+                                                                <option value='November'>November</option>
+                                                                <option value='December'>December</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="error-class" id="error_txtStartMonth"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="ButtonText">EndMonth</label>
+                                                        <div class="input-daterange input-group" id="datepickerEndMonth">
+                                                            <select class="input-sm form-control" id="EndMonth" name="start">
+                                                                <option selected value=''>--Select Month--</option>
+                                                                <option value='Janaury'>Janaury</option>
+                                                                <option value='February'>February</option>
+                                                                <option value='March'>March</option>
+                                                                <option value='April'>April</option>
+                                                                <option value='May'>May</option>
+                                                                <option value='June'>June</option>
+                                                                <option value='July'>July</option>
+                                                                <option value='August'>August</option>
+                                                                <option value='September'>September</option>
+                                                                <option value='October'>October</option>
+                                                                <option value='November'>November</option>
+                                                                <option value='December'>December</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="error-class" id="error_txtEndMonth"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="ButtonText">Start Year</label>
+                                                        <div class="input-daterange input-group" id="datepickerStartYear">
+                                                            <select type="text" class="input-sm form-control" name="select" id="StartYear"></select>
+                                                        </div>
+                                                        <div class="error-class" id="error_txtStartYear"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="ButtonText">End Year</label>
+                                                    <div class="input-daterange input-group" id="datepickerEndYear">
+                                                        <select type="text" class="input-sm form-control" name="select" id="EndYear"></select>
+                                                    </div>
+                                                    <div class="error-class" id="error_txtEndYear"></div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="date_time"> Start Date</label>
+                                                        <input type="date" class="form-control" id="Business_StartDate" required />
+                                                        <div class="error-class" id="error_Business_StartDate"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="date_time"> End Date</label>
+                                                        <input type="date" class="form-control" id="Business_EndDate" required />
+                                                        <div class="error-class" id="error_Business_EndDate"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+
+                                                        <label for="description"> Description</label>
+                                                        <textarea name="description" class="form-control" rows="6" id="experience_description"></textarea>
+                                                        <div class="error-class" id="error_experience_description"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateExperienceProfile()">Save</button>
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="ResetAddExperienceView()">cancel</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sectionViewExperiences">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <table id="tblExperienceDetailView" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>SNo.</th>
+                                                    <th> Title</th>
+                                                    <th> CompanyName</th>
+                                                    <th>StartMonth/EndMonth</th>
+                                                    <th>StartYear/EndYear</th>
+                                                    <th>Description</th>
+                                                    <th class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4"> Add Education  Details Section  </h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseDetail" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </p>
+                </div>
+                <div class="collapse" id="collapseDetail">
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row">
+
+
+                                <div class="col-12">
+                                    <a href="javascript:;" class="btn btn-primary m-4" id="btnAddEducationDetail">Add Education</a>
+                                </div>
+
+                            </div>
+                            <div class="separator mb-5"></div>
+                        </div>
+                    </div>
+                    <div id="sectionAddStaffEducation" Style="display: none">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="mb-4" id="myText">Add Education</h5>
+
+
+                                        <form>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="SchoolName">  SchoolName</label>
+                                                        <input type="text" id="txtSchoolName" class="form-control" />
+                                                        <div class="error-class" id="error_txtSchoolName"></div>
+
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="Designation">Designation</label>
+                                                        <input type="text" id="txtDesignation" class="form-control" />
+                                                        <div class="error-class" id="error_txtDesignation"></div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="ButtonText">StartMonth</label>
+                                                        <div class="input-daterange input-group" id="datepickerStartMonth">
+                                                            @*<input type="text" class="input-sm form-control" id="StartEducationMonth" name="start" placeholder="StartMonth"> <span class="input-group-addon"></span>*@
+                                                            <select class="input-sm form-control" id="StartEducationMonth" name="start">
+                                                                <option selected value=''>--Select Month--</option>
+                                                                <option value='Janaury'>Janaury</option>
+                                                                <option value='February'>February</option>
+                                                                <option value='March'>March</option>
+                                                                <option value='April'>April</option>
+                                                                <option value='May'>May</option>
+                                                                <option value='June'>June</option>
+                                                                <option value='July'>July</option>
+                                                                <option value='August'>August</option>
+                                                                <option value='September'>September</option>
+                                                                <option value='October'>October</option>
+                                                                <option value='November'>November</option>
+                                                                <option value='December'>December</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="error-class" id="error_txtStartEducationMonth"></div>
+
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="ButtonText">EndMonth</label>
+                                                        <div class="input-daterange input-group" id="datepickerEndMonth">
+                                                            <select class="input-sm form-control" id="EndEducationMonth" name="start">
+                                                                <option selected value=''>--Select Month--</option>
+                                                                <option value='Janaury'>Janaury</option>
+                                                                <option value='February'>February</option>
+                                                                <option value='March'>March</option>
+                                                                <option value='April'>April</option>
+                                                                <option value='May'>May</option>
+                                                                <option value='June'>June</option>
+                                                                <option value='July'>July</option>
+                                                                <option value='August'>August</option>
+                                                                <option value='September'>September</option>
+                                                                <option value='October'>October</option>
+                                                                <option value='November'>November</option>
+                                                                <option value='December'>December</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="error-class" id="error_txtEndEducationMonth"></div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="ButtonText">Start Year</label>
+                                                        <div class="input-daterange input-group" id="datepickerStartYear">
+                                                            <select type="text" class="input-sm form-control" name="select" id="StartEducationYear"></select>
+
+                                                        </div>
+                                                        <div class="error-class" id="error_txtStartEducationYear"></div>
+                                                    </div>
+
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="ButtonText">End Year</label>
+                                                    <div class="input-daterange input-group" id="datepickerEndYear">
+                                                        <select type="text" class="input-sm form-control" name="select" id="EndEducationYear"></select>
+
+                                                    </div>
+                                                    <div class="error-class" id="error_txtEndEducationYear"></div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="date_time"> Start Date</label>
+                                                        <input type="date" class="form-control" id="Education_StartDate" required />
+                                                        <div class="error-class" id="error_Education_StartDate"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="date_time"> End Date</label>
+                                                        <input type="date" class="form-control" id="Education_EndDate" required />
+                                                        <div class="error-class" id="error_Education_EndDate"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="description"> Description</label>
+                                                        <textarea name="description" class="form-control" rows="6" id="education_description"></textarea>
+                                                        <div class="error-class" id="error_education_description"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="Grade">  Grade</label>
+                                                        <input type="text" id="txtGrade" class="form-control" />
+                                                        <div class="error-class" id="error_txtGrade"></div>
+
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateEducationProfile()">Save</button>
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="ResetAddEducationView()">cancel</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sectionViewEducation">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <table id="tblEducationDetailView" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>SNo.</th>
+                                                    <th> SchoolName</th>
+                                                    <th> Designation</th>
+                                                    <th>StartMonth/EndMonth</th>
+                                                    <th>StartYear/EndYear</th>
+                                                    <th>Description</th>
+                                                    <th class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var selectstartElement = document.getElementById('StartEducationYear');
+
+    var currentYear = new Date().getFullYear();
+
+    var startYear = currentYear - 50;
+
+    for (var i = currentYear; i > startYear; i--) {
+
+        var option = document.createElement('option');
+        option.value = i;
+        option.text = i;
+
+
+        selectstartElement.appendChild(option);
+    }
+
+    var selectendElement = document.getElementById('EndEducationYear');
+
+    for (var i = currentYear; i > startYear; i--) {
+
+        var option = document.createElement('option');
+        option.value = i;
+        option.text = i;
+
+
+        selectendElement.appendChild(option);
+    }
+
+    var ExperienceStartElement = document.getElementById('StartYear');
+
+    for (var i = currentYear; i > startYear; i--) {
+
+        var option = document.createElement('option');
+        option.value = i;
+        option.text = i;
+
+
+        ExperienceStartElement.appendChild(option);
+    }
+    var ExperienceEndElement = document.getElementById('EndYear');
+
+    for (var i = currentYear; i > startYear; i--) {
+
+        var option = document.createElement('option');
+        option.value = i;
+        option.text = i;
+
+
+        ExperienceEndElement.appendChild(option);
+    }
+
+
+
+</script>

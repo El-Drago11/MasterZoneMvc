@@ -1,0 +1,139 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var EventBookingId_Global = $('#hidden_eventBookingId').val();
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getEventBookingViewDetailById();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        getEventBookingViewDetailById();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+     function getEventBookingViewDetailById() {
+
+    StartLoading();
+         let _url = "/api/Event/GetBusinessEventBookingDetailById?id=" + EventBookingId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+
+                var _eventBookingDetail = response.data.EventBookingDetail;
+                var _orderDetail = response.data.OrderDetail;
+                var _paymentResponseDetail = response.data.PaymentResponseDetail;
+                //var _eventDetail = response.data.EventDetail;
+                var orderListItems = ``;
+                var EventBookingListItems = ``;
+                var eventBlockHTML = ``;
+                if (_eventBookingDetail.EventTicketQRCodeWithPath == "") {
+                    eventBlockHTML = '';
+                }
+                else {
+                    eventBlockHTML = `
+                   <div class="d-flex align-items-center my-4">
+                       <div class="">
+                           <img src="${_eventBookingDetail.EventTicketQRCodeWithPath}" class="img-size-sm object-fit-cover mr-2" style="height:100px; width:100px;" />
+                       </div>
+                   </div>`;
+                }
+
+                EventBookingListItems += bindFlexListItemHTML("Event Name", _eventBookingDetail.Title);
+                EventBookingListItems += bindFlexListItemHTML("Price", _eventBookingDetail.Price + "/-");
+                EventBookingListItems += bindFlexListItemHTML("Start Date", _eventBookingDetail.Startdate_FormatDates);
+                EventBookingListItems += bindFlexListItemHTML("End Date", _eventBookingDetail.Enddate_FormatDates);
+                EventBookingListItems += bindFlexListItemHTML("StudentName", _eventBookingDetail.StudentName);
+                EventBookingListItems += eventBlockHTML;
+
+                orderListItems += bindFlexListItemHTML("Order #", _orderDetail.Id);
+                orderListItems += bindFlexListItemHTML("Date", _orderDetail.CreatedOn_FormatDate);
+                orderListItems += bindFlexListItemHTML("Discount", _orderDetail.TotalDiscount);
+                orderListItems += bindFlexListItemHTML("GST", _orderDetail.GST);
+                orderListItems += bindFlexListItemHTML("<b>Total Amount</b>", `<b>${_orderDetail.TotalAmount}/-</b>`);
+                orderListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                orderListItems += bindFlexListItemHTML("Payment Method", _orderDetail.PaymentMethod);
+                orderListItems += bindFlexListItemHTML("Payment Approved", (_paymentResponseDetail.Approved) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+                orderListItems += bindFlexListItemHTML("Transaction ID", _paymentResponseDetail.TransactionID);
+
+                $('#sectionEventBookingDetail').html(EventBookingListItems);
+                $('#sectionOrderDetails').html(orderListItems);
+
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+  }
+
+    function bindFlexListItemHTML(key, value) {
+        return `
+     <div class="d-flex d-flex h6 justify-content-between w-100">
+         <div><b>${key}: </b></div>
+         <div>${value}</div>
+     </div>
+     <hr class="mt-0 mb-0" />
+        `;
+    }
+
+
+
+
+</script>
+

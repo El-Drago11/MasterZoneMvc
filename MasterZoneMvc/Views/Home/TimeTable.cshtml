@@ -1,0 +1,547 @@
+﻿
+@{
+    Layout = null;
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.3.3/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/js/bootstrap.min.js"></script>
+
+    <!-- jquery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js" integrity="sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js" integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- fontawesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- font link -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
+    <!-- font link end -->
+    <link rel="stylesheet" href="~/Content/visitor-panel/css/stylesheet.css">
+    <link href="~/Content/assets/MasterProfileAPI.css" rel="stylesheet" />
+    <script src="~/Scripts/js/visitor-panel/main.js"></script>
+    <style>
+        .is-checked {
+            color: #f3a762;
+        }
+
+        a {
+            color: black;
+        }
+
+            a:hover {
+                color: black;
+            }
+
+        .allActiveInstructor {
+            color: #f3a762;
+        }
+
+        .allActiveClasses {
+            color: #f3a762;
+        }
+
+        .mptt-shortcode-row {
+            background-color: lightgray;
+        }
+
+        .days-iner {
+            text-align: center;
+            padding: 8px;
+            width: 12%;
+        }
+        /* ---- button ---- */
+        .timetable-template .timetable-section .button:focus {
+            outline: 0;
+        }
+
+        /* clear fix */
+
+        .timetable-template .timetable-section .ui-group .button-group > button {
+            display: block;
+            padding: 0;
+            background: transparent;
+            color: #000;
+            margin-bottom: 8px;
+            border: 0;
+            font-size: 15px;
+        }
+        /* ui group */
+
+        .timetable-template .timetable-section .ui-group {
+            flex: calc(100%/5);
+        }
+
+            .timetable-template .timetable-section .ui-group h3 {
+                display: inline-block;
+                margin-right: 0.2em;
+                font-size: 15px;
+                font-weight: 600;
+            }
+
+        .timetable-template .timetable-section .filters {
+            flex-wrap: wrap;
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .timetable-template .timetable-section .ui-group .button-group {
+            margin-right: 20px;
+        }
+
+        /* grid-items */
+
+        .timetable-template .timetable-section .grid-items {
+            width: calc(100%/7);
+            float: left;
+            padding: 8px;
+            border-right: 1px solid #e1e1e1;
+            /*border-bottom: 1px solid #e1e1e1;*/
+            position: relative;
+        }
+
+        .timetable-template .timetable-section .grid {
+            border-left: 1px solid #e1e1e1;
+        }
+
+        .timetable-template .timetable-section .days-flex {
+            border: 1px solid #e1e1e1;
+        }
+
+        .timetable-template .timetable-section .grid-items > a {
+            color: #f3a762;
+        }
+
+        .timetable-template .timetable-section button.button.is-checked {
+            color: #f3a762;
+            font-weight: 700;
+        }
+
+        .timetable-template .timetable-section .days-flex {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+        }
+
+        .timetable-template .timetable-section .grid-items > * {
+            margin-bottom: 0;
+            font-size: 15px;
+        }
+
+        .timetable-template .timetable-section .days-flex > div {
+            display: flex;
+            justify-content: center;
+            flex: 1;
+            padding: 8px;
+            background: #eee;
+            justify-content: center;
+            border-right: 1px solid #e1e1e1;
+        }
+
+            .timetable-template .timetable-section .days-flex > div:last-child {
+                border: 0;
+            }
+
+        .timetable-template .timetable-section {
+            padding: 100px 0;
+        }
+
+            .timetable-template .timetable-section .filter-title > * {
+                font-size: 30px;
+                text-transform: capitalize;
+                color: #000;
+                display: inline-block;
+                cursor: pointer;
+                position: relative;
+                margin-bottom: 0;
+            }
+
+            .timetable-template .timetable-section .filter-title > p {
+                position: relative;
+                padding-right: 25px;
+            }
+
+                .timetable-template .timetable-section .filter-title > p:before {
+                    position: absolute;
+                    font-family: "Font Awesome 5 Free";
+                    font-weight: 900;
+                    content: "\2b";
+                    font-size: 20px;
+                    top: 6px;
+                    right: 0;
+                }
+
+                .timetable-template .timetable-section .filter-title > p.open-filter:before {
+                    content: "\f068";
+                }
+
+
+
+            .timetable-template .timetable-section .filter-title {
+                text-align: right;
+                margin-bottom: 50px;
+            }
+
+            .timetable-template .timetable-section .filters.open-filter {
+                display: flex;
+            }
+
+        @@media(max-width:991px) {
+            .timetable-template .timetable-section .days-flex {
+                display: none;
+            }
+
+            .timetable-template .timetable-section .grid-items {
+                border-top: 1px solid #e1e1e1;
+            }
+
+            .timetable-template .timetable-section .grid-items {
+                width: calc(100%/4);
+            }
+
+            .timetable-template .timetable-section .ui-group {
+                flex: calc(100%/3);
+            }
+        }
+
+        @@media(max-width:767px) {
+            .timetable-template .timetable-section {
+                padding: 50px 0;
+            }
+
+                .timetable-template .timetable-section .grid-items {
+                    width: calc(100%/2);
+                }
+
+                .timetable-template .timetable-section .ui-group {
+                    flex: calc(100%/2);
+                    margin-bottom: 20px
+                }
+        }
+
+        @@media(max-width:480px) {
+
+            .timetable-template .timetable-section .grid-items {
+                width: calc(100%/1);
+            }
+        }
+    </style>
+</head>
+<body class="timetable-template">
+    <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+    <!-- header -->
+    <header class="header">
+        <div class="page-center">
+            <div class="header-main">
+                <div class="logo" id="BindBusinessLogoDetail">
+                    @*<a href="index.html">
+                            <img src="~/Content/visitor-panel/image/LOGO.png" alt="logo" loading="lazy">
+                        </a>*@
+                </div>
+                <div class="nav-sec">
+                    <div class="menu">
+                        <ul>
+                            <li><a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Home</a></li>
+                            <li><a href="/Home/MasterInstructors?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Instructor </a></li>
+                            <li><a href="/Home/MemberShip?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Membership</a></li>
+                            <li><a class="active_menu" href="/Home/TimeTable?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Time Table</a></li>
+                            <li><a href="/Home/BusinessRoom?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Room</a></li>
+                            <li><a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#contactsection">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div class="mobile_menu navmain-opener"><span></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="timetable-section">
+        <div class="page-center" @*style="margin-left: 31px;"*@>
+            <div class="filter-title">
+                <p>filter</p>
+            </div>
+            <div class="filters">
+
+                <div class="ui-group">
+                    <h3>Class Type</h3>
+                    <div class="button-group js-radio-button-group" data-filter-group="class_type" id="BindBusinessClassCategoryTypeDetail">
+                    </div>
+                </div>
+                <div class="ui-group">
+                    <h3>Instructor</h3>
+                    <div class="button-group js-radio-button-group" data-filter-group="instructor" id="BindAllInstructorListDetail">
+                      
+                    </div>
+                </div>
+                <div class="ui-group">
+                    <h3>Class Mode</h3>
+                    <div class="button-group js-radio-button-group" data-filter-group="class_type" id="BindBusinessClassModeDetail">
+                        @*<button class="button is-checked CategoryCommonClass" data-filter="" onclick="GetAllTimeTableClassRecord();">All Mode</button>*@
+                        <button class="button CategoryCommonClass" onclick="GetAllTimeTableClassMode('Offline')">Offline</button>
+                        <button class="button CategoryCommonClass" onclick="GetAllTimeTableClassMode('Online')">Online</button>
+                    </div>
+                </div>
+                <div class="ui-group">
+                    <h3>Day of the Week </h3>
+                    <div class="button-group js-radio-button-group" data-filter-group="days">
+                        @*<a class="button is-checked CategoryCommonClass allinstructor" data-filter="" id="AllClassDaysRecord" href="javascript:GetAllTimeTableClassRecord();">All Days</a>*@
+                        <button class="button is-checked CategoryCommonClass" data-filter="" id="AllClassDaysRecord" onclick="GetAllTimeTableClassRecord();">All Days</button>
+                        <button class="button CategoryCommonClass" data-filter=".monday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Monday');">Monday</button>
+                        <button class="button CategoryCommonClass" data-filter=".tuesday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Tuesday');">Tuesday</button>
+                        <button class="button CategoryCommonClass" data-filter=".wednesday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Wednesday');">Wednesday</button>
+                        <button class="button CategoryCommonClass" data-filter=".thursday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Thursday');">Thursday</button>
+                        <button class="button CategoryCommonClass" data-filter=".friday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Friday');">Friday</button>
+                        <button class="button CategoryCommonClass" data-filter=".saturday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Saturday');">Saturday</button>
+                        <button class="button CategoryCommonClass" data-filter=".sunday" id="AllClassDaysRecord" onclick="GetAllTimeTableClassDaysRecord('Sunday');">Sunday</button>
+
+                    </div>
+                </div>
+                @*<div class="ui-group">
+            <h3>Time of the Day</h3>
+            <div class="button-group js-radio-button-group" data-filter-group="timing">
+                <button class="button is-checked" data-filter="">AllDays</button>
+                <button class="button" data-filter=".morning">Morning</button>
+                <button class="button" data-filter=".afternoon">Afternoon</button>
+                <button class="button" data-filter=".evening">Evening</button>
+
+            </div>
+        </div>*@
+
+            </div>
+
+
+            <table class="mptt-shortcode-table  mptt-theme-mode table-bordered" data-hide_empty_row="1" style="width: 100%;">
+                <thead>
+                    <tr class="mptt-shortcode-row">
+                        @*<div class="days-flex"></div>*@
+                        <th class="days-iner" data-index="1">Monday</th>
+                        <th class="days-iner" data-index="2">Tuesday</th>
+                        <th class="days-iner" data-index="3">Wednesday</th>
+                        <th class="days-iner" data-index="4">Thursday</th>
+                        <th class="days-iner" data-index="5">Friday</th>
+                        <th class="days-iner" data-index="6">Saturday</th>
+                        <th class="days-iner" data-index="7">Sunday</th>
+                    </tr>
+                </thead>
+                <tbody id="BindBusinessAllClassDetail">
+                </tbody>
+            </table>
+            @*<div class="days-flex" style="width: 111%">
+                    <div class="days-iner" data-index="1">
+                        Monday
+                    </div>
+                    <div class="days-iner" data-index="2">
+                        Tuesday
+                    </div>
+                    <div class="days-iner" data-index="3">
+                        Wednesday
+                    </div>
+                    <div class="days-iner" data-index="4">
+                        Thursday
+                    </div>
+                    <div class="days-iner" data-index="5">
+                        Friday
+                    </div>
+                    <div class="days-iner" data-index="6">
+                        Saturday
+                    </div>
+                    <div class="days-iner" data-index="7">
+                        Sunday
+                    </div>
+
+                </div>*@
+
+            @*<div id="BindBusinessAllClassDetail">
+
+                </div>*@
+
+        </div>
+    </div>
+
+
+
+
+    <!-- footer -->
+    <footer class="footer">
+        <div class="page-center">
+            <div class="row-sec">
+                <div class="col-lg-one">
+                    <div id="BindBusinessAboutDetail">
+                        @*<div class="footer-logo">
+                                <a href="index.html">
+                                    <img src="image/LOGO.png" alt="logo" loading="lazy">
+                                </a>
+                                <div class="logo-title">
+                                    <h6>NrityamRuchi Academy Of Performing Arts </h6>
+                                </div>
+                            </div>
+                            <p class="small">Vestibulum in ultrices justo. Praesent placerat justo metus, vitae malesuada lacus eleifend vel. Vivamus viverra volutpat leo, a gravida dolor posuere congue.</p>*@
+                    </div>
+                    <div class="footer-social" id="BusinessSocialDetail_Footer">
+                        @*<div class="social-icon">
+                                <a href=""><i class="fa-brands fa-facebook-f"></i>	</a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-twitter"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-instagram"></i></a>
+                            </div>*@
+                    </div>
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">Quick Links</h5>
+                        <ul>
+                            <li>
+                                <a href="#">Home</a>
+                            </li>
+                            <li>
+                                <a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#BindBusinessAboutDetail">About Us</a>
+                            </li>
+
+                            <li>
+                                <a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#eventsection">Event</a>
+                            </li>
+                            <li>
+                                <a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#contactsection">Contact Us</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">
+                            Useful Links
+
+                        </h5>
+                        <ul>
+                            <li>
+                                <a href="#">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="#">Terms and Conditions</a>
+                            </li>
+
+                            <li>
+                                <a href="#">Support</a>
+                            </li>
+                            <li>
+                                <a href="#">Faq</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+                <div class="col-lg-two" id="BindContactDetailInformation">
+                    @*<h5>Contact Us</h5>
+                        <p>
+                            178 West 27th Street, Suite 527, New York NY 10012 United States
+                        </p>
+                        <a href="tel:1234567890">1234567890</a>
+                        <a href="mailto:company@yourname.com">company@yourname.com</a>*@
+                </div>
+
+            </div>
+        </div>
+    </footer>
+    <!-- copyright section -->
+    <div class="copyrights border-top pt-3" style="background-color: #f3a762;">
+        <div class="page-center">
+            <div class="row">
+
+                <div class="col-sm-12 col-md-6">
+                    <strong class="d-flex copyrights-text " style="white-space: nowrap;">
+                        <p class="text-white"> Copyright © 2023</p> <a class="copyright-company-name mr-2 ml-2" href="index.html"> Master Zone.</a>
+                        <p class="text-white">All rights reserved.</p>
+                    </strong>
+
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="float-md-right d-sm-inline-block">
+                        <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                            <p class="text-white text-center" id="footer-text" style="color: #869099;
+    font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // external js: isotope.pkgd.js
+
+        // init Isotope
+        var $grid = $('.timetable-template .timetable-section .grid').isotope({
+            itemSelector: '.timetable-template .timetable-section .grid-items'
+        });
+
+        // store filter for each group
+        var filters = {};
+
+        $('.timetable-template .timetable-section .filters').on('click', '.button', function (event) {
+            var $button = $(event.currentTarget);
+            // get group key
+            var $buttonGroup = $button.parents('.timetable-template .timetable-section .button-group');
+            var filterGroup = $buttonGroup.attr('data-filter-group');
+            // set filter for group
+            filters[filterGroup] = $button.attr('data-filter');
+            // combine filters
+            var filterValue = concatValues(filters);
+            // set filter for Isotope
+            $grid.isotope({ filter: filterValue });
+        });
+
+        // change is-checked class on buttons
+        $('.timetable-template .timetable-section .button-group').each(function (i, buttonGroup) {
+            var $buttonGroup = $(buttonGroup);
+            $buttonGroup.on('click', 'button', function (event) {
+                $buttonGroup.find('.is-checked').removeClass('is-checked');
+                var $button = $(event.currentTarget);
+                $button.addClass('is-checked');
+            });
+        });
+
+        // flatten object by concatting values
+        function concatValues(obj) {
+            var value = '';
+            for (var prop in obj) {
+                value += obj[prop];
+            }
+            return value;
+        }
+
+    </script>
+</body>
+</html>
+<script src="/Scripts/js/loader.js"></script>
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+@Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_TimeTableScriptPartial.cshtml")

@@ -1,0 +1,282 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Attendance";
+
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+@section Styles{
+    <style>
+        .current_attendance_date{
+            font-size: 15px;
+        }
+        .current_date {
+            font-size: 12px;
+            color: black;
+        }
+
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .ImageAttendance {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 30px;
+        }
+        /*not working*/
+        /*.tr_add_attendance th tr td{
+            font-weight:500
+        }*/
+        .time-iner {
+            display: flex;
+            gap: 10px;
+        }
+         .not-set, .Absent, .on-leave,.Present-cta {
+            padding: 6px;
+            min-width: 90px;
+            text-align: center;
+            border-radius: 100px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .Present-cta {
+            background: #576a3f;
+            color: #fff !important;
+        }
+        .on-leave {
+            background: #f3a762;
+            color: #fff !important;
+        }
+        .Absent {
+            background: #ff3a07;
+            color: #fff !important;
+        }
+        .not-set {
+            background: #6a6a6a;
+            color: #fff !important;
+        }
+        .staff-status {
+            color: #fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width: 80px
+        }
+        .btn-group-sm > .btn, .btn-sm {
+            width:100px;
+        }
+         .btn-in-time {
+            background: #20a2b7;
+            border-color: #20a2b7;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #fff !important;
+        }
+        .btn-sm.btn-out-time {
+            background: #ececec;
+            border-color: #ececec;
+            color: #848484;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+         .time-iner > input {
+            width: 100%;
+        }
+        .staff-profile-img{
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+        }
+        .time-iner>.btn-in-time> a:hover {
+            background: #20a2b7 !important;
+            border-color: #20a2b7 !important;
+            cursor: pointer
+        }
+        .btn-primary:hover{
+            color:#fff !important;
+        }
+        .btn-sm.btn-out-time:hover{
+            color : #000 !important;
+        }
+        .btn-primary:not(:disabled):not(.disabled).active, .btn-primary:not(:disabled):not(.disabled):active, .show > .btn-primary.dropdown-toggle {
+            
+            color: #fff !important;
+        }
+        table.dataTable td, table.dataTable th {
+            padding-right:10px !important;
+            text-align:center !important;
+        }
+        
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Attendance</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageStaff">Attendance</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Attendance</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageStaff_StaffAttendance_AddStaffAttendance"))
+                    {
+        <div class="col-4 text-right">
+            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStaffAttendance">Add Attendance</a>
+        </div>
+
+    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+    <div id="SetionViewStaffAttendance">
+        <div class="row mb-4">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <div class="current_date mb-2">Current Date: <span  class="current_attendance_date" id="SatffAttendanceTodayDate"></span></div>
+                            </div>
+                            <div class="col-sm-8" style="display: flex;">
+                                <input type="date" class="form-control w-50" id="SearchDate_Attendance" />
+                                <button class="btn btn-sm btn-primary ml-2 w-25" onclick="SearchAttendanceListByDate();">Search By Date</button>
+                                <button class="btn btn-sm btn-primary ml-2 w-25" onclick="GetAllStaffAttendanceList();">Current Date</button>
+                            </div>
+                        </div>
+
+
+
+                        @*<div class="d-flex justify-content-between align-items-end mb-4">
+                            <div class="mb-2">Current Date: <span id="SatffAttendanceTodayDate"></span></div>
+                            <div style="display: flex; ">
+                              
+                               
+                            </div>
+                        </div>*@
+
+                        <table id="tblStaffAttendance" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>S.No.</th>
+                                    <th style="width:63px;">Staff Profile Id</th>
+                                    <th>Staff Image</th>
+                                    <th>Staff Name</th>
+                                    @*<th style="width:120px">Date</th>*@
+                                    <th>Attendance Status</th>
+                                    <th style="width:195px">Leave Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Table body content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div id="SectionAddStaffAttendance" Style="display: none">
+            <div class="row mb-4 ">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row justify-content-between">
+                                <div>
+                                    <h5 class="mb-4" id="myText ">Add Attendance</h5>
+                                </div>
+                                
+                                <div><a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddStaffAttendanceView()">Back</a></div>
+                            </div>
+                           
+                            <form class=" table-bordered">
+                                @*<table class="table table-bordered ">
+                <thead>
+                    <tr>
+                        <td style="width:5%">S.no.</td>
+                        <td style="width:10%">Staff Id</td>
+                        <td style="width:5%">Staff Name</td>
+                        <td style="width:20%">Attendance Status</td>
+                        <td style="width:40%">Timing</td>
+                        <td style="width:15%">Leave Reason</td>
+                        <td style="width:5%">Status</td>
+                    </tr>
+                </thead>
+                <tbody id="StaffList">
+                </tbody>
+            </table>*@
+                                <table id="StaffList" class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <td style="width:10%">Staff Id</td>
+                                            <td style="width:5%">Staff Name</td>
+                                            <td style="width:20%">Attendance Status</td>
+                                            <td style="width:45%" class="text-center">Timing</td>
+                                            <td style="width:15%">Leave Reason</td>
+                                            <td style="width:5%">Status</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Table body content -->
+                                    </tbody>
+                                </table>
+
+                                @*<tab>
+                <label style="padding:5px;" class="w-10">S.no.</label>
+                <label style="padding:5px;" class="w-10">Staff Id</label>
+                <label class="col-2" style="margin-left:19px;">Staff Name</label>
+                <label class="col-3">Attendance Status</label>
+                <label class="col-3">Timing</label>
+                <label class="col-2">Leave Reason</label>
+            </tab>*@
+                                @*<hr />
+            <div  ></div>*@
+
+                                @*<button type="button" class="btn btn-primary mb-0 " id="ChangeUpdateText" onclick="btnAddStaffAttendance()">Save</button>*@
+
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+
+@section Scripts{
+    @*<script src="/Scripts/js/business-panel/Attendance.js"></script>*@
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageStaffAttendanceScriptPartial.cshtml")
+
+}

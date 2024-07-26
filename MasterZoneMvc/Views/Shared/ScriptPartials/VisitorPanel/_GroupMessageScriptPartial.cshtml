@@ -1,0 +1,119 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var MessageId_Global = 0;
+
+    $(document).ready(function () {
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetGroupList();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                window.location.href = '/home/login';
+                StopLoading();
+            }
+        });
+    });
+
+
+    function GetGroupList() {
+
+
+
+        var _url = "/api/Message/GetAllGroupList?searchname=" + '';
+
+     $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            var htmlData = '';
+
+            for (var i = 0; i < response.data.GroupDetail.length; i++) {
+                var newMessageCount = response.data.GroupDetail[i].NewMessageCount;
+
+                if (newMessageCount == 0) {
+                    var element = "";
+
+                }
+                else {
+                    var element = `
+                     <span class="CountMessage">${newMessageCount}</span>
+                          `;
+                }
+
+                
+
+
+                htmlData += `<div class="message-main">
+                        <a target="_blank" href="/Home/GroupMessageChat?toUserLoginId=${encodeURIComponent(response.data.GroupDetail[i].EncryptedUserLoginId)}">
+                            <div class="card col-md-12 d-inline-block float-left mr-2 my-2 userCard">
+                                <div class="card-body p-0">
+                                    <div class="d-flex flex-row py-2">
+                                        <img alt="Profile Picture" src="${response.data.GroupDetail[i].GroupProfileImageWithPath}"
+                                                class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall">
+                                        <div class="d-flex flex-grow-1 min-width-zero">
+                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row flex-grow-1 justify-content-between min-width-zero">
+                                                <div class="min-width-zero">
+                                                <h6>${response.data.GroupDetail[i].GroupName} ${response.data.GroupDetail[i].batchStartTime} to ${response.data.GroupDetail[i].batchEndTime} </h6>
+                                                    <p class="mb-0 truncate list-item-heading">${response.data.GroupDetail[i].BusinessName}</p>
+                                                </div>${element}
+                                            </div>
+                                        </div>
+                                     
+                                    </div>
+                                </div>
+                            </div>
+                        </a> </div>`;
+            }
+
+            if (response.data.GroupDetail.length <= 0) {
+                htmlData = `<div class="w-100 text-center font-italic">@(Resources.VisitorPanel.Message_NoBusinessOwnersToChat)</div>`;
+            }
+
+            $('#UserViewListForChat').append(htmlData);
+
+        },
+
+        error: function(result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+</script>
+

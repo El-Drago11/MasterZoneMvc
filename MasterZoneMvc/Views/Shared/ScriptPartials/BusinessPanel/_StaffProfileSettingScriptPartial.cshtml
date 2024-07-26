@@ -1,0 +1,2189 @@
+﻿<script>
+    var UserToken_Global = "";
+    var LandMarkSatffLocation = '';
+    var CountryStaffLocation = 'Select';
+    var LocationChooseMap = 0;
+    var StateStaffLocation = 'Select';
+    var CityStaffLocation = 'Select';
+    var _experienceTable = 0;
+    var _educationTable = 0;
+
+    function initializeDataTable_Experience() {
+        _experienceTable = $("#tblExperienceDetailView").DataTable();
+    }
+    function initializeDataTable_Education() {
+        _educationTable = $("#tblEducationDetailView").DataTable();
+    }
+
+
+$(document).ready(function () {
+    $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            EditStaffProfile();
+            GetAllMasterIdDetails();
+            EditBusinessContentUserResume();
+            initializeDataTable_Experience();
+            GetAllExperienceForBusinessPagination();
+            initializeDataTable_Education();
+            GetAllEducationForBusinessPagination();
+            GetAllLanguageDetailList();
+            //initMap();
+        }
+        else {
+            $.get("/Business/GetStaffToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                    EditStaffProfile();
+                    GetAllMasterIdDetails();
+                    EditBusinessContentUserResume();
+                    initializeDataTable_Experience();
+                    GetAllLanguageDetailList();
+                    GetAllExperienceForBusinessPagination();
+                    initializeDataTable_Education();
+                    GetAllEducationForBusinessPagination();
+                    // initMap();
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+});
+
+function ResetProfileform() {
+    // Reset data
+    $("#txtProfileFirstName").val('');
+    $("#txtProfileLastName").val('');
+    $("#txtEmail").val('');
+    $("#fileProfileImage_ManageProfile").val('');
+    $("#ProfileImage").attr('src', '');
+    $("#fileBusinesslogo_ManageProfile").val('');
+    $("#BusinessLogo").attr('src', '');
+    $("input#country").val('');
+    $("input#state").val('');
+    $("input#txt_City").val('');
+    $(".WithoutMapLocation").removeClass('d-none');
+    $(".MapLocation").addClass('d-none');
+    $("#txt_City").html('');
+    $("#txt_City").append('<option value="0">Select</option>');
+    $("#state").html('');
+    $("#state").append('<option value="0">Select</option>');
+    $("#country").html('');
+    $("#country").append('<option value="0">Select</option>');
+    CountryStaffLocation = 'Select';
+    LandMarkSatffLocation = '';
+    LocationChooseMap = 0;
+    $("#text_DocumentTitile_ManageProfile").val('');
+    $("#fileBusinessDocument_ManageProfile").val('');
+    $("#PhoneNumber").val('');
+    $("#Business_Address").val('');
+    $('#Landmark_name').val('');
+    $("#txt_PinCode").val('');
+    $(".error-class").html('');
+}
+
+    function btnAddUpdateProfile() {
+        let is_valid = true;
+        $(".error-class").html('');
+
+        // var _Mode = (StaffId_Global > 0) ? 2 : 1;
+        var _Mode = 1;
+        let _Country = '';
+        let _state = '';
+        let _cityinput = '';
+
+        let _staffFirstName = $("#txtProfileFirstName").val().trim();
+        let _staffLastName = $("#txtProfileLastName").val().trim();
+        let _email = $("#txtEmail").val().trim();
+        let _Landmarkname = $("#Landmark_name").val().trim();
+        let _staffAddress = $("#Business_Address").val();
+        let _locationLatitude = $("#LocationLatitude").val();
+        let _locationLongitude = $("#LocationLongitude").val();
+        let _PinCode = $("#txt_PinCode").val().trim();
+        let _about = $("#text_about").val().trim();
+        let _dob = $("#text_dbo").val().trim();
+
+        var _staffPhoneNumber = $("#PhoneNumber").val();
+        let _facebookProfileLink = $("#Facebook_Profilelink").val().trim();
+        let _instagramProfileLink = $("#Instagram_Profilelink").val().trim();
+        let _twitterProfileLink = $("#LinkedInWebsite_ProfileLink").val().trim();
+        let _linkedInProfileLink = $("#LinkedInWebsite_ProfileLink").val().trim();
+
+
+        if (LocationChooseMap == 1) {
+            _Country = $("input#country").val();
+            _state = $("input#state").val();
+            _cityinput = $("input#txt_City").val();
+        }
+        else {
+            _Country = $("#country").val();
+            _state = $("#state").val();
+            _cityinput = $("#txt_City").val();
+
+        }
+
+        let _error_staffFirstName = $("#error_txtProfileFirstName");
+        let _error_staffLastName = $("#error_txtProfileLastName");
+        let _error_email = $("#error_txtEmail");
+        let _error_Landmarkname = $("#error_Landmark_name");
+        let _error_staffAddress = $("#error_Business_Address");
+        let _error_Country = $("#error_txtCountry");
+        let _error_state = $("#error_state");
+        let _error_cityinput = $("#error_txt_City");
+        let _error_PinCode = $("#error_txt_PinCode");
+        let _error_PhoneNumber = $("#error_PhoneNumber");
+        let _error_dob = $("#error_dob");
+        let _error_about = $("#error_about");
+
+        var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+        var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+
+        if (validate_IsEmptyStringInputFieldValue(_staffFirstName)) {
+            is_valid = false;
+            _error_staffFirstName.html('@(Resources.BusinessPanel.FirstNameRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_staffLastName)) {
+            is_valid = false;
+            _error_staffLastName.html('@(Resources.BusinessPanel.LastNameRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_email)) {
+            is_valid = false;
+            _error_email.html('@(Resources.BusinessPanel.EmailRequired)');
+        }
+        else if (!TestEmail.test(_email)) {
+            is_valid = false;
+            _error_email.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_Landmarkname)) {
+            is_valid = false;
+            _error_Landmarkname.html('@(Resources.BusinessPanel.LandmarkNameRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_staffAddress)) {
+            is_valid = false;
+            _error_staffAddress.html('@(Resources.BusinessPanel.TrainingAddressRequired)');
+        }
+        if (_Country == "" || _Country <= 0) {
+            is_valid = false;
+            _error_Country.html('@(Resources.BusinessPanel.CountryNameRequired)');
+        }
+
+        if (_state == "" || _state <= 0) {
+            is_valid = false;
+            _error_state.html('@(Resources.BusinessPanel.StateNameRequired)');
+        }
+        if (_cityinput == "" || _cityinput <= 0) {
+            is_valid = false;
+            _error_cityinput.html('@(Resources.BusinessPanel.CityNameRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_PinCode)) {
+            is_valid = false;
+            _error_PinCode.html('@(Resources.BusinessPanel.PinCodeRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_staffPhoneNumber)) {
+            is_valid = false;
+            _error_PhoneNumber.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_dob)) {
+            is_valid = false;
+            _error_dob.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_about)) {
+            is_valid = false;
+            _error_about.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+        }
+        else if (!phone_test.test(_staffPhoneNumber)) {
+            is_valid = false;
+            _error_PhoneNumber.html('@(Resources.BusinessPanel.ValidPhoneNumberRequired)');
+        }
+
+
+
+        if (is_valid) {
+            StartLoading();
+
+            var data = new FormData();
+            //data.append("Id", StaffId_Global);
+            data.append("Email", _email);
+            data.append("FirstName", _staffFirstName);
+            data.append("LastName", _staffLastName);
+            data.append("Mode", _Mode);
+            data.append("PhoneNumber", _staffPhoneNumber);
+
+            data.append("LandMark", _Landmarkname);
+            data.append("Address", _staffAddress);
+            data.append("Country", _Country);
+            data.append("State", _state);
+            data.append("PinCode", _PinCode);
+            data.append("City", _cityinput);
+            data.append("LocationLatitude", _locationLatitude);
+            data.append("LocationLongitude", _locationLongitude);
+            data.append("FacebookProfileLink", _facebookProfileLink);
+            data.append("InstagramProfileLink", _instagramProfileLink);
+            data.append("TwitterProfileLink", _twitterProfileLink);
+            data.append("LinkedInProfileLink", _linkedInProfileLink);
+            data.append("DOB", _dob);
+            data.append("About", _about);
+
+            $.ajax({
+                url: '/api/Staff/Profile/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetProfileform();
+                    StopLoading();
+                    EditStaffProfile();
+                    GetCountriesList();
+                    //GetStatesLists();
+                    //GetCitiesList();
+                    initMap();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function btnAddUpdateProfileImage()
+    {
+        var _BusinessProfileImageFile_MS = $("#fileProfileImage_ManageProfile").get(0);
+        var _BusinessProfileImageFiles = _BusinessProfileImageFile_MS.files;
+        var data = new FormData();
+        data.append('ProfileImage', _BusinessProfileImageFiles[0]);
+
+         $.ajax({
+             url: '/api/Staff/Profile/AddUpdateProfileImage',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetProfileform();
+                    StopLoading();
+                    EditStaffProfile();
+                    GetCountriesList();
+                    //GetStatesLists();
+                    //GetCitiesList();
+                    initMap();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+
+    }
+
+
+
+
+    function GetCountriesList() {
+
+        $("#country").html('');
+        $("#country").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#country").append(res_country);
+
+                if (CountryStaffLocation != undefined && CountryStaffLocation != "" && CountryStaffLocation != "Select" && CountryStaffLocation != 0)
+                    $("#country").val(CountryStaffLocation);
+
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeCountry() {
+
+        StartLoading();
+        //var _country_id = $("#ddl_ClassOfflineCountry").val();
+        var _country_id = $('#country').find('option:selected').attr('data-phonecode-val');
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+                var hasListItem = false;
+
+                for (var i = 0; i < dataState.data.length; i++) {
+                    if (StateStaffLocation != undefined && StateStaffLocation != "" && StateStaffLocation.toLowerCase() == dataState.data[i].Name.toLowerCase()) {
+                        hasListItem = true;
+                    }
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+                if (StateStaffLocation != "" && StateStaffLocation != undefined) {
+                    if (hasListItem) {
+                        $("#state").val(StateStaffLocation).trigger('change');
+                    }
+                    else {
+                        $("#state").addClass('d-none');
+                        $("input#state").val(StateStaffLocation);
+                        $("input#state").removeClass('d-none');
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+                $("#state").val(StateStaffLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#state').find('option:selected').attr('data-phonecode-val');;
+
+        $("#txt_City").html('');
+        $("#txt_City").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+                    var hasListItem = false;
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+                        if (CityStaffLocation != undefined && CityStaffLocation != "" && CityStaffLocation.toLowerCase() == dataCity.data[i].Name.toLowerCase()) {
+                            hasListItem = true;
+                        }
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+                    if (CityStaffLocation != undefined && CityStaffLocation != "") {
+                        if (hasListItem) {
+                            $("#txt_City").val(CityStaffLocation).trigger('change');
+                        }
+                        else {
+                            $("#txt_City").addClass('d-none');
+                            $("input#txt_City").val(CityStaffLocation);
+                            $("input#txt_City").removeClass('d-none');
+                        }
+                    }
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+       function GetCitiesList() {
+
+        StartLoading();
+           $("#txt_City").html('');
+           $("#txt_City").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+                    $("#txt_City").val(CityStaffLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+// Image File Preview -------------------------------------------------------------
+document.getElementById('fileProfileImage_ManageProfile').addEventListener('change', handleProfileImageUpload);
+
+function handleProfileImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#ProfileImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#ProfileImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('ProfileImage').src = event.target.result;
+        $('#ProfileImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+  
+
+    function EditStaffProfile() {
+        GetCountriesList();
+        GetStatesLists();
+        GetCitiesList();
+
+        var _url = "/api/Staff/Profile/Get/";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            LandMarkSatffLocation = response.data.LandMark;
+            CountryStaffLocation = response.data.Country;
+            StateStaffLocation = response.data.State;
+            CityStaffLocation = response.data.City;
+
+            $("#txtProfileFirstName").val(response.data.FirstName);
+            $("#txtProfileLastName").val(response.data.LastName);
+            $("#txtEmail").val(response.data.Email);
+            $("#PhoneNumber").val(response.data.PhoneNumber);
+            $("#Business_Address").val(response.data.Address);
+            $("#country").val(CountryStaffLocation);
+            $("#txt_City").val(CityStaffLocation);
+            $("#state").val(StateStaffLocation);
+            $("#txt_PinCode").val(response.data.PinCode);
+            $("#Landmark_name").val(LandMarkSatffLocation);
+            $("#Facebook_Profilelink").val(response.data.FacebookProfileLink);
+            $("#LinkedInWebsite_ProfileLink").val(response.data.LinkedInProfileLink);
+            $("#Instagram_Profilelink").val(response.data.InstagramProfileLink);
+            $("#TwitterWebsite_ProfileLink").val(response.data.TwitterProfileLink);
+            $("#text_about").val(response.data.About);
+            $("#text_dbo").val(response.data.DOB);
+
+            $("#fileProfileImage_ManageProfile").val('');
+            if (response.data.ProfileImageWithPath != "") {
+                $("#ProfileImage").attr('src', response.data.ProfileImageWithPath);
+                $("#ProfileImage").removeClass('d-none');
+            }
+            var profilePageLink = `/Home/ResumeProfile1?businessOwnerLoginId=${response.data.UserLoginId}`;
+            $('#btnVisitorStaffProfilePage').attr('href', profilePageLink);
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("Staff_ManageProfileMap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+    var postal_code = '';
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#Landmark_name").val(LandMarkSatffLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == "street_number" || results[0].address_components[i].types[0] == "premise") {
+                                var street = results[0].address_components[i].long_name;
+                                $("#mapstreetInput").val(street);
+                            }
+                            if (results[0].address_components[i].types[0] == 'sublocality_level_1' || results[0].address_components[i].types[1] == 'sublocality_level_1' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                var neighbourhood = results[0].address_components[i].long_name;
+                                if (pp == 1) {
+                                    $("#mapneighbourhoodInput").val();
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                } else {
+                                    $("#mapneighbourhoodInput").val(neighbourhood);
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                }
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#txt_City").val(city);
+        $("#txt_PinCode").val(postal_code);
+        $("input#state").val(State);
+        $("input#country").val(Country);
+        $("#Landmark_name").val(LandMark);
+        $("#Business_Address").val(FullAddress);
+        LocationChooseMap = 1;
+    });
+
+    function GetAllMasterIdDetails() {
+
+    var _url = "/api/Business/GetAllMasterIdDetail";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $("#businessMasterId").html(response.data.BusinessMasterId);
+            $("#businessUniqueUserId").html(response.data.BusinessUniqueUserId);
+            $("#studentUserMasterId").html(response.data.StudentUserMasterId);
+            $("#studentUniqueUserId").html(response.data.StudentUniqueUserId);
+
+
+            var _tempMasterIds = ``;
+            for (var i = 0; i < response.data.TemporaryMasterIds.length; i++)
+            {
+                var _item = response.data.TemporaryMasterIds[i];
+                _tempMasterIds += `
+                                <div class="d-flex justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <img src="${_item.BusinessLogoWithPath}" class="img-size-sm mr-2" />
+                                        <span class="font-weight-bold">${_item.BusinessName}</span>
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <span class="font-weight-bold">${_item.BusinessMasterId}</span>
+                                        <span>${_item.BusinessUniqueUserId}</span>
+                                    </div>
+                                </div>
+                                <hr />`;
+            }
+            _tempMasterIds += ``;
+
+            if (response.data.TemporaryMasterIds.length <= 0) {
+                _tempMasterIds = `<div class="text-muted">No Temporary IDs</div>`;
+            }
+
+            $('#sectionTemporaryMasterIdDetails').html(_tempMasterIds);
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+      function GetAllExperienceForBusinessPagination() {
+    // ---------------- Pagination Data Table --------------------
+      var _url_val = "/api/Business/GetAllUserExperienceByPagination";
+      _experienceTable.clear().destroy();
+      _experienceTable = $("#tblExperienceDetailView").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[4, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            }
+            , { "data": "Title", "name": "Title", "autoWidth": true }
+            , { "data": "CompanyName", "name": "CompanyName", "autoWidth": true }
+            , {
+                "data": null, "name": "StartMonth", "autoWidth": true
+                , "render": function (data, type, row) {
+
+                    var _data = `<div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        ${row.StartMonth}
+                                    </div>
+                                    <div>${row.EndMonth}</div>
+                                </div>`;
+                    return _data;
+                }
+            }
+
+            , {
+                "data": null, "name": "StartYear", "autoWidth": true, "render": function (data, type, row) {
+                    var _data = `<div class="d-flex flex-column">
+                                    <div class="mb-2">
+                                         ${row.StartYear}
+                                    </div>
+                                    <div class="mb-2">
+                                        ${row.EndYear}
+                                    </div>
+                                </div>`;
+                    return _data;
+                }
+            }
+
+
+
+            , { "data": "Description", "name": "Description", "autoWidth": true }
+
+            , {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    // var _view = '';
+                    var _edit = '';
+                    var _delete = '';
+
+
+                         /* _view = `<a href="javascript:ViewBranchesDetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;*/
+
+                    _edit = `<a href="javascript:EditBusinessUserExperience(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                    _delete = `<a href="javascript:ConfirmDeleteDeleteUserExperience(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                    var _action = `<div class="edbt">
+
+
+                                ${_edit}
+                                ${_delete}
+
+                            </div>`;
+                    return _action;
+                }
+            }
+        ],
+
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [0,6], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+      $('#tblExperienceDetailView_filter input').unbind();
+      $('#tblExperienceDetailView_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _experienceTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+
+
+
+
+ function GetAllLanguageDetailList() {
+    var _url = "/api/BusinessContent/GetBusinessLanguageDetailSuperAdminPanel";
+
+$.ajax({
+    type: "GET",
+    url: _url,
+    headers: {
+        "Authorization": "Bearer " + UserToken_Global,
+        "Content-Type": "application/json"
+    },
+    contentType: 'application/json',
+    success: function (response) {
+        if (response.status < 1) {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+            return;
+        }
+
+        // --------------------- append parent categories in dropdown
+        $("#ddlLanguage_LanguageList").html('');
+        var res_language_event = '<option value="0">Select Language List</option>';
+
+        for (var i = 0; i < response.data.length; i++) {
+            res_language_event += '<option value="' + response.data[i].Language + '">' + response.data[i].Language + '</option>';
+        }
+
+        $("#ddlLanguage_LanguageList").html('').append(res_language_event); //.select2();
+
+        StopLoading();
+
+    },
+    error: function (result) {
+        StopLoading();
+
+
+        if (result["status"] == 401) {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+        }
+        else {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+        }
+    }
+});
+}
+
+
+
+$('#btnAddEducationDetail').click(function () {
+    $('#sectionAddStaffEducation').show();
+    $('#btnAddEducationDetail').hide();
+    $('#sectionViewEducation').hide();
+    document.getElementById("pageTextchange").innerHTML = "Add Education";
+    document.getElementById("pageStageChange").innerHTML = "Add Education";
+});
+
+function ResetAddEducationView() {
+    $("#sectionViewEducation").show();
+    $("#sectionAddStaffEducation").hide();
+    $("#btnAddEducationDetail").show();
+    $("#txtSchoolName").val('');
+    $("#txtDesignation").val('');
+    $("#StartEducationMonth").val('');
+    $("#EndEducationMonth").val('');
+    $("#StartEducationYear").val('');
+    $("#EndEducationYear").val('');
+    $("#Education_StartDate").val('');
+    $("#Education_EndDate").val('');
+    $("#education_description").val('');
+    $("#txtGrade").val('');
+    EducationGlobalId = 0;
+}
+var EducationGlobalId = 0;
+
+ function btnAddUpdateEducationProfile() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+     var _mode = (EducationGlobalId > 0) ? 2 : 1;
+
+
+     let _staffeducationSchoolName = $("#txtSchoolName").val().trim();
+     let _staffeducationdesignation = $("#txtDesignation").val().trim();
+     let _staffeducationStartMonth = $("#StartEducationMonth").val().trim();
+     let _staffeducationEndMonth = $("#EndEducationMonth").val().trim();
+     let _staffeducationStartYear = $("#StartEducationYear").val();
+     let _staffeducationEndYear = $("#EndEducationYear").val();
+     let _staffeducationStartDate = $("#Education_StartDate").val();
+     let _staffeducationEndDate = $("#Education_EndDate").val();
+     let _staffeducationDescription = $("#education_description").val().trim();
+     let _staffeducationGrade = $("#txtGrade").val().trim();
+
+     let _error_staffeducationSchoolName = $("#error_txtSchoolName");
+     let _error_staffeducationdesignation = $("#error_txtDesignation");
+     let _error_staffeducationStartMonth = $("#error_txtStartEducationMonth");
+     let _error_staffeducationEndMonth = $("#error_txtEndEducationMonth");
+     let _error_staffeducationStartYear = $("#error_txtStartEducationYear");
+     let _error_staffeducationEndYear = $("#error_txtEndEducationYear");
+     let _error_staffeducationStartDate = $("#error_Education_StartDate");
+     let _error_staffeducationEndDate = $("#error_Education_EndDate");
+     let _error_staffeducationDescription = $("#error_education_description");
+
+
+
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationSchoolName)) {
+        is_valid = false;
+         _error_staffeducationSchoolName.html('@(Resources.BusinessPanel.SchoolNameRequired)');
+    }
+
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationdesignation)) {
+        is_valid = false;
+         _error_staffeducationdesignation.html('@(Resources.BusinessPanel.DesignationRequired)');
+    }
+
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationStartMonth)) {
+        is_valid = false;
+         _error_staffeducationStartMonth.html('@(Resources.BusinessPanel.StartMonthRequired)');
+    }
+
+
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationEndMonth)) {
+        is_valid = false;
+         _error_staffeducationEndMonth.html('@(Resources.BusinessPanel.EndMonthRequired)');
+    }
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationStartYear)) {
+        is_valid = false;
+         _error_staffeducationStartYear.html('@(Resources.BusinessPanel.StartYearRequired)');
+    }
+
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationEndYear)) {
+        is_valid = false;
+         _error_staffeducationEndYear.html('@(Resources.BusinessPanel.EndYearRequired)');
+     }
+     else if (_staffeducationStartYear > _staffeducationEndYear) {
+         is_valid = false;
+         _error_staffeducationEndYear.html('@(Resources.BusinessPanel.EndYearDoesNotLessThanStartYearRequired)');
+     }
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationStartDate)) {
+        is_valid = false;
+         _error_staffeducationStartDate.html('@(Resources.BusinessPanel.StartDateRequired)');
+    }
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationEndDate)) {
+        is_valid = false;
+          _error_staffeducationEndDate.html('@(Resources.BusinessPanel.EndDateRequired)');
+     }
+     else if (_staffeducationStartDate > _staffeducationEndDate) {
+         is_valid = false;
+         _error_staffeducationEndDate.html('@(Resources.BusinessPanel.EndDateDoesNotLessThanStartDateRequired)');
+     }
+     if (validate_IsEmptyStringInputFieldValue(_staffeducationDescription)) {
+        is_valid = false;
+         _error_staffeducationDescription.html('@(Resources.BusinessPanel.DescriptionRequired)');
+    }
+
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        data.append("Id", EducationGlobalId);
+        data.append("SchoolName", _staffeducationSchoolName);
+        data.append("Designation", _staffeducationdesignation);
+        data.append("StartMonth", _staffeducationStartMonth);
+        data.append("EndMonth", _staffeducationEndMonth);
+        data.append("StartYear", _staffeducationStartYear);
+        data.append("EndYear", _staffeducationEndYear);
+        data.append("StartDate", _staffeducationStartDate);
+        data.append("EndDate", _staffeducationEndDate);
+        data.append("Description", _staffeducationDescription);
+        data.append("Grade", _staffeducationGrade);
+        data.append("Mode", _mode);
+
+
+        $.ajax({
+            url: '/api/Business/AddUpdateBusinessUserEducationDetail',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllEducationForBusinessPagination();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+
+                    return;
+                }
+
+                ResetProfileform();
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+ function GetAllEducationForBusinessPagination() {
+    // ---------------- Pagination Data Table --------------------
+      var _url_val = "/api/Business/GetAllUserEducationByPagination";
+      _educationTable.clear().destroy();
+      _educationTable = $("#tblEducationDetailView").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[4, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            }
+            , { "data": "SchoolName", "name": "SchoolName", "autoWidth": true }
+            , { "data": "Designation", "name": "Designation", "autoWidth": true }
+            , {
+                "data": null, "name": "StartMonth", "autoWidth": true
+                , "render": function (data, type, row) {
+
+                    var _data = `<div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        ${row.StartMonth}
+                                    </div>
+                                    <div>${row.EndMonth}</div>
+                                </div>`;
+                    return _data;
+                }
+            }
+
+            , {
+                "data": null, "name": "StartYear", "autoWidth": true, "render": function (data, type, row) {
+                    var _data = `<div class="d-flex flex-column">
+                                    <div class="mb-2">
+                                         ${row.StartYear}
+                                    </div>
+                                    <div class="mb-2">
+                                        ${row.EndYear}
+                                    </div>
+                                </div>`;
+                    return _data;
+                }
+            }
+
+
+
+            , { "data": "Description", "name": "Description", "autoWidth": true }
+
+            , {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    // var _view = '';
+                    var _edit = '';
+                    var _delete = '';
+
+
+                         /* _view = `<a href="javascript:ViewBranchesDetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;*/
+
+                    _edit = `<a href="javascript:EditBusinessUserEducation(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                    _delete = `<a href="javascript:ConfirmDeleteDeleteUserEducation(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                    var _action = `<div class="edbt">
+
+
+                                ${_edit}
+                                ${_delete}
+
+                            </div>`;
+                    return _action;
+                }
+            }
+        ],
+
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [0,6], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+      $('#tblEducationDetailView_filter input').unbind();
+      $('#tblEducationDetailView_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _educationTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+ function ConfirmDeleteDeleteUserEducation(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteUserEducationTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteUserEducationText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    }).then((willDelete) => {
+        if (willDelete) {
+            DeleteUserEducation(sid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteUserEducation(sid) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/DeleteUserEducationDetailById?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllEducationForBusinessPagination();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+   function EditBusinessUserEducation(id) {
+       $('#sectionAddStaffEducation').show();
+       $('#sectionViewEducation').hide();
+     document.getElementById("ChangeUpdateText").innerHTML = "Update";
+       $('#btnAddEducationDetail').hide();
+     $(".error-class").html('');
+       $('#btnAddEducationDetail').click(function () {
+         document.getElementById("ChangeUpdateText").innerHTML = "Save";
+         $(".error-class").html('');
+
+     });
+    
+     var _url = "/api/Business/GetUserEducationDetailById?id=" +id;
+
+StartLoading();
+
+$.ajax({
+    type: "GET",
+    url: _url,
+    headers: {
+        "Authorization": "Bearer " + UserToken_Global,
+        "Content-Type": "application/json"
+    },
+    contentType: 'application/json',
+    success: function (response) {
+        if (response.status < 1) {
+            $.iaoAlert({
+                msg: response.message,
+                type: "error",
+                mode: "dark",
+            });
+            return;
+        }
+        EducationGlobalId = response.data.Id;
+        $("#txtSchoolName").val(response.data.SchoolName);
+        $("#txtDesignation").val(response.data.Designation);
+        $("#StartEducationMonth").val(response.data.StartMonth);
+        $("#EndEducationMonth").val(response.data.EndMonth);
+        $("#StartEducationYear").val(response.data.StartYear);
+        $("#EndEducationYear").val(response.data.EndYear);
+        $("#Education_StartDate").val(response.data.StartDate);
+        $("#Education_EndDate").val(response.data.EndDate);
+        $("#education_description").val(response.data.Description);//
+        $("#txtGrade").val(response.data.Grade);
+
+
+        StopLoading();
+    },
+    error: function (result) {
+        StopLoading();
+
+        if (result["status"] == 401) {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+        }
+        else {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+        }
+    }
+});
+}
+
+
+$('#btnAddExperienceStaff').click(function () {
+    $('#sectionAddStaffExperience').show();
+    $('#btnAddExperienceStaff').hide();
+    $('#sectionViewExperience').hide();
+    document.getElementById("pageTextchange").innerHTML = "Add Experience";
+    document.getElementById("pageStageChange").innerHTML = "Add Experience";
+});
+
+
+
+$(document).ready(function () {
+    $('#datepickerStartYear input').datepicker({
+        format: "yyyy",
+        viewMode: "years",
+        minViewMode: "years",
+        startView: "years",
+        startDate: "1950",
+        endDate: "+10y"
+    });
+});
+$(document).ready(function () {
+    $('#datepickerEndYear input').datepicker({
+        format: "yyyy",
+        viewMode: "years",
+        minViewMode: "years",
+        startView: "years",
+        startDate: "1950",
+        endDate: "+10y"
+    });
+});
+$(document).ready(function () {
+    $('#datepickerStartMonth input').datepicker({
+        format: "MM",
+        viewMode: "months",
+        minViewMode: "months",
+    });
+});
+$(document).ready(function () {
+    $('#datepickerEndMonth input').datepicker({
+        format: "MM",
+        viewMode: "months",
+        minViewMode: "months",
+    });
+});
+
+function ResetAddExperienceView() {
+    $("#sectionViewExperience").show();
+    $("#sectionAddStaffExperience").hide();
+    $("#btnAddExperienceStaff").show();
+    $("#txtTitle").val('');
+    $("#txtCompanyName").val('');
+    $("#StartMonth").val('');
+    $("#EndMonth").val('');
+    $("#StartYear").val('');
+    $("#EndYear").val('');
+    $("#Business_StartDate").val('');
+    $("#Business_EndDate").val('');
+    $("#experience_description").val('');
+    ExperienceGlobalId = 0;
+}
+
+function ConfirmDeleteDeleteUserExperience(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteUserExperienceTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteUserExperienceText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    }).then((willDelete) => {
+        if (willDelete) {
+            DeleteUserExperience(sid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteUserExperience(sid) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/DeleteUserExperienceDetailById?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllExperienceForBusinessPagination();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+ function EditBusinessUserExperience(id) {
+     $('#sectionAddStaffExperience').show();
+     $('#sectionViewExperience').hide();
+     document.getElementById("ChangeUpdateText").innerHTML = "Update";
+     $('#btnAddExperienceStaff').hide();
+     $(".error-class").html('');
+     $('#btnAddExperienceStaff').click(function () {
+         document.getElementById("ChangeUpdateText").innerHTML = "Save";
+         $(".error-class").html('');
+
+     });
+    
+     var _url = "/api/Business/GetUserExperienceDetailById?id=" +id;
+
+StartLoading();
+
+$.ajax({
+    type: "GET",
+    url: _url,
+    headers: {
+        "Authorization": "Bearer " + UserToken_Global,
+        "Content-Type": "application/json"
+    },
+    contentType: 'application/json',
+    success: function (response) {
+        if (response.status < 1) {
+            $.iaoAlert({
+                msg: response.message,
+                type: "error",
+                mode: "dark",
+            });
+            return;
+        }
+        ExperienceGlobalId = response.data.Id;
+        $("#txtTitle").val(response.data.Title);
+        $("#txtCompanyName").val(response.data.CompanyName);
+        $("#StartMonth").val(response.data.StartMonth);
+        $("#EndMonth").val(response.data.EndMonth);
+        $("#StartYear").val(response.data.StartYear);
+        $("#EndYear").val(response.data.EndYear);
+        $("#Business_StartDate").val(response.data.StartDate);
+        $("#Business_EndDate").val(response.data.EndDate);
+        $("#experience_description").val(response.data.Description);//
+
+
+
+        StopLoading();
+    },
+    error: function (result) {
+        StopLoading();
+
+        if (result["status"] == 401) {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+        }
+        else {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+        }
+    }
+});
+}
+
+
+var ExperienceGlobalId = 0;
+
+ function btnAddUpdateExperienceProfile() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+     var _mode = (ExperienceGlobalId > 0) ? 2 : 1;
+
+
+     let _staffexperiencetitle = $("#txtTitle").val().trim();
+     let _staffexperienceCompanyName = $("#txtCompanyName").val().trim();
+     let _staffexperienceStartMonth = $("#StartMonth").val().trim();
+     let _staffexperienceEndMonth = $("#EndMonth").val().trim();
+     let _staffexperienceStartYear = $("#StartYear").val();
+     let _staffexperienceEndYear = $("#EndYear").val();
+     let _staffexperienceStartDate = $("#Business_StartDate").val();
+     let _staffexperienceEndDate = $("#Business_EndDate").val();
+     let _staffexperienceDescription = $("#experience_description").val().trim();
+
+
+     let _error_staffexperiencetitle = $("#error_txtTitle");
+     let _error_staffexperienceCompanyName = $("#error_txtCompanyName");
+     let _error_staffexperienceStartMonth = $("#error_txtStartMonth");
+     let _error_staffexperienceEndMonth = $("#error_txtEndMonth");
+     let _error_staffexperienceStartYear = $("#error_txtStartYear");
+     let _error_staffexperienceEndYear = $("#error_txtEndYear");
+     let _error_staffexperienceStartDate = $("#error_Business_StartDate");
+     let _error_staffexperienceEndDate = $("#error_Business_EndDate");
+     let _error_staffexperienceDescription = $("#error_experience_description");
+
+
+     if (validate_IsEmptyStringInputFieldValue(_staffexperiencetitle)) {
+        is_valid = false;
+         _error_staffexperiencetitle.html('@(Resources.BusinessPanel.TitleRequired)');
+    }
+
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceCompanyName)) {
+        is_valid = false;
+         _error_staffexperienceCompanyName.html('@(Resources.BusinessPanel.CompanyNameRequired)');
+    }
+
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceStartMonth)) {
+        is_valid = false;
+         _error_staffexperienceStartMonth.html('@(Resources.BusinessPanel.StartMonthRequired)');
+    }
+
+
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceEndMonth)) {
+        is_valid = false;
+         _error_staffexperienceEndMonth.html('@(Resources.BusinessPanel.EndMonthRequired)');
+    }
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceStartYear)) {
+        is_valid = false;
+         _error_staffexperienceStartYear.html('@(Resources.BusinessPanel.StartYearRequired)');
+    }
+
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceEndYear)) {
+        is_valid = false;
+         _error_staffexperienceEndYear.html('@(Resources.BusinessPanel.EndYearRequired)');
+     }
+     else if (_staffexperienceStartYear > _staffexperienceEndYear) {
+         is_valid = false;
+         _error_staffexperienceEndYear.html('@(Resources.BusinessPanel.EndYearDoesNotLessThanStartYearRequired)');
+     }
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceStartDate)) {
+        is_valid = false;
+         _error_staffexperienceStartDate.html('@(Resources.BusinessPanel.StartDateRequired)');
+    }
+      if (validate_IsEmptyStringInputFieldValue(_staffexperienceEndDate)) {
+        is_valid = false;
+          _error_staffexperienceEndDate.html('@(Resources.BusinessPanel.EndDateRequired)');
+     }
+      else if (_staffexperienceStartDate > _staffexperienceEndDate) {
+         is_valid = false;
+          _error_staffexperienceEndDate.html('@(Resources.BusinessPanel.EndDateDoesNotLessThanStartDateRequired)');
+     }
+     if (validate_IsEmptyStringInputFieldValue(_staffexperienceDescription)) {
+        is_valid = false;
+         _error_staffexperienceDescription.html('@(Resources.BusinessPanel.DescriptionRequired)');
+    }
+
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        data.append("Id", ExperienceGlobalId);
+        data.append("Title", _staffexperiencetitle);
+        data.append("CompanyName", _staffexperienceCompanyName);
+        data.append("StartMonth", _staffexperienceStartMonth);
+        data.append("EndMonth", _staffexperienceEndMonth);
+        data.append("StartYear", _staffexperienceStartYear);
+        data.append("EndYear", _staffexperienceEndYear);
+        data.append("StartDate", _staffexperienceStartDate);
+        data.append("EndDate", _staffexperienceEndDate);
+        data.append("Description", _staffexperienceDescription);
+        data.append("Mode", _mode);
+
+
+        $.ajax({
+            url: '/api/Business/AddUpdateBusinessUserExperienceDetail',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllExperienceForBusinessPagination();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+
+                    return;
+                }
+
+                ResetProfileform();
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+
+      // To Add UserContentResume
+     var UserContentResumeId_Global = 0;
+    function btnAddUpdateUserResume() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+       var _mode =  1;
+
+        let _managesummary = $("#txt_summary").val().trim();
+        let _manageskills = $("#text_tagSkills").val().trim();
+        let _managefreelance = $("#txt_freelance").val();
+      //  let _managelanguage = $("#text_tagLanguages").val().trim();
+
+
+        let _error_managesummary = $("#error_txt_summary");
+        let _error_manageskills = $("#error_text_tagSkills");
+        let _error_managefreelance = $("#error_txt_freelance");
+
+
+       // let _error_managelanguage = $("#error_text_tagLanguages");
+
+
+        let _LanguageId = $("#ddlLanguage_LanguageList").val();
+
+
+        let _error_LanguageId = $("#error_ddlLanguage_LanguageList");
+
+
+        if (validate_IsEmptyStringInputFieldValue(_managesummary)) {
+            is_valid = false;
+            _error_managesummary.html('@(Resources.BusinessPanel.SummaryRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_manageskills)) {
+            is_valid = false;
+            _error_manageskills.html('@(Resources.BusinessPanel.SkillsRequired)');
+        }
+
+
+        @*if (validate_IsEmptySelectInputFieldValue()) {
+            is_valid = false;
+            _error_managefreelance.html('@(Resources.BusinessPanel.FreelanceRequired)');
+        }*@
+
+        if (_managefreelance <= 0) {
+                is_valid = false;
+            _error_managefreelance.html('@(Resources.BusinessPanel.FreelanceRequired)');
+        }
+
+        @*if (validate_IsEmptyStringInputFieldValue(_managelanguage)) {
+            is_valid = false;
+            _error_managelanguage.html('@(Resources.BusinessPanel.LanguageRequired)');
+        }*@
+        if (validate_IsEmptySelectInputFieldValue(_LanguageId) || parseInt(_LanguageId) < 0) {
+            is_valid = false;
+            _error_LanguageId.html('@(Resources.BusinessPanel.LanguageRequired)');
+            return;
+              }
+
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", UserContentResumeId_Global);
+            data.append("Summary", _managesummary);
+            data.append("Skills", _manageskills);
+            data.append("Freelance", _managefreelance);
+            data.append("Languages", _LanguageId);
+            data.append('Mode', _mode);
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentUserResumeDetail',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        EditBusinessContentUserResume();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentUserResume() {
+
+        
+        var _url = "/api/Business/GetBusinessUserResumeContentDetail";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            UserContentResumeId_Global = response.data.Id;
+            $("#txt_summary").val(response.data.Summary);
+            $("#text_tagSkills").tagsinput('add', response.data.Skills); // Assuming you want to add tags for Skills
+            $("#txt_freelance").val(response.data.Freelance);
+            $("#ddlLanguage_LanguageList").val(response.data.Languages); // Assuming you want to add tags for Languages
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+</script>
+

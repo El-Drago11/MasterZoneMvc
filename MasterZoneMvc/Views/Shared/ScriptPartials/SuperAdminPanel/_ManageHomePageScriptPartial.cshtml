@@ -1,0 +1,899 @@
+﻿<script>
+    var UserToken_Global = "";
+    var FeaturedCardImageId_Global = 0;
+    var FeaturedCardVideoId_Global = 0;
+
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+                GetFeaturedCardDetailByType('SingleImage');
+                GetFeaturedCardDetailByType('SingleVideo');
+                getAllActiveParentClassCategoryLists();
+                GetAllHomePageFeaturedVideos();
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+
+                        UserToken_Global = dataAdminToken;
+                        GetFeaturedCardDetailByType('SingleImage');
+                        GetFeaturedCardDetailByType('SingleVideo');
+                        getAllActiveParentClassCategoryLists();
+                        GetAllHomePageFeaturedVideos();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function AddUpdate_ManageCardImage() {
+
+        let is_valid = true;
+        $("#sectionManageImageCard .error-class").html('');
+
+        var _id_substring = "_ManageCardImage";
+        let _title = $("#txtTitle" + _id_substring).val().trim();
+        let _description = $("#txtDescription" + _id_substring).val().trim();
+        let _buttonText = $("#txtButtonText" + _id_substring).val().trim();
+        let _buttonLink = $("#txtButtonLink" + _id_substring).val().trim();
+
+        let _error_title = $("#error_txtTitle" + _id_substring);
+        let _error_description = $("#error_txtDescription" + _id_substring);
+        let _error_buttonText = $("#error_txtButtonText" + _id_substring);
+        let _error_buttonLink = $("#error_txtButtonLink" + _id_substring);
+        let _error_thumbnail = $("#error_fileThumbnail" + _id_substring);
+
+
+        var _cardThumbnailImageFile_MS = $("#fileThumbnail" + _id_substring).get(0);
+        var _CardThumbnailImageFiles = _cardThumbnailImageFile_MS.files;
+
+        if (FeaturedCardImageId_Global <= 0 && _CardThumbnailImageFiles.length <= 0) {
+            is_valid = false;
+            _error_thumbnail.html('@(Resources.SuperAdminPanel.BusinessCourseCategoryImageRequired)');
+        }
+
+
+        if (validate_IsEmptyStringInputFieldValue(_title)) {
+            is_valid = false;
+            _error_title.html('@(Resources.SuperAdminPanel.TitleRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_description)) {
+            is_valid = false;
+            _error_description.html('@(Resources.SuperAdminPanel.DescriptionRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_buttonText)) {
+            is_valid = false;
+            _error_buttonText.html('@(Resources.SuperAdminPanel.ButtonTextRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_buttonLink)) {
+            is_valid = false;
+            _error_buttonLink.html('@(Resources.SuperAdminPanel.ButtonLinkRequired)');
+        }
+         else if (!isValidHttpLink(_buttonLink)) {
+            is_valid = false;
+            _error_buttonLink.html('@(Resources.SuperAdminPanel.ValidLinkRequired)');
+        }
+
+
+        if (is_valid) {
+
+            var _status = 0;
+            if ($('#chkIsActive' + _id_substring).is(':checked')) {
+                _status = 1;
+            }
+
+            var data = new FormData();
+
+            data.append("Id", FeaturedCardImageId_Global);
+            data.append("Type", 'SingleImage');
+            data.append("Title", _title);
+            data.append("Description", _description);
+            data.append("ButtonText", _buttonText);
+            data.append("ButtonLink", _buttonLink);
+            data.append("Status", _status);
+            data.append("Thumbnail", _CardThumbnailImageFiles[0]);
+
+            $.ajax({
+                url: '/api/ManageHomePage/FeaturedCard/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetFeaturedCardDetailByType('SingleImage');
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+
+function AddUpdate_ManageCardVideo() {
+
+    let is_valid = true;
+    $("#sectionManageVideoCard .error-class").html('');
+
+    var _id_substring = "_ManageCardVideo";
+    let _title = $("#txtTitle" + _id_substring).val().trim();
+    let _description = $("#txtDescription" + _id_substring).val().trim();
+    let _buttonText = $("#txtButtonText" + _id_substring).val().trim();
+    let _buttonLink = $("#txtButtonLink" + _id_substring).val().trim();
+    let _video = $("#txtVideo" + _id_substring).val().trim();
+
+    let _error_title = $("#error_txtTitle" + _id_substring);
+    let _error_description = $("#error_txtDescription" + _id_substring);
+    let _error_buttonText = $("#error_txtButtonText" + _id_substring);
+    let _error_buttonLink = $("#error_txtButtonLink" + _id_substring);
+    let _error_thumbnail = $("#error_fileThumbnail" + _id_substring);
+    let _error_video = $("#error_txtVideo" + _id_substring);
+
+
+    //var _cardThumbnailImageFile_MS = $("#fileThumbnail" + _id_substring).get(0);
+    //var _CardThumbnailImageFiles = _cardThumbnailImageFile_MS.files;
+
+    //if (FeaturedCardVideoId_Global <= 0 && _CardThumbnailImageFiles.length <= 0) {
+    //    is_valid = false;
+    //    _error_thumbnail.html('@(Resources.SuperAdminPanel.BusinessCourseCategoryImageRequired)');
+    //}
+
+
+    if (validate_IsEmptyStringInputFieldValue(_title)) {
+        is_valid = false;
+        _error_title.html('@(Resources.SuperAdminPanel.TitleRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_description)) {
+        is_valid = false;
+        _error_description.html('@(Resources.SuperAdminPanel.DescriptionRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_buttonText)) {
+        is_valid = false;
+        _error_buttonText.html('@(Resources.SuperAdminPanel.ButtonTextRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_buttonLink)) {
+        is_valid = false;
+        _error_buttonLink.html('@(Resources.SuperAdminPanel.ButtonLinkRequired)');
+    }
+     else if (!isValidHttpLink(_buttonLink)) {
+        is_valid = false;
+        _error_buttonLink.html('@(Resources.SuperAdminPanel.ValidLinkRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_video)) {
+        is_valid = false;
+        _error_video.html('@(Resources.SuperAdminPanel.VideoLinkRequired)');
+    }
+        @*else if (!isValidHttpLink(_video)) {
+            is_valid = false;
+            _error_video.html('@(Resources.SuperAdminPanel.ValidLinkRequired)');
+        }*@
+
+
+    if (is_valid) {
+
+        var _status = 0;
+        if ($('#chkIsActive' + _id_substring).is(':checked')) {
+            _status = 1;
+        }
+
+        var data = new FormData();
+
+        data.append("Id", FeaturedCardImageId_Global);
+        data.append("Type", 'SingleVideo');
+        data.append("Title", _title);
+        data.append("Description", _description);
+        data.append("ButtonText", _buttonText);
+        data.append("ButtonLink", _buttonLink);
+        data.append("Status", _status);
+        data.append("Video", _video);
+        //data.append("Thumbnail", _CardThumbnailImageFiles[0]);
+
+        $.ajax({
+            url: '/api/ManageHomePage/FeaturedCard/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetFeaturedCardDetailByType('SingleVideo');
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+
+                    return;
+                }
+
+               // EditBusinessProfile();
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+
+    function GetFeaturedCardDetailByType(type) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/ManageHomePage/FeaturedCard/GetByType?type=" + type,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                if(dataResponse.status < 0) {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+                var _item = dataResponse.data;
+                if (type == 'SingleImage') {
+                    FeaturedCardImageId_Global = _item.Id;
+                    var _id_substring = '_ManageCardImage';
+                    $("#txtTitle" + _id_substring).val(_item.Title);
+                    $("#txtDescription" + _id_substring).val(_item.Description);
+                    $("#txtButtonText" + _id_substring).val(_item.ButtonText);
+                    $("#txtButtonLink" + _id_substring).val(_item.ButtonLink);
+                    if (_item.ThumbnailImageWithPath != "") {
+                        $("#thumbnail" + _id_substring).attr('src', _item.ThumbnailImageWithPath);
+                        $("#thumbnail_ManageCardImage").removeClass('d-none');
+                    }
+                    else {
+                        $("#thumbnail_ManageCardImage").addClass('d-none');
+                    }
+
+                    if (_item.Status == 1) {
+                        $('#chkIsActive' + _id_substring).prop('checked', true);
+                    }
+                    else {
+                        $('#chkIsActive' + _id_substring).prop('checked', false);
+                    }
+                }
+                else if (type == 'SingleVideo') {
+                    FeaturedCardVideoId_Global = _item.Id;
+                    var _id_substring = '_ManageCardVideo';
+                    $("#txtTitle" + _id_substring).val(_item.Title);
+                    $("#txtDescription" + _id_substring).val(_item.Description);
+                    $("#txtButtonText" + _id_substring).val(_item.ButtonText);
+                    $("#txtButtonLink" + _id_substring).val(_item.ButtonLink);
+                    $("#txtVideo" + _id_substring).val(_item.Video);
+                    //if (_item.ThumbnailImageWithPath != "") {
+                    //    $("#thumbnail" + _id_substring).attr('src', _item.ThumbnailImageWithPath);
+                    //    $("#thumbnail_ManageCardVideo").removeClass('d-none');
+                    //}
+                    //else {
+                    //    $("#thumbnail_ManageCardVideo").addClass('d-none');
+                    //}
+
+                    if (_item.Status == 1) {
+                        $('#chkIsActive' + _id_substring).prop('checked', true);
+                    }
+                    else {
+                        $('#chkIsActive' + _id_substring).prop('checked', false);
+                    }
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function getAllActiveParentClassCategoryLists() {
+
+         let _url =  "/api/ClassCategory/GetAllParentClassCategories";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _ParentCategoryList = '';
+                $("#ddlParentClassCategory_ManageClassCategory").html('');
+
+                var _ParentCategoryList = '<option value="0">Select</option>';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    _ParentCategoryList += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+                }
+
+                $("#ddlParentClassCategory_ManageClassCategory").html('').append(_ParentCategoryList); //.select2();
+                GetClassCategorySectionDetail();
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetClassCategorySectionDetail() {
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: "/api/ManageHomePage/ClassCategorySection/Get",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                if(dataResponse.status < 0) {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+                var _item = dataResponse.data;
+                if (_item != null) {
+                    var _id_substring = '_ManageClassCategory';
+                    $("#ddlParentClassCategory" + _id_substring).val(_item.ClassCategoryTypeId);
+
+                    if (_item.Status == 1) {
+                        $('#chkIsActive' + _id_substring).prop('checked', true);
+                    }
+                    else {
+                        $('#chkIsActive' + _id_substring).prop('checked', false);
+                    }
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function AddUpdate_ManageClassCategory() {
+
+        let is_valid = true;
+        $("#sectionManageClassCategorySection .error-class").html('');
+
+        var _id_substring = "_ManageClassCategory";
+        let _classCategoryTypeId = $("#ddlParentClassCategory" + _id_substring).val();
+
+        let _error_classCategoryTypeId = $("#error_txtParentClassCategory" + _id_substring);
+
+
+        if (validate_IsEmptySelectInputFieldValue(_classCategoryTypeId)) {
+            is_valid = false;
+            _error_classCategoryTypeId.html('@(Resources.SuperAdminPanel.ClassCategoryTypeRequired)');
+        }
+
+        if (is_valid) {
+
+            var _status = 0;
+            if ($('#chkIsActive' + _id_substring).is(':checked')) {
+                _status = 1;
+            }
+
+            var data = new FormData();
+
+            data.append("Id", FeaturedCardImageId_Global);
+            data.append("ClassCategoryTypeId", _classCategoryTypeId);
+            data.append("Status", _status);
+
+            $.ajax({
+                url: '/api/ManageHomePage/ClassCategorySection/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetClassCategorySectionDetail();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+
+    function GetAllHomePageFeaturedVideos() {
+
+        let _url =  "/api/ManageHomePage/FeaturedVideo/GetAll";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _htmlData = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var _item = response.data[i];
+                    _video = (_item.Video == '') ? '<h6>No Video</h6>' : `
+                        <video width="320" height="240" controls>
+                              <source src="${_item.VideoWithPath}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                    _htmlData += `
+                        <div class="col-md-6" id="sectionVideo${_item.Id}_ManageFeaturedVideo">
+                            <div class="form-group">
+                                ${_video}
+                            </div>
+                            <div class="form-group d-flex flex-column">
+                                <label>Video ${i+1} <span class="text-danger"></span></label>
+                                <input type="file" id="fileVideo_ManageFeaturedVideo${_item.Id}" class="border form-control" accept="video/mp4">
+                                <div class="error-class" id="error_fileVideo_ManageFeaturedVideo${_item.Id}"></div>
+                            </div>
+                            <div class="form-group d-flex flex-column">
+                                <label>Title <span class="text-danger"></span></label>
+                                <input type="text" id="txtTitle_ManageFeaturedVideo${_item.Id}" class="form-control" value="${_item.Title}">
+                                <div class="error-class" id="error_txtTitle_ManageFeaturedVideo${_item.Id}"></div>
+                            </div>
+                            <div class="form-group d-flex flex-column">
+                                <label>Description <span class="text-danger"></span></label>
+                                <textarea id="txtDescription_ManageFeaturedVideo${_item.Id}" class="form-control">${_item.Description}</textarea>
+                                <div class="error-class" id="error_txtDescription_ManageFeaturedVideo${_item.Id}"></div>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary" onclick="AddUpdate_ManageFeaturedVideo(${_item.Id})">Update</button>
+                                <button type="button" class="btn btn-danger" onclick="confrimDelete_ManageFeaturedVideo(${_item.Id})">Remove</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                $("#sectionManageFeaturedVideos .card-body .row").html('').append(_htmlData); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function AddUpdate_ManageFeaturedVideo(id) {
+
+        let is_valid = true;
+        var _mode = (id <= 0) ? 1 : 2;
+            $("#sectionManageFeaturedVideos .error-class").html('');
+
+            var _id_substring = "_ManageFeaturedVideo" + id;
+
+            let _error_videoFile = $("#error_fileVideo" + _id_substring);
+
+            var _videoFile_MS = $("#fileVideo" + _id_substring).get(0);
+            var _title = $("#txtTitle" + _id_substring).val();
+            var _description = $("#txtDescription" + _id_substring).val();
+            var _VideoFiles = _videoFile_MS.files;
+
+            if (_mode == 1 && _VideoFiles.length <= 0) {
+                is_valid = false;
+                _error_videoFile.html('Please select a video!');
+            }
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", id);
+            data.append("Video", _VideoFiles[0]);
+            data.append("Title", _title);
+            data.append("Description", _description);
+            data.append("Mode", _mode);
+
+            $.ajax({
+                url: '/api/ManageHomePage/FeaturedVideo/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllHomePageFeaturedVideos();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+
+function confrimDelete_ManageFeaturedVideo(id) {
+    let textMessage = '@(Resources.SuperAdminPanel.ConfirmDeleteItemText)';
+
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmDeleteItemTitle)",
+        text: textMessage,
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            ajaxDeleteFeaturedVideo(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function ajaxDeleteFeaturedVideo(id) {
+    StartLoading();
+    _url =  '/api/ManageHomePage/FeaturedVideo/DeleteById?id=' + id;
+    $.ajax({
+        type: "POST",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            if (response.status == 1) {
+                swal("Success!", response.message, "success");
+            }
+
+            GetAllHomePageFeaturedVideos();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+      // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileThumbnail_ManageCardImage').addEventListener('change', handleCardThumbnailImageUpload);
+
+    function handleCardThumbnailImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#thumbnail_ManageCardImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#thumbnail_ManageCardImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('thumbnail_ManageCardImage').src = event.target.result;
+            $('#thumbnail_ManageCardImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>
+

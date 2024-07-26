@@ -1,0 +1,1021 @@
+﻿
+
+<script>
+    var Class_LastRecordedId_Global = 0;
+    var ActiveClass_LastRecordedId_Global = 0;
+    var UserToken_Global = "";
+    var recordLimit = 10;
+    var ClassBookingIdGlobal = 0;
+    var TrainingEndDateGlobal = "";
+    var TrainingStartDateGlobal = "";
+
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetAllEndendEvent();
+                GetAllStudentActiveEvent();
+                updatePauseDays();
+               // GetAllStudentNEWActiveClasses();
+            }
+            else {
+                /* UserToken_Global = "";*/
+                StopLoading();
+            }
+        });
+
+    });
+
+    // Bind Business My  Expiry Classes
+    function GetAllEndendEvent() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Student/GetAllEndedEventList?lastRecordId=0',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                $("#menuendEvent").html('');
+                var EventList = '';
+
+                if (response.data.length <= 0) {
+                    // No data, show a message
+                    $('#menuendEvent').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Endend Events!</i></div>');
+                    $('#BtnViewMoreUpcomingEvent').addClass('d-none');
+                    StopLoading();
+                    return;
+                }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    if (response.data.length < recordLimit) {
+                        $("#BtnViewMoreUpcomingEvent").addClass('btnViewMoreUpcomingEndClass');
+                    } else {
+                        $("#BtnViewMoreUpcomingEvent").removeClass('d-none');
+                    }
+
+                    var starIcons = '';
+
+                    if (response.data[i].AverageRating) {
+                        rating = response.data[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += '<i class="fa-solid fa-star rating-star-filled" style="color: #f3a762";></i>';
+                            } else {
+                                starIcons += `<i class="fa-solid fa-star rating-star-empty"></i>`;
+
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star rating-star-empty"></i>`;
+                        }
+                    }
+
+                  var EventList = `
+                                        <div class="my-cl-cnt-jdkfjk4-2">
+                                <img class="img-cnt-jdk" src="${response.data[i].EventImageWithPath}">
+                                <div class="sd-cont-cnt-jdk">
+                                    <p class="tm-cnt-jdk"> ${response.data[i].EventStartTime} - ${response.data[i].EventEndTime}</p>
+                                    <h5 class="hd-cnt-jdk">${response.data[i].Title}</h5>
+                                    <div class="hd-cnt-jdk text-muted">${response.data[i].StartDateFormat} to ${response.data[i].EndDateFormat}</div>
+                                    <p class="dtails-wdjri9">
+                                        <span class="kjkjsdf">${response.data[i].ShortDescription}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                                    `;
+
+                        $("#menuendEvent").append(EventList);
+                    }
+                // Check if there is more data to load
+                if (response.data.length > 0) {
+                    Class_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+                    $('#BtnViewMoreUpcomingEvent').removeClass('d-none');
+
+                    //ViewMoreClassButton = `<div class="btn-outtrkjkd text-center mb-5 ">
+                    //    <a  href= "javascript:ViewMoreUpcomingClasses();" id="BtnViewMoreUpcomingEvent"
+                    //       class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                    //        View
+                    //        More
+                    //    </a>
+                    //</div>`;
+                    /*$("#menuendEvent").append(ViewMoreClassButton);*/
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingEvent').addClass('d-none');
+                }
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Business LastRecord My Expiry Classes
+
+    function ViewMoreUpcomingClasses() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Student/GetAllEndedCourse?lastRecordId=' + Class_LastRecordedId_Global,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+               // $("#menu1").html('');
+
+                var EventList = '';
+
+                //if (response.data.length <= 0) {
+                //    // No data, show a message
+                //    $('#menu1').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Classes!</i></div>');
+                //    $('#BtnViewMoreUpcomingEvent').addClass('d-none');
+                //    StopLoading();
+                //    return;
+                //}
+                for (var i = 0; i < response.data.length; i++) {
+
+                    var EventList = `
+                                    <div class="my-cl-cnt-jdkfjk4-2">
+                                <img class="img-cnt-jdk" src="${response.data[i].ClassImageWithPath}">
+                                <div class="sd-cont-cnt-jdk">
+                                    <p class="tm-cnt-jdk"> ${response.data[i].ScheduledStartOnTime_24HF} - ${response.data[i].ScheduledEndOnTime_24HF}</p>
+                                    <h5 class="hd-cnt-jdk">${response.data[i].Name}</h5>
+                                    <div class="hd-cnt-jdk text-muted">${response.data[i].StartDate} to ${response.data[i].EndDate}</div>
+                                    <div class="hd-cnt-jdk text-muted">${response.data[i].ClassDays_ShortForm}</div>
+                                    <p class="last-cntcnt-jdk">
+                                        ${response.data[i].BusinessOwnerName} <i class="fa-solid fa-star"></i>
+                                      ${response.data[i].AverageRating}<span class="tm-cnt-jdk ml-1">( ${response.data[i].TotalReviewsEntered})</span>
+                                    </p>
+                                    <p class="dtails-wdjri9">
+                                        <span class="kjkjsdf"> ${response.data[i].ClassType} ${response.data[i].Description}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+
+                                    `;
+
+                    $("#menuendEvent").append(EventList);
+                }
+                // Check if there is more data to load
+                if (response.data.length > 0) {
+                    Class_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+                    $('#BtnViewMoreUpcomingEvent').removeClass('d-none');
+
+                //var ViewMoreClassButton = '';
+                //ViewMoreClassButton = `<div class="btn-outtrkjkd text-center mb-5">
+                //        <a  href= "javascript:ViewMoreUpcomingClasses();" id="BtnViewMoreUpcomingEvent"
+                //           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                //            View
+                //            More
+                //        </a>
+                //    </div>`;
+                //    $("#menuendEvent").append(ViewMoreClassButton);
+
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingEvent').addClass('d-none');
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+    // Bind Business LastRecord My Expiry Classes
+
+    function ViewMoreUpcomingActiveClasses() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Student/GetAllActiveCourse?lastRecordId=' + ActiveClass_LastRecordedId_Global,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var EventList = '';
+
+                //if (response.data.length <= 0) {
+                //    // No data, show a message
+                //    $('#home').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Classes!</i></div>');
+                //    $('#BtnViewMoreUpcomingActiveClass').addClass('d-none');
+                //    StopLoading();
+                //    return;
+                //}
+                for (var i = 0; i < response.data.length; i++) {
+                    if (response.data.length < recordLimit) {
+                        $("#BtnViewMoreUpcomingActiveClass").addClass('BtnViewMoreUpcomingEvent');
+                    } else {
+                        $("#BtnViewMoreUpcomingActiveClass").removeClass('d-none');
+                    }
+                    var starIcons = '';
+
+                    if (response.data[i].AverageRating) {
+                        rating = response.data[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star rating-star-filled"></i>';
+                            } else {
+                                starIcons += `<i class="fa-solid fa-star rating-star-empty"></i>`;
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star rating-star-empty"></i>`;
+                        }
+                    }
+
+                    var PauseClassRequestbtn = '';
+                    //if (response.data[i].Status == 3 || response.data[i].Status == 0) {
+                    if (response.data[i].CanPauseClass == 1) {
+                        PauseClassRequestbtn = `<div class="cta">
+                            <a class="btn btn-dark primary-button" href="javascript:;" onclick="ClassModelRequestDetail('${response.data[i].Name}',${response.data[i].Id},'${response.data[i].EndDate}','${response.data[i].StartDate}')" style="text-decoration: none;">Pause Class</a>
+                        </div>`;
+                    }
+                    else
+                    {
+
+                        PauseClassRequestbtn = ``;
+                    }
+
+                    var truncatedDescription = response.data[i].Description;
+                    var maxLength = 100;
+                    if (truncatedDescription.length > maxLength) {
+                        truncatedDescription = truncatedDescription.substr(0, maxLength) + '...';
+                    }
+                    var EventList = `<div class="active-class-main"><div class="active-class-tab">
+                      <div class="active-class-tab-iner">
+                          <div class="logo-img-iner">
+                              <img src="${response.data[i].BusinessProfileImage}" alt="logo" loading="lazy">
+                          </div>
+                          <div class="text-title-start">
+                              <div class="text-iner">
+                                  <h6> ${response.data[i].BusinessName}</h6>
+
+                              </div>
+                              <div class="text-start">
+
+                                  <span>
+                                     ${starIcons}
+                                  </span>
+
+                              </div>
+                          </div>
+                      </div>
+                      <div class="active-class-tab-iner">
+                          <div class="guitar-img-iner">
+                              <img src="${response.data[i].ImageWithPath}" alt="logo" loading="lazy">
+                          </div>
+                          <div class="text-title-start">
+                              <div class="text-iner">
+                                  <h6>${response.data[i].Name}</h6>
+                                  <p>${response.data[i].Price}/${response.data[i].ClassPriceType}</p>
+                              </div>
+                              <div class="active-click-down">
+                                  <div class="text-start">
+                                      <a href="#">active</a>
+                                  </div>
+                                  <div class="arrow-down">
+                                      <i class="fa-solid fa-angle-down"></i>
+                                  </div>
+                              </div>
+
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="active-class-item">
+                      <div class="active-class-item-flex">
+                          <div class="active-class-item-iner">
+                              <div class="img-in-text-img">
+                                  <img src="${response.data[i].GroupImageWithPath}" alt="img" loading="lazy">
+
+                              </div>
+                              <Div class="img-in-text-in">
+                                  <p>${response.data[i].GroupName}</p>
+                                  <p>
+                                      <span>${response.data[i].ClassDays_ShortForm}</span>
+                                      <span class="time-cl">${response.data[i].ScheduledStartOnTime_24HF} to ${response.data[i].ScheduledEndOnTime_24HF}</span>
+                                  </p>
+
+                              </Div>
+                          </div>
+                          <div class="active-class-item-iner second-child">
+
+                              <div class="img-in-pro-img">
+                                  <img src="${response.data[i].ProfileImageWithPath}" alt="img" loading="lazy">
+
+                              </div>
+                              <div class="img-in-text-in">
+                                  <p class="profile-name">
+                                      <span class="verified"><i class="fa-solid fa-circle-check"></i></span>
+                                    ${response.data[i].BusinessOwnerName}
+                                  </p>
+                                  <p> ID ${response.data[i].MasterId}</p>
+                                  <p>${response.data[i].BusinessCategoryName}</p>
+
+                              </div>
+                          </div>
+                      </div>
+                      <div class="button-iner">
+                          <a href="/Home/MessageChat?toUserLoginId=${encodeURIComponent(response.data[i].EncryptedUserLoginId)}">Message</a>
+                          <a href="#">
+                              <span><i class="fa-solid fa-clipboard-user"></i></span>
+                              Attendance
+                          </a>
+                          <a href="#">
+                              <span><i class="fa-solid fa-file-invoice"></i></span>
+                              Invoice
+                          </a>
+                      </div>
+                      <div class="start-end-date-iner">
+                          <div class="start-date">
+                              <p>start Date</p>
+                              <span class="date-style">${response.data[i].StartDate}</span>
+                          </div>
+                          <div class="start-date">
+                              <p>Expire On</p>
+                              <span class="Expire-style">${response.data[i].EndDate}</span>
+                          </div>
+                          <div class="date mt-4 ml-auto">
+                         ${PauseClassRequestbtn}
+                      </div>
+                      </div>
+                      <div class="des-text">
+                          <p>
+                              ${truncatedDescription}
+                          </p>
+                      </div>
+                  </div></div>`;
+                    $("#BindActiveClassDetail").append(EventList);
+                }
+
+
+
+
+
+                // Check if there is more data to load
+                if (response.data.length > 0) {
+                    ActiveClass_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+                    $('#BtnViewMoreUpcomingActiveClass').removeClass('d-none');
+
+                    //var ViewMoreClassButton = '';
+                    //ViewMoreClassButton = `<div class="btn-outtrkjkd text-center mb-5">
+                    //    <a  href= "javascript:ViewMoreUpcomingActiveClasses();" id="BtnViewMoreUpcomingActiveClass"
+                    //       class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                    //        View
+                    //        More
+                    //    </a>
+                    //</div>`;
+                    //$("#BindActiveClassDetail").append(ViewMoreClassButton);
+                }
+
+else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingActiveClass').addClass('d-none');
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+        function datepicker() {
+        var startDate = new Date(TrainingStartDateGlobal);
+        var endDate = new Date(TrainingEndDateGlobal);
+
+        var formattedStartDate = formatDate(startDate);
+        var formattedEndDate = formatDate(endDate);
+
+        // Set the min and max attributes for the date input
+        document.getElementById('Business_StartDate').setAttribute('min', formattedStartDate);
+        document.getElementById('Business_StartDate').setAttribute('max', formattedEndDate);
+    }
+    function formatDate(date) {
+        var day = date.getDate().toString().padStart(2, '0');
+        var month = (date.getMonth() + 1).toString().padStart(2, '0');
+        var year = date.getFullYear();
+
+        return `${year}-${month}-${day}`;
+    }
+    function ChooseEndDate() {
+        var StartDate = $("#Business_StartDate").val();
+
+        var start_Date = new Date(StartDate);
+        var endDate = new Date(TrainingEndDateGlobal);
+
+        var formattedStartDate = formatDate(start_Date);
+        var formattedEndDate = formatDate(endDate);
+
+        // Set the min and max attributes for the date input
+        document.getElementById('Business_EndDate').setAttribute('min', formattedStartDate);
+        document.getElementById('Business_EndDate').setAttribute('max', formattedEndDate);
+    }
+
+    // To Open the Model
+    function ClassModelRequestDetail(name, classBookingId, endDate, startDate) {
+        $('#EditBusinessPauseClassModal').modal('show');
+        $("#BusinessDetails_EditBusinessPauseModal").html('');
+        $("#BusinessDetails_EditBusinessPauseModal").append(name);
+        ClassBookingIdGlobal = classBookingId;
+        TrainingEndDateGlobal = endDate;
+        TrainingStartDateGlobal = startDate;
+    }
+
+    function ResetAddPauseClassView() {
+        $("#BusinessDetails_EditBusinessPauseModal").val('');
+        $("#Business_StartDate").val('');
+        $("#Business_EndDate").val('');
+        $("#txtDescription").val('');
+        $("#Business_PauseDays").val('');
+    }
+
+
+
+
+
+
+    function updatePauseDays() {
+        var startDateValue = document.getElementById('Business_StartDate').value;
+        var endDateValue = document.getElementById('Business_EndDate').value;
+
+        // Check if both StartDate and EndDate are selected
+        if (startDateValue && endDateValue) {
+            var startDate = new Date(startDateValue);
+            var endDate = new Date(endDateValue);
+
+            // Check if the dates are valid
+            if (!isNaN(startDate) && !isNaN(endDate)) {
+                // Calculate the difference in days
+                var timeDiff = endDate - startDate;
+                var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                // Update the "Pause Days" field
+                document.getElementById('Business_PauseDays').value = daysDiff;
+            } else {
+                // If either StartDate or EndDate is not valid, display a message or handle it as needed
+                document.getElementById('Business_PauseDays').value = "Invalid date(s)";
+            }
+        } else {
+            // If either StartDate or EndDate is not selected, display nothing
+            document.getElementById('Business_PauseDays').value = "";
+        }
+    }
+
+    // Attach the function to the change event of the start and end date inputs
+    document.getElementById('Business_StartDate').addEventListener('change', updatePauseDays);
+    document.getElementById('Business_EndDate').addEventListener('change', updatePauseDays);
+
+
+
+      function btnPauseClassFormClick() {
+    //console.log('submission disabled!');
+    //return;
+    let is_valid = true;
+      $(".error-class").html('');
+        var _mode = 1;
+
+        let _startDate = $("#Business_StartDate").val();
+        let _endDate = $("#Business_EndDate").val().trim();
+        let _reason = $("#txtDescription").val().trim();
+        let _pausedays = $("#Business_PauseDays").val();
+
+        let _error_startDate = $("#error_Business_StartDate");
+        let _error_endDate = $("#error_Business_EndDate");
+        let _error_reason = $("#error_txtDescription");
+
+
+
+        if (validate_IsEmptyStringInputFieldValue(_startDate)) {
+        is_valid = false;
+            _error_startDate.html('@(Resources.VisitorPanel.StartDateRequired)');
+    }
+        if (validate_IsEmptyStringInputFieldValue(_endDate)) {
+        is_valid = false;
+            _error_endDate.html('@(Resources.VisitorPanel.EndDateRequired)');
+    }
+        if (validate_IsEmptyStringInputFieldValue(_reason)) {
+        is_valid = false;
+            _error_reason.html('@(Resources.VisitorPanel.ReasonRequired)');
+        }
+
+
+
+    if (is_valid) {
+
+
+        var data = new FormData();
+
+        data.append("PauseStartDate", _startDate);
+        data.append("PauseEndDate", _endDate);
+        data.append("PauseDays", _pausedays);
+        data.append("Reason", _reason);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/Class/AddPauseRequest?classBookingId=' + ClassBookingIdGlobal,
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    ResetAddPauseClassView();
+                    $('#EditBusinessPauseClassModal').modal('hide');
+                    GetAllStudentActiveEvent();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    StopLoading();
+
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+
+
+
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+
+    function GetAllStudentActiveEvent() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Student/GetAllActiveEventList?lastRecordId=0',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var EventList = '';
+
+                $('#BindActiveEventDetail').html('');
+                if (response.data.Eventdetails.length <= 0) {
+                    // No data, show a message
+                    $('#BindActiveEventDetail').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Active Events!</i></div>');
+                    $('#BtnViewMoreUpcomingActiveClass').addClass('d-none');
+                    StopLoading();
+                    return;
+                }
+
+
+
+                for (var i = 0; i < response.data.Eventdetails.length; i++) {
+                    if (response.data.Eventdetails.length < recordLimit) {
+                        $("#BtnViewMoreUpcomingActiveClass").addClass('BtnViewMoreUpcomingEvent');
+                    } else {
+                        $("#BtnViewMoreUpcomingActiveClass").removeClass('d-none');
+                    }
+
+                    
+                     var _eventsDetails = '';
+                    var _eventhostDetails = '';
+                    var _eventSpecialGuestsDetails ='';
+                    for (var j = 0; j < response.data.EventGuestDetails.length; j++)
+                    {
+                        if (response.data.EventGuestDetails[j].DetailsType == 'Organizer')
+                        {
+                            _eventsDetails += `<div class="content-container">
+                                                    <div class="content-img">
+                                                       <a target="_blank" href="${response.data.EventGuestDetails[j].Link}" style="color: black;"> <img class="" src="${response.data.EventGuestDetails[j].EventDetailImageWithPath}" alt="img" loading="lazy"></a>
+                                                    </div>
+                                                    <div class="content-name">
+                                                       <a target="_blank" href="${response.data.EventGuestDetails[j].Link}" style="color: black;"> ${response.data.EventGuestDetails[j].EventDetailsName} </a>
+                                                    </div>
+                                             </div>`;
+                        }
+                       else if (response.data.EventGuestDetails[j].DetailsType == 'Host') {
+                            _eventhostDetails += `<div class="content-container">
+                                         <div class="content-img">
+                                            <a target="_blank" href="${response.data.EventGuestDetails[j].Link}" style="color: black;"> <img class="" src="${response.data.EventGuestDetails[j].EventDetailImageWithPath}" alt="img" loading="lazy"></a>
+                                         </div>
+                                         <div class="content-name">
+                                            <a target="_blank" href="${response.data.EventGuestDetails[j].Link}" style="color: black;"> ${response.data.EventGuestDetails[j].EventDetailsName} </a>
+                                         </div>
+                                  </div>`;
+                        }
+                        else if (response.data.EventGuestDetails[j].DetailsType == 'SpecialGuest') {
+                            _eventSpecialGuestsDetails += `<div class="content-container">
+                                                    <div class="content-img">
+                                                        <a target="_blank" href="${response.data.EventGuestDetails[j].Link}" style="color: black;"><img class="" src="${response.data.EventGuestDetails[j].EventDetailImageWithPath}" alt="img" loading="lazy"></a>
+                                                    </div>
+                                                    <div class="content-name">
+                                                       <a target="_blank" href="${response.data.EventGuestDetails[j].Link}" style="color: black;"> ${response.data.EventGuestDetails[j].EventDetailsName} </a>
+                                                    </div>
+                                             </div>`;
+                        }
+                        else if (_eventsDetails == '') {
+                            _eventsDetails = ``;
+                        }
+                        else if (_eventSpecialGuestsDetails == '')
+                        {
+                            _eventSpecialGuestsDetails = ``;
+
+                        }
+                        else if (_eventhostDetails == '')
+                        {
+                            _eventhostDetails = ``;
+
+                        }
+
+                    }
+
+                    var eventSponsor = '';
+                    for (var k = 0; k < response.data.EventSponserDetails.length; k++)
+                    {
+                        eventSponsor += `<div class="content-container">
+                                                    <div class="content-img">
+                                                        <a target="_blank" href="${response.data.EventSponserDetails[k].SponsorLink}" style="color: black;"><img class="" src="${response.data.EventSponserDetails[k].SponsorImageWithPath}" alt="img" loading="lazy"></a>
+                                                    </div>
+                                                    <div class="content-name">
+                                                       <a target="_blank" href="${response.data.EventSponserDetails[k].SponsorLink}" style="color: black;"> ${response.data.EventSponserDetails[k].SponsorTitle} </a>
+                                                    </div>
+                                             </div>`;
+
+                    }
+
+                    var Description = ``;
+                    var truncatedDescription = response.data.Eventdetails[i].ShortDescription;
+                    var maxLength = 100;
+                    var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                    var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                    if (truncatedDescription.length > maxLength) {
+                        truncatedDescription = truncatedDescription.substr(0, maxLength) + '.';
+                    }
+                    if (response.data.Eventdetails[i].ShortDescription.length < maxLength) {
+
+                        Description = '<span class="description"><span class="full-description">' + response.data.Eventdetails[i].Description + '.';
+
+                    } else {
+
+                        Description = '<span class="description"><span class="full-description d-none">' + response.data.Eventdetails[i].Description + '.' + showLessHtml + '</span ><span class="truncated-description">' + truncatedDescription + '.' + readMoreHtml + '</span></span> ';
+                    }
+
+                    var _eventstartDate = response.data.Eventdetails[i].StartDateFormat; 
+                    var dateParts = _eventstartDate.split("-"); 
+                    var formattedStartDate = dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0]; 
+
+
+                    var _eventendDate = response.data.Eventdetails[i].EndDateFormat;
+                    var dateParts = _eventendDate.split("-");
+                    var formattedEndDate = dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0]; 
+
+                    var EventList = `<div class="active-class-main"><div class="active-class-tab">
+                                        <div class="active-class-tab-iner">
+                                            <div class="logo-img-iner">
+                                                <img src="${response.data.Eventdetails[i].EventImageWithPath}" alt="logo" loading="lazy">
+                                            </div>
+                                            <div class="text-title-start">
+                                                <div class="text-iner1 heading-event">
+                                                    <h6>${response.data.Eventdetails[i].Title}</h6>
+                                                </div>
+                                                <div class="text-start">
+                                                 <p><span class="event-start-date">${formattedStartDate}</span> To <span class="event-end-date">${formattedEndDate}</span></p>
+                                                         
+                                                 <p><span class="ml-4">${response.data.Eventdetails[i].EventStartTime} to ${response.data.Eventdetails[i].EventEndTime}</span></p>
+                                                </div>
+                                            </div>
+                                                <div class="classModeSection">Location : <span style="color:white;">${response.data.Eventdetails[i].Address}, ${response.data.Eventdetails[i].City}, ${response.data.Eventdetails[i].State}(${response.data.Eventdetails[i].Pincode}), Near : ${response.data.Eventdetails[i].LandMark}, ${response.data.Eventdetails[i].Country}</span><p>PH : ${response.data.Eventdetails[i].PhoneNumber}, Email : ${response.data.Eventdetails[i].Email}</p></div>
+                                        </div>
+                                        <div class="active-class-tab-iner">
+
+                                            <div class="text-title-start">
+                                                <div class="text-iner">
+                                                    <p class="ticketCount">Only For ${response.data.EventCountTicket.CountofTicket} Person</p>
+                                                    <p class="Bookedmessage">Booked</p>
+                                                    <p class="ticketCount">${response.data.EventCountTicket.CountofTicket} Ticket</p>
+                                                </div>
+                                                <div class="active-click-down">
+                                                    <div class="text-start d-flex">
+                                                        <a target="_blank" href="${response.data.Eventdetails[i].EventLocationURL}">Get Location</a>
+
+                                                    </div>
+                                                    <div class="arrow-down">
+                                                        <i class="fa-solid fa-angle-down"></i>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="active-class-item">
+                                        <div class="row p-4 organizer-section">
+                                            <div class="col-sm-9 scroll-section">
+                                                <div class="section-title">Our Host</div>
+                                                <div class="section-content">
+                                                    ${_eventhostDetails}
+                                                </div> 
+                                            </div>
+                                            <div class="col-sm-3 qr-code-container">
+                                                <img src="${response.data.Eventdetails[i].EventQRCodeWithPath}" alt="img" loading="lazy">                                            </div>
+                                            </div>
+                                        
+                                          <div class="active-class-item-iner1 ">
+                                            <div class="col-sm-12 scroll-section">
+                                                <div class="section-title">Our ORGANIZERS</div>
+                                                <div class="section-content">
+                                                   ${_eventsDetails}
+                                                </div> 
+                                            </div>
+                                        </div>
+
+                                         <div class="active-class-item-iner1 ">
+                                            <div class="col-sm-12 scroll-section">
+                                                <div class="section-title">Special Guests</div>
+                                                <div class="section-content">
+                                                    ${_eventSpecialGuestsDetails}
+                                                </div> 
+                                            </div>
+                                        </div>
+                                         <div class="active-class-item-iner1 ">
+                                            <div class="col-sm-12 scroll-section">
+                                                <div class="section-title">OUR SPONSER</div>
+                                                <div class="section-content">
+                                                     ${eventSponsor}
+                                                </div> 
+                                            </div>
+                                        </div>
+ 
+
+                                        <div class="des-text mt-3">
+                                            <h3 class="mt-1" style="color:white;">ADDITIONAL INFORMATION</h3>
+                                            <p style="color:black;">${response.data.Eventdetails[i].AdditionalInformation}</p>
+                                        </div>
+                                    </div> </div>
+
+                                    </div>`;
+
+                    $("#BindActiveEventDetail").append(EventList);
+                }
+                // Check if there is more data to load
+                if (response.data.Eventdetails.length > 0) {
+                    ActiveClass_LastRecordedId_Global = response.data.Eventdetails[response.data.Eventdetails.length - 1].Id;
+                    $('#BtnViewMoreUpcomingActiveClass').removeClass('d-none');
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingActiveClass').addClass('d-none');
+                }
+
+                // for read more show less functionality of description
+                $(document).on('click', '.read-more', function (e) {
+                    e.preventDefault();
+                    $(this).closest('.description').find('.full-description').removeClass('d-none');
+                    $(this).closest('.description').find('.truncated-description').addClass('d-none');
+                });
+                $(document).on('click', '.read-less', function (e) {
+                    e.preventDefault();
+                    $(this).closest('.description').find('.full-description').addClass('d-none');
+                    $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function convertDaysToShortForm(days) {
+        // Split the days string into an array
+        var daysArray = days.split(',');
+
+        // Create an object to map full day names to short forms
+        var dayMap = {
+            'Monday': 'M',
+            'Tuesday': 'T',
+            'Wednesday': 'W',
+            'Thursday': 'Th', // If Thursday is needed
+            'Friday': 'F',
+            'Saturday': 'Sa',
+            'Sunday': 'Su' // If Sunday is needed
+        };
+
+        // Map each full day name to its short form
+        var shortFormArray = daysArray.map(function (day) {
+            return dayMap[day];
+        });
+
+        // Join the short forms back into a string
+        return shortFormArray.join(',');
+    }
+
+    // Example usage:
+    var days = 'Monday,Tuesday,Wednesday,Friday,Saturday';
+    var shortFormDays = convertDaysToShortForm(days);
+    console.log(shortFormDays); // Output: M,T,W,F,Sa
+
+
+
+
+
+    //function bussinessMessage(businessOwnerLoginId) {
+
+    //    var OwnerId_Global = EDClass.Decrypt(businessOwnerLoginId);
+    //    window.location.href = '/Home/MessageChat?toUserLoginId=' + OwnerId_Global;
+    //}
+
+
+    $(document).on('click', '.active-class-tab .arrow-down', function (event) {
+        event.preventDefault();
+
+        // Find the corresponding .active-class-item
+        var dropDown = $(this).closest('.active-class-main').find('.active-class-item');
+
+        // Close all other .active-class-item elements
+        $('.active-class-item').not(dropDown).slideUp();
+
+        // Toggle active class on arrow-down icon
+        $(this).toggleClass('active');
+
+        // Toggle visibility of the corresponding .active-class-item
+        dropDown.stop(false, true).slideToggle();
+    });
+
+
+
+
+
+
+
+
+</script>

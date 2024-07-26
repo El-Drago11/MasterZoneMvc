@@ -1,0 +1,469 @@
+﻿<script>
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+    var ClassCategoryTypeIdGlobal = 0;
+    var InstructorLoginIdGlobal = 0;
+    var ClassDaysGlobal = "";
+    var ClassmodeGlobal = "";
+    var ClassListArray = [];
+    $(document).ready(function () {
+        GetBusinessAboutDetail();
+        GetContactInformationDetail();
+        GetAllBusinessClassCategoryTypeDetail();
+        GetAllTimeTableClassRecord();
+        GetAllClassInstructorListDetail();
+    });
+
+
+
+    //Bind TimeTable Footer About Detail
+    function GetBusinessAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentAboutDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessLogoDetail = '';
+                if (response.data === null) {
+                    BusinessLogoDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Logo   Detail. </div>';
+                }
+                else {
+                    BusinessLogoDetail = ` <a href="index.html">
+                        <img src="${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy">
+                    </a>`;
+                    $("#BindBusinessLogoDetail").append(BusinessLogoDetail);
+
+                }
+
+                var htmlBusinessAboutDetail = '';
+                if (response.data === null) {
+                    htmlBusinessAboutDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No About  Detail. </div>';
+                } else {
+                    var fullAbout = response.data.About;
+                    var maxLength = 130;
+                    var truncatedAbout = ``;
+                    if (fullAbout.length > maxLength) {
+                        truncatedAbout = fullAbout.substr(0, maxLength) + '...';
+                    } else {
+                        truncatedAbout = fullAbout + '...';
+
+                    }
+                    htmlBusinessAboutDetail = ` <div class="footer-logo">
+                            <a href="index.html">
+                                <img src="  ${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 52px;
+                            width: auto;">
+                            </a>
+                            <div class="logo-title">
+                              <h6>${response.data.BusinessName}</h6>
+                            </div>
+                        </div>
+                        <p class="small">${truncatedAbout}<a href="/Home/MasterProfileAPI?businessOWnerLoginId=${BusinessOwnerLoginId_Global}#BindBusinessAboutDetail">Read More</a</p>`;
+
+                }
+
+                $("#BindBusinessAboutDetail").append(htmlBusinessAboutDetail);
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind  Footer Business Contact Detail
+    function GetContactInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessSocial = ''; // Declare BusinessSocial variable
+
+
+                if (response.data.BusinessTimingDetail.FacebookProfileLink && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+    </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.TwitterProfileLink && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+    </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+    </div>`;
+                }
+                $("#BusinessSocialDetail_Footer").append(BusinessSocial);
+
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data === null) {
+                    htmlBusinessContactDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Contact  Detail. </div>';
+                    $("#BindContactDetailInformation").html(htmlBusinessContactDetail);
+                }
+                else {
+                    htmlBusinessContactDetail = `<h5>Contact Us</h5>
+                    <p>
+                         ${response.data.BusinessTimingDetail.Address}
+                    </p>
+                    <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}"> ${response.data.BusinessTimingDetail.PhoneNumber}</a>
+                    <a href="${response.data.BusinessTimingDetail.Email}">${response.data.BusinessTimingDetail.Email}</a>`;
+
+
+                    $("#BindContactDetailInformation").append(htmlBusinessContactDetail);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Class Category Type Detail 
+    function GetAllBusinessClassCategoryTypeDetail() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessAllClassCategoryList?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var ShowClassBtn = '';
+                ShowClassBtn = `<a class="button is-checked CategoryCommonClass" data-filter="" id="ShowAllActiveClasses" href="javascript:GetAllTimeTableClassRecord();">All Classes</a>`;
+                $("#BindBusinessClassCategoryTypeDetail").append(ShowClassBtn);
+                var classcategorytypeList = '';
+                if (response.data.length <= 0) {
+                    $('#BindBusinessClassCategoryTypeDetail').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Class Category Detail!</i></div>');
+                }
+                for (var i = 0; i < response.data.length; i++) {
+
+                    var classcategorytypeList = `<button class="button CategoryCommonClass" id="ToAddCategoryTypeActive_${response.data[i].Id}" data-filter=".CategoryId_${response.data[i].Id}" onclick="GetAllTimeTableClassCategoryTypeRecord(${response.data[i].Id}, '${response.data[i].CategoryName}')" >${response.data[i].CategoryName}</button>`;
+                    $("#BindBusinessClassCategoryTypeDetail").append(classcategorytypeList);
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+    function GetAllTimeTableClassRecord() {
+     
+        $.ajax({
+            type: "GET",
+            url: '/api/Class/GetAllClasesTimeTableDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global + '&classCategoryTypeId=' + ClassCategoryTypeIdGlobal + '&instructorLoginId=' + InstructorLoginIdGlobal + '&classDays=' + ClassDaysGlobal + '&classMode=' + ClassmodeGlobal,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $("#BindBusinessAllClassDetail").html('');
+                ClassListArray = response.data;
+
+                const timeListArray = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00', '00:00'];
+
+
+                var timeTableHtml = ``;
+                for (var t = 0; t < timeListArray.length - 1; t++) {
+                   
+                        var classListByTime = response.data.filter(c => c.ScheduledStartOnTime_24HF >= timeListArray[t] && c.ScheduledStartOnTime_24HF < timeListArray[t + 1]);
+
+
+
+
+                    var row = GenreateTableRow(classListByTime, timeListArray[t]);
+
+                    timeTableHtml += row;
+                }
+
+                $("#BindBusinessAllClassDetail").html(timeTableHtml);
+
+                 ClassCategoryTypeIdGlobal = 0;
+                 InstructorLoginIdGlobal = 0;
+                 ClassDaysGlobal = "";
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function GenreateTableRow(classList, startTime) {
+        var rowHtmlData = '';
+        var colDataArr = ["", "", "", "", "", "", ""];
+        var classDescription = '';
+        const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        if (classList.length == 0) {
+            return '';
+        }
+        for (var a = 0; a < classList.length; a++) {
+            var classData = classList[a];
+             classDescription = `
+
+            <div class="grid-items ${classData.Name} ${classData.ClassDays}" style="width: 101%;">
+                <a href="/Home/ClassDetail?classId= ${classData.Id}&businessOwnerLoginId=${classData.BusinessOwnerLoginId}">${classData.Name}</a>
+                <p>${classData.ScheduledStartOnTime_24HF} - ${classData.ScheduledEndOnTime_24HF}</p>
+                <p>${classData.BatchName}</p>
+                <p>${classData.InstructorFullName}</p>
+            </div>`;
+
+            for (var d = 0; d < weekDays.length; d++) {
+                if (classData.ClassDays.includes(weekDays[d])) {
+                    if (ClassDaysGlobal != '' && weekDays[d] != ClassDaysGlobal) {
+                        colDataArr[d] += ``;
+                    }
+                    else {
+                        colDataArr[d] += classDescription;
+                    }
+                }
+                else {
+                    colDataArr[d] += ``;
+                }
+            }
+        }
+
+        
+
+        var rowCells = '';
+        for (var c = 0; c < 7; c++) {
+            rowCells += `<td>${colDataArr[c]}</td>`;
+        }
+        
+
+        rowHtmlData = `
+<tr>
+       
+            ${rowCells}
+        </tr>
+    `;
+
+        return rowHtmlData;
+    }
+
+    // Bind Business All Class Instructor Detail 
+    function GetAllClassInstructorListDetail() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetClassInstructorDetailList?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var ShowInstructorBtn = '';
+
+                ShowInstructorBtn = ` <a class="button is-checked CategoryCommonClass" data-filter="" id="AllInstructorClassesRecord" href="javascript:GetAllTimeTableClassRecord();">All Instructor </a>`;
+                $("#BindAllInstructorListDetail").append(ShowInstructorBtn);
+
+                var ShowInstructorBtnList = '';
+
+                if (response.data.length <= 0) {
+                    // No data, show a message
+                    $('#BindAllInstructorListDetail').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Class Category Detail!</i></div>');
+                }
+                for (var i = 0; i < response.data.length; i++) {
+                    var ShowInstructorBtnList = `<button class="button CategoryCommonClass"  id="InstructorAllClassesDetail_${response.data[i].Id}" data-filter=".CategoryId_${response.data[i].Id}" onclick="GetAllTimeTableInstructorLoginIdRecord(${response.data[i].InstructorUserLoginId})" >${response.data[i].InstructorName}</button>`;
+                    $("#BindAllInstructorListDetail").append(ShowInstructorBtnList);
+
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+    function GetAllTimeTableClassCategoryTypeRecord(Id) {
+        ClassCategoryTypeIdGlobal = Id;
+        $('.CategoryCommonClass').removeClass('is-checked');
+        $("#ToAddCategoryTypeActive_").addClass('is-checked');
+        $("#AllInstructorClassesRecord").removeClass('allActiveinstructor');
+        $("#AllClassDaysRecord").removeClass('allActiveInstructor');
+        $("#ShowAllActiveClasses").removeClass('allActiveClasses'); 
+        GetAllTimeTableClassRecord();
+    }
+
+    function GetAllTimeTableInstructorLoginIdRecord(Id) {
+        
+        InstructorLoginIdGlobal = Id;
+        $('.CategoryCommonClass').removeClass('is-checked');
+        $("#AllInstructorClassesRecord").removeClass('allActiveinstructor');
+       $("#InstructorAllClassesDetail_").addClass('is-checked'); // Add # before id
+        $("#ShowAllActiveClasses").removeClass('allActiveClasses'); // Add # before id
+        $("#AllClassDaysRecord").removeClass('allActiveInstructor');
+        GetAllTimeTableClassRecord();
+    }
+
+    function GetAllTimeTableClassDaysRecord(classDays) {
+        ClassDaysGlobal = classDays;
+        $('.CategoryCommonClass').removeClass('is-checked');
+        $("#AllInstructorClassesRecord").removeClass('allActiveinstructor');
+        $("#ShowAllActiveClasses").removeClass('allActiveClasses'); 
+        GetAllTimeTableClassRecord();
+    }
+    function GetAllTimeTableClassMode(classmode) {
+     
+        ClassmodeGlobal = classmode;
+        $('.CategoryCommonClass').removeClass('is-checked');
+        $("#AllInstructorClassesRecord").removeClass('allActiveinstructor');
+        $("#ShowAllActiveClasses").removeClass('allActiveClasses');
+        GetAllTimeTableClassRecord();
+    }
+   
+
+</script>

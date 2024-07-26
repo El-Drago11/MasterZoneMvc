@@ -1,0 +1,96 @@
+﻿<script>
+    $(document).ready(function () {
+        GetAboutDetail();
+    });
+
+
+    function GetAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/SuperAdmin/GetSuperAdminAboutDetailForVisitorPanel',
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var htmlAboutDetail = '';
+
+
+                if (response.data === null) {
+                    $("#BindAboutInformation").addClass('d-none');
+                }
+                else {
+                    htmlAboutDetail = `<h2 class="text-center sc-hd">${response.data.AboutTitle}</h2>
+                    <p class="text-justify sc-txt">
+                        ${response.data.AboutDescription}
+                    </p>`;
+
+                    $("#BindAboutInformation").append(htmlAboutDetail);
+                }
+
+                var htmlMissionDetail = '';
+                if (response.data === null) {
+
+                    $("#BindAboutMissionDetail").addClass('d-none');
+                }
+                else {
+                    htmlMissionDetail = ` <h2 class="text-center sc-hd">${response.data.OurMissionTitle}</h2>
+                    <p class="text-justify sc-txt">
+                       ${response.data.OurMissionDescription}
+                    </p>`;
+
+                    $("#BindAboutMissionDetail").append(htmlMissionDetail);
+                }
+
+
+                var AboutBannerDetail = '';
+                if (response.data === null) {
+                    AboutBannerDetail = `<div class="banner-sec" style="background: url(/Content/visitor-panel/image/taj2.jpg) no-repeat top center/cover;">
+                                <h2 class="text-center text-white pj-hd-text">About Us</h2>
+                            </div>`;
+                    $("#BindAboutBannerDetail").append(AboutBannerDetail);
+                }
+                else {
+                    AboutBannerDetail = `<div class="banner-sec" style="background: url(${response.data.AboutImageWithPath}) no-repeat top center/cover;">
+                                <h2 class="text-center text-white pj-hd-text">About Us</h2>
+                            </div>`;
+                    $("#BindAboutBannerDetail").append(AboutBannerDetail);
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+</script>
+

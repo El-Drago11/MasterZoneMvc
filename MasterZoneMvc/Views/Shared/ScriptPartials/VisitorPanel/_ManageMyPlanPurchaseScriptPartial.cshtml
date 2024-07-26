@@ -1,0 +1,211 @@
+﻿<script>
+     var UserToken_Global = "";
+   $(document).ready(function () {
+      StartLoading();
+       PlanBookingId_Global = $('#hidden_planBookingId').val();
+       PlanBookingType_Global = $('#hidden_planBookingType').val();
+      $.get("/Home/GetStudentToken", null, function (dataToken) {
+          if (dataToken != "" && dataToken != null) {
+              UserToken_Global = dataToken;
+              getPlanBookingViewDetailById();
+          }
+          else {
+              $.iaoAlert({
+                  msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                  type: "error",
+                  mode: "dark",
+              });
+              window.location.href = '/home/login';
+              StopLoading();
+          }
+      });
+   });
+
+    function getPlanBookingViewDetailById() {
+        
+    StartLoading();
+        let _url = "/api/BusinessPlan/GetPlanBookingDetailById?id=" + PlanBookingId_Global + "&&planbookingtype=" + PlanBookingType_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+
+                var _planBookingDetail = response.data.PlanBookingDetail;
+                var _orderDetail = response.data.OrderDetail;
+                var _paymentResponseDetail = response.data.PaymentResponseDetail;
+                //var _planDetail = response.data.PlanDetail;
+                var orderListItems = ``;
+                var PlanBookingListItems = ``;
+
+
+                // Parse the Startdate_FormatDates string into a Date object
+                var startDate = new Date(_planBookingDetail.Startdate_FormatDates);
+
+                if (_planBookingDetail.PlanDurationTypeName == 'Weekly' || _planBookingDetail.PlanDurationTypeName == 'weekly') {
+                    startDate.setDate(startDate.getDate() + 7);
+                }
+                else if (_planBookingDetail.PlanDurationTypeName == 'per_monthly' || _planBookingDetail.PlanDurationTypeName == 'Monthly' || _planBookingDetail.PlanDurationTypeName == 'monthly')
+                {
+                    startDate.setDate(startDate.getDate() + 30);
+
+                }
+                else if (_planBookingDetail.PlanDurationTypeName == 'Yearly' || _planBookingDetail.PlanDurationTypeName == 'yearly' || _planBookingDetail.PlanDurationTypeName == 'per_Yearly') 
+                {
+                    startDate.setDate(startDate.getDate() + 365);
+
+                }
+
+               var  newStartDateFormatted = startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                var _businessnamevalidation = ``;
+                if (_planBookingDetail.BusinessName != null) {
+                    _businessnamevalidation = bindFlexListItemHTML("Business Name", _planBookingDetail.BusinessName);
+                } else {
+                    _businessnamevalidation = ``;
+                }
+                var _businessOwnerName = ``;
+                if (_planBookingDetail.PlanType == 1) {
+
+                    _businessOwnerName = `<a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${_planBookingDetail.userLoginIdForlink}">${_planBookingDetail.BusinessOwnerName}</a>`;
+                }
+                else {
+                    _businessOwnerName = `${_planBookingDetail.BusinessOwnerName}`;
+                }
+
+                ////-----------for permissions---------------------------------
+                
+                if (_planBookingDetail.PlanType == 2)
+                {
+                        var html=``;
+
+                    for (var i = 0; i < response.data.PermissionAllList.length; i++)
+                    {
+
+                        if (_planBookingDetail.PlanPermission.includes(response.data.PermissionAllList[i].Id))
+                        {
+                            html += `<div class="font-weight-bold mt-2" style="margin-left:40px;">
+                        <i class="fa fa-check text-success"></i> ${response.data.PermissionAllList[i].TextValue}</div>`;
+                        }
+                    }
+
+                }
+
+                PlanBookingListItems += bindFlexListItemHTML("Plan Name", _planBookingDetail.PlanName);
+                PlanBookingListItems += bindFlexListItemHTML("Price", _planBookingDetail.PlanPrice + "/-");
+                PlanBookingListItems += bindFlexListItemHTML("Start Date", _planBookingDetail.Startdate_FormatDates);
+                PlanBookingListItems += bindFlexListItemHTML("End Date", newStartDateFormatted);
+                PlanBookingListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                PlanBookingListItems += `<h3>Contact Details</h3>`;
+                PlanBookingListItems += ` <hr />`;
+                PlanBookingListItems += bindFlexListItemHTML("Business Owner Name", _businessOwnerName);
+                PlanBookingListItems += _businessnamevalidation;
+                PlanBookingListItems += bindFlexListItemHTML("Email", _planBookingDetail.Email);
+                PlanBookingListItems += bindFlexListItemHTML("Contact No. ", _planBookingDetail.PhoneNumber_CountryCode + ' ' + _planBookingDetail.PhoneNumber);
+                PlanBookingListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                PlanBookingListItems += `<h3>Plan/Packages Information</h3>`;
+                PlanBookingListItems += `<strong>${_planBookingDetail.PlanName}</strong> ( ${_planBookingDetail.PlanPrice}/-)`;
+                PlanBookingListItems += `${_planBookingDetail.Description} `;
+                PlanBookingListItems += `<h3>Package Permissions</h3>${html}`;
+
+                orderListItems += bindFlexListItemHTML("Order #", _orderDetail.Id);
+                orderListItems += bindFlexListItemHTML("Date", _orderDetail.CreatedOn_FormatDate);
+                orderListItems += bindFlexListItemHTML("Discount", _orderDetail.TotalDiscount);
+                orderListItems += bindFlexListItemHTML("GST", _orderDetail.GST);
+                orderListItems += bindFlexListItemHTML("<b>Total Amount</b>", `<b>${_orderDetail.TotalAmount}/-</b>`);
+                orderListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                orderListItems += bindFlexListItemHTML("Payment Method", _orderDetail.PaymentMethod);
+                orderListItems += bindFlexListItemHTML("Payment Approved", (_paymentResponseDetail.Approved) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+                orderListItems += bindFlexListItemHTML("Transaction ID", _paymentResponseDetail.TransactionID);
+
+
+                     $('#sectionPlanBookingDetail').html(PlanBookingListItems);
+                      $('#sectionOrderDetails').html(orderListItems);
+
+
+                    
+
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+  }
+
+    function bindFlexListItemHTML(key, value) {
+        return `
+     <div class="d-flex d-flex h6 justify-content-between w-100">
+         <div><b>${key}: </b></div>
+         <div>${value}</div>
+     </div>
+     <hr class="mt-0 mb-0" />
+        `;
+    }
+
+    function bindPermissions(allPermissions, html, currentPermission, level = 0) {
+        if (allPermissions.length <= 0) {
+            return '';
+        }
+
+        if (currentPermission == null || currentPermission.length <= 0) {
+            return '';
+        }
+
+        _marginLeft = 40 * level;
+        html += `<div class="font-weight-bold mt-2" style="margin-left:${_marginLeft}px;"><i class="fa fa-check text-success"></i> ${currentPermission.TextValue}</div>`;
+
+        var _subPermissions = allPermissions.filter((x) => x.ParentPermissionId == currentPermission.Id);
+        for (var sp = 0; sp < _subPermissions.length; sp++) {
+            html += bindPermissions(allPermissions, '', _subPermissions[sp], level + 1);
+        }
+
+        return html;
+
+    }
+
+
+
+
+</script>

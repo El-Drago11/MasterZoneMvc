@@ -1,0 +1,1809 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+<script>
+    var CourseId_Global = 0;
+    var UserToken_Global = "";
+    var _courseTable;
+    var GroupDetail_Global = {};
+
+    var LicenseBookingId_Global = 0;
+
+    var LocationChooseMap = 0;
+    var CountryCourseLocation = 'Select';
+    var StateCourseLocation = 'Select';
+    var CityCourseLocation = 'Select';
+    var LandMarkCourseLocation = '';
+    var CourseCertificateId_Global = 0;
+    var ParentCourseCategoryTypeId_Global = 0;
+
+    function initializeDataTable_Course() {
+        _courseTable = $("#tblCourse").DataTable();
+
+    }
+
+  $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetActiveCourseCategoryTypeList();
+                getAllInstructorLists();
+                GetGroupNamesList();
+                GetExamNamesList();
+                initializeDataTable_Course();
+                GetAllCourseDetail();
+                //GetAllClasses();
+                GetActiveCourseCategoryTypeList();
+
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        GetActiveCourseCategoryTypeList();
+                        getAllInstructorLists();
+                        GetGroupNamesList();
+                        GetExamNamesList();
+                       initializeDataTable_Course();
+                        GetAllCourseDetail();
+                       // GetAllClasses();
+                        GetActiveCourseCategoryTypeList();
+
+
+
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+
+      $('input[name="CourseMode"]').change(function () {
+          if ($(this).val() === '1') {
+              $('#CourseURL_Link').prop('disabled', false).show();
+              $('#CourseMapLocation').prop('disabled', true).hide();
+          } else {
+              $('#CourseMapLocation').prop('disabled', true).show();
+              $('#CourseURL_Link').prop('disabled', false).hide();
+              GetCountriesList();
+          }
+      });
+
+     
+
+
+      $('input[name="Course_Price"]').change(function () {
+          if ($(this).val() === '1') {
+              $("#CoursePrice_PaidSection").show();
+              $("#CoursePriceFree_DemoCourse_Section").hide();
+              $('#CoursePricePaid_PerCourse').prop('checked', true);
+          } else {
+              $("#CoursePrice_PaidSection").hide();
+              $("#CoursePriceFree_DemoCourse_Section").show();
+              $('#CoursePricePaid_PerCourse').prop('checked', false);
+             $("#CoursePriceFree_DemoCourse").prop('checked', true);
+
+          }
+      });
+    });
+
+
+
+
+    //$("#ddlParentCourseCategoryType").on('change', function () {
+    //    getactivecoursecategorytypelist();
+    //});
+
+    function toggleExamDetail() {
+       
+        if ($("#ddlExamType").val() === '1') {
+            $("#Exam_ListDetail").show();
+        } else {
+            $("#Exam_ListDetail").hide();
+        }
+    }
+    function toggleCertificateDetail() {
+        if ($("#ddlCertifiedType").val() === '1') {
+            $("#Certificate_ListDetail").show();
+        } else {
+            $("#Certificate_ListDetail").hide();
+        }
+    }
+
+
+
+    function btnSubmitCourse() {
+        ;
+       
+        let is_valid = true;
+        $(".error-class").html('');
+        let _courseLocationCountry = '';
+        let _courseLocationState = '';
+        let _courseLocationCity = '';
+        var _mode = (CourseId_Global <= 0) ? 1 : 2;
+        let _courseName = $("#CourseName").val().trim();
+        let _courseshortDescription = $("#CourseShortDescription").val().trim();
+        let _coursePrice = $("#CoursePrice").val().trim();
+        let _courseStartDate = $("#Schedule_StartDate").val().trim();
+        var _courseMode = $('input[name="CourseMode"]:checked').val();
+        let _courseLoctionAddress = $("#CourseOfflineAddress").val();
+        let _courseOnlineURl = $("#CourseOnlineURL_Link").val();
+        let _coursePriceOption = $('input[name="Course_Price"]:checked').val();
+        let _coursePaidOption = $('#CoursePriceFree').val();
+        let _courseLocationLandMark = $("#CourseOfflineLandMark").val();
+        let _courseLocationPinCode = $("#CourseOfflinePinCode").val();
+        let _instructor = $("#ddlSelectedInstructorUserLoginId").val();
+        let _courseOnlineURL_LinkPassword = $("#CourseOnlineURL_Link_Password").val();
+        let _howToBookText = $("#txtHowToBookCourse").val().trim();
+        let _coursedurationType = $("#ddlDurationType").val().trim();
+        let _coursedurationValue = $("#text_duration").val();
+        let _courseLocationLatitude = $("#LocationLatitude").val();
+        let _courseLocationLongitude = $("#LocationLongitude").val();
+        let _courseCategoryId = $("#ddlParentCourseCategoryType").val();
+        let _coursedescription = $("#text_description .ql-editor").html();
+        let _courseexam = $("#ddlExamType").val();
+        let _courseCertificate = $("#ddlCertifiedType").val();
+        let _courseexamlistId = $("#ddlSelectedExamId").val();
+        let _coursecertificateId = $("#ddlLicenseBookingId").val();
+        let _coursegroupId = $("#ddlSelectedGroupId").val();
+        let _courseCertificateProfileId = $("#ddlCertificationProfileId").val();
+
+        let _error_courseName = $("#error_txtCourseName");
+        let _error_courseshortDescription = $("#error_CourseShortDescription");
+        let _error_coursePrice = $("#error_txtCoursePricePaid");
+        let _error_courseStartDate = $("#error_Schedule_StartDate");
+        let _error_howToBookText = $("#error_txtHowToBookCourse");
+        let _error_instructorId = $("#error_ddlSelectedInstructorUserLoginId");
+        let _error_coursedurationType = $("#error_ddlDurationType");
+        let _error_coursedurationValue = $("#error_text_duration");
+        let _error_courseCategoryId = $("#error_ddlParentCourseCategory");
+        let _error_coursedescription = $("#error_text_description");
+        let _error_courseexam = $("#error_ddlExamType");
+        let _error_courseCertificate = $("#error_ddlCertificateType");
+        let _error_coursegroupId = $("#error_ddlSelectedGroupId");
+
+
+
+        if (LocationChooseMap == 1) {
+            _courseLocationCountry = $("input #ddl_CourseOfflineCountry").val();
+            _courseLocationState = $("input #ddl_CourseOfflineState").val();
+            _courseLocationCity = $("input #ddl_CourseOfflineCity").val();
+        }
+        else {
+            _courseLocationCountry = $("#ddl_CourseOfflineCountry").val();
+            _courseLocationState = $("#ddl_CourseOfflineState").val();
+            _courseLocationCity = $("#ddl_CourseOfflineCity").val();
+        }
+
+
+        if (_courseexam <= 0) {
+            is_valid = false;
+            _error_courseexam.html('@(Resources.BusinessPanel.CourseExamSelectedValueRequired)');
+        }
+
+
+
+
+        if (_courseCertificate <= 0) {
+            is_valid = false;
+            _error_courseCertificate.html('@(Resources.BusinessPanel.CourseCertificateSelectedValueRequired)');
+        }
+
+        if (_courseexam == '1') {
+            if (_courseexamlistId <= 0) {
+                 is_valid = false;
+            $("#error_ddlSelectedExamId").html('@(Resources.BusinessPanel.CourseExamIdRequired)');
+        }
+        }
+
+
+        if (_courseCertificate == '1') {
+            if (_coursecertificateId <=0) {
+            is_valid = false;
+            $("#error_ddlLicenseBookingId").html('@(Resources.BusinessPanel.CourseCertificateIdRequired)');
+        }
+        }
+
+
+                if (_courseMode == '0') {
+
+            if (_courseLoctionAddress == "") {
+                is_valid = false;
+                $("#error_CourseOfflineAddress").html('@(Resources.BusinessPanel.ErrorMessageOfflineCourseLocation)');
+            }
+
+            if (_courseLocationLandMark == "") {
+                is_valid = false;
+                $("#error_CourseOfflineLandMark").html('@(Resources.BusinessPanel.ErrorMessageCourseOfflineLandMark)');
+            }
+            if (_courseLocationCountry == "" || _courseLocationCountry <= 0) {
+                is_valid = false; // <-- Typo here
+                $("#error_ddl_CourseOfflineCountry").html('@(Resources.BusinessPanel.ErrorMessageCourseOfflineCountry)');
+            }
+            if (_courseLocationState <= 0 || _courseLocationState == "") {
+                is_valid = false; // <-- Typo here
+                $("#error_ddl_CourseOfflineState").html('@(Resources.BusinessPanel.ErrorMessageCourseOfflineState)');
+            }
+            if (_courseLocationCity <= 0 || _courseLocationCity == "") {
+                is_valid = false; // <-- Typo here
+                $("#error_ddl_CourseOfflineCity").html('@(Resources.BusinessPanel.ErrorMessageCourseOfflineCity)');
+            }
+            if (_courseLocationPinCode == "") {
+                is_valid = false;
+                $("#error_CourseOfflinePinCode").html('@(Resources.BusinessPanel.ErrorMessageCourseOfflinePinCode)');
+            }
+           }
+                else {
+                    let _courseOnlineURl = $("#CourseOnlineURL_Link").val();
+                    if (_courseOnlineURl == "") {
+                        is_valid = false;
+                        $("#error_CourseOnlineURL_Link").html('@(Resources.BusinessPanel.ErrorMessagOnlineCourseURl)');
+                    }
+                    if (_courseOnlineURL_LinkPassword == "") {
+                        is_valid = false;
+                        $("#error_CourseOnlineURL_Link_Password").html('@(Resources.BusinessPanel.ErrorMessageCourseOnlineLinkPassword)');
+                    }
+                }
+
+
+
+        if (_coursePriceOption == 0) {
+            _coursePrice = 0;
+        }
+        else {
+
+            if (validate_IsEmptyStringInputFieldValue(_coursePrice) && _coursePrice <= 0) {
+                is_valid = false;
+                _error_coursePrice.html('@(Resources.BusinessPanel.ErrorMessageCoursePrice)');
+            }
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_courseName))
+        {
+            is_valid = false;
+            _error_courseName.html('@(Resources.BusinessPanel.ErrorMessageCourseName)');
+        }
+
+
+
+        if (_instructor <= 0 || _instructor == "") {
+            is_valid = false;
+            _error_instructorId.html('@(Resources.BusinessPanel.ErrorMessageSelectInstructor)')
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_howToBookText))
+        {
+            is_valid = false;
+            _error_howToBookText.html('@(Resources.BusinessPanel.HowToBookText_CourseRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_courseshortDescription))
+        {
+            is_valid = false;
+            _error_courseshortDescription.html('@(Resources.BusinessPanel.ErrorMessageShortDescription)');
+        }
+
+        if (_coursedescription == "")
+        {
+            is_valid = false;
+             _error_coursedescription.html('@(Resources.BusinessPanel.DescriptionRequired)');
+        }
+
+
+        if (validate_IsEmptyStringInputFieldValue(_courseStartDate))
+        {
+            is_valid = false;
+            _error_courseStartDate.html('@(Resources.BusinessPanel.CourseStartDate_Required)');
+        }
+
+        if (validate_IsEmptySelectInputFieldValue(_coursedurationValue))
+        {
+            is_valid = false;
+            _error_coursedurationValue.html('@(Resources.BusinessPanel.ErrorMessageDuration)');
+        }
+        if (_coursegroupId <=0)
+        {
+            is_valid = false;
+            _error_coursegroupId.html('@(Resources.BusinessPanel.GroupSelection_Required)');
+        }
+        if (_coursedurationType <=0)
+        {
+            is_valid = false;
+            _error_coursedurationType.html('@(Resources.BusinessPanel.DurationTypeSelection_Required)');
+        }
+        if (_courseCategoryId <= 0)
+        {
+            is_valid = false;
+            _error_courseCategoryId.html('@(Resources.BusinessPanel.CourseCategorySelection_Required)');
+        }
+
+
+        var _isActiveCourse = 0;
+        if ($('#chkIsActive').is(':checked')) {
+            // checked
+            _isActiveCourse = 1;
+        }
+        var _courseImageFile_MS = $("#fileCourseImage_ManageCourse").get(0);
+        var _courseImageFiles = _courseImageFile_MS.files;
+
+        var encodeddescription = encodeURIComponent(_coursedescription);
+        
+
+       if (is_valid) {
+        var data = new FormData();
+        data.append("Id", CourseId_Global);
+        data.append("Name", _courseName);
+        data.append("ShortDescription", _courseshortDescription);
+        data.append("Description", encodeddescription);
+        data.append("CoursePrice", _coursePrice);
+        data.append("CourseStartDate", _courseStartDate);
+        data.append("CourseMode", _courseMode);
+        data.append("courseLocationAddress", _courseLoctionAddress);
+        data.append("courseOnlineURLLink", _courseOnlineURl);
+        data.append("courseLocationCountry", _courseLocationCountry);
+        data.append("courseLocationLandMark", _courseLocationLandMark);
+        data.append("courseLocationState", _courseLocationState);
+        data.append("courseLocationCity", _courseLocationCity);
+        data.append("courseLocationPinCode", _courseLocationPinCode);
+        data.append("coursePaidOption", _coursePaidOption);
+        data.append("coursePriceOption", _coursePriceOption);
+        data.append("courseOnlineURLLinkPassword", _courseOnlineURL_LinkPassword);
+        data.append("InstructorId", _instructor);
+        data.append("GroupId", _coursegroupId);
+        data.append("HowToBookText", _howToBookText);
+        data.append("DurationType", _coursedurationType);
+        data.append("Duration", _coursedurationValue);
+        data.append("courseLocationLatitude", _courseLocationLatitude);
+        data.append("courseLocationLongitude", _courseLocationLongitude);
+        data.append("mode", _mode);
+        data.append("CourseCategoryId", _courseCategoryId);
+        data.append("IsActive", _isActiveCourse);
+        data.append("ExamType", _courseexam);
+        data.append("CertificateType", _courseCertificate);
+        data.append("ExamId", _courseexamlistId);
+        data.append("CertificateProfileId", _courseCertificateProfileId);
+        data.append("CertificateId", _coursecertificateId);
+        data.append('CourseImage', _courseImageFiles[0]);
+
+        $.ajax({
+            url: "/api/Course/AddUpdateCourse",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: "multipart/form-data",
+            contentType: false,
+            //contentType: 'application/json',
+            type: "POST",
+            success: function (dataResponse) {
+                
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllCourseDetail();
+                    ResetCourseAddView();
+                }
+                else {
+                    swal({
+                        title: '',
+                        imageUrl: '/Content/svg/error.svg',
+                        text: dataResponse.message
+                    });
+
+                    //StopLoading();
+
+                }
+
+            },
+            error: function (result) {
+                //StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+ }
+
+    function GetAllCourseDetail() {
+       
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Course/GetCourseDetail_ByPagination";
+        _courseTable.clear().destroy();
+        _courseTable = $("#tblCourse").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "asc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+
+                }
+                , {
+                    "data": "CourseImage", "name": "CourseImage", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        return `<img class="imagePreview" src="${row.CourseImageWithPath}" />`;
+                    }
+                }
+                , { "data": "Name", "name": "Name", "autoWidth": true }
+                , { "data": "ShortDescription", "name": "ShortDescription", "autoWidth": true }
+                , { "data": "Price", "name": "Price", "autoWidth": true }
+                ,{
+                    "data": null, "name": "Duration", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                            <div class="mb-2">
+                                 ${row.DurationType}
+                            </div>
+                            <div class="mb-2">
+
+                                ${row.Duration}
+                            </div>
+                        </div>`;
+                        return _data;
+                    }
+                },
+                 { "data": "CourseMode", "name": "CourseMode", "autoWidth": true }
+                , {
+                    "data": null, "": "IsActive", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _status = '';
+                        if (row.IsActive == 1) {
+                            _status = '<a class="btn btn-success text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusCourse(' + row.Id + ');">Active</a>';
+                                }
+                        else {
+                            _status = '<a class="btn btn-danger text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusCourse(' + row.Id + ');">In-Active</a>';
+                                 }
+
+                        return _status;
+                    }
+                }
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                        var _delete = '';
+
+                        _edit = `<a href="javascript:EditCourseById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                        _delete = `<a href="javascript:ConfirmDeleteCourse(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                        var _action = `<div class="edbt">
+                                        ${_edit}
+                                        ${_delete}
+                                    </div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,1,5], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblCourse_filter input').unbind();
+        $('#tblCourse_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _courseTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    function EditCourseById(id) {
+
+        /*GetCountriesList();*/
+        //GetStatesLists();
+        //GetCitiesList();
+        var _url = "/api/Course/GetCourseDetailById?id=" + id;
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('.error-class').html('');
+
+                var item = response.data;
+
+
+                $("#CourseName").val(item.Name);
+                $("#CourseShortDescription").val(item.ShortDescription);
+                $("#ddlDurationType").val(item.DurationType).trigger('change');
+                $("#text_duration").val(item.Duration);
+                $("#Schedule_StartDate").val(item.CourseStartDate);
+                $("#ddlSelectedInstructorUserLoginId").val(item.InstructorLoginId).trigger('change');
+                if (item.IsPaid == 1) {
+                    $("#CoursePricePaid").prop('checked', true);
+                    $("#CoursePriceFree").prop('checked', false);
+                    $("#CoursePrice").val(item.Price);
+                    $("#CoursePrice_PaidSection").show();
+                    $("#CoursePriceFree_DemoCourse_Section").hide();
+                    if (item.CoursePriceType == "per_class") {
+                        $("#CoursePricePaid_PerCourse").prop('checked', true);
+                        $("#CoursePricePaid_PerMonth").prop('checked', false);
+                        $("#CoursePriceFree_DemoCourse").prop('checked', false);
+                    }
+                    if (item.CoursePriceType == "per_month") {
+                        $("#CoursePricePaid_PerMonth").prop('checked', true);
+                        $("#CoursePricePaid_PerCourse").prop('checked', false);
+                        $("#CoursePriceFree_DemoCourse").prop('checked', false);
+                    }
+                    if (item.CoursePriceType == "demo") {
+                        $("#CoursePriceFree_DemoCourse").prop('checked', true);
+                        $("#CoursePricePaid_PerMonth").prop('checked', false);
+                        $("#CoursePricePaid_PerCourse").prop('checked', false);
+                    }
+
+                }
+                else {
+                    $("#CoursePriceFree_DemoCourse").prop('checked', true);
+                    $("#CoursePricePaid").prop('checked', false);
+                    $("#CoursePriceFree").prop('checked', true);
+                    $("#CoursePrice_PaidSection").hide();
+                    $("#CoursePriceFree_DemoCourse_Section").show();
+                }
+
+                $("#ddlExamType").val(item.ExamType).trigger('change');
+                $("#ddlSelectedExamId").val(item.ExamId).trigger('change');
+                $("#ddlCertifiedType").val(item.CertificateType).trigger('change');
+                $("#ddlLicenseBookingId").val(item.CertificateId).trigger('change');
+
+                if (item.CourseMode == "Online") {
+                    $("#CourseOnlineMode").prop('checked', true);
+                    $("#CourseURL_Link").show();
+                    $("#CourseMapLocation").hide();
+                    $("#CourseOnlineURL_Link").val(item.OnlineCourseLink);
+                    $("#CourseOnlineURL_Link_Password").val(item.CourseURLLinkPassword);
+                    //$("#ClassOfflineLocation").val(item.Price);
+                }
+                else if (item.CourseMode == "Offline") {
+                    CountryCourseLocation = item.Country;
+                    StateCourseLocation = item.State;
+                    CityCourseLocation = item.City;
+                    LandMarkCourseLocation = item.LandMark;
+                    $("#CourseOfflineMode").prop('checked', true);
+                    $("#CourseMapLocation").show();
+                    $("#CourseURL_Link").hide();
+                    $("#CourseOfflineAddress").val(item.Address);
+                    $("#CourseOfflineLandMark").val(LandMarkCourseLocation);
+                    $("#ddl_CourseOfflineCountry").val(CountryCourseLocation);
+                    $("#ddl_CourseOfflineState").val(StateCourseLocation);
+                    $("#ddl_CourseOfflineCity").val(CityCourseLocation);
+                    $("#CourseOfflinePinCode").val(item.Pincode);
+                }
+
+                //--Category-Status
+                if (item.IsActive == 1) {
+                    $('#chkIsActive').prop('checked', true);
+                }
+                else {
+                    $('#chkIsActive').prop('checked', false);
+                }
+
+
+                $('#text_description .ql-editor').html(item.Description);
+                $('#ddlSelectedGroupId').val(item.GroupId).trigger('change');
+                $('#txtHowToBookCourse').val(item.HowToBookText);
+
+                $("#fileCourseImage_ManageCourse").val('');
+                if (item.CourseImageWithPath != "") {
+                    $("#previewImage").attr('src', item.CourseImageWithPath);
+                    $("#previewImage").removeClass('d-none');
+                }
+                CourseId_Global = item.Id;
+                ParentCourseCategoryTypeId_Global = response.data.CourseCategoryId;
+                LicenseBookingId_Global = response.data.CertificateId;
+                CourseCertificateId_Global = response.data.CertificateProfileId;
+                if (item.CourseMode == "Offline") {
+
+                    GetCountriesList();
+                }
+                else {
+                    GetCountriesList();
+                }
+                
+                EditScheduleCourses();
+                GetActiveCourseCategoryTypeList();
+                GetBusinessAvailableBookedCertificationProfilesList();
+
+                initMap();
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+function EditScheduleCourses() {
+    $('#sectionAddCourse').show();
+    $('#sectionViewCourse').hide();
+    document.getElementById("myText").innerHTML = "Edit My Schedule/Course";
+    document.getElementById("ChangeUpdateText").innerHTML = "Update";
+    document.getElementById("pageTextchange").innerHTML = "Edit My Schedule/Course";
+    document.getElementById("pageStageChange").innerHTML = "Edit My Schedule/Course";
+    $('#ChangeUpdateText').show();
+    $('#btnAddCourse').hide();
+    $(".error-class").html('');
+    $('#btnAddCourse').click(function () {
+        document.getElementById("myText").innerHTML = "Add My Schedule/Course";
+        document.getElementById("ChangeUpdateText").innerHTML = "Save";
+        $(".error-class").html('');
+    });
+    $('#sectionViewCourseFeature').removeClass('d-none');
+};
+
+
+$(document).ready(function () {
+    $('#btnAddCourse').click(function () {
+        $('#sectionAddCourse').show();
+        $('#btnAddCourse').hide();
+        $('#sectionViewCourse').hide();
+        document.getElementById("pageTextchange").innerHTML = "Add My Schedule/Course";
+        document.getElementById("pageStageChange").innerHTML = "Add My Schedule/Course";
+        GetCountriesList();
+        GetBusinessAvailableBookedCertificationProfilesList();
+        initMap();
+    });
+
+});
+
+
+function ShowingViewStaffList() {
+
+    $('#EditScheduleCourse').show();
+
+}
+
+    function ResetCourseAddView() {
+
+        $("#CourseName").val('');
+        $("#text_description .ql-editor").text('');
+        $("#CourseShortDescription").val('');
+        $("#CoursePrice").val('');
+        $('#ddlDurationType').val('0');
+        $('#text_duration').val('');
+        $('#Schedule_StartDate').val('');
+        $("#CourseOnlineURL_Link").val('');
+        $("#CourseOfflineAddress").val('');
+        $("#CourseOfflineLandMark").val('');
+        $("#ddl_CourseOfflineCountry").val('');
+        $("#ddl_CourseOfflineState").val('');
+        $("#ddl_CourseOfflineCity").val('');
+        $("#CourseOfflinePinCode").val('');
+        $('#sectionViewCourse').show();
+        $('#ddlCertifiedType').val('');
+        $('#sectionAddCourse').hide();
+        $('#btnAddCourse').show();
+        $("#CourseOnlineMode").prop('checked', true);
+        $("#CourseOfflineMode").prop('checked', false);
+        $("#CoursePricePaid_PerMonth").prop('checked', false);
+        $("#CoursePricePaid_PerCourse").prop('checked', false);
+        $("#CoursePriceFree_DemoCourse").prop('checked', true);
+        $("#CoursePricePaid").prop('checked', false);
+        $("#CoursePriceFree").prop('checked', true);
+        $("#CoursePrice_PaidSection").hide();
+        $("#CoursePriceFree_DemoCourse_Section").show();
+        $("#CourseOfflineLocation").val('');
+        $("#CourseURL_Link").show();
+        $("#CourseMapLocation").hide();
+        //$("#SelectDaysOfClass").hide();
+        $("#ddlSelectedInstructorUserLoginId").val('0');
+        $("#CourseOnlineURL_Link_Password").val('');
+        $("#fileCourseImage_ManageCourse").val('');
+        $("#previewImage").attr('src', '');
+        $("#previewImage").addClass('d-none');
+        $("#ddlSelectedGroupId").val('0');
+        $("#txtHowToBookCourse").val('');
+        $("#ddlCourseCategoryType").val('0');
+        $("#ddlExamType").val('0');
+        $("#ddlSelectedExamId").val('0');
+        $("#ddlCertifiedType").val('0');
+        $("#ddlCertificationProfileId").val('0');
+        $("#ddlLicenseBookingId").val('0');
+        $("#ddlParentCourseCategoryType").val('0').trigger('change');
+        $('#Certificate_ListDetail').hide();
+        $('#Exam_ListDetail').hide();
+
+        document.getElementById("pageTextchange").innerHTML = "My Schedule/Course";
+        document.getElementById("pageStageChange").innerHTML = "My Schedule/Course";
+        $(".error-class").html('');
+
+        $("input#ddl_CourseOfflineCountry").val('');
+        $("input#ddl_CourseOfflineState").val('');
+        $("input#ddl_CourseOfflineCity").val('');
+        $(".WithoutMapLocation").removeClass('d-none');
+        $(".MapLocation").addClass('d-none');
+        $("#ddl_CourseOfflineCity").html('');
+        $("#ddl_CourseOfflineCity").append('<option value="0">Select</option>');
+        $("#ddl_CourseOfflineState").html('');
+        $("#ddl_CourseOfflineState").append('<option value="0">Select</option>');
+        $("#ddl_CourseOfflineCountry").html('');
+        $("#ddl_CourseOfflineCountry").append('<option value="0">Select</option>');
+        CountryCourseLocation = 'Select';
+        LandMarkCourseLocation = '';
+        LocationChooseMap = 0;
+        CourseId_Global = 0;
+        ParentCourseCategoryTypeId_Global = 0;
+        LicenseBookingId_Global = 0;
+        CourseCertificateId_Global = 0;
+    }
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+    }
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+function ConfirmDeleteCourse(id) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteCourseTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteCourseText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "Yes",
+        }
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeleteCourseById(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+    function DeleteCourseById(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Course/DeleteCourseDetailById?id=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if Class successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message);
+                    //--Get Class List
+                    GetAllCourseDetail();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+    function ConfirmChangeStatusCourse(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmChangeStatusCourseTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmChangeStatusCourseText)",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+        cancelButtonText: "@(Resources.ErrorMessage.No)"
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusCourse(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+    function ChangeStatusCourse(sid) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/Course/ChangeCourseStatus?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllCourseDetail();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+
+    function GetActiveCourseCategoryTypeList() {
+
+      
+        let _url = "/api/Business/GetAllCourseCategoryDetailList" ;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $("#ddlParentCourseCategoryType").html('');
+                var _selectList = '<option value="0">Select Course Category Type</option>';
+                for (var i = 0; i < response.data.length; i++) {
+                    _selectList += '<option value="' + response.data[i].Id + '">' + response.data[i].Title + '</option>';
+                }
+
+                $("#ddlParentCourseCategoryType").html('').append(_selectList); //.select2();
+                $("#ddlParentCourseCategoryType").val(ParentCourseCategoryTypeId_Global).trigger('change');
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+       function getAllInstructorLists() {
+
+      let _url =  "/api/Class/GetAllInstructor";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $("#ddlSelectedInstructorUserLoginId").html('');
+            var _selectList = '<option value="0">Select Instructor</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                var _InstructorName = '(' + response.data[i].Id + ')' + response.data[i].InstructorName;
+                _selectList += '<option value="' + response.data[i].InstructorUserLoginId + '">' + response.data[i].InstructorName + '</option>';
+            }
+            $("#ddlSelectedInstructorUserLoginId").html('').append(_selectList); //.select2();
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+    function GetGroupNamesList() {
+        var GroupType_Global = 'g_course';
+          var _url = "/api/Group/GetAllGroupNamesList?groupType=" +GroupType_Global;
+          $('#ddlSelectedGroupId').html('<option value="0">Select Group</option>');
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+              
+               
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    $('#ddlSelectedGroupId').append(`<option value="${item.Id}">${item.Name}</option>`);
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetExamNamesList() {
+        var _url = "/api/Exam/GetExamFormByBusinessId";
+        $('#ddlSelectedExamId').html('<option value="0">Select Exam</option>');
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    $('#ddlSelectedExamId').append(`<option value="${item.Id}">${item.Title}</option>`);
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+     function GetBusinessAvailableBookedCertificationProfilesList() {
+        StartLoading();
+        $("#ddlCertificationProfileId").html('<option value="0">Select</option>');
+
+        $.ajax({
+        type: "GET",
+            url: "/api/License/GetAllAvaliableBookedLicenseCertificationProfiles?trainingId=" + CourseId_Global,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            //--Check if cities exist related to the selected-state
+            if (response.data.length > 0) {
+                var options = '';
+                var hasCertificateId = 0;
+
+                for (var i = 0; i < response.data.length; i++) {
+                    if (CourseCertificateId_Global == response.data[i].Id) {
+                        hasCertificateId = 1;
+                    }
+                    options += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+                }
+
+                $("#ddlCertificationProfileId").append(options);
+                if (hasCertificateId == 1) {
+                    $("#ddlCertificationProfileId").val(CourseCertificateId_Global).trigger('change');
+                } else {
+                    $("#ddlCertificationProfileId").val(0).trigger('change');
+                }
+
+
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+        });
+    }
+
+    function GetBusinessAvailableBookedLicenseListByCertificate() {
+        var certificateId = $("#ddlCertificationProfileId").val();
+
+        $("#ddlLicenseBookingId").html('<option value="0">Select</option>');
+
+        if (certificateId <= 0) {
+            return;
+        }
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/License/GetAllAvaliableBookedLicenses?certificateId=" + certificateId + "&trainingId=" + CourseId_Global,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            //--Check if cities exist related to the selected-state
+            if (response.data.length > 0) {
+                var options = '';
+                var hasOption = 0;
+
+                for (var i = 0; i < response.data.length; i++) {
+                    if (LicenseBookingId_Global == response.data[i].Id) {
+                        hasOption = 1;
+                    }
+                    options += '<option value="' + response.data[i].Id + '">' + response.data[i].LicenseTitle + '</option>';
+                }
+
+                $("#ddlLicenseBookingId").append(options);
+                if (hasOption == 1) {
+                    $("#ddlLicenseBookingId").val(LicenseBookingId_Global).trigger('change');
+                } else {
+                    $("#ddlLicenseBookingId").val(0).trigger('change');
+                }
+
+
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+        });
+    }
+
+
+// Image File Preview -------------------------------------------------------------
+    document.getElementById('fileCourseImage_ManageCourse').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+
+
+
+    function GetCountriesList() {
+
+        $("#ddl_CourseOfflineCountry").html('');
+        $("#ddl_CourseOfflineCountry").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#ddl_CourseOfflineCountry").append(res_country);
+
+                if (CourseId_Global != 0 && CountryCourseLocation != undefined && CountryCourseLocation != "")
+                    $("#ddl_CourseOfflineCountry").val(CountryCourseLocation).trigger('change');
+
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+    function ChangeCountry() {
+
+        
+        StartLoading();
+       // var _country_id = $("#ddl_courseOfflineCountry").val();
+
+
+      var _country_id = $('#ddl_CourseOfflineCountry').find('option:selected').attr('data-phonecode-val');
+        $("#ddl_CourseOfflineState").html('');
+        $("#ddl_CourseOfflineState").append('<option value="0">Select</option>');
+
+        if (_country_id == null) {
+            _country_id = 102;
+        }
+      
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                var hasListItem = false;
+                for (var i = 0; i < dataState.data.length; i++) {
+                    if (StateCourseLocation != undefined && StateCourseLocation != "" && StateCourseLocation.toLowerCase() == dataState.data[i].Name.toLowerCase()) {
+                        hasListItem = true;
+                    }
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#ddl_CourseOfflineState").append(res_state);
+
+                if (CourseId_Global != 0 && StateCourseLocation != undefined && StateCourseLocation != "") {
+                    if (hasListItem) {
+                        $("#ddl_CourseOfflineState").val(StateCourseLocation).trigger('change');
+                    }
+                    else {
+                        $("#ddl_CourseOfflineState").addClass('d-none');
+                        $("input#ddl_CourseOfflineState").val(StateCourseLocation);
+                        $("input#ddl_CourseOfflineState").removeClass('d-none');
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#ddl_CourseOfflineState").html('');
+        $("#ddl_CourseOfflineState").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#ddl_CourseOfflineState").append(res_state);
+                $("#ddl_CourseOfflineState").val(StateCourseLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#ddl_CourseOfflineState').find('option:selected').attr('data-phonecode-val');
+       
+        $("#ddl_CourseOfflineCity").html('');
+        $("#ddl_CourseOfflineCity").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    var hasListItem = false;
+                    for (var i = 0; i < dataCity.data.length; i++) {
+                        if (CityCourseLocation.toLowerCase() == dataCity.data[i].Name.toLowerCase()) {
+                            hasListItem = true;
+                        }
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#ddl_CourseOfflineCity").append(res_city);
+
+                    if (CourseId_Global != 0 && CityCourseLocation != undefined && CityCourseLocation != "") {
+                        if (hasListItem) {
+                            $("#ddl_CourseOfflineCity").val(CityCourseLocation).trigger('change');
+                        }
+                        else {
+                            $("#ddl_CourseOfflineCity").addClass('d-none');
+                            $("input#ddl_CourseOfflineCity").val(CityCourseLocation);
+                            $("input#ddl_CourseOfflineCity").removeClass('d-none');
+                        }
+                    }
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetCitiesList() {
+
+        StartLoading();
+           $("#ddl_CourseOfflineCity").html('');
+           $("#ddl_CourseOfflineCity").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#ddl_CourseOfflineCity").append(res_city);
+                    $("#ddl_CourseOfflineCity").val(CityCourseLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    
+
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("Coursemap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#CourseOfflineLandMark").val(LandMarkCourseLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_2' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+
+
+
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#ddl_CourseOfflineCity").val(city);
+        $("#CourseOfflinePinCode").val(postal_code);
+        $("input#ddl_CourseOfflineState").val(State);
+        $("input#ddl_CourseOfflineCountry").val(Country);
+        $("#CourseOfflineLandMark").val(LandMark);
+        $("#CourseOfflineAddress").val(FullAddress);
+        LocationChooseMap = 1;
+    })
+</script>
+

@@ -1,0 +1,687 @@
+﻿<script>
+    var UserToken_Global = "";
+    var Branches_GlobalId = 0;
+    var _branchesTable;
+
+    function initializeDataTable_Branches() {
+        _branchesTable = $("#tblBranchesView").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                initializeDataTable_Branches();
+                UserToken_Global = dataToken;
+                getAllActiveSubCategoriesByParentCategory();
+               GetAllBranchesForBusinessPagination();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_Branches();
+                        getAllActiveSubCategoriesByParentCategory();
+                       GetAllBranchesForBusinessPagination();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function getAllActiveSubCategoriesByParentCategory() {
+        
+        let _url = "/api/BusinessCategory/GetAllSubBusinessCategoryDetail";
+    StartLoading();
+    $.ajax({
+        type: "GET",
+        url: _url,
+        contentType: 'application/json',
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        success: function (response) {
+            StopLoading();
+
+            var res_Categories = '';
+            // --------------------- append parent categories in dropdown
+            var res_Categories = '<option value="0">Select  Category</option>';
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else if (response.data) {
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    res_Categories += '<option value="' + item.Id + '">' + item.Name + '</option>';
+                }
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.CategoryData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            $("#ddlBusinessSubCategory").html('').append(res_Categories);
+                // --------------------- append parent categories in dropdown
+
+
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    function GetAllBranchesForBusinessPagination() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllBranchesDetailByPagination";
+        _branchesTable.clear().destroy();
+        _branchesTable = $("#tblBranchesView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , { "data": "BranchName", "name": "BranchName", "autoWidth": true }
+                , {
+                    "data": null, "name": "BusinessName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Branches-Status
+                        var _BusinessLogo = (row.BusinessLogoWithPath == '') ? '' : '<img src="' + row.BusinessLogoWithPath + '" class="Image" />';
+                        var _data = `<div class="d-flex align-items-center">
+                                        <div class="mr-2">
+                                            ${_BusinessLogo}
+                                        </div>
+                                        <div>${row.BusinessName}</div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+                , { "data": "BusinessOwnerName", "name": "BusinessOwnerName", "autoWidth": true }
+                , {
+                    "data": null, "name": "Email", "autoWidth": true, "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                             ${row.PhoneNumber}
+                                        </div>
+                                        <div class="mb-2">
+                                            ${row.Email}
+                                        </div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+                , { "data": "Address", "name": "Address", "autoWidth": true }
+                // , {
+                //    "data": null, "": "Status", "autoWidth": true
+                //    , "render": function (data, type, row) {
+                //        //---Check Advertisement-Status
+                //        var _status = '';
+                //        if (row.Status == 1) {
+                //            _status = '<a class="btn btn-success text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusBranch(' + row.Id + ');">Active</a>';
+                //                }
+                //        else {
+                //            _status = '<a class="btn btn-danger text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusBranch(' + row.Id + ');">In-Active</a>';
+                //                 }
+
+                //        return _status;
+                //    }
+                //}
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        // var _view = '';
+                        var _edit = '';
+                        var _delete = '';
+                        var _staffdetail = '';
+                        var _eventdetail = '';
+                        var _studentPayment = '';
+                        var _studentDetail = '';
+
+                             /* _view = `<a href="javascript:ViewBranchesDetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;*/
+
+                        _edit = `<a href="javascript:EditBranchesDetail(${row.BranchBusinessLoginId});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                        _delete = `<a href="javascript:ConfirmDeleteBranches(${row.BranchBusinessLoginId});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                        _staffdetail = `<a href="/Business/BranchStaff?businessbranchLoginId=${row.BranchBusinessLoginId}"><i class="fas fa-user-friends" title="Staff Detail"></i></a>`;
+
+                        _eventdetail = `<a href="/Business/BranchEvent?businessbranchLoginId=${row.BranchBusinessLoginId}"><i class="fas fa-calendar-alt" title="Event Detail"></i></a>`;
+                        _studentPayment = `<a href="/Business/BranchTansactions?businessbranchLoginId=${row.BranchBusinessLoginId}"><i class="fa fa-credit-card" title="Transaction Detail"></i></a>`;
+                        _studentDetail = `<a href="/Business/BranchStudent?businessbranchLoginId=${row.BranchBusinessLoginId}"><i class="fa fa-user" title="Student Detail"></i></a>`;
+
+
+                        var _action = `<div class="edbt">
+
+
+                                    ${_edit}
+                                    ${_delete}
+                                    ${_staffdetail}
+                                    ${_eventdetail}
+                                    ${_studentPayment}
+                                    ${_studentDetail}
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            "columnDefs": [{
+                "targets": [0,6], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblBranchesView_filter input').unbind();
+        $('#tblBranchesView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _branchesTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+    function EditBranchesDetail(branchbusinessLoginId) {
+
+
+        $('#sectionAddBranches').show();
+        $('#sectionViewBranches').hide();
+        document.getElementById("myText").innerHTML = "Edit Branch";
+        document.getElementById("ChangeUpdateText").innerHTML = "Update";
+        document.getElementById("pageTextchange").innerHTML = "Edit Branch";
+        document.getElementById("pageStageChange").innerHTML = "Edit Branch";
+        $('#ChangeUpdateText').show();
+        $('#btnAddBranches').hide();
+        $(".error-class").html('');
+        $('#btnAddBranches').click(function () {
+            document.getElementById("myText").innerHTML = "Add Branch";
+            document.getElementById("ChangeUpdateText").innerHTML = "Save";
+            $(".error-class").html('');
+        });
+        var _url = "/api/Business/GetBranchDetailBybusinessLoginId?branchbusinessLoginId=" + branchbusinessLoginId;
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                    //getAllActiveStudentsLists();
+                }
+
+                $("#ddlBusinessSubCategory").val(response.data.BusinessSubCategoryId).trigger('change');
+                $("#txtBranchName").val(response.data.Name);
+                $("#txtFirstName").val(response.data.FirstName);
+                $("#txtLastName").val(response.data.LastName);
+                $("#txtEmail").val(response.data.Email);
+                $("#txtPhoneNumber").val(response.data.PhoneNumber);
+                $("#txtPassword").val(response.data.Password);
+                $("#txtConfirmPassword").val(response.data.Password);
+
+
+                //--ActiveStatus
+                if (response.data.Status == 1) {
+                    $('#chkIsActive_ManageBranches').prop('checked', true);
+                }
+                else {
+                    $('#chkIsActive_ManageBranches').prop('checked', false);
+                }
+                Branches_GlobalId = response.data.BranchBusinessLoginId;
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+
+  function btnBranchesFormClick() {
+    //console.log('submission disabled!');
+    //return;
+    let is_valid = true;
+      $(".error-class").html('');
+      var _mode = (Branches_GlobalId > 0) ? 3 : 1;
+
+    let _businessSubCategoryId = $("#ddlBusinessSubCategory").val();
+    let _firstName = $("#txtFirstName").val().trim();
+    let _lastName = $("#txtLastName").val().trim();
+    let _email = $("#txtEmail").val().trim();
+    let _phoneNumber = $("#txtPhoneNumber").val().trim();
+    let _password = $("#txtPassword").val().trim();
+      let _confirmPassword = $("#txtConfirmPassword").val().trim();
+      let _name = $("#txtBranchName").val().trim();
+
+    let _error_businessSubCategoryId = $("#error_ddlBusinessSubCategory");
+    let _error_firstName = $("#error_txtFirstName");
+    let _error_lastName = $("#error_txtLastName");
+    let _error_email = $("#error_txtEmail");
+    let _error_phoneNumber = $("#error_txtPhoneNumber");
+    let _error_password = $("#error_txtPassowrd");
+      let _error_confirmPassword = $("#error_txtConfirmPassword");
+      let _error_name = $("#error_txtBranchName");
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+
+    if (validate_IsEmptySelectInputFieldValue(_businessSubCategoryId) || parseInt(_businessSubCategoryId) <= 0) {
+        is_valid = false;
+        _error_businessSubCategoryId.html('@(Resources.BusinessPanel.SelectSubCategoryRequired)');
+      }
+       if (validate_IsEmptyStringInputFieldValue(_name)) {
+        is_valid = false;
+        _error_name.html('@(Resources.BusinessPanel.NameIsRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_firstName)) {
+        is_valid = false;
+        _error_firstName.html('@(Resources.BusinessPanel.FirstNameRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_lastName)) {
+        is_valid = false;
+        _error_lastName.html('@(Resources.BusinessPanel.LastNameRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_phoneNumber)) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+    }
+    else if (_phoneNumber.indexOf(' ') >= 0) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.PhoneNumberNotEmptySpaceRequired)');
+    }
+    else if (!phone_test.test(_phoneNumber)) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.ValidPhoneNumberRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_password)) {
+        is_valid = false;
+        _error_password.html('@(Resources.BusinessPanel.PasswordRequired)');
+    }
+    else if (validate_IsEmptyStringInputFieldValue(_confirmPassword)) {
+        is_valid = false;
+        _error_confirmPassword.html('@(Resources.BusinessPanel.ConfirmPasswordRequired)');
+    }
+    else if (_confirmPassword != _password) {
+        is_valid = false;
+        _error_confirmPassword.html("@(Resources.BusinessPanel.PasswordNotMatch_ErrorMessage)");
+    }
+    if (validate_IsEmptyStringInputFieldValue(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.BusinessPanel.EmailRequired)');
+    }
+    else if (!TestEmail.test(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+      }
+
+      var _isActive = 0;
+      if ($('#chkIsActive_ManageBranches').is(':checked')) {
+          // checked
+          _isActive = 1;
+      }
+
+    if (is_valid) {
+
+        //var _dataBusinessCategory = _businessCategoryId;
+        //if (_businessSubCategoryId > 0) {
+        //    _dataBusinessCategory = _businessSubCategoryId
+        //}
+
+        var data = new FormData();
+        var countryPhoneCode = '+64';
+        data.append("BusinessSubCategoryId", _businessSubCategoryId);
+        data.append("Email", _email);
+        data.append("Name", _name);
+        data.append("Password", _password);
+        data.append("FirstName", _firstName);
+        data.append("LastName", _lastName);
+        data.append("PhoneNumber", _phoneNumber);
+        data.append("Status", _isActive);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/Business/AddUpdateBranches?id=' + Branches_GlobalId,
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllBranchesForBusinessPagination();
+                    ResetAddBranchesView();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    StopLoading();
+
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+    $('#btnAddBranches').click(function () {
+        $('#sectionAddBranches').show();
+        $('#btnAddBranches').hide();
+        $('#sectionViewBranches').hide();
+        document.getElementById("pageTextchange").innerHTML = "Manage Branch";
+        document.getElementById("pageStageChange").innerHTML = "Add Branch";
+    });
+
+
+    //function ShowingViewBranchesList() {
+    //    $('#sectionViewBranches').show();
+    //}
+
+
+
+    function ResetAddBranchesView() {
+        $("#ddlBusinessCategory").val('');
+        $("#ddlBusinessSubCategory").val('');
+        $("#txtFirstName").val('');
+        $("#txtBranchName").val('');
+        $("#txtLastName").val('');
+        $("#txtEmail").val('');
+        $("#txtPhoneNumber").val('');
+        $("#txtPassword").val('');
+        $("#txtConfirmPassword").val('');
+        $('#chkIsActive_ManageBranches').prop('checked', false);
+        $('#sectionViewBranches').show();
+        $('#sectionAddBranches').hide();
+        $('#btnAddBranches').show();
+        document.getElementById("pageTextchange").innerHTML = "Branches";
+        document.getElementById("pageStageChange").innerHTML = "Branches";
+        Branches_GlobalId = 0;
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function ConfirmDeleteBranches(sid) {
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteBranchTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteBranchText)",
+            type: "warning",
+            buttons: true,
+           buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    
+        }).then((willDelete) => {
+            if (willDelete) {
+                DeleteBranches(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeleteBranches(sid) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/DeleteBranchDetailById?branchBusinessLoginId=" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if branches successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBranchesForBusinessPagination();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+      function ConfirmChangeStatusBranch(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmChangeStatusBranchTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmChangeStatusBranchText)",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+        cancelButtonText: "@(Resources.ErrorMessage.No)"
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusBranch(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+    function ChangeStatusBranch(sid) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/ChangeStatus?Id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllBranchesForBusinessPagination();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+</script>

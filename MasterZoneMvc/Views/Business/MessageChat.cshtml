@@ -1,0 +1,214 @@
+﻿
+@{
+    ViewBag.Title = "MessageChat";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    long toUserLoginId = 0;
+}
+
+@section Styles{
+    <style>
+        .CountMessage {
+            font-size: 14px;
+            background: #f3a762;
+            color: #FFF;
+            padding: 4px 10px;
+            border-radius: 50%;
+        }
+        .UnreadMessage{
+            display:flex;
+            justify-content:flex-end;
+            align-items:center
+        }
+        .profile-img {
+            width: 40px;
+            height: 40px;
+        }
+        .ps__rail-y {
+            top: 0 !important;
+            height: 0 !important;
+            right: 0px;
+        }
+        .ps__rail-x{
+            bottom: 0 !important;
+        }
+        .list-thumbnail.xsmall{
+            width:40px !important;
+        }
+        /*Style message Chat Header*/
+        .gruop-msg-iner {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        p.time-gruop {
+            font-size: 14px;
+            color: #f3a762;
+            margin-bottom: 1px;
+            font-weight: 800;
+        }
+        p.student-in {
+            color: #f3a762;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        div#chatUserInfo p {
+            margin-bottom: 0;
+        }
+        .UserData {
+            justify-content: space-between;
+            width: 100%;
+            align-items: flex-end;
+        }
+        .UserDetailMainDiv{
+            width:100% !important;
+        }
+        .UserDataTile{
+            cursor:pointer;
+        }
+        .UserSidebarDetails{
+            width:100%;
+        }
+       /* .scroll-content{
+            margin-bottom:100px;
+        }*/
+        .GroupDataTile{
+            cursor:pointer;
+        }
+        .chat-app .scroll {
+            /*45 vh Previous height*/
+            height: 45vh !important;
+        }
+
+        .notificationBar{
+            width:50px !important;
+        }
+        .sideBarNotification {
+            background-color: #f3a762;
+            color:#fff;
+            height:20px;
+        }
+       
+    </style>
+}
+
+
+<main>
+    
+    <div class="container-fluid">
+        <div class="row app-row">
+            <div class="col-12">
+                <div class="row">
+                    @*<div class="col-8">
+                            <h1 class="pageHeadingText" id="pageTextchange">View Messages</h1>
+                            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                                <ol class="breadcrumb pt-0">
+                                    <li class="breadcrumb-item">
+                                        <a href="/Business/Home">Home</a>
+                                    </li>
+                                    <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Messages</li>
+                                </ol>
+                            </nav>
+                        </div>*@
+                    @*<div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddMessage" style="display: none;"> View Messages</a>
+                        </div>*@
+                    <div class="col-12 row" id="chatUserInfo">
+
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        @*<div class="row" id="ShowChatList">*@
+
+        <input type="hidden" id="hdnUserloginId" value="@toUserLoginId" />
+
+        <div class="row app-row">
+            <div class="col-12 chat-app">
+                <div class="scroll">
+                    <div class="scroll-content">
+                        <div id="MessageView">
+                            @* Messages list *@
+                            <div id="LoaderDivMessage"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*</div>*@
+        @*<div id="Arrow">
+                <div class="chat-input-container d-flex justify-content-between align-items-center">
+                    <input class="form-control flex-grow-1" type="text" id="MessageBodyText" placeholder="Say something...">
+
+                    <div class="error-class" id="error_MessageBodyText"></div>
+                    <button type="button" class="btn btn-secondary icon-button large" style="margin-right: -185px;">
+                        <i class="simple-icon-arrow-right" onclick=" btnSubmitMessage(@(toUserLoginId));"></i>
+                    </button>
+                </div>
+            </div>*@
+    </div>
+
+    @* Sidebar *@
+    <div class="app-menu shown">
+        <ul class="nav nav-tabs card-header-tabs ml-0 mr-0 mb-1 justify-content-around" role="tablist">
+            <li class="nav-item w-50 text-center d-flex align-items-center justify-content-center">
+                <a class="nav-link active" id="first-tab" data-toggle="tab" href="#firstFull" role="tab" aria-selected="true">Messages</a>
+                <span class="sideBarNotification top-0 right-0 translate-middle badge rounded-pill" id="TotalUnreadMessage">
+                    
+                </span>
+            </li>
+            <li class="nav-item w-50 text-center d-flex align-items-center justify-content-center">
+                <a class="nav-link" id="second-tab" data-toggle="tab" href="#secondFull" role="tab" aria-selected="false">Groups</a>
+                <span class="sideBarNotification top-0 right-0 translate-middle badge rounded-pill" id="TotalUnreadGroupMessage" >
+                    
+                </span>
+            </li>
+        </ul>
+        <div class="p-4 h-100">
+            <div class="form-group">
+                <input type="text" class="form-control rounded" placeholder="Search" id="searchvalueListnme" onkeyup="filterUserSideViewList()">
+                <input type="text" class="form-control rounded" placeholder="Search" id="searchvaluegroupnme" onkeyup="filterUserSideViewGroups()">
+            </div>
+            <div class="tab-content h-100">
+                <div class="tab-pane fade show active h-100" id="firstFull" role="tabpanel" aria-labelledby="first-tab">
+                    <div class="scroll ps" id="UserSideViewListForChat">
+
+                    </div>
+                </div>
+                <div class="tab-pane fade h-100" id="secondFull" role="tabpanel" aria-labelledby="second-tab">
+                    <div class="scroll ps" id="UserSideViewGroupListForChat">
+                       
+                    </div>
+                </div>
+
+            </div>
+        </div><a class="app-menu-button d-inline-block d-xl-none" href="#"><i class="simple-icon-options"></i></a>
+    </div>
+
+    <div class="chat-input-container d-flex justify-content-between align-items-center" id="Arrow">
+        <input class="form-control flex-grow-1" type="text" placeholder="Say something..." id="MessageBodyText">
+        <div>
+            <button type="button" class="btn btn-primary icon-button large">
+                <i class="simple-icon-arrow-right" onclick="btnSubmitMessage(@(toUserLoginId));"></i>
+            </button>
+        </div>
+    </div>
+
+</main>
+
+
+
+
+
+@section Scripts{
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_MessageChatScriptPartial.cshtml")
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        $(".page-footer").addClass("d-none");
+    </script>
+
+}
+

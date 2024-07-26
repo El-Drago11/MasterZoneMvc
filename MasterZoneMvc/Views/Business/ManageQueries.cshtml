@@ -1,0 +1,134 @@
+﻿
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Query";
+}
+
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Queries</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Queries</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewQuery" class="d-none">*@
+        <div id="sectionViewQuery">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblQuery" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Student Name</th>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>Date</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @*<tr>
+                                            <td>Tiger Nixon</td>
+                                            <td>System Architect</td>
+                                            <td>Edinburgh</td>
+                                            <td>61</td>
+                                            <td>2011/04/25</td>
+                                            <td>
+                                                <div class="edbt">
+                                                    <a href="javascript:;" onclick="EditQuery()">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="javascript:;" class="swalDefaultSuccess" onclick="swl01()"><i class="fas fa-trash "></i></a>
+                                                </div>
+                                            </td>
+                                        </tr>*@
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+
+@*------------------------------------- Modal ------------------------------------------------------ *@
+<button type="button" id="btnOpenQueryReplyModal" class="btn btn-outline-primary mb-2 d-none" data-toggle="modal" data-target="#queryReplyModal">Reply Query</button>
+<div class="modal fade" id="queryReplyModal" data-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reply Query</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="w-100" id="queryDetail_ReplyModal">
+                </div>
+                <form>
+                    <div class="form-group">
+                        <label for="textareaQueryReply" class="col-form-label font-weight-bold">Reply</label>
+                        <textarea id="textareaQueryReply" class="form-control"></textarea>
+                        <div class="error-class" id="error_textareaQueryReply"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnCancel_ReplyModal" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="btnSubmitReplyClick()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Modal ------------------------------------------------------ *@
+
+
+@*------------------------------------- Modal ------------------------------------------------------ *@
+<div class="modal fade" id="queryDetailModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">@*Now available: Shopify Certifications*@</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+            </div>
+            <!-- Modal footer -->
+            <!-- <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                    data-dismiss="modal">Save</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div> -->
+        </div>
+    </div>
+</div>
+@*------------------------------------- Modal ------------------------------------------------------ *@
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_QueryScriptPartial.cshtml")
+}

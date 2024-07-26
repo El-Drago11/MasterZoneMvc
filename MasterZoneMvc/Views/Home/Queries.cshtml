@@ -1,0 +1,261 @@
+﻿
+@{
+    ViewBag.Title = "Query";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+}
+
+@section Styles{
+    <style>
+        .row.academies {
+            max-height: 250px;
+            overflow-y: scroll;
+        }
+
+        .radio_itemclass {
+            width: auto;
+            height: auto;
+        }
+
+        .academiesradio {
+            padding: 5px;
+            align-items: center;
+        }
+
+        .btn-default {
+            background-color: #f8f9fa;
+            border-color: #ddd;
+            color: #444;
+        }
+
+        .row::-webkit-scrollbar {
+            width: 10px;
+            max-height: 350px;
+        }
+
+        /* Track */
+        .row::-webkit-scrollbar-track {
+            box-shadow: inset 0 0 5px grey;
+            border-radius: 10px;
+        }
+
+        /* Handle */
+        .row::-webkit-scrollbar-thumb {
+            background: black;
+            border-radius: 10px;
+        }
+
+        /* Handle on hover */
+        .FormElementModel::-webkit-scrollbar-thumb:hover {
+            background: black;
+        }
+
+        .otheracademies {
+            padding: 1.25rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+
+        .myacademies {
+            padding: 1.25rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+
+        .form-check {
+            margin-bottom: 47px;
+        }
+
+        .business-logo {
+            height: 50px;
+            width: 50px;
+            object-fit: contain
+        }
+
+        .check-box {
+            display: flex;
+        }
+
+        a.enq-cnt-link-kddd:hover {
+            color: #f3a762;
+        }
+    </style>
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+    </style>
+}
+
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+                @Html.Partial("_VisitorPanelSidebarPartial")
+            </div>
+            <div class="col-sm-9">
+
+                <!-- Query-section -->
+                <div id="Queries" class="section-2-queries inrsection-mltp ">
+                    <div class="row rewrsfjdkslfjalksj">
+                        <div class="col-6">
+                            <h2 class="mk-hdffjsdkfj-enq">Queries</h2>
+                        </div>
+                        <div class="col-6 text-right">
+                            <a id="nemdl" href="javascript:AddQuery();"
+                               class="nwe-fjdkfj btn btn-outline-dark cstm-btn w-auto">
+                                New Query
+                            </a>
+                        </div>
+                    </div>
+                    @*<div>
+                            <div class="enq-cnt-liuijl enq-cnt-liuijl">
+                                <div class="enq-cnt-link-kddd">
+                                    <div class="enq-cnt-inner border-bottom d-flex justify-content-between">
+                                        <div class="">
+                                            <h6 class="enq-h-urie" data-toggle="modal" data-target="#enq-modal1a">Now available: Shopify Certifications</h6>
+                                            <p class="enq-txt-rjei">March 9, 2023</p>
+                                        </div>
+                                        <div class="">
+                                            <button type="button" class="btn btn-sm btn-danger">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>*@
+                    <div id="queryList">
+
+                    </div>
+                    <div class="text-center mt-4 mb-5">
+                        <a href="javascript:ViewMoreQueries();" id="btnViewMoreQuery" class="v-a-c-guinr-enq-jdfkj  v-a-c-guinr btn btn-outline-dark cstm-btn w-auto d-none">
+                            View More
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- The Modal -->
+<button class="d-none" id="btnAddUpdateQueryModal" data-toggle="modal" data-target="#AddUpdateQueryModal"></button>
+<div class="modal fade" data-backdrop="static" id="AddUpdateQueryModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">New Query</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                <div class="enq-cnt-liuijl enq-cnt-liuijl">
+                    <form action="" id="adnfm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="check-box-sec">
+                                    <input type="radio" id="allbusinessOwnerId" data-name="academies" class="radio_itemclass" name="filter-item-type" onclick="AllBusinessOwnerSearch();">
+                                    <label for="allbusinessOwnerId" class="academiesradio">My Academies</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="check-box-sec">
+                                    <input type="radio" id="otherbusinessownerId" class="radio_itemclass" data-name="otherbusinessowner" name="filter-item-type" onclick="OtherBusinessOwnerSearch();">
+                                    <label for="otherbusinessownerId" class="academiesradio"> Other Academies</label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row d-none" id="AssignAcademyProfileSection">
+                            <div class="col-sm-12">
+
+                                <div class="row">
+                                    <div class="col-md-6 ">
+                                        <div class="form-group d-flex flex-column">
+
+                                            <input type="search" id="txtSearchBusiness" class="border form-control" placeholder="Search...">
+                                            <div class="error-class" id="error_txtSearchBusiness"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <button type="button" id="btnSearchBusiness" class="btn btn-success" onclick="getBusinessOnwersBySearch();">Search</button>
+                                        <button type="button" id="btnClearBusinessCertificate" class="btn btn-default" onclick="resetAssignQuerySection();">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="myacademies">
+                                    <div class="row academies">
+                                        <div id="searchedBusinessOwnersList" class="row w-100"></div>
+                                        <div class="col-sm-12 text-center"><a id="btnSearchBusinessShowMore" class="btn btn-outline-primary d-none" href="javascript:getBusinessOnwersBySearch(false)">Show More</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row d-none" id="AssignOtherBusinessProfileSection">
+                            <div class="col-sm-12">
+                                <div class="row">
+                                </div>
+                                <div class="otheracademies">
+                                    <div class="row academies">
+                                        <div id="searchedBusinessOwners" class="row w-100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="mt-0">Tittle</label>
+                            <input class="form-control" type="text" id="textqueries">
+                            <div class="error-class" id="error_txtquery"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="mt-0">Message</label>
+                            <textarea class="w-100 txt-ara-1dhrtr form-control" id="textdescriptionqueries"></textarea>
+                            <div class="error-class" id="error_txtdescriptions"></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button id="submitQuery" type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnAddUpdateQuery();">
+                    Save
+                </button>
+                <button type="button" id="btnCloseQueryModal" class="btn btn-outline-danger" data-dismiss="modal" onclick="ResetAddUpdateQuery();">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="enq-modal1a">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">@*Now available: Shopify Certifications*@</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+            </div>
+            <!-- Modal footer -->
+            <!-- <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                    data-dismiss="modal">Save</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div> -->
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_QueryScriptPartial.cshtml")
+
+    <script src="/Content/business-panel/js/vendor/moment.min.js"></script>
+}

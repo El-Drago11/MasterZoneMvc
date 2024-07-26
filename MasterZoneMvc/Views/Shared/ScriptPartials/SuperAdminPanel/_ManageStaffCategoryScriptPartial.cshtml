@@ -1,0 +1,454 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var MultipleItemId_Global = 0;
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+               getAllStaffCategories();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+
+                        UserToken_Global = dataAdminToken;
+                        getAllStaffCategories();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+
+
+    function AddUpdate_ManageStaffCategory() {
+    var is_valid = true;
+    $(".error-class").html('');
+    var _mode = (MultipleItemId_Global > 0) ? 2 : 1;
+
+
+
+    //var _id_substring = "_ManageMultipleImage";
+        let _name = $("#txtname").val().trim();
+       let _error_name = $("#error_txtname" );
+            if (validate_IsEmptyStringInputFieldValue(_name)) {
+                is_valid = false;
+                _error_name.html('@(Resources.SuperAdminPanel.CategoryNameRequired)');
+            }
+
+    if (is_valid) {
+        StartLoading();
+
+         var _status = 0;
+        if ($('#chkIsActive_ManageStaffCategories').is(':checked')) {
+             _status = 1;
+         }
+
+         var data = new FormData();
+
+         data.append("Id", MultipleItemId_Global);
+         data.append("Name", _name);
+         data.append("IsActive", _status);
+         data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/StaffCategory/AddUpdateStaffCategory',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            contentType: false,
+            mimeType: 'multipart/form-data',
+            //contentType: 'application/json',
+            type: 'POST',
+            dataType: "json",
+            success: function (dataResponse) {
+                
+                console.log(dataResponse);
+                //--If successfully added
+                if (dataResponse.status == 1) {
+                    swal("Success!", dataResponse.message, "success");
+
+                    getAllStaffCategories();
+                    resetAddUpdateStaffCategory();
+                   showViewStaffCategorySection();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    }
+
+
+
+    function showAddUpdateStaffCategorySection() {
+        $('#sectionViewStaffCategories_ManageCategories').addClass('d-none');
+        $('#sectionAddUpdateStaffCategory_ManageCategories').removeClass('d-none');
+        getAllStaffCategories();
+    }
+
+
+    function showViewStaffCategorySection() {
+        $('#sectionAddUpdateStaffCategory_ManageCategories').addClass('d-none');
+        $('#sectionViewStaffCategories_ManageCategories').removeClass('d-none');
+    }
+
+
+    function btnClickCancel_ManageStaffCategories() {
+        showViewStaffCategorySection();
+        resetAddUpdateStaffCategory();
+    }
+
+    function resetAddUpdateStaffCategory() {
+        $('.error-class').html('');
+        $("#txtname").val('');
+        $('#chkIsActive_ManageStaffCategories').prop('checked', false);
+        $('#sectionAddUpdateStaffCategory_ManageCategories .card-title').html('Add  Staff Category');
+        MultipleItemId_Global = 0;
+
+
+    }
+
+  function getAllStaffCategories() {
+      let _url = "/api/StaffCategory/GetAllStaffCategoryDetail";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+
+            }
+
+            var _table = $('#tblStaffCategories').DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _name = '';
+            var _status = '';
+            var _action = '';
+            var data = [];
+            for (var i = 0; i < response.data.length; i++) {
+                sno++;
+                _name = response.data[i].Name;
+                _action = '<div class="edbt">';
+                _action += '<a href="javascript:EditStaffCategory(' + response.data[i].Id + ');"><i class="fas fa-edit"></i></a>';
+                _action += `<a href="javascript:confrimDelete_ManageStaffCategory(`+ response.data[i].Id +`);"><i class="fas fa-trash "></i></a>`;
+                _action += '</div>';
+
+                //---Check Staff-Status
+                if (response.data[i].IsActive == 1) {
+                    _status = '<a class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStaffStatus(' + response.data[i].Id + ');">Active</a>';
+                }
+                else {
+                    _status = '<a class="btn btn-danger btn-sm" style="width:80px;" onclick="ConfirmChangeStaffStatus(' + response.data[i].Id + ');">In-Active</a>';
+                }
+
+                data.push([
+                    sno,
+                    _name,
+                    _status,
+                    _action
+                ]);
+            }
+
+            $('#tblStaffCategories').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+  }
+
+
+    function EditStaffCategory(id) {
+    if (id <= 0)
+        return;
+
+    StartLoading();
+      let _url = API_Base_URL + "/api/StaffCategory/GetStaffCategoryTypeById?id="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            let _staffCategory = response.data;
+            $("#txtname").val(_staffCategory.Name);
+            //--Category-Status
+            if (_staffCategory.IsActive == 1) {
+                $('#chkIsActive_ManageStaffCategories').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive_ManageStaffCategories').prop('checked', false);
+            }
+
+            MultipleItemId_Global = id;
+            $('#sectionAddUpdateStaffCategory_ManageCategories .card-title').html('Edit Category');
+            showAddUpdateStaffCategorySection();
+            StopLoading();
+            getAllStaffCategories();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+  function ConfirmChangeStaffStatus(sid) {
+   swal({
+       title: "@(Resources.SuperAdminPanel.ConfirmChangeStatusCategoryTitle)",
+       text: "@(Resources.SuperAdminPanel.ConfirmChangeStatusCategoryText)",
+       type: "warning",
+       showCancelButton: true,
+       confirmButtonColor: '#DD6B55',
+       confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+       cancelButtonText: "@(Resources.ErrorMessage.No)"
+   })
+       .then((willDelete) => {
+           if (willDelete) {
+               ChangeStatusStaffCategory(sid);
+           } else {
+               //swal("Your imaginary file is safe!");
+           }
+       });
+     }
+  function ChangeStatusStaffCategory(sid) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/StaffCategory/ChangeStatusStaffCategoryType?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    getAllStaffCategories();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+ function confrimDelete_ManageStaffCategory(sid) {
+     swal({
+         title: "@(Resources.SuperAdminPanel.ConfirmDeleteStaffCategoryTitle)",
+         text: "@(Resources.SuperAdminPanel.ConfirmDeleteStaffCategoryText)",
+         type: "warning",
+         buttons: true,
+         cancel: {
+             text: "@(Resources.ErrorMessage.Cancel)",
+             value: null,
+             visible: false,
+             className: "",
+             closeModal: true,
+         }
+     }).then((willDelete) => {
+         if (willDelete) {
+             DeleteStaffCategory(sid);
+         } else {
+             //swal("Your imaginary file is safe!");
+         }
+     });
+ }
+
+ function DeleteStaffCategory(sid) {
+     StartLoading();
+     $.ajax({
+         type: "POST",
+         url: "/api/StaffCategory/DeleteStaffCategory?id=" + sid,
+         headers: {
+             "Authorization": "Bearer " + UserToken_Global,
+             "Content-Type": "application/json"
+         },
+         contentType: 'application/json',
+         success: function (dataResponse) {
+             StopLoading();
+
+             //--Check if staff successfully deleted
+             if (dataResponse.status == 1) {
+                 setTimeout(function () {
+                     swal("Success!", dataResponse.message, "success");
+                     getAllStaffCategories();
+                 }, 100);
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         },
+         error: function (result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+ }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+</script>

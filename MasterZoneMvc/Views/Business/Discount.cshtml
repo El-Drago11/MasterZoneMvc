@@ -1,0 +1,227 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Discount";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+    </style>
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Discount</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Discount">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Discount</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageDiscounts_AddDiscounts"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStaff">Add Discount</a>
+                        </div>
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewStaff">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="ViewForDiscount" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Code</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Is Fixed Amount</th>
+                                        <th>Discount Value</th>
+                                        <th>Discount For</th>
+                                        <th>Total Used</th>
+                                        <th>Created On</th>
+                                        @*<th>SelectedStudent</th>*@
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddStaff" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Discount</h5>
+                            <form>
+                                <div class="form-group">
+                                    <label for="Name">Name</label>
+                                    <input type="text" id="txtName" class="form-control" />
+                                    <div class="error-class" id="error_txtName"></div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="Description">Description</label>
+                                    <input type="text" id="txtDescription" class="form-control" />
+
+                                    <div class="error-class" id="error_txtDescription"></div>
+
+                                </div>
+
+
+
+                                <div class="form-group">
+                                    <label for="StartDate">Start Date</label>
+                                    <input type="date" id="txtStartDate" class="form-control" onchange="StartDateChange();" />
+                                    <div class="error-class" id="error_txtStartDate"></div>
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="EndDate">End Date</label>
+                                    <input type="date" id="txtEndDate" class="form-control" />
+                                    <div class="error-class" id="error_txtEndDate"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlDiscount_ManageDiscount">Select Discount</label>
+                                    <select name="ddlDiscount_ManageDiscount" id="ddlDiscount_ManageDiscount" form="carform" default="unslected" class="form-control">
+                                        <option value="-1">Select Discount</option>
+                                        <option value="0">Percentage</option>
+                                        <option value="1">Fixed</option>
+
+                                    </select>
+
+                                    <div class="error-class" id="error_ddlDiscount_ManageDiscount"></div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscountValue">Discount Value</label>
+                                    <input type="text" id="txtDiscountValue" class="form-control" />
+                                    <div class="error-class" id="error_txtDiscountValue"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlDiscount_SelectedDiscount">Select Student For Discount</label>
+                                    <select name="ddlDiscount_SelectedDiscount" id="ddlDiscount_SelectedDiscount" onchange="onChangeDiscountForField();" form="carform" default="unslected" class="form-control">
+                                        <option value="0">Select Student For Discount</option>
+                                        <option value="1">All Students</option>
+                                        <option value="2">Selected Students</option>
+
+                                    </select>
+
+                                    <div class="error-class" id="error_ddlDiscount_SelectedDiscount"></div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label>Select Students</label>
+                                    <select id="ddlSelectedStudentsForDiscount" class="form-control select2-multiple" multiple="multiple" data-width="100%">
+                                        @*<option label="&nbsp;">&nbsp;</option>*@
+                                    </select>
+                                    <div class="error-class" id="error_ddlSelectedStudentsForDiscount"></div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitToDiscount()">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+@*------------------------------------- View Group Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="viewDiscountDetialsModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Discount Detail</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div id="discountDetails_DiscountDetailModal">
+                    @*<div class="d-flex align-items-center">
+                            <div><img src="~/Content/images/defaultProfileImg.png" class="profile-img" /></div>
+                            <div class="flex-grow-1 p-3 font-weight-bold">Student Name</div>
+                            <div><button class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add</button></div>
+                        </div>*@
+                </div>
+            </div>
+            <div class="modal-footer">
+                @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                    data-dismiss="modal">Save</button>*@
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- View Group Details Modal ------------------------------------------------------ *@
+
+@section Scripts{
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_DiscountScriptPartial.cshtml")
+}
+
+

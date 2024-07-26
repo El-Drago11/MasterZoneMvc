@@ -1,0 +1,275 @@
+﻿<script>
+    var UserToken_Global = "";
+var CategoryId_Global = "0";
+var LastBusinessRecordId_Global = 0;
+
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getAllBusinessOwnersBySearch();
+            }
+            else {
+               /* UserToken_Global = "";*/
+                StopLoading();
+                getAllBusinessOwnersBySearch();
+            }
+        });
+
+
+    //CategoryId_Global = $('#hiddenCategoryId_CategoryLisitng').val();
+    console.log(SearchParameters_Global);
+
+    // set parent category name
+    $('#pageHeading').html('<a class="h2 text-dark" href="javascript:window.location.reload();">Search Results for: "' + SearchParameters_Global.SearchKeyword + '"</a>');
+
+
+});
+
+    function getAllBusinessOwnersBySearch(forceRefresh = false) {
+
+    if (forceRefresh == true) {
+        // -- reset list view
+        $('#businessRecordsList').html('');
+        SearchParameters_Global.LastRecordId = 0;
+    }
+
+        let _url = "/api/Business/GetAllBySearch"; //+categoryId+"&lastRecordId="+LastBusinessRecordId_Global;
+        const headers = new Headers();
+        var headerValue = {};
+            console.log("entered!");
+        if (UserToken_Global != "") {
+            _url = "/api/Business/GetAllBySearchWithFavourites";
+            //headers.append("Authorization", "Bearer " + UserToken_Global);
+            //headers.append("Content-Type", "application/json");
+            headerValue = {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            };
+        }
+
+    var requestData = SearchParameters_Global;
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: _url,
+        headers: headerValue,
+        data: JSON.stringify(requestData),
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var res_content = '';
+            // --------------------- append parent categories in dropdown
+
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+
+                var favClass = "fas fa-heart";
+                if (item.IsFavourite == 1) {
+                    favClass = "fas fa-heart";
+                } else {
+                    favClass = "far fa-heart";
+                }
+                var businessName = (item.BusinessName != "") ? item.BusinessName : item.FirstName + ' ' + item.LastName;
+                var businessImage = (item.BusinessLogo != "") ? item.BusinessLogoWithPath : item.ProfileImageWithPath;
+                res_content += `
+                    <div class="search-r-outer d-flex justify-content-between align-items-center mt-4 border-bottom pb-3">
+                        <div class="busi-sc d-flex" style="width:85%">
+                            <a href="#"> <img src="${businessImage}"></a>
+                            <div class="bus-txt-sc">
+                                <div class="bus-head-i ">
+                                    <a href="#" class="d-flex align-items-center text-dark">
+                                        <div class="Bus-txt-1 b-title">${businessName}</div>
+                                    </a>
+                                </div>
+                                <div class="bus-addr-txt b-addrs text-black-50">Category: ${item.BusinessCategoryName}</div>
+                            </div>
+                           <a class="w-25" style="color: #f3a762;"><i id="fav_icon_${item.UserLoginId}" class="${favClass}" onclick="AddOrRemoveFavourites(${item.UserLoginId});" style="cursor:pointer;"></i></a>
+                           <a class="w-25" style="color: #f3a762;"><button id="fav_btn_${item.UserLoginId}" class="btn btn-success" onclick="AddOrRemoveFollowers(${item.UserLoginId});" style="cursor:pointer;">Follow</button></a>
+                        
+                        </div>
+                        <a class="btn btn-outline-dark btn-sm btn-md-lg cstm-btn w-auto" href="#">View Profile</a>
+                    </div>
+                `;
+            }
+
+            if (response.data.length > 0) {
+                SearchParameters_Global.LastRecordId = response.data[response.data.length - 1].Id;
+                $('#btnViewMore').removeClass('d-none');
+            }
+            else {
+                SearchParameters_Global.LastRecordId = 0;
+                res_content = '<div class="w-100 text-center text-black-50"> No records found!</div > ';
+                $('#btnViewMore').addClass('d-none');
+            }
+
+            $("#businessRecordsList").append(res_content);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function getBySubCategory(categoryId) {
+    // -- reset list view
+    $('#businessRecordsList').html('');
+    $('#subCategoriesList a p').removeClass('text-primary');
+    $('#subCategoriesList a[data-id="' + categoryId + '"] p').addClass('text-primary');
+    // get and bind data
+    //CategoryId_Global = categoryId;
+    SearchParameters_Global.BusinessCategoryId = categoryId;
+    getAllBusinessOwnersBySearch(categoryId, true);
+}
+
+function parentCategoryClick(categoryId) {
+    // -- reset list view
+    $('#businessRecordsList').html('');
+    $('#subCategoriesList a p').removeClass('text-primary');
+    // get and bind data
+    CategoryId_Global = categoryId;
+    getAllBusinessOwnersBySearch(categoryId, true);
+}
+
+function btnViewMoreClick() {
+    // sub category stored in global
+    getAllBusinessOwnersBySearch();
+    }
+
+    function AddOrRemoveFavourites(id) {
+        if (UserToken_Global == "") {
+            $("#btnUserLoginPoup").click();
+        }
+        else {
+
+            $.ajax({
+                type: "POST",
+                url: "/api/Student/AddOrRemoveStudentFavourites?favouriteUserLoginId=" + id,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (dataResponse) {
+                    StopLoading();
+
+                    //--Check if Class successfully deleted
+                    if (dataResponse.status > 0) {
+                        setTimeout(function () {
+                            /* swal("Success!", dataResponse.message);*/
+
+                            document.querySelector("i#fav_icon_" +dataResponse.data.UserLoginId).classList.toggle("fa-solid");
+
+                        }, 100);
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+
+    function AddOrRemoveFollowers(id) {
+        if (UserToken_Global == "") {
+            $("#btnUserLoginPoup").click();
+        }
+        else {
+
+            $.ajax({
+                type: "POST",
+                url: "/api/Student/AddOrRemoveStudentFollowing?FollowerUserLoginId=" + id,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (dataResponse) {
+                    StopLoading();
+
+                    //--Check if Class successfully deleted
+                    if (dataResponse.status == 1) {
+
+                        $('#fav_btn_' + dataResponse.data.Id).html('Following');
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: 'Unauthorized! Invalid Token!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+</script>

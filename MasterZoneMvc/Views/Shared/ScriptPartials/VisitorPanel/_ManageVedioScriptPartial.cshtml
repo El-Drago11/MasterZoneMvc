@@ -1,0 +1,475 @@
+﻿<script>
+    var VideoId_Global = 0;
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetUserVedioDetail();
+            }
+            else {
+                StopLoading();
+            }
+        });
+    });
+
+    function ResetAddViewUserVideo() {
+        $(".error-class").html('');
+        $("#textuser_vediotitle").val('');
+        $("#user_youtubeurlvedio").val('');
+        $("#Manageuser_vediothumbnailimage").val('');
+        $('#previewManageUserVideoThumbNailImage').addClass('d-none');
+        $('#user_vediodescription').val('');
+        document.getElementById("Tochangetext").innerHTML = "Save";
+
+        VideoId_Global = 0;
+    }
+
+
+    function AddbtnUserVideo() {
+        
+        var mode = (VideoId_Global <= 0) ? 1 : 2;
+        var _userVideoTitle = $("#textuser_vediotitle").val().trim();
+        var _userVideoLink = $("#user_youtubeurlvedio").val();
+      // var youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
+        var _vediodescription = $("#user_vediodescription").val().trim();
+        var _userVideoThumbNailImages_MS = $("#Manageuser_vediothumbnailimage").get(0);
+        var _userVideoThumbNailImages = _userVideoThumbNailImages_MS.files;
+
+
+        var _error_userVideoTitle = $("#error_textuser_vediotitle");
+        var _error_userVideoLink = $("#error_user_youtubeurlvedio");
+        var _error_vediodescription = $("#error_user_vediodescription");
+        var _error_userVideoThumbNailImages = $("#error_Manageuser_vediothumbnailimage");
+
+        let is_valid = true;
+        $(".error-class").html('');
+
+        if (validate_IsEmptyStringInputFieldValue(_userVideoTitle)) {
+            is_valid = false;
+            _error_userVideoTitle.html('@(Resources.VisitorPanel.UserVideoTitleRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_userVideoLink)) {
+            is_valid = false;
+            _error_userVideoLink.html('@(Resources.VisitorPanel.UserVideoLinkRequired)');
+        }
+            @*else if (!youtubeRegex.test(_userVideoLink)) {
+                is_valid = false;
+                _error_userVideoLink.html('@(Resources.VisitorPanel.ValidYouTubeLinkRequired)');
+            }*@
+
+          if (mode === 1 && _userVideoThumbNailImages.length <= 0) {
+    is_valid = false;
+    _error_userVideoThumbNailImages.html('@(Resources.VisitorPanel.UserVideoThumbnailImageRequired)');
+}
+
+
+        if (validate_IsEmptyStringInputFieldValue(_vediodescription)) {
+            is_valid = false;
+            _error_vediodescription.html('@(Resources.VisitorPanel.VedioDescriptionRequired)');
+
+        }
+
+
+        if (is_valid) {
+
+            var data = new FormData();
+            data.append("Id", VideoId_Global);
+            data.append("VideoTitle", _userVideoTitle);
+            data.append("VideoLink", _userVideoLink);
+            data.append("VideoDescription", _vediodescription);
+            data.append("Image", _userVideoThumbNailImages[0]);
+            data.append("Mode", mode);
+
+
+            $.ajax({
+                url: '/api/UserContentVideo/AddUpdateVideos',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+
+
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+                        return;
+                    }
+
+                    StopLoading();
+                    ResetAddViewUserVideo();
+                    GetUserVedioDetail();
+                },
+                error: function (result) {
+                    StopLoading();
+                    //removeBtnLoading(btnSelector);
+                    //enableContinueBtn();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: 'Unauthorized! Invalid Token!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+
+    
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+
+    function openFileInput() {
+        document.getElementById("Manageuser_vediothumbnailimage").click(handleFileSelect);
+    
+    }
+
+    
+    function EditUserContentVedio(Id) {
+        
+        //$("#SidebarVideosfrom").removeClass('d-none');
+        document.getElementById("Tochangetext").innerHTML = "Update";
+            var videoSidebar = document.querySelector(".ad-vd-sidebar");
+            videoSidebar.style.display = "block";
+
+        $(".video-add-sec").addClass('open-pannel');
+        $("body").addClass('overflow');
+       // $("#Toclosethepopup").hide();
+
+       $(".ad-vd-sidebar .cross-icon>*").click(function () {
+      $(".video-add-sec").removeClass("open-pannel");
+        $("body").removeClass('overflow');
+      });
+
+        var _url = "/api/UserContentVideo/GetUserContentVideoDetailById?id=" + Id;
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+
+                }
+                VideoId_Global = response.data.Id;
+                $("#textuser_vediotitle").val(response.data.VideoTitle);
+                $("#user_youtubeurlvedio").val(response.data.VideoLink);
+                $("#user_vediodescription").val(response.data.VideoDescription);
+               $("#contentVediothumbnailimage").val(response.data.VideoThumbNailImageWithPath);
+              
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+
+    function GetUserVedioDetail() {
+     $("#ContentVedioDetail").html('');
+     var _url = "/api/UserContentVideo/GetAllUserContentVideoDetail";
+     $.ajax({
+         type: "GET",
+         url: _url,
+         headers: {
+             "Authorization": "Bearer " + UserToken_Global,
+             "Content-Type": "application/json"
+         },
+         contentType: 'application/json',
+         success: function (response) {
+             if (response.status < 1) {
+                 $.iaoAlert({
+                     msg: response.message,
+                     type: "error",
+                     mode: "dark",
+                 });
+                 return;
+             }
+
+
+             var ContentVideoDetailList = '';
+            // $("#ContentVedioDetail").html('');
+                 for (var i = 0; i < response.data.UserContentVedioDetailList.length; i++) {
+                     ContentVideoDetailList += `  <div class="video-in-text" > <div class="manage-vd">
+                 <div class="edit-icon">
+                     <i class="fa-regular fa-pen-to-square" onclick="EditUserContentVedio(${response.data.UserContentVedioDetailList[i].Id})"></i>
+                 </div>
+                 <div class="delete-icon">
+                     <i class="fa-solid fa-trash-can" onclick="ConfirmDeletedUserContentVedio(${response.data.UserContentVedioDetailList[i].Id})"></i>
+                 </div>
+                 <iframe width="420" height="345" src="${"https://www.youtube.com/embed/" + response.data.UserContentVedioDetailList[i].VideoLink}">
+                 </iframe>
+
+             </div>
+           <h6 class="title">${response.data.UserContentVedioDetailList[i].VideoTitle}</h6></div>`;
+             }
+
+             ContentVideoDetailList += `<div class="video-add-sec" id="addUpdateSection">
+                             <div class="add-vdieo">
+                         <i class="fa-solid fa-plus" id="AddVideos"></i>
+                     </div>
+                         <div class="ad-vd-sidebar" id="adVdSidebar">
+                         <div class="cross-icon">
+                             <i class="fa-solid fa-xmark"></i>
+                         </div>
+                         <p>Video Thumbnail</p>
+
+                         <a class="custom-file-button" id="contentVediothumbnailimage" href="javascript:;" onclick="openFileInput()">
+                             Select Your Profile
+                         </a>
+                         <input type="file" id="Manageuser_vediothumbnailimage" class="form-control" accept="image/*" style="display: none;" />
+
+                         <div class="error-class" id="error_Manageuser_vediothumbnailimage"></div>
+
+                         <div class="textarea-inr">
+                             <h6>Video Title</h6>
+                             <input type="text" class="form-control " placeholder="Enter Video Title" id="textuser_vediotitle" required />
+
+                             <div class="error-class" id="error_textuser_vediotitle"></div>
+                         </div>
+                         <div class="textarea-inr">
+                           <h6>Video Youtube Unique Identifier
+                             <button class="tooltip"> i
+                             <span class="tooltiptext" style="border: 1.5px solid  #ced4da"> For Example, This is the youtube link, from this link you just need to copy the video name (S-8druBYi3o) and paste it in below input field.  https://www.youtube.com/watch?v=S-8druBYi3o</span>
+                             </button>
+                            </h6>
+                             <input type="text" class="form-control" placeholder="Enter Video Youtube Url" id="user_youtubeurlvedio" required />
+
+                             <div class="error-class" id="error_user_youtubeurlvedio"></div>
+                         </div>
+                         <div class="textarea-inr">
+                             <h6>Video Description</h6>
+                             <textarea placeholder="Enter Video Description" id="user_vediodescription">
+                   </textarea>
+
+                             <div class="error-class" id="error_user_vediodescription"></div>
+                         </div>
+                         <div class="btn-iner">
+
+                             <a href="javascript:;" id="Tochangetext" onclick="AddbtnUserVideo()">Save</a>
+                             <a href="javascript:;"   id="Toclosethepopup" onclick="ResetAddViewUserVideo()"> Cancel</a>
+                         </div>
+
+                     </div>
+                     </div>`;
+
+
+             $("#ContentVedioDetail").append(ContentVideoDetailList);
+
+             $("#AddVideos").click(function () {
+                 ResetAddViewUserVideo();
+
+                 $(".video-add-sec").addClass('open-pannel');
+                 $("body").addClass('overflow');
+                 $("#Toclosethepopup").show();
+
+
+                 $(".ad-vd-sidebar .cross-icon>*").click(function () {
+                     $(".video-add-sec").removeClass("open-pannel");
+                     $("body").removeClass('overflow');
+                 });
+
+
+             });
+
+
+             // JavaScript function to hide the ad-vd-sidebar section
+             function hideVideoSidebar() {
+                 var videoSidebar = document.querySelector(".ad-vd-sidebar");
+                 videoSidebar.style.display = "none";
+             }
+
+             // JavaScript function to show the ad-vd-sidebar section
+             function showVideoSidebar() {
+                 var videoSidebar = document.querySelector(".ad-vd-sidebar");
+                 videoSidebar.style.display = "block";
+             }
+
+             // Attach click event listener to the close button
+             var closeButton = document.getElementById("Toclosethepopup");
+             if (closeButton) {
+                 closeButton.addEventListener("click", hideVideoSidebar);
+             }
+
+             // Attach click event listener to the plus icon
+             var plusIcon = document.getElementById("AddVideos");
+             if (plusIcon) {
+                 plusIcon.addEventListener("click", showVideoSidebar);
+             }
+
+         },
+
+         error: function(result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+ }
+
+    $(".vd-edit-in").click(function () {
+
+        $(".manage-vd").toggleClass('show-icon');
+    });
+
+      function ConfirmDeletedUserContentVedio(id) {
+
+        swal({
+            title: "@(Resources.VisitorPanel.ConfirmDeletedContentVideoTitleMessage)",
+            text: "@(Resources.VisitorPanel.ConfirmDeletedContentVideoTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeletedUserContentVedio(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeletedUserContentVedio(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/UserContentVideo/DeleteUserContentVideoDetail?id=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetUserVedioDetail();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+</script>

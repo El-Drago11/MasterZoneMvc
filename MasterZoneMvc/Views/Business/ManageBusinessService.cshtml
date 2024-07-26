@@ -1,0 +1,211 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    ViewBag.Title = "ManageBusinessService";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.bubble.css" />
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+
+
+
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Business Service</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageBusinessService">Manage Business Service</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Business Service</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="col-4 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnBusinessServiceAdd">Add Business Service</a>
+                    </div>
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="sectionViewBusinessService">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="ViewForBusinessService" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S No.</th>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>Icon</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddBusinessService" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h3 class="mb-4" id="myText">Business Service Details</h3>
+                            <form>
+                                <div class="row">
+                                    <div class=" col-md-6">
+                                        <div class="form-group">
+                                            <label for="Title-name"> Title</label>
+                                            <input type="text" class="form-control" id="Title_Name" required />
+                                            <div class="error-class" id="error_Title_Name"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Title-name">Service Type</label>
+                                            <select class="form-control" id="Service_Type" required>
+                                                <option value="#" selected>Select an Option</option>
+                                                <option value="1">Main Service</option>
+                                                <option value="0">OtherService</option>
+                                            </select>
+                                            <div class="error-class" id="error_Title_Name"></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description"> Short Description</label>
+                                            <textarea name="description" class="form-control" rows="6" id="businessservice_description"></textarea>
+                                            <div class="error-class" id="error_businessservice_description"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label> Business  Service Image</label>
+                                            <div class="imagePreview">
+                                                <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileBusinessServiceImage" class="border form-control" accept="image/*">
+                                            <div class="error-class" id="error_fileBusinessServiceImage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label> Icon</label>
+                                            <div class="imagePreview">
+                                                <img id="previewIcon" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileBusinessserviceIcon" class="border form-control" accept="image/*">
+                                            <div class="error-class" id="error_fileBusinessserviceIcon"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="d-none form-group" id="BusinessServiceStatusInserted">
+                                            <label for="ddlBusinessService_ManageBusinessService">Select Discount</label>
+                                            <select name="ddlBusinessService_ManageBusinessService" id="ddlBusinessService_ManageBusinessService" form="carform" default="unslected" class="form-control">
+                                                <option value="0">Select Status</option>
+                                                <option value="1">Enable</option>
+                                                <option value="2">Disable</option>
+
+                                            </select>
+
+                                            <div class="error-class" id="error_ddlBusinessService_ManageBusinessService"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitToBusinessServiceInfo();">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</main>
+
+
+
+@section Scripts{
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageBusinessServiceScriptPartial.cshtml")
+}
+
+
+
+

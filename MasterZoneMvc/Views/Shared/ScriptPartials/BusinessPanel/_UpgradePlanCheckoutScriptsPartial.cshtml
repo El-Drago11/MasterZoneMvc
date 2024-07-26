@@ -1,0 +1,301 @@
+﻿
+<script>
+
+    var UserToken_Global = "";
+    var ItemId_Global = 0;
+    var CouponId_Global = 0;
+    var ItemType_Global = "";
+    var StudentLoginId_Global = 0;
+    ItemId_Global = $("#hiddenCheckoutId").val();
+
+   
+    var objOrderBilling = {
+        itemAmount: 0,
+        couponDiscount: 0,
+        totalDiscount: 0,
+        subTotalAmount: 0,
+        totalAmount: 0
+    };
+
+    $(document).ready(function () {
+        StartLoading();
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getPlanDetails();
+                GetStaffProfile();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        getPlanDetails();
+                        GetStaffProfile();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    
+    function GetStaffProfile() {
+
+        var _url = "/api/Staff/GetAllPermissionsDetails?itemId=" + ItemId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+
+              
+                   
+
+                         
+
+                    $('#staffPermissionDetail_Card').html('');
+                    var _permissions = '';
+                    var _permissions2 = '';
+
+
+
+                    for (var i = 0; i < response.data.length; i++) {
+                        _permissions += `
+                         
+                     `;
+                    }
+
+
+                    if (response.data.length <= 0) {
+                        //_permissions = `<h6 class="text-muted">No Permissions</h6>`;
+                        _permissions2 = `<h6 class="text-muted">No Permissions</h6>`;
+                    }
+                    else {
+                        var _parentPermissions = response.data.filter((x) => x.ParentPermissionId == 0);
+
+                        for (var pp = 0; pp < _parentPermissions.length; pp++) {
+                            //_permissions += `<div class="font-weight-bold mt-2"><i class="fa fa-check text-success"></i> ${_parentPermissions[pp].TextValue}</div>`;
+                            //var _subPermissions = response.data.Permissions.filter((x) => x.ParentPermissionId == _parentPermissions[pp].Id);
+                            //for (var sp = 0; sp < _subPermissions.length; sp++) {
+                            //    _permissions += `<div class="ml-3"><i class="fa fa-check text-success"></i> ${_subPermissions[sp].TextValue}</div>`;
+                            //}
+                            _permissions2 += bindPermissions(response.data, '', _parentPermissions[pp], 0);
+                        }
+                    }
+
+                    //$('#staffPermissionDetail_Card').html(_permissions);
+                    //$('#staffPermissionDetail_Card').append("---------------------------------------");
+                    $('#staffPermissionDetail_Card').append(_permissions2);
+                    //<p><button class="btn btn-sm btn-primary" onclick="MessageStudent();"><i class="fas fa-envelope"></i> Message</button></p>
+                    //bindPermissions(response.data.Permissions, '',)
+                
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindPermissions(allPermissions, html, currentPermission, level = 0) {
+        if (allPermissions.length <= 0) {
+            return '';
+        }
+
+        if (currentPermission == null || currentPermission.length <= 0) {
+            return '';
+        }
+
+        _marginLeft = 40 * level;
+        html += `<div class="font-weight-bold mt-2" style="margin-left:${_marginLeft}px;"><i class="fa fa-check text-success"></i> ${currentPermission.TextValue}</div>`;
+
+        var _subPermissions = allPermissions.filter((x) => x.ParentPermissionId == currentPermission.Id);
+        for (var sp = 0; sp < _subPermissions.length; sp++) {
+            html += bindPermissions(allPermissions, '', _subPermissions[sp], level + 1);
+        }
+
+        return html;
+
+    }
+
+   
+
+    function getPlanDetails() {
+        let _url = "/api/Business/GetMainPlanDetailById?itemId=" + ItemId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    $('#sectionError').removeClass('d-none');
+                    $('#sectionCheckout').addClass('d-none');
+
+                    StopLoading();
+
+                    return;
+                }
+
+                if (response.data) {
+                    var item = response.data;
+                    var price = '';
+                    var price = parseFloat(item.Price).toFixed(2);
+                  
+
+                    var itemDetail_HTML = `
+                        <div class="card">
+                            <div class="card-body">
+                            <h4 class="mb-4"> Plan Information </h4>
+                            <div class="text-center">
+                             <img src="${item.PlanImageWithPath}" class="image">
+                            <h2 class="flex-grow-1">${item.Name}</h2>
+                             </div>
+                                <div class="d-flex flex-column w-100">
+                                    <div class=" w-100 align-items-center">
+                                    <div class="text-black-50 duration_sec">${item.PlanDurationTypeKey}</div>
+                                    <p class="">${item.Description}</p>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    $('#divItemDetail').html(itemDetail_HTML);
+
+                    objOrderBilling.itemAmount = parseFloat(item.Price).toFixed(2);
+                    objOrderBilling.subTotalAmount = parseFloat(item.Price).toFixed(2);
+                    objOrderBilling.totalAmount = parseFloat(item.Price).toFixed(2);
+
+                    refreshOrderBillingDetail();
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: "@(Resources.ErrorMessage.TechincalErrorMessage)",
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+   
+
+   
+
+    function refreshOrderBillingDetail() {
+        var orderBillingHTML = `
+            <div class=" mt-1">
+                <div class="font-weight-bold"> </div>
+                <div class="price_sec">Rs. ${objOrderBilling.totalAmount}</div>
+            </div>
+        `;
+        $('#divOrderBillingDetail').html(orderBillingHTML);
+    }
+
+  
+
+    function verifyPlanCanBeBookedAjax() {
+        
+        var _paymentMode = $('input[name="paymentMode"]:checked').val();
+        var data = { itemId: ItemId_Global, paymentMode: _paymentMode, totalAmountPaid: objOrderBilling.totalAmount};
+         $.ajax({
+             url: '/api/Booking/VerifyPlanCanBePurchasedByBusiness',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                type: 'POST',
+                data: JSON.stringify(data),
+                dataType: 'json',
+                processData: false,
+                contentType: 'application/json',
+                success: function (dataResponse) {
+
+                    if (dataResponse.status === 1) {
+                        window.location.href = `/Business/BookMainPlanPackage?itemId=${ItemId_Global}&paymentMode=${_paymentMode}&totalAmountPaid=${objOrderBilling.totalAmount}`;
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+
+
+
+</script>

@@ -1,0 +1,116 @@
+﻿<script>
+
+    $(document).ready(function () {
+        GetAllAdvertisementdetailsSlider();
+    });
+
+//--------------------Advertisement slider(instructorResearch, index,checkout) --------------------------------------
+function GetAllAdvertisementdetailsSlider() {
+    let _url = "/api/BusinessCategory/GetAllAdvertisementSlider";
+
+    StartLoading();
+    $.ajax({
+        type: "GET",
+        url: _url,
+
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $('.error-class').html('');
+
+            for (var i = 0; i < response.data.length; i++) {
+                var Advertisement = response.data[i];
+                var advertisementHtml = `
+<div class="advertisement-img">
+    <a href="${Advertisement.AdvertisementLink}" class="text-decoration-none" target="_blank">
+        <img src="${Advertisement.ImageWithPath}" class="slider-image">
+    </a>
+</div> `;
+
+                $("#GetAllAdvertisementList").append(advertisementHtml);
+            }
+
+            if (response.data.length <= 0) {
+                $("#GetAllAdvertisementList").html(`
+<div class="text-muted">
+    No Events
+</div>
+                `);
+
+                $('#adv-slider-section').hide();
+            }
+            else {
+
+                $('.advertisement-slide').slick({
+                    dots: false,
+                    arrows: false,
+                    infinite: true,
+                    speed: 3000,
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                    autoplay: true,
+                    responsive: [
+                        {
+                            breakpoint: 1024,
+                            settings: {
+                                arrows: false,
+                                slidesToShow: 1,
+                                slidesToScroll: 1,
+                                infinite: true,
+                                dots: false
+                            }
+                        },
+                        {
+                            breakpoint: 600,
+                            settings: {
+                                dots: false,
+                                arrows: false,
+                                slidesToShow: 1,
+                                slidesToScroll: 1
+                            }
+                        },
+                        {
+                            breakpoint: 480,
+                            settings: {
+                                dots: false,
+                                arrows: false,
+                                slidesToShow: 1,
+                                slidesToScroll: 1
+                            }
+                        }
+                    ]
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: 'Unauthorized! Invalid Token!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: 'There is some technical error, please try again!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+</script>

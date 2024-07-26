@@ -1,0 +1,208 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var CourseBookingId_Global = $('#hidden_courseBookingId').val();
+        $(document).ready(function () {
+           StartLoading();
+          EventBookingId_Global = $('#hidden_eventBookingId').val();
+           $.get("/Home/GetStudentToken", null, function (dataToken) {
+               if (dataToken != "" && dataToken != null) {
+                   UserToken_Global = dataToken;
+                   getCourseBookingViewDetailById();
+               }
+               else {
+                   $.iaoAlert({
+                       msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                       type: "error",
+                       mode: "dark",
+                   });
+                   window.location.href = '/home/login';
+                   StopLoading();
+               }
+           });
+        });
+
+
+
+    function getCourseBookingViewDetailById() {
+
+    StartLoading();
+        let _url = "/api/Course/GetCourseBookingDetailsbyId?id=" + CourseBookingId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+
+                var _courseBookingDetail = response.data.CourseBookingDetail;
+                var _orderDetail = response.data.OrderDetail;
+                var _paymentResponseDetail = response.data.PaymentResponseDetail;
+             
+                var orderListItems = ``;
+                var courseBookingListItems = ``;
+
+                var _durationtype = ``;
+
+                if (_courseBookingDetail.DurationType == 'Monthly' && _courseBookingDetail.Duration > 1) {
+                    _durationtype = `Months`;
+
+                } else if (_courseBookingDetail.DurationType == 'Monthly' && _courseBookingDetail.Duration <= 1)
+                {
+                    _durationtype = `Month`;
+                }
+
+                if (_courseBookingDetail.DurationType == 'Yearly' && _courseBookingDetail.Duration > 1) {
+                    _durationtype = `Years`;
+
+                } else if (_courseBookingDetail.DurationType == 'Yearly' && _courseBookingDetail.Duration <= 1) {
+                    _durationtype = `Year`;
+                }
+
+                if (_courseBookingDetail.DurationType == 'Day' && _courseBookingDetail.Duration > 1) {
+                    _durationtype = `Days`;
+
+                } else if (_courseBookingDetail.DurationType == 'Day' && _courseBookingDetail.Duration <= 1) {
+                    _durationtype = `Day`;
+                }
+
+                if (_courseBookingDetail.DurationType == 'Weekly' && _courseBookingDetail.Duration > 1) {
+                    _durationtype = `Weeks`;
+
+                } else if (_courseBookingDetail.DurationType == 'Weekly' && _courseBookingDetail.Duration <= 1) {
+                    _durationtype = `Week`;
+                }
+                var durationValue = _courseBookingDetail.Duration;
+
+                var startDate = new Date(_courseBookingDetail.CreatedOnString);
+
+
+                if (_durationtype == 'Months' || _durationtype == 'Month') {
+                    startDate.setDate(startDate.getDate() + 30 * durationValue);
+                }
+                else if (_durationtype == 'Weeks' || _durationtype == 'Week') {
+                    startDate.setDate(startDate.getDate() + 7 * durationValue);
+
+                }
+                else if (_durationtype == 'Years' || _durationtype == 'Year' ) {
+                    startDate.setDate(startDate.getDate() + 365 * durationValue);
+
+                }
+                else if (_durationtype == 'Days' || _durationtype == 'Day') {
+                    startDate.setDate(startDate.getDate() + 1 * durationValue);
+
+                }
+
+                var newEndDateFormatted = startDate.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+
+
+                var _coursedurationdetails = `${_courseBookingDetail.Duration} ${_durationtype}`;
+
+                var dateString = _courseBookingDetail.CreatedOnString;
+
+                var dateComponents = dateString.split('/');
+
+                var startDate = new Date(dateComponents[2], dateComponents[0] - 1, dateComponents[1]);
+
+                var newStartDateFormatted = ("0" + startDate.getDate()).slice(-2) + "/" + ("0" + (startDate.getMonth() + 1)).slice(-2) + "/" + startDate.getFullYear();
+
+
+                var _businessOwnerName = `<a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${_courseBookingDetail.UserLoginIdforlink}">${_courseBookingDetail.BusinessOwnerName}</a>`;
+               //this is link of qrcode
+                //<a target="_blank" href="/Home/Certification?id=${_classBookingDetail.Id}&UserLoginId=${_classBookingDetail.UserLoginId}">
+                courseBookingListItems += bindFlexListItemHTML("Course Name", _courseBookingDetail.Name);
+                courseBookingListItems += bindFlexListItemHTML("Price", _courseBookingDetail.Price + "/-");
+                courseBookingListItems += bindFlexListItemHTML("Start Date", newStartDateFormatted);
+                courseBookingListItems += bindFlexListItemHTML("End Date", newEndDateFormatted);
+                courseBookingListItems += bindFlexListItemHTML("Duration", _coursedurationdetails);
+                courseBookingListItems += bindFlexListItemHTML("Student Name", _courseBookingDetail.StudentName);
+                courseBookingListItems += bindFlexListItemHTML("Group Name", _courseBookingDetail.GroupName);
+                courseBookingListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                courseBookingListItems += `<h3>Contact Details</h3>`;
+                courseBookingListItems += `<hr/>`;
+                courseBookingListItems += bindFlexListItemHTML("Business Owner Name", _businessOwnerName);
+                courseBookingListItems += bindFlexListItemHTML("Business Name", _courseBookingDetail.BusinessName);
+                courseBookingListItems += bindFlexListItemHTML("Email", _courseBookingDetail.Email);
+                courseBookingListItems += bindFlexListItemHTML("Number", _courseBookingDetail.PhoneNumber_CountryCode + ' ' + _courseBookingDetail.PhoneNumber);
+               // courseBookingListItems += courseBlockHTML;
+
+                orderListItems += bindFlexListItemHTML("Order #", _orderDetail.Id);
+                orderListItems += bindFlexListItemHTML("Date", _orderDetail.CreatedOn_FormatDate);
+                orderListItems += bindFlexListItemHTML("Discount", _orderDetail.TotalDiscount);
+                orderListItems += bindFlexListItemHTML("GST", _orderDetail.GST);
+                orderListItems += bindFlexListItemHTML("<b>Total Amount</b>", `<b>${_orderDetail.TotalAmount}/-</b>`);
+                orderListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                orderListItems += bindFlexListItemHTML("Payment Method", _orderDetail.PaymentMethod);
+                orderListItems += bindFlexListItemHTML("Payment Approved", (_paymentResponseDetail.Approved) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+                orderListItems += bindFlexListItemHTML("Transaction ID", _paymentResponseDetail.TransactionID);
+
+                $('#sectionBookingDetail').html(courseBookingListItems);
+                $('#sectionOrderDetails').html(orderListItems);
+
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+    function bindFlexListItemHTML(key, value) {
+        return `
+        <div class="d-flex d-flex h6 justify-content-between w-100">
+            <div><b>${key}: </b></div>
+            <div>${value}</div>
+        </div>
+        <hr class="mt-0 mb-0" />
+    `;
+    }
+
+
+
+</script>

@@ -1,0 +1,185 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Package";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+    <style>
+        .disabled {
+            opacity: 0.5; /* Reduce the opacity to indicate it is disabled */
+        }
+    </style>
+
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Transfer Package</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Transfer Package</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @*<div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStaff">Add Package</a>
+                        </div>*@
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+
+        <div id="sectionViewPackage">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="ViewForPackage" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S No.</th>
+                                        <th>Request By</th>
+                                        <th>Transfer Type</th>
+                                        <th>Transfer To</th>
+                                        <th>Package</th>
+                                        <th>Transfer Date</th>
+                                        <th>Transfer Status</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</main>
+
+
+@*------------------------------------- Transfer Package Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="ViewPackageDetialsModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">View Transfer Request Detail</h2>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <hr style="width: 100%; display: initial;">
+            <div class="modal-body pt-0">
+                <div id="ViewPackageDetails_ForUserDetailModal">
+                    @*<div class="d-flex align-items-center">
+                            <div><img src="~/Content/images/defaultProfileImg.png" class="profile-img" /></div>
+                            <div class="flex-grow-1 p-3 font-weight-bold">Student Name</div>
+                            <div><button class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add</button></div>
+                        </div>*@
+
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="ViewSelectTransferStatus">
+                            <div class="form-group">
+                                <label>Select Status</label>
+                                <select id="ddlSelectedStatusForPackage" class="form-control" data-width="100%">
+                                    <option value="Select">Select</option>
+                                    <option value="0">Pending</option>
+                                    <option value="1">Accept</option>
+                                    <option value="2">Reject</option>
+                                </select>
+                                <div class="error-class" id="error_ddlSelectedStatusForPackage"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="ViewRejectionreason" style="display: none;">
+                            <div class="form-group">
+                                <label for="textRejectionReason" style="font-size: 20px;">Rejection Reason</label>
+                                <textarea name="description" class="form-control" rows="4" id="txtTransferReasonDescription"></textarea>
+                                <div class="error-class" id="error_txtTransferReasonDescription"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnSubmitPackage();" id="Closed">Submit</button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- View Group Details Modal ------------------------------------------------------ *@
+
+@*------------------------------------- Notification Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="NotificationDetailsModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">Notification Detail</h2>
+
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+
+            </div>
+            <hr style="width: 100%; display: initial;">
+            <div class="modal-body pt-0">
+                <!--<div id="Notification_ForUserDetailModal">-->
+                <!--</div>-->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Select Multiple Business</label>
+                            <select id="ddlSelectedBusinessForNotification" class="form-control select2-multiple" multiple="multiple" data-width="100%">
+                                @*<option label="&nbsp;">&nbsp;</option>*@
+                            </select>
+                            <div class="error-class" id="error_ddlSelectedBusinessForNotification"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="textDescription" style="font-size: 20px;">Description</label>
+                            <textarea name="description" class="form-control" rows="6" id="text_Description"></textarea>
+                            <div class="error-class" id="error_text_Description"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                        onclick="btnSubmitNotification();">
+                    Send Notification
+                </button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal" onclick="ResetAddView();">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- View Group Details Modal ------------------------------------------------------ *@
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_TransferPackageScriptPartial.cshtml")
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+}

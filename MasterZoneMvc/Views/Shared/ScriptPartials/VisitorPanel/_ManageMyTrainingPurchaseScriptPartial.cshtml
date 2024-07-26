@@ -1,0 +1,133 @@
+﻿
+<script>
+     var UserToken_Global = "";
+   $(document).ready(function () {
+      StartLoading();
+     TrainingBookingId_Global = $('#hidden_trainingBookingId').val();
+      $.get("/Home/GetStudentToken", null, function (dataToken) {
+          if (dataToken != "" && dataToken != null) {
+              UserToken_Global = dataToken;
+              getTrainingBookingViewDetailById();
+          }
+          else {
+              $.iaoAlert({
+                  msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                  type: "error",
+                  mode: "dark",
+              });
+              window.location.href = '/home/login';
+              StopLoading();
+          }
+      });
+   });
+
+  function getTrainingBookingViewDetailById() {
+
+    StartLoading();
+      let _url = "/api/Training/GetTrainingBookingDetailsById?id=" + TrainingBookingId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+
+                var _trainingBookingDetail = response.data.TrainingBookingDetail;
+                var _orderDetail = response.data.OrderDetail;
+                var _paymentResponseDetail = response.data.PaymentResponseDetail;
+                //var _trainingDetail = response.data.TrainingDetail;
+                var orderListItems = ``;
+                var trainingBookingListItems = ``;
+                var _businessOwnerName = `<a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${_trainingBookingDetail.userLoginIdForlink}">${_trainingBookingDetail.BusinessOwnerName}</a>`;
+
+                trainingBookingListItems += bindFlexListItemHTML("Training Name", _trainingBookingDetail.TrainingName);
+                trainingBookingListItems += bindFlexListItemHTML("Price", _trainingBookingDetail.Price +"/-");
+                trainingBookingListItems += bindFlexListItemHTML("Start Date", _trainingBookingDetail.Startdate_FormatDates);
+                trainingBookingListItems += bindFlexListItemHTML("End Date", _trainingBookingDetail.Enddate_FormatDates);
+                trainingBookingListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                trainingBookingListItems += `<h3>Contact Details</h3>`;
+                trainingBookingListItems += ` <hr />`;
+                trainingBookingListItems += bindFlexListItemHTML("Business Owner Name", _businessOwnerName);
+                trainingBookingListItems += bindFlexListItemHTML("Business Name", _trainingBookingDetail.BusinessName);
+                trainingBookingListItems += bindFlexListItemHTML("Email", _trainingBookingDetail.Email);
+                trainingBookingListItems += bindFlexListItemHTML("Number", _trainingBookingDetail.PhoneNumber_CountryCode + ' ' + _trainingBookingDetail.PhoneNumber);
+
+               // trainingBookingListItems += bindFlexListItemHTML("Class Completed", (_trainingBookingDetail.IsCompleted) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+
+                orderListItems += bindFlexListItemHTML("Order #", _orderDetail.Id);
+                orderListItems += bindFlexListItemHTML("Date", _orderDetail.CreatedOn_FormatDate);
+                orderListItems += bindFlexListItemHTML("Discount", _orderDetail.TotalDiscount);
+                orderListItems += bindFlexListItemHTML("GST", _orderDetail.GST);
+                orderListItems += bindFlexListItemHTML("<b>Total Amount</b>", `<b>${_orderDetail.TotalAmount}/-</b>`);
+                orderListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                orderListItems += bindFlexListItemHTML("Payment Method", _orderDetail.PaymentMethod);
+                orderListItems += bindFlexListItemHTML("Payment Approved", (_paymentResponseDetail.Approved) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+                orderListItems += bindFlexListItemHTML("Transaction ID", _paymentResponseDetail.TransactionID);
+
+                $('#sectiontrainingBookingDetail').html(trainingBookingListItems);
+                $('#sectionOrderDetails').html(orderListItems);
+
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+  }
+
+    function bindFlexListItemHTML(key, value) {
+        return `
+     <div class="d-flex d-flex h6 justify-content-between w-100">
+         <div><b>${key}: </b></div>
+         <div>${value}</div>
+     </div>
+     <hr class="mt-0 mb-0" />
+        `;
+    }
+ 
+
+
+
+
+
+</script>

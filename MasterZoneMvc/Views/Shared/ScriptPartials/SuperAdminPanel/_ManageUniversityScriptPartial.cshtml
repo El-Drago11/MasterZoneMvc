@@ -1,0 +1,818 @@
+﻿<script>
+
+    var UserToken_Global = "";
+    var _UniversityTable = 0;
+    var UniversityId_Global = 0;
+    function initializeDataTable_UniversityDetail() {
+        _UniversityTable = $("#tblUniversityDetailView").DataTable();
+    }
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                initializeDataTable_UniversityDetail();
+                GetAllBusinessContentUniversityPagination();
+                StopLoading();
+            }
+            else {
+
+
+            }
+            //StopLoading();
+        });
+    });
+
+
+
+         ///Language  Section
+
+    $('#AddUniversity').click(function () {
+        $('#AddNewUniversity').show();
+        $('#AllUniversity').hide();
+    });
+
+
+    function ResetBusinessUniversityDetail() {
+        $("#fileProfileImage_ManageUniversityImage").val('');
+        $('#previewimageUniversityImagePreview').addClass('d-none');
+        $("#previewimageUniversityImagePreview").attr('src', '');
+        $("#text_description").val('');
+        $("#txtUniversity").val('');
+        $('#AllUniversity').show();
+        $('#AddNewUniversity').hide();
+        $('#txtEducationUniversity').val('');
+        $("#fileProfileImage_ManageUniversityLogo").val('');
+        $('#previewimageUniversityLogoPreview').addClass('d-none');
+        $("#previewimageUniversityLogoPreview").attr('src', '');
+        UniversityId_Global = 0;
+    }
+
+
+
+
+
+      // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageUniversityImage').addEventListener('change', handleUniversityImageUpload);
+
+    function handleUniversityImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewimageUniversityImagePreview').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewimageUniversityImagePreview').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewimageUniversityImagePreview').src = event.target.result;
+        $('#previewimageUniversityImagePreview').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+    function GetLanguageDataById(id) {
+       // $("#collapseAddLanguageService").modal('show');
+        //$(".error-class").html('');
+        //document.getElementById("Modal_Title").innerHTML = "Edit Language Detail";
+
+
+        var _url = "/api/Business/GetBusinessContentLanguage_PPCMeta?id=" +id ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            LanguageId_Global = response.data.Id;
+            $("#txtLanguage").val(response.data.Language);
+            $("#fileProfileImage_ManageLanguageImage").val('');
+            if (response.data.LanguageIconWithPath != "") {
+                $("#previewimageLanguagePreview").attr('src', response.data.LanguageIconWithPath);
+                $("#previewimageLanguagePreview").removeClass('d-none');
+        }
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function ConfirmDeleteLanguageDetail(sid) {
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteLanguageTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteLanguageText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                DeleteLanguage(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeleteLanguage(sid) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/DeleteLanguageDetail?id=" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessContentCoursePagination();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function AddUniversityDetail() {
+        $("#collapseAddLanguageService").modal('show');
+
+    }
+
+    function GetAllBusinessContentLanguagePagination() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllBusinessContentLanguageByPagination";
+          _LanguageTable.clear().destroy();
+        _LanguageTable = $("#tblLanguageDetailView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[2, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+
+
+                , {
+                    "data": null, "": "LanguageIcon", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _Image = (row.LanguageIconWithPath == '') ? '' : '<img src="' + row.LanguageIconWithPath + '" class="previewimageLanguagePreview" />';
+                        return _Image;
+                    }
+                }
+                , { "data": "Language", "name": "Language", "autoWidth": true }
+
+               , {
+                    "data": null, "": "Action", "autowidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                       var _delete = '';
+
+                                    //_view = `<a href="javascript:viewgroupdetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;
+
+                        _edit = `<a href="javascript:EditBusinessContentLanguageDetail(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+
+                        _delete = `<a href="javascript:ConfirmDeleteLanguageDetail(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                        var _action = `<div class="edbt">
+
+                                    ${_edit}
+                                    ${_delete}
+
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [3], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblLanguageDetailView_filter input').unbind();
+        $('#tblLanguageDetailView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _LanguageTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+
+    function EditBusinessContentUniversityDetail(id) {
+        $('#AddNewUniversity').show();
+        $('#AllUniversity').hide();
+        document.getElementById("ToChangeUpdateText").innerHTML = "Update";
+        document.getElementById("ToChangeTextTitle").innerHTML = "Edit University";
+        document.getElementById("TochangeHeader").innerHTML = "Edit University";
+        document.getElementById("pageUpTextChange").innerHTML = "Edit University";
+        $(".error-class").html('');
+        $('#AddUniversity').click(function () {
+            document.getElementById("ToChangeTextTitle").innerHTML = "Add University";
+            document.getElementById("TochangeHeader").innerHTML = "Add University";
+            document.getElementById("pageUpTextChange").innerHTML = "Add University";
+            document.getElementById("ToChangeUpdateText").innerHTML = "Save";
+            $(".error-class").html('');
+        });
+        GetUniversityDataById(id);
+        $(".error-class").html('');
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function btnSubmitBusinessContentUniversityClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+         var _mode = (UniversityId_Global > 0) ? 2 : 1;
+
+        var _universityImageFile_MS = $("#fileProfileImage_ManageUniversityImage").get(0);
+        var _universityImageFiles = _universityImageFile_MS.files;
+
+        let _manageeducationUniversity = $("#txtEducationUniversity").val().trim();
+        let _manageeducationdescription = $("#text_description").val().trim();
+
+        let _error_manageUniversityImage = $("#error_fileProfileImage_ManageUniversityImage");
+        let _error_manageeducationUniversity = $("#error_txtEducationUniversity");
+        let _error_manageeducationdescription = $("#error_text_description");
+        let _error_manageUniversityLogo = $("#error_fileProfileImage_ManageUniversityLogo");
+
+        if (validate_IsEmptyStringInputFieldValue(_manageeducationdescription)) {
+            is_valid = false;
+            _error_manageeducationdescription.html('@(Resources.SuperAdminPanel.DescriptionRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_manageeducationUniversity)) {
+            is_valid = false;
+            _error_manageeducationUniversity.html('@(Resources.SuperAdminPanel.UniversityRequired)');
+        }
+
+         if (_mode != 2) {
+             if (_universityImageFiles.length == null) {
+                 is_valid = false;
+                 _error_manageUniversityImage.html('@(Resources.SuperAdminPanel.BusinessUniversityImageRequired)');
+             }
+
+         }
+            var _universityLogoFile_MS = $("#fileProfileImage_ManageUniversityLogo").get(0);
+            var _universityLogoFiles = _universityLogoFile_MS.files;
+
+        if (_mode != 2) {
+            if (_universityLogoFiles.length == null) {
+                    is_valid = false;
+                    _error_manageUniversityLogo.html('@(Resources.SuperAdminPanel.BusinessUniversityLogoRequired)');
+                }
+
+
+            }
+
+
+
+
+
+
+
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", UniversityId_Global);
+            data.append("University", _manageeducationUniversity);
+            data.append("UniversityImage", _universityImageFiles[0]);
+            data.append("UniversityLogo", _universityLogoFiles[0]);
+            data.append("Description", _manageeducationdescription);
+            data.append("Mode", _mode);
+
+
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessEducation_PPCMeta',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessContentUniversityPagination();
+                        ResetBusinessUniversityDetail();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+
+      // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageUniversityLogo').addEventListener('change', handleUniversityLogoUpload);
+
+    function handleUniversityLogoUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewimageUniversityLogoPreview').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewimageUniversityLogoPreview').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewimageUniversityLogoPreview').src = event.target.result;
+        $('#previewimageUniversityLogoPreview').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+    function ConfirmDeleteUniversityDetail(sid) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmDeleteUniversityTitle)",
+            text: "@(Resources.SuperAdminPanel.ConfirmDeleteUniversityText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                DeleteEducation(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeleteEducation(sid) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/DeleteEducationDetail?id=" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessContentUniversityPagination();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+       function GetAllBusinessContentUniversityPagination() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllBusinessContentEducationByPagination";
+           _UniversityTable.clear().destroy();
+           _UniversityTable = $("#tblUniversityDetailView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+
+                , {
+                    "data": null, "": "UniversityLogo", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _Image = (row.UniversityLogoWithPath == '') ? '' : '<img src="' + row.UniversityLogoWithPath + '" class="previewimageUniversityLogoPreview" />';
+                        return _Image;
+                    }
+                }
+                , {
+                    "data": null, "": "UniversityImage", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _Image = (row.UniversityImageWithPath == '') ? '' : '<img src="' + row.UniversityImageWithPath + '" class="previewimageUniversityLogoPreview" />';
+                        return _Image;
+                    }
+                }
+
+
+                , { "data": "University", "name": "University", "autoWidth": true }
+
+
+                , {
+                    "data": "Description",
+                    "name": "Description",
+                    "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var maxLength = 150; // Maximum length to show initially
+                        var description = data;
+                        var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                        var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                        if (description.length > maxLength) {
+                            var trimmedDescription = description.substr(0, maxLength);
+
+                        }
+                        if (description.length < maxLength) {
+                            return '<span class="description"><span class="full-description">' + description + '.';
+
+                        } else {
+
+                            return '<span class="description"><span class="full-description d-none">' + description + '...' + showLessHtml + '</span ><span class="truncated-description">' + trimmedDescription + '...' + readMoreHtml + '</span></span> ';
+                        }
+                    }
+                }
+               , {
+                    "data": null, "": "Action", "autowidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                       var _delete = '';
+
+                                    //_view = `<a href="javascript:viewgroupdetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;
+
+                        _edit = `<a href="javascript:EditBusinessContentUniversityDetail(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+
+                        _delete = `<a href="javascript:ConfirmDeleteUniversityDetail(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                        var _action = `<div class="edbt">
+
+                                    ${_edit}
+                                    ${_delete}
+
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [5], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+
+           // for read more show less functionality of description
+           $(document).on('click', '.read-more', function (e) {
+               e.preventDefault();
+               $(this).closest('.description').find('.full-description').removeClass('d-none');
+               $(this).closest('.description').find('.truncated-description').addClass('d-none');
+           });
+           $(document).on('click', '.read-less', function (e) {
+               e.preventDefault();
+               $(this).closest('.description').find('.full-description').addClass('d-none');
+               $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+           });
+        // for enabling search box only send requet on pressing enter
+           $('#tblUniversityDetailView_filter input').unbind();
+           $('#tblUniversityDetailView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _UniversityTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    function GetUniversityDataById(id) {
+        $(".error-class").html('');
+
+
+        var _url = "/api/Business/GetBusinessContentEducation_PPCMeta?id=" +id ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            UniversityId_Global = response.data.Id;
+            //$("#txtEducationQualification").val(response.data.Qualification);
+            $("#txtEducationUniversity").val(response.data.University);
+          //  $("#Education_StartDate").val(response.data.StartDate);
+           // $("#Education_EndDate").val(response.data.EndDate);
+            $("#text_description").val(response.data.Description);
+            $("#fileProfileImage_ManageUniversityLogo").val('');
+            if (response.data.UniversityLogoWithPath != "") {
+                $("#previewimageUniversityLogoPreview").attr('src', response.data.UniversityLogoWithPath);
+                $("#previewimageUniversityLogoPreview").removeClass('d-none');
+            }
+            $("#fileProfileImage_ManageUniversityImage").val('');
+            if (response.data.UniversityImageWithPath != "") {
+                $("#previewimageUniversityImagePreview").attr('src', response.data.UniversityImageWithPath);
+                $("#previewimageUniversityImagePreview").removeClass('d-none');
+            }
+
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+</script>
+

@@ -1,0 +1,336 @@
+﻿<script>
+    var UserToken_Global = "";
+    var TrainingList_LastRecordId_Global = 0;
+
+    //$(document).ready(function () {
+
+    //    $.get("/Home/GetStudentToken", null, function (dataToken) {
+    //        if (dataToken != "" && dataToken != null) {
+    //            UserToken_Global = dataToken;
+    //           GetTrainingDetailBy();
+    //        }
+    //        else {
+    //            StopLoading();
+    //        }
+    //    });
+    //});
+
+
+
+    $(document).ready(function () {
+        GetTrainingDetailBy();
+    });
+
+   @*function GetTrainingDetail() {
+            var _url = "/api/Training/GetAllTraining?lastRecordId=0";
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var TrainingList = '';
+                for (var i = 0; i < response.data.TrainingList.length; i++) {
+                    htmlData1 += `<div class="cards-items"><div class="date-year">
+                    <img src="${response.data.TrainingList[i].TrainingImageWithPath}">
+                    <h6 class="date">${response.data.TrainingList[i].StartMonth} ${response.data.TrainingList[i].StartDay}</h6>
+                    <h6 class="year">${response.data.TrainingList[i].StartYear} </h6>
+
+                </div>
+
+                <div class="address-cta">
+                    <div class="info-sec">
+                        <h4>${response.data.TrainingList[i].TrainingName} </h4>
+                        <h6 class="loc-text">${response.data.TrainingList[i].Location} </h6>
+                        <h6>${response.data.TrainingList[i].ShortDescription} </h6>
+                    </div>
+                    <div class="cta">
+                        <a class="primary-button" href="/Home/Certification">Learn More</a>
+                    </div>
+                </div></div>`;
+                }
+                if (response.data.TrainingList.length <= 0) {
+                    TrainingList += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Detail in this Training Detail.</div>`;
+                }
+
+
+                $('#InstructorTrainingList').append(TrainingList);
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }*@
+
+
+   function GetTrainingDetailBy() {
+
+          var _url = "/api/Training/GetAllTraining?lastRecordId=0";
+         $.ajax({
+                type: "GET",
+                url: _url,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.status < 1) {
+                        $.iaoAlert({
+                            msg: response.message,
+                            type: "error",
+                            mode: "dark",
+                        });
+                        return;
+                    }
+
+                    var TrainingList = '';
+
+                    // if no enquiries found and not a hit from ViewMore.
+                    if (response.data.TrainingList.length <= 0) {
+                        $('#InstructorTrainingList').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any notification for training!</i></div>');
+                        $('#BtnViewMoreTraining').addClass('d-none');
+                        StopLoading();
+                        return;
+                    }
+
+                    if (response.data.TrainingList.length <= 0) {
+                        $('#BtnViewMoreTraining').addClass('d-none');
+                    }
+                    else {
+                        TrainingList_LastRecordId_Global = response.data.TrainingList[response.data.TrainingList.length - 1].Id;
+                        $('#BtnViewMoreTraining').removeClass('d-none');
+                    }
+
+                    TrainingList = getHTMLBindedNotificationData(response.data.TrainingList);
+
+                    $('#TrainingList').html(TrainingList);
+
+
+                },
+
+                error: function(result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+        function ViewMoreTraining() {
+
+            let _url = "/api/Training/GetAllTraining?lastRecordId=" +TrainingList_LastRecordId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+                var TrainingList = '';
+
+                if (response.data.TrainingList.length <= 0) {
+                    $('#BtnViewMoreTraining').addClass('d-none');
+                }
+                else {
+                    TrainingList_LastRecordId_Global = response.data.TrainingList[response.data.TrainingList.length - 1].Id;
+                    $('#BtnViewMoreTraining').removeClass('d-none');
+                }
+
+                TrainingList = getHTMLBindedNotificationData(response.data.TrainingList);
+
+                $('#TrainingList').append(TrainingList);
+
+                //getAllBusinessOwnerLists();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+        }
+        function getHTMLBindedNotificationData(TrainingList) {
+            var TrainingDetail = '';
+            for (var i = 0; i < TrainingList.length; i++) {
+                var Training = TrainingList[i];
+
+                TrainingDetail += `<div class="cards-items">
+                    <div class="date-year">
+                        <img src="${Training.TrainingImageWithPath}">
+                        <h6 class="date">${Training.StartMonth} ${Training.StartDay}</h6>
+                        <h6 class="year">${Training.StartYear} </h6>
+
+                    </div>
+
+                    <div class="address-cta">
+                        <div class="info-sec">
+                            <h4>${Training.TrainingName} </h4>
+                            <h6 class="loc-text">${Training.Location} </h6>
+                            <h6>${Training.ShortDescription} </h6>
+                        </div>
+                        <div class="cta">
+                            <a class="primary-button" href="/Home/Certification?id=${Training.Id}">Learn More</a>
+                        </div>
+                    </div>
+                </div>`;
+
+            }
+            return TrainingDetail;
+        }
+
+
+
+
+
+
+
+
+
+
+    function GetTrainingDetailByLocation() {
+
+        var _url = "/api/Training/GetAllTrainingByLocation?searchKeyword=${SearchParameters_Global.SearchKeyword}&searchBy=${SearchParameters_Global.SearchBy}";
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var TrainingLocationList = '';
+                for (var i = 0; i < response.data.TrainingLocationList.length; i++) {
+                    htmlData1 += `<div class="cards-items">
+                <div class="date-year">
+                    <img src="${response.data.TrainingLocationList[i].TrainingImageWithPath}">
+                    <h6 class="date">${response.data.TrainingLocationList[i].StartMonth} ${response.data.TrainingList[i].StartDay}</h6>
+                    <h6 class="year">${response.data.TrainingLocationList[i].StartYear} </h6>
+
+                </div>
+
+                <div class="address-cta">
+                    <div class="info-sec">
+                        <h4>${response.data.TrainingLocationList[i].TrainingName} </h4>
+                        <h6 class="loc-text">${response.data.TrainingLocationList[i].Location} </h6>
+                        <h6>${response.data.TrainingLocationList[i].ShortDescription} </h6>
+                    </div>
+                    <div class="cta">
+                        <a class="primary-button" href="/Home/Certification">Learn More</a>
+                    </div>
+                </div>
+            </div>`;
+                }
+                if (response.data.TrainingLocationList.length <= 0) {
+                    TrainingLocationList += `<div class="w-100 font-italic text-center text-black-50 py-2">No Course Detail in this Student Detail.</div>`;
+                }
+
+
+                $('#TrainingList').append(TrainingLocationList);
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+</script>
+

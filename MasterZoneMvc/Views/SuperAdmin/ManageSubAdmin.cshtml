@@ -1,0 +1,333 @@
+﻿@{
+    ViewBag.Title = "Manage SubAdmin";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+@section Styles{
+
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDj6D3QtBy7hfNpDe0Gqy2OjBCxrGF0d5k&callback=initMap" async defer></script>
+    <style>
+        .ClassCountryState {
+            cursor: no-drop;
+        }
+
+        .subadminIcon {
+            width: 75px;
+            height: 75px;
+        }
+
+        .subadminIconPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+
+}
+
+<div id="AllSubAdmin">
+    <div class="wrapper">
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>View Sub Admins</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active">View Sub Admins</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title">View Sub Admins</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <a href="javascript:;" id="AddSubAdminUser">
+                                                <button type="submit" class="btn btn-primary">
+                                                    &plus; Add New
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body">
+                                        <table id="tblSubAdmin" class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>S No.</th>
+                                                    <th>Profile Image</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Address</th>
+                                                    <th>CreatedOn</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <th>S No.</th>
+                                                    <th>Profile Image</th>
+                                                    <td>Name</td>
+                                                    <td>Email</td>
+                                                    <th>Address</th>
+                                                    <td>CreatedOn</td>
+                                                    <td>Action</td>
+                                                </tr>
+
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>S No.</th>
+                                                    <th>Profile Image</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Address</th>
+                                                    <th>CreatedOn</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <!-- /.card-body -->
+                                </div>
+                                <!-- /.card -->
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                        <!-- /.row -->
+                    </div>
+                    <!-- /.container-fluid -->
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+    </div>
+</div>
+
+<div id="AddNewSub" style="display: none;">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h3 id="ChangeText_header">Manage SubAdmin</h3>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active" id="Changetext">Add New User Accounts</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+
+                <!-- Default box -->
+                <div class="card card-default">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-sm-9 d-flex align-items-center">
+                                <h3 class="card-title" id="TitleChange">Add New User Accounts</h3>
+                            </div>
+                            <div class="col-sm-3 d-flex justify-content-end">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="ResetAddView();">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group d-flex flex-column">
+                                    <label>First Name<span class="text-danger">*</span></label>
+                                    <input type="text" id="txtSubAdminName" class="border form-control">
+                                    <div class="error-class" id="error_txtSubAdminName"></div>
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <label>Last Name <span class="text-danger">*</span></label>
+                                    <input type="text" id="txtSubAdminLastName" class="border form-control">
+                                    <div class="error-class" id="error_txtSubAdminLastName"></div>
+                                </div>
+                                <!-- /.form-group -->
+                                <div class="form-group d-flex flex-column">
+                                    <label> Password<span class="text-danger">*</span></label>
+                                    <input type="password" id="txtPassword_ManageSubAdmin" class="border form-control">
+                                    <div class="error-class" id="error_txtPassword_ManageSubAdmin"></div>
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <label> Confirm Password<span class="text-danger">*</span></label>
+                                    <input type="password" id="txtConfirmPassword_ManageSubAdmin" class="border form-control">
+                                    <div class="error-class" id="error_txtConfirmPassword_ManageSubAdmin"></div>
+                                </div>
+                                <!-- /.form-group -->
+                            </div>
+                            <!-- /.col -->
+                            <div class="col-md-6">
+                                <div class="form-group d-flex flex-column">
+                                    <label>Email<span class="text-danger">*</span></label>
+                                    <input type="text" id="txtEmail_ManageSubAdmin" class="border form-control">
+                                    <div class="error-class" id="error_txtEmail_ManageSubAdmin"></div>
+                                </div>
+                                <!-- /.form-group -->
+                                <div class="form-group d-flex flex-column">
+                                    <label>SubAdmin Icon<span class="text-danger">*</span></label>
+                                    <div class="subadminIconPreview">
+                                        <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="fileSubAdminImage_ManageSubAdmin" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileSubAdminImage_ManageSubAdmin"></div>
+                                </div>
+
+                                <!-- /.form-group -->
+                            </div>
+                            <!-- /.col -->
+                            <!-- /.form-group -->
+
+                        </div>
+                        <!-- /.row -->
+
+
+                        <div class="row">
+                            <div class="col-md-6">
+
+                                <div class="form-group d-flex flex-column">
+                                    <div id="SubAdminMapLocation" class="row">
+                                        <div id="SubAdminmap" style="width: 100%; height: 400px;"></div>
+                                        <input type="hidden" id="LocationLatitude" value="" />
+                                        <input type="hidden" id="LocationLongitude" value="" />
+                                        <div class="col-12 from-group text-center mt-4 mb-4">
+                                            <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                        </div>
+                                        <div class="from-group col-6">
+                                            <label for="SubAdminOfflineAddress">Address Line 1</label>
+                                            <input type="text" id="SubAdminOfflineAddress" class="form-control" />
+                                            <div class="error-class" id="error_SubAdminOfflineAddress"></div>
+                                        </div>
+                                        <div class="from-group col-6">
+                                            <label for="SubAdminOfflineLandMark">Land Mark</label>
+                                            <input type="text" id="SubAdminOfflineLandMark" class="form-control" />
+                                            <div class="error-class" id="error_SubAdminOfflineLandMark"></div>
+                                        </div>
+                                        <div class="from-group col-3 pt-3">
+                                            <label for="ddl_SubAdminOfflineCountry">Country</label>
+                                            @*<input type="text" id="SubAdminOfflineLocation" class="form-control" />*@
+                                            <select id="ddl_SubAdminOfflineCountry" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                            </select>
+                                            <input type="text" id="ddl_SubAdminOfflineCountry" class="form-control SubAdminCountryState MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_ddl_SubAdminOfflineCountry"></div>
+                                        </div>
+                                        <div class="from-group col-3 pt-3">
+                                            <label for="ddl_SubAdminOfflineState">State</label>
+                                            @*<input type="text" id="SubAdminOfflineLocation" class="form-control" />*@
+                                            <select id="ddl_SubAdminOfflineState" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();">
+                                            </select>
+                                            <input type="text" id="ddl_SubAdminOfflineState" class="form-control SubAdminCountryState  MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_ddl_SubAdminOfflineState"></div>
+                                        </div>
+                                        <div class="from-group col-3 pt-3">
+                                            <label for="ddl_SubAdminOfflineCity">City</label>
+                                            @*<input type="text" id="SubAdminOfflineLocation" class="form-control" />*@
+                                            <select id="ddl_SubAdminOfflineCity" class="form-control WithoutMapLocation" data-width="100%">
+                                            </select>
+                                            <input type="text" id="ddl_SubAdminOfflineCity" class="form-control MapLocation d-none" value="" />
+                                            @*<select id="ddl_SubAdminOfflineCity" class="form-control" data-width="100%">
+                                                </select>*@
+                                            <div class="error-class" id="error_ddl_SubAdminOfflineCity"></div>
+                                        </div>
+                                        <div class="from-group col-3 pt-3">
+                                            <label for="SubAdminOfflinePinCode">Pin Code</label>
+                                            <input type="text" id="SubAdminOfflinePinCode" class="form-control" />
+                                            <div class="error-class" id="error_SubAdminOfflinePinCode"></div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <!-- /.form-group -->
+                            </div>
+                            <!-- /.col -->
+                            <!-- /.col -->
+                        </div>
+                        <!-- /.row -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4>SubAdmin Permissions</h4>
+                                <div id="SubAdminPermissions_ManageSubAdmin">
+
+                                </div>
+                                <div class="error-class" id="error_SubAdminPermissions_ManageSubAdmin"></div>
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary" id="ChangeUpdateText" onclick="btnSubmitSubAdmin();">Save</button>
+                        <button type="submit" class="btn btn-danger" onclick="ResetAddView()">Cancel</button>
+                    </div>
+                    <!-- /.card-body -->
+                    <!-- <div class="card-footer">
+                      Visit <a href="https://select2.github.io/">Select2 documentation</a> for more examples and information about
+                      the plugin.
+                    </div> -->
+                </div>
+                <!-- /.card -->
+
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+    </div>
+</div>
+
+
+@section Scripts{
+    @*<script src="~/Scripts/js/superadmin-panel/ManageSubAdmin.js"></script>*@
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/superadmin-panel/plugins/select2/js/select2.full.min.js"></script>
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageSubAdminScriptPartial.cshtml")
+}
+
+
+
+
+
+
+
+

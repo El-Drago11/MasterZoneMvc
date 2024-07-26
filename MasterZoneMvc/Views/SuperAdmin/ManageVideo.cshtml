@@ -1,0 +1,244 @@
+﻿
+@{
+    ViewBag.Title = "ManageVideo";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+@section Styles{
+  
+    <link href="~/Content/assets/Common_Popuphover.css" rel="stylesheet" />
+
+    <style>
+
+        .videoIcon {
+            width: 75px;
+            height: 75px;
+        }
+
+        .videoIconPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+     <link href="~/Content/assets/Common_Popuphover.css" rel="stylesheet" />
+}
+
+
+<div id="AllSubAdmin">
+    <div class="wrapper">
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>View Videos</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active">View Video </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title">View Video</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <a href="javascript:;" id="AddSubAdminUser">
+                                                <button type="submit" class="btn btn-primary">
+                                                    &plus; Add New
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <table id="tblVideo" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>S No.</th>
+                                                <th>VideoTitle</th>
+                                                <th>VideoLink</th>
+                                                <th>Image</th>
+                                                <th>Description</th>
+                                                @*<th>CreatedOn</th>*@
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <th>S No.</th>
+                                                <th>VideoTitle</th>
+                                                <th>VideoLink</th>
+                                                <th>Image</th>
+                                                <th>Description</th>
+                                                @*<th>CreatedOn</th>*@
+                                                <th>Action</th>
+                                            </tr>
+
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>S No.</th>
+                                                <th>VideoTitle</th>
+                                                <th>VideoLink</th>
+                                                <th>Image</th>
+                                                <th>Description</th>
+                                                @*<th>CreatedOn</th>*@
+                                                <th>Action</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        <!-- Control Sidebar -->
+        <!-- /.control-sidebar -->
+    </div>
+</div>
+
+<aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+</aside>
+
+<div id="AddNewSub" style="display: none;">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h3 id="ChangeText_header">Manage Video</h3>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active" id="Change_text">Add Video</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="card card-default">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-sm-9 d-flex align-items-center">
+                                <h3 class="card-title" id="ChangeText">Add New User Accounts</h3>
+                            </div>
+                            <div class="col-sm-3 d-flex justify-content-end">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="ResetAddViewUserVideo();">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group d-flex flex-column">
+                                    <label>Video Image <span class="text-danger">*</span></label>
+                                    <div class="videoIconPreview">
+                                        <img id="videoIcon" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="Manageuser_vediothumbnailimage" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_Manageuser_vediothumbnailimage"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group d-flex flex-column">
+                                    <label>Enter Video Title<span class="text-danger">*</span></label>
+                                    <input type="text" id="textuser_vediotitle" class="border form-control">
+                                    <div class="error-class" id="error_textuser_vediotitle"></div>
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <label>
+                                        Enter Video Unique Identifier <span class="text-danger">*</span> <button class="tooltip">
+                                            i
+                                            <span class="tooltiptext" style="border: 1.5px solid  #ced4da"> For Example, This is the youtube link, from this link you just need to copy the video name (S-8druBYi3o) and paste it in below input field.  https://www.youtube.com/watch?v=S-8druBYi3o</span>
+                                        </button>
+                                    </label>
+                                    <input type="text" id="user_youtubeurlvedio" class="border form-control">
+                                    <div class="error-class" id="error_user_youtubeurlvedio"></div>
+                                </div>
+                                <!-- /.form-group -->
+                                <div class="form-group d-flex flex-column">
+                                    <label>Description <span class="text-danger">*</span></label>
+                                    <input type="text" id="user_vediodescription" class="border form-control">
+                                    <div class="error-class" id="error_user_vediodescription"></div>
+                                </div>
+
+                                <!-- /.form-group -->
+                            </div>
+                            <!-- /.col -->
+                            <div class="col-md-6">
+                                <!-- /.form-group -->
+                                <!-- /.form-group -->
+                            </div>
+                            <!-- /.col -->
+                            <!-- /.form-group -->
+
+                        </div>
+
+                    </div>
+
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary" id="ChangeUpdateText" onclick="AddbtnUserVideo();">Save</button>
+                        <button type="submit" class="btn btn-danger" onclick="ResetAddViewUserVideo();">Cancel</button>
+                    </div>
+
+                </div>
+
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+    </div>
+</div>
+
+
+
+@section Scripts{
+    @*<script src="~/Scripts/js/superadmin-panel/ManageSubAdmin.js"></script>*@
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/superadmin-panel/plugins/select2/js/select2.full.min.js"></script>
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageSuperAdminVideoScriptPartial.cshtml")
+}

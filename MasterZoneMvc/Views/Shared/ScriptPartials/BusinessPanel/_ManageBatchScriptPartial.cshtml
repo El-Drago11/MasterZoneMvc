@@ -1,0 +1,766 @@
+﻿
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var BatchId_Global = 0;
+    var _batchTable;
+    var BatchGroupId_Global = 0;
+
+    function initializeDataTable_Batch() {
+        _batchTable = $("#tblBatch").DataTable();
+    }
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_Batch();
+                GetAllBatch();
+                getAllInstructorLists();
+                GetGroupNamesList();
+                //StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_Batch();
+                        GetAllBatch();
+                        getAllInstructorLists();
+                        GetGroupNamesList();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+        $('#btnAddBatch').click(function () {
+            $('#sectionAddBatch').show();
+            $('#btnAddBatch').hide();
+            $('#sectionViewBatch').hide();
+            document.getElementById("pageTextchange").innerHTML = "Add Batch";
+            document.getElementById("pageStageChange").innerHTML = "Add Batch";
+            $('#btnUpdateCredential').addClass('d-none');
+        });
+
+    });
+
+     function getAllInstructorLists() {
+
+      let _url =  "/api/Class/GetAllInstructor";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $("#ddlSelectedInstructorUserLoginId").html('');
+            var _selectList = '<option value="0">Select Instructor</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                var _InstructorName = '(' + response.data[i].Id + ')' + response.data[i].InstructorName;
+                _selectList += '<option value="' + response.data[i].InstructorUserLoginId + '">' + response.data[i].InstructorName + '</option>';
+            }
+            $("#ddlSelectedInstructorUserLoginId").html('').append(_selectList); //.select2();
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    function GetGroupNamesList() {
+        var GroupType_Global = 'g_class';
+        var _url = "/api/Group/GetAllGroupNamesList?groupType=" + GroupType_Global;
+        $('#ddlGroup').html('<option value="0">Select Group</option>');
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    $('#ddlGroup').append(`<option value="${item.Id}">${item.Name}</option>`);
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetGroupNamesListByBatchId(batchId) {
+        var _url = "/api/Group/GetAllUnassignedBatchGroupNamesList?batchId="+batchId;
+        $('#ddlGroup').html('<option value="0">Select Group</option>');
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    $('#ddlGroup').append(`<option value="${item.Id}">${item.Name}</option>`);
+                }
+                $('#ddlGroup').val(BatchGroupId_Global).trigger('change');
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllBatch() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Batch/GetAllByPagination";
+        _batchTable.clear().destroy();
+        _batchTable = $("#tblBatch").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[2, "asc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , { "data": "Name", "name": "Name", "autoWidth": true }
+                , { "data": "ScheduledStartOnTime_24HF", "name": "ScheduledStartOnTime_24HF", "autoWidth": true }
+                , { "data": "ScheduledEndOnTime_24HF", "name": "ScheduledEndOnTime_24HF", "autoWidth": true }
+                , { "data": "StudentMaxStrength", "name": "StudentMaxStrength", "autoWidth": true }
+                , {
+                    "data": "InstructorFullName", "name": "InstructorFullName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `
+                            <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.InstructorLoginId}">
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        <img src="${row.InstructorProfileImageWithPath}" class="img-size-sm" />
+                                    </div>
+                                <div>${row.InstructorFullName} </div>
+                            </div></a>
+                        `;
+                        return _data;
+                    }
+                }
+                , {
+                    "data": "GroupName", "name": "GroupName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `
+                                <div class="d-flex align-items-center" data-id="${row.GroupId}">
+                                        <div class="mr-2">
+                                            <img src="${row.GroupImageWithPath}" class="img-size-sm" />
+                                        </div>
+                                    <div>${row.GroupName} </div>
+                                </div>
+                            `;
+                        return _data;
+                    }
+                }
+                , {
+                    "data": null, "": "Status", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _status = '';
+                        if (row.Status == 1) {
+                            _status = '<button class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStatusBatch(' + row.Id + ');">Active</button>';
+                        }
+                        else {
+                            _status = '<button class="btn btn-danger text-white btn-sm" style="width:80px;" onclick="ConfirmChangeStatusBatch(' + row.Id + ');">Inactive</button>';
+                        }
+                        return _status;
+                    }
+                }
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                        var _delete = '';
+                        @if (permissionKeys.Contains("ManageScheduleClass_EditScheduleClass"))
+                          {
+                             <text>
+                               _edit = `<a href="javascript:EditBatch(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                             </text>
+                          }
+                        @if (permissionKeys.Contains("ManageScheduleClass_DeleteScheduleClass"))
+                          {
+                              <text>
+                        _delete = `<a href="javascript:confrimDeleteBatch(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                              </text>
+                          }
+
+                        var _action = `<div class="edbt">
+                                        ${_edit}
+                                        ${_delete}
+                                    </div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,6,7], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblClass_filter input').unbind();
+        $('#tblClass_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _eventTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+function showEditBatchPage() {
+    $('#sectionAddBatch').show();
+    $('#sectionViewBatch').hide();
+    document.getElementById("myText").innerHTML = "Edit Batch";
+    document.getElementById("ChangeUpdateText").innerHTML = "Update";
+    document.getElementById("pageTextchange").innerHTML = "Edit Batch";
+    document.getElementById("pageStageChange").innerHTML = "Edit Batch";
+    $('#ChangeUpdateText').show();
+    $('#btnAddBatch').hide();
+    $(".error-class").html('');
+
+    $('#btnUpdateCredential').removeClass('d-none');
+};
+
+function EditBatch(id) {
+    var _url = "/api/Batch/GetById?id="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            BatchId_Global = id;
+
+            $("#txtName").val(response.data.Name);
+            $("#LimitOfStudentForClass").val(response.data.StudentMaxStrength);
+            $("#BatchStartTime").val(response.data.ScheduledStartOnTime_24HF);
+            $("#BatchEndTime").val(response.data.ScheduledEndOnTime_24HF);
+            $("#ddlSelectedInstructorUserLoginId").val(response.data.InstructorLoginId);
+            $("#ddlGroup").val(response.data.GroupId);
+            BatchGroupId_Global = response.data.GroupId;
+            var _groupMembersCount = response.data.GroupMembersCount;
+            if (_groupMembersCount > 0) {
+                $("#ddlGroupNotes").html(`Note: This group has ${_groupMembersCount} members. Changing group leads to add theses members to new group manually.`);
+            }
+            else {
+                $("#ddlGroupNotes").html('');
+            }
+
+            ////---Check Batch-Status
+            if (response.data.Status == 1) {
+                $('#chkIsActive').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive').prop('checked', false);
+            }
+
+            // Bind Groups by batch
+            GetGroupNamesListByBatchId(id);
+
+            showEditBatchPage();
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function ShowingViewBatchList() {
+
+    $('#sectionViewBatch').show();
+}
+
+function ResetAddView() {
+    // Reset data
+    $("#ddlGroup").val('0');
+    $("#ddlSelectedInstructorUserLoginId").val('0');
+    $("#BatchStartTime").val('');
+    $("#BatchEndTime").val('');
+    $("#LimitOfStudentForClass").val('');
+    $("#txtName").val('');
+
+    $('#chkIsActive').prop('checked', true);
+
+    BatchId_Global = 0;
+    BatchGroupId_Global = 0;
+
+    // show hide panel
+    $('#sectionViewBatch').show();
+    $('#sectionAddBatch').hide();
+    $('#btnAddBatch').show();
+    document.getElementById("pageTextchange").innerHTML = "View Batch";
+    document.getElementById("pageStageChange").innerHTML = "View Batch";
+    document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+    $(".error-class").html('');
+
+    // Bind Groups by batch
+    GetGroupNamesListByBatchId(0);
+}
+
+function btnAddUpdateBatch() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+    var _Mode = (BatchId_Global > 0) ? 2 : 1;
+
+    let _Name = $("#txtName").val();
+    let _LimitOfStudent = $("#LimitOfStudentForClass").val();
+    let _BatchStartTime = $("#BatchStartTime").val();
+    let _BatchEndTime = $("#BatchEndTime").val();
+    let _InstructorLoginId = $("#ddlSelectedInstructorUserLoginId").val();
+    let _GroupId = $("#ddlGroup").val();
+
+    let _error_Name = $("#error_txtName");
+    let _error_LimitOfStudent = $("#error_LimitOfStudentForClass");
+    let _error_BatchStartTime = $("#error_BatchStartTime");
+    let _error_BatchEndTime = $("#error_BatchEndTime");
+    let _error_InstructorLoginId = $("#error_ddlSelectedInstructorUserLoginId");
+    let _error_GroupId = $("#error_ddlGroup");
+
+    if (validate_IsEmptySelectInputFieldValue(_InstructorLoginId)) {
+        is_valid = false;
+        _error_InstructorLoginId.html('@(Resources.BusinessPanel.InstructorSelectionRequired)');
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_GroupId)) {
+        is_valid = false;
+        _error_GroupId.html('@(Resources.BusinessPanel.GroupSelection_Required)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_Name)) {
+        is_valid = false;
+        _error_Name.html('@(Resources.BusinessPanel.BatchNameRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_LimitOfStudent) || parseInt(_LimitOfStudent <= 0)) {
+        is_valid = false;
+        _error_LimitOfStudent.html('@(Resources.BusinessPanel.ErrorMessageLimitOfStudent)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_BatchStartTime)) {
+        is_valid = false;
+        _error_BatchStartTime.html('@(Resources.BusinessPanel.ErrorMessageClassStartTime)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_BatchEndTime)) {
+        is_valid = false;
+        _error_BatchEndTime.html('@(Resources.BusinessPanel.ErrorMessageClassEndTime)');
+    }
+    else if (_BatchEndTime <= _BatchStartTime) {
+        is_valid = false;
+        _error_BatchEndTime.html("@(Resources.BusinessPanel.ErrorMessageEndTimeGreaterThen)");
+    }
+
+
+    var _isActiveBatch = 0;
+    if ($('#chkIsActive').is(':checked')) {
+        // checked
+        _isActiveBatch = 1;
+    }
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        data.append("Id", BatchId_Global);
+        data.append("batchName", _Name);
+        data.append("batchStartTime", _BatchStartTime);
+        data.append("batchEndTime", _BatchEndTime);
+        data.append("batchLimitofStudent", _LimitOfStudent);
+        data.append("instructorLoginId", _InstructorLoginId);
+        data.append("groupId", _GroupId);
+        data.append("Mode", _Mode);
+        data.append("status", _isActiveBatch);
+
+        $.ajax({
+            url: '/api/Batch/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+                ResetAddView();
+                StopLoading();
+                GetAllBatch();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+function confrimDeleteBatch(id) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteBatchTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteBatchText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteBatch(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteBatch(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Batch/Delete?id=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get Batch List
+                    GetAllBatch();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function ConfirmChangeStatusBatch(id) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmChangeStatusBatchTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmChangeStatusBatchText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            ChangeStatusBatch(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function ChangeStatusBatch(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Batch/ChangeStatus?id=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get Batch List
+                    GetAllBatch();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+</script>

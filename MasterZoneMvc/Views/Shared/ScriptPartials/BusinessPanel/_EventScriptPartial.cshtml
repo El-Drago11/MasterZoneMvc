@@ -1,0 +1,2316 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var EventId_Global = 0;
+    var UserToken_Global = "";
+    var _eventTable;
+    var GroupDetail_Global = {};
+    var EventSponsorId_Global = 0;
+    var EventDetailsId_Global = 0;
+    var LocationChooseMap = 0;
+    var CountryEventLocation = 'Select';
+    var StateEventLocation = 'Select';
+    var CityEventLocation = 'Select';
+    var LandMarkEventLocation = '';
+
+    function initializeDataTable_Events() {
+            _eventTable = $("#tblEvent").DataTable();
+            $('#tblEventSponsor').DataTable();
+            $('#tblEventOrganizer').DataTable();
+            $("#tblEventHost").DataTable();
+            $("#tblEventSpecialGuest").DataTable();
+    }
+  $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_Events();
+                GetAllEvents();
+                GetAllActiveEventCategories();
+                HideAllEventDetailsTable();
+                //GettAllRecordEventById();
+                //StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_Events();
+                        GetAllActiveEventCategories();
+                        GetAllEvents();
+                        HideAllEventDetailsTable();
+
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+  });
+
+
+        function HideAllEventDetailsTable() {
+            $("#sectionViewEventSponsor").hide();
+            $("#sectionViewEventOrganizer").hide();
+            $("#sectionViewEventHost").hide();
+            $("#sectionViewEventSpecialGuest").hide();
+
+        }
+
+
+
+
+
+
+    $(document).ready(function () {
+        $('#btnAddEvent').click(function () {
+            $('#sectionAddEvent').show();
+            $('#btnAddEvent').hide();
+            $('#sectionViewEvent').hide();
+
+            document.getElementById("pageTextchange").innerHTML = "Add Event";
+            document.getElementById("pageStageChange").innerHTML = "Add Event";
+
+            GetCountriesList();
+            initMap();
+
+        });
+    });
+
+    function StartDateChange() {
+
+        var _startDate_val = $("#StartDate_Event").val();
+
+        if (_startDate_val) {
+            var startDateInput = document.getElementById("StartDate_Event");
+            var endDateInput = document.getElementById("EndDate_Event");
+
+            endDateInput.min = startDateInput.value;
+        }
+    }
+
+    function ResetAddView() {
+
+            //$("#ddlEventCategory").val('0');
+            $("#txtTitle_Event").val('');
+            $("#txtLocationURL_Event").val('');
+            $("#StartDate_Event").val('');
+            $("#EndDate_Event").val('');
+            $("#StartTime_Event").val('');
+            $("#EndTime_Event").val('');
+            $("#ShortDecription_Event").val('');
+            $("#Price_Event").val('');
+            $("#FeaturedImage_Event").val('');
+            $("#previewEventImage").attr('src', '');
+            $("#IsPaidRadioYes_Event").prop('checked', false);
+            $("#IsPaidRadioNo_Event").prop('checked', true);
+            $("#WalkingRadioYes_Event").prop('checked', true);
+            $("#WalkingRadioNo_Event").prop('checked', false);
+            $("#About_Event").html('');
+            $("#AdditonalInforamtion_Event").html('');
+            $("#TicketInformation_Event").val('');
+            $('#sectionViewEvent').show();
+            $('#sectionAddEvent').hide();
+            $('#btnAddEvent').show();
+            document.getElementById("pageTextchange").innerHTML = "Event";
+            document.getElementById("pageStageChange").innerHTML = "Event";
+            $(".error-class").html('');
+            $("input#country").val('');
+            $("input#state").val('');
+            $("input#txt_City").val('');
+            $(".WithoutMapLocation").removeClass('d-none');
+            $(".MapLocation").addClass('d-none');
+            $("#txt_City").html('');
+            $("#txt_City").append('<option value="0">Select</option>');
+            $("#state").html('');
+            $("#state").append('<option value="0">Select</option>');
+            $("#country").html('');
+            $("#country").append('<option value="0">Select</option>');
+            CountryEventLocation = 'Select';
+            $("#txt_City").val('');
+            $("#state").val('');
+            $("#country").val('');
+            $("#Event_Address").val('');
+            $("#Landmark_name").val('');
+            $("#txt_PinCode").val('');
+            LandMarkEventLocation = '';
+            LocationChooseMap = 0;
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+            if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+                return true;
+            return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+            if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+                return true;
+            return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+    function ConfirmDeleteEventSponsor(id, EventId) {
+            swal({
+                title: "Delete Event Sponsor",
+                text: "Are you sure to delete this Event Sponsor?",
+                type: "warning",
+                buttons: {
+                    cancel: true,
+                    confirm: "Yes",
+                }
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        DeleteEventSponsor(id, EventId);
+                    } else {
+                        //swal("Your imaginary file is safe!");
+                    }
+                });
+    }
+
+    function DeleteEventSponsor(id, EventId) {
+            StartLoading();
+            $.ajax({
+                type: "POST",
+                url: "/api/Event/Sponsor/DeleteById?id=" + id + "&EventId=" + EventId,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (dataResponse) {
+                    StopLoading();
+
+                    //--Check if staff successfully deleted
+                    if (dataResponse.status == 1) {
+                        setTimeout(function () {
+                            swal("Success!", dataResponse.message, "success");
+                            //--Get Event Sponsor List
+                            getAllEventSponsor(EventId);
+
+                        }, 100);
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+
+    function ValidateFields_Event() {
+            let _Country = '';
+            let _state = '';
+            let _cityinput = '';
+            var _eventTitle = $("#txtTitle_Event").val().trim();
+            var _eventStartDate = $("#StartDate_Event").val().trim();
+            var _eventEndDate = $("#EndDate_Event").val().trim();
+            var _eventStartTime = $("#StartTime_Event").val().trim();
+            var _eventEndTime = $("#EndTime_Event").val().trim();
+            var _eventIsPaid = $('input[name="IsPaidRadio_Event"]:checked').val();
+            var _eventWalking = $('input[name="WalkingRadio_Event"]:checked').val();
+            var _eventLocationURL = $("#txtLocationURL_Event").val().trim();
+            var _eventShortDescription = $("#ShortDecription_Event").val().trim();
+            var _eventAbout = $("#About_Event .ql-editor").text();
+            var _eventAdditionalInformation = $("#AdditonalInforamtion_Event .ql-editor").text();
+            var _eventFeaturedImage = $("#FeaturedImage_Event").get(0).files;
+            var _eventTicketInformation = $("#TicketInformation_Event").val();
+            var _eventPrice = $("#Price_Event").val().trim();
+            let _eventAddress = $("#Event_Address").val();
+            let _PinCode = $("#txt_PinCode").val().trim();
+            let _Landmarkname = $("#Landmark_name").val().trim();
+        let _eventCategoryId = $("#ddlEventCategory").val();
+
+                var _is_valid = true;
+
+                if (LocationChooseMap == 1) {
+                    _Country = $("input#country").val();
+                    _state = $("input#state").val();
+                    _cityinput = $("input#txt_City").val();
+                }
+                else {
+                    _Country = $("#country").val();
+                    _state = $("#state").val();
+                    _cityinput = $("#txt_City").val();
+
+                }
+
+            var _mode = (EventId_Global <= 0) ? 1 : 2;
+            $(".error-class").html('');
+            let _error_Landmarkname = $("#error_Landmark_name");
+            let _error_EventAddress = $("#error_Event_Address");
+            let _error_Country = $("#error_txtCountry");
+            let _error_state = $("#error_state");
+            let _error_cityinput = $("#error_txt_City");
+            let _error_PinCode = $("#error_txt_PinCode");
+
+            //Event-Title
+            if (_eventTitle == "" || _eventTitle.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_txtTtile_Event").html('Please enter Title!');
+            }
+            //Event-Start Date
+            if (_eventStartDate == "" || _eventStartDate.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_EventStartDate").html('Please enter Start Date!');
+            }
+            //Event End Date
+        if (_eventEndDate == "" || _eventEndDate.replace(/\s/g, "") == "") {
+            _is_valid = false;
+            $("#error_EventEndDate").html('Please enter End Date!');
+        }
+        else if (_eventEndDate < _eventStartDate) {
+            _is_valid = false;
+            $("#error_EventEndDate").html('End-Date cannot be less than Start-Date!');
+        }
+            // Event Start Time
+            if (_eventStartTime == "" || _eventStartTime.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_EventStartTime").html('Please enter Start Time!');
+            }
+            // Event End Time
+            if (_eventEndTime == "" || _eventEndTime.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_EventEndTime").html('Please enter End Time!');
+            }
+            // Event Is Paid
+            //if (_eventIsPaid.length <= 0) {
+            //    _is_valid = false;
+            //    $("#error_IsPaid_Event").html('Please select Is Paid !');
+            //}
+            // Event Walking
+            //if (_eventWalking.length <= 0) {
+            //    _is_valid = false;
+            //    $("#error_Walking_Event").html('Please select Walking !');
+            //}
+            // Event Location URL
+            if (_eventLocationURL == "" || _eventLocationURL.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_txtLocationURL_Event").html('Please enter Location URL!');
+            }
+            // Event Short Decription
+            if (_eventShortDescription == "" || _eventShortDescription.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_EventShortDecription").html('Please Enter Short Description !');
+            }
+            // Event About
+            if (_eventAbout == "") {
+                _is_valid = false;
+                $("#error_About_Event").html('Please enter About !');
+            }
+            // Event Additional Inforamtion
+            if (_eventAdditionalInformation == "") {
+                _is_valid = false;
+                $("#error_AdditonalInforamtion_Event").html('Please enter Additional Inforamtion !');
+            }
+            //-- image
+            if (_mode == 1 && _eventFeaturedImage.length <= 0) {
+                _is_valid = false;
+                $("#error_FeaturedImage_Event").html('please select image!');
+            }
+            // Event Ticket Inforamtion
+        if (_eventTicketInformation == "" || _eventTicketInformation.replace(/\s/g, "") == "") {
+                _is_valid = false;
+                $("#error_TicketInformation_Event").html('Please enter Ticket Inforamtion !');
+        }
+        if (_eventIsPaid == "1" && (!validate_IsEmptyStringInputFieldValue(_eventPrice) && parseFloat(_eventPrice) <= 0)) {
+                _is_valid = false;
+                $("#error_Price_Event").html('event price must be greater than 0');
+        }
+         if (validate_IsEmptyStringInputFieldValue(_Landmarkname)) {
+            is_valid = false;
+             _error_Landmarkname.html('@(Resources.BusinessPanel.LandmarkNameRequired)');
+        }
+        if (validate_IsEmptySelectInputFieldValue(_eventCategoryId)) {
+            is_valid = false;
+            $("#error_ddlEventCategory").html('@(Resources.BusinessPanel.Event_EventCategoryRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_eventAddress)) {
+            is_valid = false;
+             _error_EventAddress.html('@(Resources.BusinessPanel.TrainingAddressRequired)');
+         }
+        if (_Country == "" || _Country <= 0) {
+            is_valid = false;
+             _error_Country.html('@(Resources.BusinessPanel.CountryNameRequired)');
+         }
+
+         if (_state == "" || _state <=0) {
+            is_valid = false;
+             _error_state.html('@(Resources.BusinessPanel.StateNameRequired)');
+         }
+         if (_cityinput == "" || _cityinput <= 0) {
+            is_valid = false;
+             _error_cityinput.html('@(Resources.BusinessPanel.CityNameRequired)');
+         }
+        if (validate_IsEmptyStringInputFieldValue(_PinCode)) {
+            is_valid = false;
+            _error_PinCode.html('@(Resources.BusinessPanel.PinCodeRequired)');
+         }
+            return _is_valid;
+
+    }
+    function AddUpdateEvent() {
+            let _Country = '';
+            let _state = '';
+            let _cityinput = '';
+            var _eventTitle = $("#txtTitle_Event").val();
+            var _eventStartDate = $("#StartDate_Event").val();
+            var _eventEndDate = $("#EndDate_Event").val();
+            var _eventStartTime = $("#StartTime_Event").val();
+            var _eventEndTime = $("#EndTime_Event").val();
+            var _eventIsPaid = $('input[name="IsPaidRadio_Event"]:checked').val();
+            var _eventWalking = $('input[name="WalkingRadio_Event"]:checked').val();
+            var _eventLocationURL = $("#txtLocationURL_Event").val();
+            var _eventShortDescription = $("#ShortDecription_Event").val();
+            var _eventAbout = $("#About_Event .ql-editor").html();
+            var _eventAdditionalInformation = $("#AdditonalInforamtion_Event .ql-editor").html();
+            var _eventTicketInformation = $("#TicketInformation_Event").val();
+            var _eventPrice = $("#Price_Event").val();
+            var _eventFeaturedImage_MS = $("#FeaturedImage_Event").get(0);
+            var _eventFeaturedImage = _eventFeaturedImage_MS.files;
+            var _mode = (EventId_Global <= 0) ? 1 : 2;
+            let _Landmarkname = $("#Landmark_name").val().trim();
+            let _EventAddress = $("#Event_Address").val().trim();
+            let _locationLatitude = $("#LocationLatitude").val();
+            let _locationLongitude = $("#LocationLongitude").val();
+            let _PinCode = $("#txt_PinCode").val().trim();
+        let _eventCategoryId = $("#ddlEventCategory").val();
+
+            if (LocationChooseMap == 1) {
+                _Country = $("input#country").val();
+                _state = $("input#state").val();
+                _cityinput = $("input#txt_City").val();
+            }
+            else {
+                _Country = $("#country").val();
+                _state = $("#state").val();
+                _cityinput = $("#txt_City").val();
+
+            }
+
+            if (ValidateFields_Event()) {
+                StartLoading();
+                var encodedEventAbout = encodeURIComponent(_eventAbout);
+                var encodedEventAdditionalInformation = encodeURIComponent(_eventAdditionalInformation);
+                var encodedEventTicketInformation = encodeURIComponent(_eventTicketInformation);
+
+                var data = new FormData();
+
+                data.append("id", EventId_Global);
+                data.append("title", _eventTitle);
+                data.append("startDate", _eventStartDate);
+                data.append("endDate", _eventEndDate);
+                data.append("startTime", _eventStartTime);
+                data.append("endTime", _eventEndTime);
+                data.append("isPaid", _eventIsPaid);
+                data.append("walking", _eventWalking);
+                data.append("locationURL", _eventLocationURL);
+                data.append("shortDescription", _eventShortDescription);
+                data.append("additionalInforamtion", encodedEventAdditionalInformation);
+                data.append("ticketInforamtion", encodedEventTicketInformation);
+                data.append("about", encodedEventAbout);
+                data.append("featuredImage", _eventFeaturedImage[0]);
+                data.append("price", _eventPrice);
+                data.append("mode", _mode);
+                data.append("LandMark", _Landmarkname);
+                data.append("Address", _EventAddress);
+                data.append("Country", _Country);
+                data.append("State", _state);
+                data.append("PinCode", _PinCode);
+                data.append("City", _cityinput);
+                data.append("LocationLatitude", _locationLatitude);
+                data.append("LocationLongitude", _locationLongitude);
+                data.append("EventCategoryId", _eventCategoryId);
+
+                $.ajax({
+                    url: '/api/Event/AddUpdate',
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    //contentType: 'application/json',
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+                            //Hide section add event
+                            $('#sectionAddEvent').hide();
+                            // show section view event
+                            $('#btnAddEvent').show();
+                            $('#sectionViewEvent').show();
+                            ResetAddEventView();
+                            //get all event list
+                            GetAllEvents();
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+                            return;
+                        }
+
+
+
+                        StopLoading();
+
+
+                    },
+                    error: function (result) {
+                        StopLoading();
+                        //removeBtnLoading(btnSelector);
+                        //enableContinueBtn();
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+            }
+    }
+    $(document).ready(function () {
+        // Add change event listener to the radio buttons
+        $('input[name="IsPaidRadio_Event"]').change(function () {
+            if ($(this).val() === '1') {
+                $('#Price_Event').prop('disabled', false).val('');
+            } else {
+                $('#Price_Event').prop('disabled', true).val('0');
+            }
+        });
+    });
+
+    function GetAllEvents() {
+            // ---------------- Pagination Data Table --------------------
+            var _url_val = "/api/Event/GetAllByPagination";
+            _eventTable.clear().destroy();
+            _eventTable = $("#tblEvent").DataTable({
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "orderMulti": false,
+                "ordering": true,
+                "paginate": true,
+                "order": [[4, "desc"]],
+                "ajax": {
+                    "headers": {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    "url": _url_val,
+                    "type": "POST",
+                    //"data": { "_Params": JSON.stringify(_Params) },
+                    //"datatype": "json",
+                    "error": function (result) {
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                        //,"render": function (data, type, row) {
+                        //    return '';
+                        //}
+                    }
+                    //, {
+                    //    "data": "GroupImage", "name": "GroupImage", "autoWidth": true
+                    //    , "render": function (data, type, row) {
+                    //        return `<img src="${row.GroupImageWithPath}" class="image" />`
+                    //    }
+                    //}
+                    , {
+                        "data": "Title", "name": "Title", "autoWidth": true,
+                        "render": function (data, type, row) {
+                            var _data = `<a target="_blank" href="/Home/Event?eventId=${row.Id}">
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        <img src="${row.EventFeaturedImageWithPath}" class="img-size-sm" />
+                                    </div>
+                                    <div>${row.Title}</div>
+                                </div></a>`;
+
+                            return _data;
+                        }
+                    }
+                    , { "data": "StartDateTime_Format", "name": "StartDateTime_Format", "autoWidth": true }
+                    , { "data": "EndDateTime_Format", "name": "EndDateTime_Format", "autoWidth": true }
+                    , { "data": "Price", "name": "Price", "autoWidth": true }
+                    , {
+                        "data": "EventArchived", "name": "EventArchived", "autoWidth": true,
+                        "render": function (data, type, row) {
+                            var _data = (row.EventArchived == 1) ? `<span class="badge badge-danger">Archived</span>` : ``;
+                            return _data;
+                        }
+                    }
+                    //, {
+                    //    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    //    , "render": function (data, type, row) {
+                    //        return row.CreatedOn_FormatDate; //`<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                    //    }
+                    //}
+                    , {
+                        "data": null, "": "Action", "autoWidth": true,
+                        "render": function (data, type, row) {
+
+                            /*var _view = `<a href="javascript:viewGroupDetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;*/
+                            var _edit = `<a href="javascript:EditEventById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                           /* var _addMembers = `<a href="javascript:addGroupMembers(${row.Id});"><i class="fas fa-plus" title="Add Members" ></i></a>`;*/
+                            var _delete = `<a href="javascript:ConfirmDeleteEvent(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                            var _action = `<div class="edbt">
+                            @if (permissionKeys.Contains("ManageEvents_EditEvents"))
+                            {
+                                 <text>
+                                      ${_edit}
+                                 </text>
+                             }
+                            @if (permissionKeys.Contains("ManageEvents_DeleteEvents"))
+                            {
+                                <text>
+                                    ${_delete}
+                                </text>
+                            }
+                                    </div>`;
+                            return _action;
+                        }
+                    }
+
+                ],
+
+                "responsive": true,
+                "autoWidth": false,
+                //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                "columnDefs": [{
+                    "targets": [0,4,5], // column index (start from 0)
+                    "orderable": false, // set orderable false for selected columns
+                }]
+            });
+
+            // for enabling search box only send requet on pressing enter
+            $('#tblEvent_filter input').unbind();
+            $('#tblEvent_filter input').bind('keyup', function (e) {
+                if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                    _eventTable.search(this.value).draw();
+                }
+            });
+
+            // ----------------  Pagination Data Table ------------------
+    }
+  
+    function EditEventById(id) {
+
+        var _url = "/api/Event/GetById?id=" + id;
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('.error-class').html('');
+
+                var item = response.data;
+                CountryEventLocation = item.Country;
+                StateEventLocation = item.State;
+                CityEventLocation = item.City;
+                LandMarkEventLocation = item.LandMark;
+
+                $("#txtTitle_Event").val(item.Title);
+                $("#txtLocationURL_Event").val(item.EventLocationURL);
+                $("#StartDate_Event").val(item.StartDate);
+                $("#EndDate_Event").val(item.EndDate);
+                $("#StartTime_Event").val(item.StartTime_24HF);
+                $("#EndTime_Event").val(item.EndTime_24HF);
+                $("#ShortDecription_Event").val(item.ShortDescription);
+                $("#Price_Event").val(item.Price);
+                $("#FeaturedImage_Event").val('');
+                $("#ddlEventCategory").val(item.EventCategoryId);
+                if (response.data.EventImageWithPath != "") {
+                    $("#previewEventImage").attr('src', response.data.EventImageWithPath);
+                    $("#previewEventImage").removeClass('d-none');
+                }
+                if (item.IsPaid == 1) {
+                    $("#IsPaidRadioYes_Event").prop('checked', true);
+                    $('#Price_Event').prop('disabled', false);
+                }
+                else if (item.IsPaid == 0) {
+                    $("#IsPaidRadioNo_Event").prop('checked', true);
+                    $('#Price_Event').prop('disabled', true).val('0');
+                }
+                if (item.Walkings == 1) {
+                    $("#WalkingRadioYes_Event").prop('checked', true);
+                }
+                else if (item.Walkings == 0) {
+                    $("#WalkingRadioNo_Event").prop('checked', true);
+                }
+
+                //$("#About_Event").innerText(item.AboutEvent);
+                $("#About_Event .ql-editor").html(item.AboutEvent);
+                $("#AdditonalInforamtion_Event .ql-editor").html(item.AdditionalInformation);
+                $("#TicketInformation_Event").val(item.TicketInformation);
+
+                $("#Landmark_name").val(LandMarkEventLocation);
+                $("#Event_Address").val(item.Address);
+                $("#country").val(CountryEventLocation);
+                $("#state").val(StateEventLocation);
+                $("#txt_City").val(CityEventLocation);
+                $("#txt_PinCode").val(item.PinCode);
+
+                EventId_Global = item.Id;
+
+                GetCountriesList();
+
+                EditEventView();
+                getAllEventSponsor(EventId_Global);
+                getAllEventDetails(EventId_Global);
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function EditEventView() {
+            $('#sectionAddEvent').show();
+            $('#sectionViewEvent').hide();
+            $("#sectionViewEventSponsor").show();
+            $("#sectionViewEventOrganizer").show();
+            $("#sectionViewEventHost").show();
+            $("#sectionViewEventSpecialGuest").show();
+            document.getElementById("myText").innerHTML = "Edit Event";
+            document.getElementById("ChangeUpdateText").innerHTML = "Update";
+            document.getElementById("pageTextchange").innerHTML = "Edit Event";
+            document.getElementById("pageStageChange").innerHTML = "Edit Event";
+            $('#ChangeUpdateText').show();
+            $('#btnAddEvent').hide();
+        $(".error-class").html('');
+        initMap();
+    }
+
+     function GetCountriesList() {
+
+        $("#country").html('');
+        $("#country").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#country").append(res_country);
+
+                if (EventId_Global != 0 && CountryEventLocation != undefined && CountryEventLocation != "")
+                    $("#country").val(CountryEventLocation).trigger('change');
+
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeCountry() {
+
+        StartLoading();
+        //var _country_id = $("#ddl_ClassOfflineCountry").val();
+        var _country_id = $('#country').find('option:selected').attr('data-phonecode-val');
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+                var hasListItem = false;
+                for (var i = 0; i < dataState.data.length; i++) {
+                    if (StateEventLocation != undefined && StateEventLocation != "" && StateEventLocation.toLowerCase() == dataState.data[i].Name.toLowerCase()) {
+                        hasListItem = true;
+                    }
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+
+                if (EventId_Global != 0 && StateEventLocation != "" && StateEventLocation != undefined) {
+                    if (hasListItem) {
+                        $("#state").val(StateEventLocation).trigger('change');
+                    }
+                    else {
+                        $("#state").addClass('d-none');
+                        $("input#state").val(StateEventLocation);
+                        $("input#state").removeClass('d-none');
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+                $("#state").val(StateEventLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#state').find('option:selected').attr('data-phonecode-val');;
+
+        $("#txt_City").html('');
+        $("#txt_City").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+                    var hasListItem = false;
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+                        if (CityEventLocation != undefined && CityEventLocation != "" && CityEventLocation.toLowerCase() == dataCity.data[i].Name.toLowerCase()) {
+                            hasListItem = true;
+                        }
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+
+                    if (EventId_Global != 0 && CityEventLocation != undefined && CityEventLocation != "") {
+                        if (hasListItem) {
+                            $("#txt_City").val(CityEventLocation).trigger('change');
+                        }
+                        else {
+                            $("#txt_City").addClass('d-none');
+                            $("input#txt_City").val(CityEventLocation);
+                            $("input#txt_City").removeClass('d-none');
+                        }
+                    }
+
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+       function GetCitiesList() {
+
+        StartLoading();
+           $("#txt_City").html('');
+           $("#txt_City").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+                    $("#txt_City").val(CityEventLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllActiveEventCategories() {
+
+    StartLoading();
+        $("#ddlEventCategory").html('');
+        $("#ddlEventCategory").append('<option value="0">Select</option>');
+    $.ajax({
+        type: "GET",
+        url: "/api/EventCategory/GetAllActiveEventCategoryDetail",
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.data.length > 0) {
+                var _itemList = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+
+                    _itemList += '<option value="' + response.data[i].Id + '">' + response.data[i].CategoryName + '</option>';
+                }
+
+                $("#ddlEventCategory").append(_itemList);
+            }
+
+            StopLoading();
+        },
+       error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+     ///Map initialized
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("EventMap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+    var postal_code = '';
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#Landmark_name").val(LandMarkEventLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == "street_number" || results[0].address_components[i].types[0] == "premise") {
+                                var street = results[0].address_components[i].long_name;
+                                $("#mapstreetInput").val(street);
+                            }
+                            if (results[0].address_components[i].types[0] == 'sublocality_level_1' || results[0].address_components[i].types[1] == 'sublocality_level_1' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                var neighbourhood = results[0].address_components[i].long_name;
+                                if (pp == 1) {
+                                    $("#mapneighbourhoodInput").val();
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                } else {
+                                    $("#mapneighbourhoodInput").val(neighbourhood);
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                }
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#txt_City").val(city);
+        $("#txt_PinCode").val(postal_code);
+        $("input#state").val(State);
+        $("input#country").val(Country);
+        $("#Landmark_name").val(LandMark);
+        $("#Event_Address").val(FullAddress);
+        LocationChooseMap = 1;
+    })
+    //end
+
+    function ShowAddUpdateEventSponsor() {
+            $("#AddUpdateEventSponsorModal").modal('show');
+            document.getElementById("ChangeUpdateText_EventSponsor").innerHTML = "Submit";
+            document.getElementById("Modal_Title").innerHTML = "Add Event Sponsor";
+    }
+    function AddUpdateEventSponor() {
+
+            var _eventSponsorTitle = $("#txtTitle_EventSponsor").val().trim();
+        var _eventSpnsorLink = $("#EventSponsorLink").val().trim();
+        var _eventSponsorIcon_MS = $("#Icon_EventSponsor").get(0);
+            var _eventSponsorIcon = _eventSponsorIcon_MS.files;
+            var _mode = (EventSponsorId_Global <= 0) ? 1 : 2;
+            let is_valid = true;
+            $(".error-class").html('');
+
+            if (validate_IsEmptyStringInputFieldValue(_eventSponsorTitle)) {
+                is_valid = false;
+                $("#error_txtTtile_EventSponsor").html('Enter  Title!');
+            }
+            if (validate_IsEmptyStringInputFieldValue(_eventSpnsorLink)) {
+                is_valid = false;
+                $("#error_EventSponsorLink").html('Enter Link!');
+        }
+        if (_eventSponsorIcon.length <= 0) {
+                is_valid = false;
+                $("#error_Icon_EventSponsor").html('Select Icon!');
+            }
+
+            if (is_valid) {
+
+                var data = new FormData();
+                data.append("id", EventSponsorId_Global);
+                data.append("EventId", EventId_Global);
+                data.append("Title", _eventSponsorTitle);
+                data.append("Link", _eventSpnsorLink);
+                data.append("Icon", _eventSponsorIcon[0]);
+                data.append("mode", _mode);
+
+                $.ajax({
+                    url: '/api/Event/Sponsor/AddUpdate',
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    //contentType: 'application/json',
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+                            $("#AddUpdateEventSponsorModal").modal('hide');
+                            //Reset Event Sponsor Model
+                            ResetAddViewEventSponsor();
+                            EventSponsorId_Global = 0;
+                            //Get All Sponsor List
+                            getAllEventSponsor(EventId_Global);
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+                            return;
+                        }
+
+
+
+                        StopLoading();
+
+
+                    },
+                    error: function (result) {
+                        StopLoading();
+                        //removeBtnLoading(btnSelector);
+                        //enableContinueBtn();
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+            }
+    }
+
+    function getAllEventSponsor(EventId_Global) {
+            let _url = API_Base_URL + "/api/Event/Sponsor/GetAllList?id=" + EventId_Global;
+
+            $.ajax({
+                type: "GET",
+                url: _url,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.status < 1) {
+                        $.iaoAlert({
+                            msg: response.message,
+                            type: "error",
+                            mode: "dark",
+                        });
+                        return;
+                    }
+
+                    var _table = $('#tblEventSponsor').DataTable();
+                    _table.destroy();
+
+                    var sno = 0;
+                    var _sponsorTitle = '';
+                    var _sponsorIcon = '';
+                    var _sponsorLink = '';
+                    var _action = '';
+
+                    var data = [];
+                    for (var i = 0; i < response.data.length; i++) {
+                        sno++;
+                        _sponsorTitle = response.data[i].SponsorTitle;
+                        _sponsorLink = response.data[i].SponsorLink;
+                        _sponsorIcon = (response.data[i].EventSponsorWithPath == "") ? '' : '<img src="' + response.data[i].EventSponsorWithPath + '" class="image" />';
+                        _action = '<div class="edbt">';
+                       /* _action += `<a href="javascript:EditEventSponsor(${response.data[i].Id}, ${response.data[i].EventId});"><i class="fas fa-edit"></i></a>`;*/
+                        _action += `<a href="javascript:ConfirmDeleteEventSponsor(${response.data[i].Id}, ${response.data[i].EventId});"><i class="fas fa-trash "></i></a>`;
+                        _action += '</div>';
+                        data.push([
+                            sno,
+                            _sponsorTitle,
+                            _sponsorLink,
+                            _sponsorIcon,
+                            _action
+
+                        ]);
+
+                    }
+
+                    $('#tblEventSponsor').DataTable({
+                        "data": data,
+                        "paging": true,
+                        "lengthChange": true,
+                        "searching": true,
+                        "ordering": true,
+                        "info": true,
+                        "autoWidth": false,
+                        "responsive": true,
+                    });
+                    StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+    function EditEventSponsor(id, EventId) {
+            var _url = "/api/Event/Sponsor/GetById?id=" + id + "&EventId=" + EventId;
+
+            StartLoading();
+            $.ajax({
+                type: "GET",
+                url: _url,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.status < 1) {
+                        $.iaoAlert({
+                            msg: response.message,
+                            type: "error",
+                            mode: "dark",
+                        });
+                        return;
+                    }
+
+                    $('.error-class').html('');
+
+                    var item = response.data;
+
+                    $("#txtTitle_EventSponsor").val(item.SponsorTitle);
+                    $("#EventSponsorLink").val(item.SponsorLink);
+                    $("#Icon_EventSponsor").val('');
+                    if (response.data.EventSponsorWithPath != "") {
+                        $("#previewSponsorEventImage").attr('src', response.data.EventSponsorWithPath);
+                        $("#previewSponsorEventImage").removeClass('d-none');
+                    }
+                    EventSponsorId_Global = item.Id;
+
+                    EditEventSponsorViewModel();
+                    //getAllEventSponsor(EventId_Global);
+                    StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+    function EditEventSponsorViewModel() {
+            $("#AddUpdateEventSponsorModal").modal('show');
+            document.getElementById("ChangeUpdateText_EventSponsor").innerHTML = "Update";
+            document.getElementById("Modal_Title").innerHTML = "Update Event Sponsor";
+
+    }
+
+    function ConfirmDeleteEvent(id) {
+        swal({
+            title: "Delete Event ",
+            text: "Are you sure to delete this Event ?",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteEventById(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+    function DeleteEventById(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Event/DeleteById?id=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Event  List
+                        GetAllEvents();
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+//--------------------------------Event Details For Organizer---------------------------------//
+    function ShowAddUpdateEventOrganizer() {
+            $("#AddUpdateEventOrganizerModal").modal('show');
+
+    }
+    function ShowAddUpdateEventHost() {
+
+            $("#AddUpdateEventHostModal").modal('show');
+    }
+    function ShowAddUpdateEventSpecialGuest() {
+
+        $("#AddUpdateEventSpecialGuestModal").modal('show');
+    }
+    function AddUpdateEventOrganizer() {
+
+        var response =  validateEventDetailModalFields("#AddUpdateEventOrganizerModal","Organizer");
+
+
+        if(response.valid) {
+            AddUpdateEventDetails(response.eventDetailsData, response.eventDetailsType);
+        }
+
+
+    }
+    function AddUpdateEventHost() {
+
+        var response = validateEventDetailModalFields("#AddUpdateEventHostModal", "Host");
+
+
+        if (response.valid) {
+            AddUpdateEventDetails(response.eventDetailsData, response.eventDetailsType);
+        }
+
+
+    }
+    function AddUpdateEventSpecialGuest() {
+
+        var response = validateEventDetailModalFields("#AddUpdateEventSpecialGuestModal", "SpecialGuest");
+
+
+        if (response.valid) {
+            AddUpdateEventDetails(response.eventDetailsData, response.eventDetailsType);
+        }
+
+
+    }
+
+
+// modalIdSelector = "#modalOrganiser";
+    function validateEventDetailModalFields(modalSelector,EventDetailsType) {
+        var _name = $(modalSelector + " .txtNameEventDetail").val();
+        var _link = $(modalSelector + " .txtLinkEventDetail").val();
+        var _image = $(modalSelector + " .imageEventDetails").get(0);
+        var _designation = $(modalSelector + " .txtDesignationEventDetails").val();
+         let is_valid = true;
+
+
+        $(".error-class").html('');
+
+            if (validate_IsEmptyStringInputFieldValue(_name)) {
+                is_valid = false;
+                $(".error_txtNameEventDetail").html('@(Resources.BusinessPanel.NameIsRequired)');
+            }
+             if (validate_IsEmptyStringInputFieldValue(_link)) {
+                is_valid = false;
+                $(".error_txtLinkEventDetail").html('@(Resources.BusinessPanel.EventDetailLinkRequired_ErrorMessage)');
+        }
+        if (_image.files.length <= 0) {
+                    is_valid = false;
+                    $(".error_imageEventDetails").html('@(Resources.BusinessPanel.SelectImageRequired)');
+                }
+
+
+             if(EventDetailsType =="Host"){
+                if (validate_IsEmptySelectInputFieldValue(_designation)) {
+                    is_valid = false;
+                    $(".error_txtDesignationEventDetails").html('@Resources.BusinessPanel.DesignationErrorMessageEventDetails');
+                }
+              }
+
+        else{
+                 _designation = "";
+
+             }
+
+                    let obj_EventDetailsData = {
+                        "name": _name,
+                        "link": _link,
+                        "image": _image,
+                        "designation": _designation,
+
+                    }
+
+
+        return { "valid": is_valid, "eventDetailsData": obj_EventDetailsData, "eventDetailsType": EventDetailsType}
+
+
+    }
+
+    function AddUpdateEventDetails(eventDetailsData, eventDetailsType){
+        var _image = eventDetailsData.image.files;
+       var data = new FormData();
+
+       //data.append("id", EventDetailsId_Global);
+        data.append("eventId", EventId_Global);
+        data.append("eventDetailsType", eventDetailsType);
+        data.append("name", eventDetailsData.name);
+        data.append("link", eventDetailsData.link);
+        data.append("image", _image[0]);
+        data.append("designation", eventDetailsData.designation);
+
+
+
+       $.ajax({
+           url: '/api/Event/Deatils/AddUpdate',
+           headers: {
+               "Authorization": "Bearer " + UserToken_Global
+           },
+           data: data,
+           processData: false,
+           mimeType: 'multipart/form-data',
+           contentType: false,
+           //contentType: 'application/json',
+           type: 'POST',
+           success: function (dataResponse) {
+
+               //--Parse into Json of response-json-string
+               dataResponse = JSON.parse(dataResponse);
+
+               //--If successfully added/updated
+               if (dataResponse.status === 1) {
+                   swal("Success!", dataResponse.message, "success");
+                   //Hide section add event
+                   $("#AddUpdateEventOrganizerModal").modal('hide');
+                   $("#AddUpdateEventHostModal").modal('hide');
+                   $("#AddUpdateEventSpecialGuestModal").modal('hide');
+
+                   //get all Event  Details list
+                   getAllEventDetails(EventId_Global);
+                   //Reset Models
+                   ResetAddViewEventSpecialGuest();
+                   ResetAddViewEventOrganizer();
+                   ResetAddViewEventHost();
+               }
+               else {
+                   swal({
+                       title: 'Error!',
+                       icon: 'error',
+                       text: dataResponse.message
+                   });
+                   StopLoading();
+                   return;
+               }
+
+
+
+               StopLoading();
+
+
+           },
+           error: function (result) {
+               StopLoading();
+               //removeBtnLoading(btnSelector);
+               //enableContinueBtn();
+
+               if (result["status"] == 401) {
+                   $.iaoAlert({
+                       msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                       type: "error",
+                       mode: "dark",
+                   });
+               }
+               else {
+                   $.iaoAlert({
+                       msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                       type: "error",
+                       mode: "dark",
+                   });
+               }
+           }
+       });
+
+
+    }
+
+    function ResetAddViewEventSpecialGuest() {
+        $("#txtName_EventSpecialGuest").val('');
+        $("#EventSpecialGuestLink").val('');
+        $("#Image_EventSpecialGuest").val('');
+        $('#previewSpecialGuestEventImage').addClass('d-none');
+        $(".error-class").html('');
+
+    }
+    function ResetAddViewEventHost() {
+        $("#txtName_EventHost").val('');
+        $("#EventHostLink").val('');
+        $("#EventHostDesignation").val('');
+        $("#Image_EventHost").val('');
+        $('#previewHostEventImage').addClass('d-none');
+        $(".error-class").html('');
+
+    }
+    function ResetAddViewEventSponsor() {
+        $("#txtTitle_EventSponsor").val('');
+        $("#EventSponsorLink").val('');
+        $("#Icon_EventSponsor").val('');
+        $('#previewSponsorEventImage').addClass('d-none');
+        $(".error-class").html('');
+    }
+    function ResetAddViewEventOrganizer() {
+        $("#txtName_EventOrganizer").val('');
+        $("#EventOrganizerLink").val('');
+        $("#Image_EventOrganizer").val('');
+        $('#previewOrganizerEventImage').addClass('d-none');
+        $(".error-class").html('');
+
+    }
+
+    function getAllEventDetails(EventId_Global) {
+        let _url = API_Base_URL + "/api/Event/Details/GetAllList?id=" + EventId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table1 = $('#tblEventOrganizer').DataTable();
+                _table1.destroy();
+                var _table2 = $('#tblEventHost').DataTable();
+                _table2.destroy();
+                var _table3 = $('#tblEventSpecialGuest').DataTable();
+                _table3.destroy();
+
+                var sno = 0;
+                var _name = '';
+                var _image = '';
+                var _link = '';
+                var _desgination = '';
+                var _action = '';
+
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+                for (var i = 0; i < response.data.OrganiserList.length; i++) {
+                    //sno++;
+                    _name = response.data.OrganiserList[i].Name;
+                    _link = response.data.OrganiserList[i].Link;
+                    _image = (response.data.OrganiserList[i].EventDetailsImageWithPath == "") ? '' : '<img src="' + response.data.OrganiserList[i].EventDetailsImageWithPath + '" class="image" />';
+                    _action = '<div class="edbt">';
+                    /*_action += `<a href="javascript:EditEventSponsor(${response.data[i].Id}, ${response.data[i].EventId});"><i class="fas fa-edit"></i></a>`;*/
+                    _action += `<a href="javascript:ConfirmDeleteEventOrganizer(${response.data.OrganiserList[i].Id});"><i class="fas fa-trash "></i></a>`;
+                    _action += '</div>';
+                    data1.push([
+                        i+1,
+                        _name,
+                        _image,
+                        _link,
+                        _action
+
+                    ]);
+
+                }
+
+                for (var i = 0; i < response.data.HostList.length; i++) {
+                    //sno++;
+                    _name = response.data.HostList[i].Name;
+                    _link = response.data.HostList[i].Link;
+                    _desgination = response.data.HostList[i].Designation;
+                    _image = (response.data.HostList[i].EventDetailsImageWithPath == "") ? '' : '<img src="' + response.data.HostList[i].EventDetailsImageWithPath + '" class="image" />';
+                    _action = '<div class="edbt">';
+                    /*_action += `<a href="javascript:EditEventSponsor(${response.data[i].Id}, ${response.data[i].EventId});"><i class="fas fa-edit"></i></a>`;*/
+                    _action += `<a href="javascript:ConfirmDeleteEventHost(${response.data.HostList[i].Id});"><i class="fas fa-trash "></i></a>`;
+                    _action += '</div>';
+                    data2.push([
+                        i+1,
+                        _name,
+                        _image,
+                        _link,
+                        _desgination,
+                        _action
+
+                    ]);
+
+                }
+                for (var i = 0; i < response.data.SpecialGuestList.length; i++) {
+                    //sno++;
+                    _name = response.data.SpecialGuestList[i].Name;
+                    _link = response.data.SpecialGuestList[i].Link;
+                    _image = (response.data.SpecialGuestList[i].EventDetailsImageWithPath == "") ? '' : '<img src="' + response.data.SpecialGuestList[i].EventDetailsImageWithPath + '" class="image" />';
+                    _action = '<div class="edbt">';
+                    /*_action += `<a href="javascript:EditEventSponsor(${response.data[i].Id}, ${response.data[i].EventId});"><i class="fas fa-edit"></i></a>`;*/
+                    _action += `<a href="javascript:ConfirmDeleteEventSpecialGuest(${response.data.SpecialGuestList[i].Id});"><i class="fas fa-trash "></i></a>`;
+                    _action += '</div>';
+                    data3.push([
+                        i+1,
+                        _name,
+                        _image,
+                        _link,
+                        _action
+
+                    ]);
+
+                }
+
+                $('#tblEventOrganizer').DataTable({
+                    "data": data1,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                $('#tblEventHost').DataTable({
+                    "data": data2,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                $('#tblEventSpecialGuest').DataTable({
+                    "data": data3,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmDeleteEventOrganizer(id) {
+        swal({
+            title: "Delete Event Organizer",
+            text: "Are you sure to delete this Event Organizer?",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteEventDetails(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+    function ConfirmDeleteEventHost(id) {
+        swal({
+            title: "Delete Event Host",
+            text: "Are you sure to delete this Event Host?",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteEventDetails(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+    function ConfirmDeleteEventSpecialGuest(id) {
+        swal({
+            title: "Delete Event Special Guest",
+            text: "Are you sure to delete this Event Special Guest?",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteEventDetails(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+    function DeleteEventDetails(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Event/Details/DeleteById?id=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Event Deatils List
+                        getAllEventDetails(EventId_Global);
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ResetAddEventView() {
+        HideAllEventDetailsTable();
+        $('#sectionAddEvent').hide();
+        $('#sectionViewEvent').show();
+        $('#btnAddEvent').show();
+        $("#ddlEventCategory").val('0');
+        $("#txtTitle_Event").val('');
+        $("#txtLocationURL_Event").val('');
+        $("#StartDate_Event").val('');
+        $("#EndDate_Event").val('');
+        $("#StartTime_Event").val('');
+        $("#EndTime_Event").val('');
+        $("#ShortDecription_Event").val('');
+        $("#Price_Event").val('');
+        $("#FeaturedImage_Event").val('');
+        $("#previewEventImage").attr('src', '');
+        $("#IsPaidRadioYes_Event").prop('checked', false);
+        $("#IsPaidRadioNo_Event").prop('checked', false);
+        $("#WalkingRadioYes_Event").prop('checked', false);
+        $("#WalkingRadioNo_Event").prop('checked', false);
+        $("#About_Event .ql-editor").text('');
+        $("#AdditonalInforamtion_Event .ql-editor").text('');
+        $("#TicketInformation_Event").val('');
+        document.getElementById("ChangeUpdateText").innerHTML = 'Save';
+        document.getElementById("myText").innerHTML = "Add Event";
+        $('#previewEventImage').addClass('d-none');
+        $('#Price_Event').prop('disabled', true);
+        $(".error-class").html('');
+
+
+        EventId_Global = 0;
+    }
+
+    // Image File Preview -------------------------------------------------------------
+    document.getElementById('FeaturedImage_Event').addEventListener('change', handleEventImageUpload);
+
+    function handleEventImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: 'Invalid image type. Please select a JPEG, PNG image.',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewEventImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: 'Image size too large. Please select a smaller image(< 10 MB).',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewEventImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewEventImage').src = event.target.result;
+            $('#previewEventImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+
+    // Event Sponsor Image File Preview -------------------------------------------------------------
+    document.getElementById('Icon_EventSponsor').addEventListener('change', handleSponsorImageUpload);
+
+    function handleSponsorImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: 'Invalid image type. Please select a JPEG, PNG image.',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewSponsorEventImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: 'Image size too large. Please select a smaller image(< 10 MB).',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewSponsorEventImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewSponsorEventImage').src = event.target.result;
+            $('#previewSponsorEventImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+    // Event Organizer Image File Preview -------------------------------------------------------------
+    document.getElementById('Image_EventOrganizer').addEventListener('change', handleOrganizerImageUpload);
+
+    function handleOrganizerImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: 'Invalid image type. Please select a JPEG, PNG image.',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewOrganizerEventImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: 'Image size too large. Please select a smaller image(< 10 MB).',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewOrganizerEventImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewOrganizerEventImage').src = event.target.result;
+            $('#previewOrganizerEventImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+    // Event Host Image File Preview -------------------------------------------------------------
+    document.getElementById('Image_EventHost').addEventListener('change', handleHostImageUpload);
+
+    function handleHostImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: 'Invalid image type. Please select a JPEG, PNG image.',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewHostEventImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: 'Image size too large. Please select a smaller image(< 10 MB).',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewHostEventImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewHostEventImage').src = event.target.result;
+            $('#previewHostEventImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+    // Event Special Guest Image File Preview -------------------------------------------------------------
+    document.getElementById('Image_EventSpecialGuest').addEventListener('change', handleSpecialGuestImageUpload);
+
+    function handleSpecialGuestImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: 'Invalid image type. Please select a JPEG, PNG image.',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewSpecialGuestEventImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: 'Image size too large. Please select a smaller image(< 10 MB).',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewSpecialGuestEventImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewSpecialGuestEventImage').src = event.target.result;
+            $('#previewSpecialGuestEventImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+</script>

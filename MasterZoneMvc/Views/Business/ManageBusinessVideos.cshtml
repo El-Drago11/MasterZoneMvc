@@ -1,0 +1,225 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "ManageBusinessVideos";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+@section Styles{
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .tooltip {
+            background-color: #f3a762;
+            border-radius: 50%;
+            border: 0px;
+            color: white;
+            width: 14px;
+            height: 14px;
+            font-size: 9px;
+            opacity: 10;
+            margin-top: 150px;
+            margin-left: 155px;
+        }
+
+            .tooltip .tooltiptext {
+                visibility: hidden;
+                width: auto;
+                background-color: white;
+                color: grey;
+                text-align: center;
+                border-radius: 6px;
+                padding: 10px 10px;
+                position: absolute;
+                z-index: 1;
+                font-size: 13px;
+                border: 3px;
+                border-color: grey;
+                right: 0px;
+            }
+
+            .tooltip:hover .tooltiptext {
+                visibility: visible;
+            }
+
+        @@media (max-width: 1199px) {
+            .popover, .tooltip {
+                top: -146px !important;
+            }
+        }
+        @@media (max-width: 896px) {
+            .popover, .tooltip {
+                top: -145px !important;
+                /* padding-left: 0px; */
+        
+            }
+        }
+    </style>
+}
+        
+
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Manage Videos</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Manage Vidoes</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("Miscellaneous_ManageBusinessVideos_AddVideos"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" onclick="ShowModelAddUpdateBusinessVideo();">Add Video</a>
+                        </div>
+
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        <div id="sectionViewBusinessManageVideos">
+
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            @*<div class="row">
+                                    <div class="col-6">
+                                        <h5 class="mb-4">Event Sponsor</h5>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventSponsor" onclick="ShowAddUpdateEventSponsor();">Add Event Sponsor</a>
+                                    </div>
+                                </div>*@
+
+                            <table id="tblBusinessVideos" class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th> Video Title</th>
+                                        <th>Thumb Nail</th>
+                                        <th>Video Link</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*------------------------------------- Add Update Business Video Model ------------------------------------------------------ *@
+        <div class="modal fade" id="AddBusinessVideo">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="Modal_Title" class="modal-title"> Add Video</h5>
+                        <button type="button" class="close" data-dismiss="modal" onclick="ResetAddViewBusinessVideo()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="txtTitle_BusinessVideo">Video Title</label>
+                                    <input type="text" id="txtTitle_BusinessVideo" class="form-control" />
+                                    <div class="error-class" id="error_txtTitle_BusinessVideo"></div>
+
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="BusinessVideoLink">
+                                        Video Unique Identifier
+                                        <button class="tooltip" disabled>
+                                            i
+                                            <span class="tooltiptext" style="border: 1.5px solid  #ced4da"> For Example, This is the youtube link, from this link you just need to copy the video name (S-8druBYi3o) and paste it in below input field.  https://www.youtube.com/watch?v=S-8druBYi3o</span>
+                                        </button>
+                                    </label>
+                                    <input type="text" id="BusinessVideoLink" class="form-control" />
+                                    <div class="error-class" id="error_user_youtubeurlvedio"></div>
+                                </div>
+
+
+
+
+
+
+
+                                <div class="col-6 form-group">
+                                    <label>Video Category</label>
+                                    <select id="ddlBusinessVideoCategory" class="form-control select2-single" data-width="100%">
+                                        <option value="0" label="&nbsp;">&nbsp;</option>
+                                    </select>
+                                    <div class="error-class" id="error_BusinessVideoCategory"></div>
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="ManageBusinessVideoThumbNail"> Video Thumb Nail</label>
+                                    <div class="imagePreview">
+                                        <img id="previewManageBusinessVideoThumbNailImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="ManageBusinessVideoThumbNail" class="form-control" accept="image/*" />
+                                    <div class="error-class" id="error_ManageBusinessVideoThumbNail"></div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="description"> Description</label>
+                                        <textarea name="description" class="form-control" rows="6" id="txt_description"></textarea>
+                                        <div class="error-class" id="error_txtdescription"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_EventSponsor" onclick="AddUpdateBusinessVideo()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewBusinessVideo()">Cancel</a>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                            data-dismiss="modal">Save</button>*@
+                        @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageBusinessVideosScriptPartial.cshtml")
+}

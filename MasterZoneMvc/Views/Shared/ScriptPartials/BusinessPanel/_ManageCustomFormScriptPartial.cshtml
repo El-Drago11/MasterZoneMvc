@@ -1,0 +1,883 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var CustomFormId_Global = 0;
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                      
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+   
+
+    function addDeleteButton(card) {
+        // Create a span for the delete icon
+        const deleteIcon = document.createElement('span');
+        deleteIcon.className = 'fas fa-trash delete-icon';
+
+        // Set the click event to remove the card
+        deleteIcon.onclick = function () {
+            card.remove();
+        };
+
+        // Append the delete icon to the card
+        card.appendChild(deleteIcon);
+    }
+
+
+    function addTextQuestion() {
+        const label = prompt('Enter the question label:');
+        const placeholder = prompt('Enter the placeholder text:');
+        //addQuestion('text', label, placeholder);
+        const type = prompt('Enter the input type (text, email, number):').toLowerCase();
+
+        if (type === 'text' || type === 'email' || type === 'number') {
+            addQuestion(type, label, placeholder);
+        } else {
+            alert('Invalid input type. Please enter text, email, or number.');
+        }
+    }
+
+    function addSelectQuestion() {
+        const label = prompt('Enter the select label:');
+        const options = prompt('Enter the options (comma-separated):');
+        addQuestion('select', label, options);
+    }
+
+    function addImageQuestion() {
+        const label = prompt('Enter the image label:');
+        const placeholder = prompt('Enter the image URL:');
+        addQuestion('image', label, placeholder);
+    }
+
+    function addRadioQuestion() {
+        const label = prompt('Enter the radio button label:');
+        const options = prompt('Enter the options (comma-separated):');
+        addQuestion('radio', label, options);
+    }
+
+    function addCheckboxQuestion() {
+        const label = prompt('Enter the checkbox label:');
+        const options = prompt('Enter the options (comma-separated):');
+        addQuestion('checkbox', label, options);
+    }
+    function addTextareaQuestion() {
+        const label = prompt('Enter the textarea label:');
+        const placeholder = prompt('Enter the placeholder text:');
+        addQuestion('textarea', label, placeholder);
+    }
+
+
+    //function addSubmitButton() {
+    //    addQuestion('submit', null, 'submitButton', saveFormData);
+    //}
+  
+
+    function addSubmitButton() {
+        const label = prompt('Enter the button label:');
+        addQuestion('submit', label, 'submitButton');
+    }
+
+
+    function addQuestion(questionType, label, value, placeholder) {
+        const formContainer = document.getElementById('form-container');
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const labelElement = document.createElement('label');
+        labelElement.textContent = label;
+        questionCard.appendChild(labelElement);
+
+        addDeleteButton(questionCard);
+
+        //if (questionType === 'text') {
+        //    const input = document.createElement('input');
+        //    input.setAttribute('placeholder', value);
+        //    questionCard.appendChild(input);
+        //}
+        if (questionType === 'text' || questionType === 'email' || questionType === 'number') {
+            const input = document.createElement('input');
+            input.setAttribute('type', questionType);
+            input.setAttribute('placeholder', value); // Set the provided placeholder or an empty string
+            questionCard.appendChild(input);
+        }
+
+        else if (questionType === 'select') {
+            const select = document.createElement('select');
+
+            const optionsArray = value.split(',');
+
+            optionsArray.forEach(optionText => {
+                const option = document.createElement('option');
+                option.value = optionText.trim().toLowerCase();
+                option.text = optionText.trim();
+                select.appendChild(option);
+            });
+
+            questionCard.appendChild(select);
+        } else if (questionType === 'textarea') {
+            const textarea = document.createElement('textarea');
+            textarea.setAttribute('placeholder', value || '');
+            questionCard.appendChild(textarea);
+        } else if (questionType === 'image') {
+            const img = document.createElement('img');
+            img.setAttribute('src', value || '');
+            img.setAttribute('alt', 'Image');
+            questionCard.appendChild(img);
+        }
+      
+
+            // To add New Radio Query
+        else if (questionType === 'radio' || questionType === 'checkbox') {
+            const optionsArray = value.split(',');
+
+            optionsArray.forEach(optionText => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.setAttribute('type', questionType);
+                input.setAttribute('value', optionText.trim().toLowerCase());
+               
+
+                // For radio buttons, use the same name for grouping
+                if (questionType === 'radio') {
+                    input.setAttribute('name', 'radioGroup');
+                }
+
+                // For checkboxes, use unique IDs and corresponding labels
+                if (questionType === 'checkbox') {
+                    input.setAttribute('id', optionText.trim().toLowerCase());
+                    label.setAttribute('for', optionText.trim().toLowerCase());
+                }
+
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(optionText.trim()));
+                questionCard.appendChild(label);
+            });
+        }
+
+        else if (questionType === 'submit') {
+            const submitButton = document.createElement('button');
+            submitButton.setAttribute('type', 'button');
+            submitButton.textContent = label || 'Submit'; // Set the provided label or a default text
+            submitButton.setAttribute('name', name || 'submitButton'); // Set the provided name or a default name
+            submitButton.classList.add('submit-button'); // Add the class 'submit-button'
+
+           
+       
+            questionCard.appendChild(submitButton);
+        }
+
+        formContainer.appendChild(questionCard);
+    }
+
+    
+
+    //$('#btnAddCustomForm').click(function () {
+    //    $('#ShowAddCustomDetail').show();
+    //    $('#btnAddCustomForm').hide();
+    //    $('#sectionViewCustomForm').hide();
+    //    $("#ButtonAddCustom").show();
+    //    document.getElementById("pageTextchange").innerHTML = "Add Custom Form";
+    //    document.getElementById("pageStageChange").innerHTML = "Add Custom Form";
+    //});
+
+    //function ResetAddView() {
+    //    $('#sectionViewCustomForm').show();
+    //    $('#ShowAddCustomDetail').hide();
+    //    $('#btnAddCustomForm').show();
+    //    $('#ButtonAddCustom').hide();
+    //    document.getElementById("pageTextchange").innerHTML = "Form";
+    //    document.getElementById("pageStageChange").innerHTML = "Form";
+    //}
+
+
+     @*function saveFormData() {
+    const formNameInput = document.getElementById('formNameInput').value;
+
+    // Create an array to store the form data
+    const formData = [];
+
+    // Add the form name to the formData array
+    formData.push({
+        label: 'Form Name',
+        type: 'text',
+        value: formNameInput,
+    });
+
+    const formContainer = document.getElementById('form-container');
+
+    // Iterate over each question card in the form container
+    formContainer.querySelectorAll('.question-card').forEach(questionCard => {
+        const labelElement = questionCard.querySelector('label');
+
+        // Skip if the question card does not contain a label
+        if (!labelElement) {
+            return;
+        }
+
+        const questionData = {};
+        questionData.label = labelElement.textContent;
+
+        // Check the type of the question
+        if (questionCard.querySelector('select')) {
+            questionData.type = 'select';
+
+            // Get the selected option
+            const selectedOption = questionCard.querySelector('select option:checked');
+            if (selectedOption) {
+                questionData.selectedOption = selectedOption.text;
+            }
+        } else if (questionCard.querySelector('input[type="radio"]')) {
+            questionData.type = 'radio';
+
+            // Get the selected option for the radio button
+            const selectedRadio = questionCard.querySelector('input[type="radio"]:checked');
+            if (selectedRadio) {
+                questionData.selectedOption = {
+                    value: selectedRadio.value,
+                    label: selectedRadio.nextSibling.textContent.trim()
+                };
+            }
+        } else if (questionCard.querySelector('input[type="checkbox"]')) {
+            questionData.type = 'checkbox';
+
+            // Get the selected options for checkboxes
+            const selectedCheckboxes = Array.from(questionCard.querySelectorAll('input[type="checkbox"]:checked')).map(input => ({
+                value: input.value,
+                label: input.nextSibling.textContent.trim()
+            }));
+
+            if (selectedCheckboxes.length > 0) {
+                questionData.selectedOptions = selectedCheckboxes;
+            }
+        } else if (questionCard.querySelector('input[type="text"]')) {
+            questionData.type = 'text';
+            questionData.placeholder = questionCard.querySelector('input').placeholder;
+        } else if (questionCard.querySelector('textarea')) {
+            questionData.type = 'textarea';
+            questionData.placeholder = questionCard.querySelector('textarea').placeholder;
+        } else if (questionCard.querySelector('img')) {
+            questionData.type = 'image';
+            questionData.src = questionCard.querySelector('img').getAttribute('src');
+        }
+
+        // Include placeholder in the questionData object
+        const placeholderElement = questionCard.querySelector('[placeholder]');
+        questionData.placeholder = placeholderElement ? placeholderElement.getAttribute('placeholder') : '';
+
+        // Check if label is non-empty before pushing to formData
+        if (questionData.label.trim() !== '' || questionData.placeholder.trim() !== '') {
+            // Push a new instance of the question data to the form data array
+            formData.push({ ...questionData });
+        }
+    });
+
+    $.ajax({
+        url: '/api/CustomForm/AddUpdateCustomFormDetail',
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify(formData),
+        contentType: 'application/json',
+        type: "POST",
+        success: function (dataResponse) {
+            // If successfully added/updated
+            if (dataResponse.status === 1) {
+                swal("Success!", dataResponse.message, "success");
+            } else {
+                swal({
+                    title: 'Error!',
+                    icon: 'error',
+                    text: dataResponse.message
+                });
+                StopLoading();
+                return;
+            }
+
+            ResetAddView();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}*@
+
+
+   @*function saveFormData() {
+    const formNameInput = document.getElementById('formNameInput').value;
+
+    // Create an array to store the form data
+    const formData = [];
+
+    // Add the form name to the formData array
+    formData.push({
+        label: 'Form Name',
+        type: 'text',
+        value: formNameInput,
+    });
+
+    const formContainer = document.getElementById('form-container');
+
+    // Iterate over each question card in the form container
+    formContainer.querySelectorAll('.question-card').forEach(questionCard => {
+        const labelElement = questionCard.querySelector('label');
+
+        // Skip if the question card does not contain a label
+        if (!labelElement) {
+            return;
+        }
+
+        const questionData = {};
+        questionData.label = labelElement.textContent;
+
+        // Check the type of the question
+        if (questionCard.querySelector('select')) {
+            questionData.type = 'select';
+
+            // Get the selected option
+            const selectedOption = questionCard.querySelector('select option:checked');
+            if (selectedOption) {
+                questionData.selectedOption = selectedOption.text;
+            }
+        } else if (questionCard.querySelector('input[type="radio"]')) {
+            questionData.type = 'radio';
+
+            // Get the selected option for the radio button
+            const selectedRadio = questionCard.querySelector('input[type="radio"]:checked');
+            if (selectedRadio) {
+                questionData.selectedOption = {
+                    value: selectedRadio.value,
+                    label: selectedRadio.nextSibling.textContent.trim()
+                };
+            }
+        } else if (questionCard.querySelector('input[type="checkbox"]')) {
+            questionData.type = 'checkbox';
+
+            // Get the selected options for checkboxes
+            const selectedCheckboxes = Array.from(questionCard.querySelectorAll('input[type="checkbox"]:checked')).map(input => ({
+                value: input.value,
+                label: input.nextSibling.textContent.trim()
+            }));
+
+            if (selectedCheckboxes.length > 0) {
+                questionData.selectedOptions = selectedCheckboxes;
+            }
+        } else if (questionCard.querySelector('input[type="text"]')) {
+            questionData.type = 'text';
+            questionData.placeholder = questionCard.querySelector('input').placeholder;
+        } else if (questionCard.querySelector('textarea')) {
+            questionData.type = 'textarea';
+            questionData.placeholder = questionCard.querySelector('textarea').placeholder;
+        } else if (questionCard.querySelector('img')) {
+            questionData.type = 'image';
+            questionData.src = questionCard.querySelector('img').getAttribute('src');
+        }
+
+        // Include placeholder in the questionData object
+        const placeholderElement = questionCard.querySelector('[placeholder]');
+        questionData.placeholder = placeholderElement ? placeholderElement.getAttribute('placeholder') : '';
+
+        // Check if label is non-empty before pushing to formData
+        if (questionData.label.trim() !== '' || questionData.placeholder.trim() !== '') {
+            // Push a new instance of the question data to the form data array
+            formData.push({ ...questionData });
+
+            console.log(formData);
+        }
+    });
+
+    $.ajax({
+        url: '/api/CustomForm/AddUpdateCustomFormDetail',
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify(formData),
+        //contentType: 'application/json',
+        type: "POST",
+        success: function (dataResponse) {
+            // If successfully added/updated
+            if (dataResponse.status === 1) {
+                swal("Success!", dataResponse.message, "success");
+            } else {
+                swal({
+                    title: 'Error!',
+                    icon: 'error',
+                    text: dataResponse.message
+                });
+                StopLoading();
+                return;
+            }
+
+            ResetAddView();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}*@
+
+    // This is the correct Question Answer Detail
+
+    @*function saveFormData() {
+        const formNameInput = document.getElementById('formNameInput').value;
+
+        // Create an array to store the form data
+        const formData = [];
+
+        // Add the form name to the formData array
+        formData.push({
+            label: 'Form Name',
+            type: 'text',
+            value: formNameInput,
+        });
+
+        const formContainer = document.getElementById('form-container');
+
+        // Iterate over each question card in the form container
+        formContainer.querySelectorAll('.question-card').forEach(questionCard => {
+            const labelElement = questionCard.querySelector('label');
+
+            // Skip if the question card does not contain a label
+            if (!labelElement) {
+                return;
+            }
+
+            const questionData = {};
+            questionData.label = labelElement.textContent;
+
+            // Check the type of the question
+            if (questionCard.querySelector('select')) {
+                questionData.type = 'select';
+
+                // Get the selected option
+                const selectedOption = questionCard.querySelector('select option:checked');
+                if (selectedOption) {
+                    questionData.selectedOption = selectedOption.text;
+                }
+            } else if (questionCard.querySelector('input[type="radio"]')) {
+                questionData.type = 'radio';
+
+                // Get options for radio buttons
+                const radioOptions = Array.from(questionCard.querySelectorAll('input[type="radio"]')).map(radio => ({
+                    value: radio.value,
+                    label: radio.nextSibling.textContent.trim()
+                }));
+
+                questionData.options = radioOptions;
+
+                // Get the selected option for the radio button
+                const selectedRadio = questionCard.querySelector('input[type="radio"]:checked');
+                if (selectedRadio) {
+                    questionData.selectedOption = {
+                        value: selectedRadio.value,
+                        label: selectedRadio.nextSibling.textContent.trim()
+                    };
+                }
+            } else if (questionCard.querySelector('input[type="checkbox"]')) {
+                questionData.type = 'checkbox';
+
+                // Get options for checkboxes
+                const checkboxOptions = Array.from(questionCard.querySelectorAll('input[type="checkbox"]')).map(checkbox => ({
+                    value: checkbox.value,
+                    label: checkbox.nextSibling.textContent.trim()
+                }));
+
+                questionData.options = checkboxOptions;
+
+                // Get the selected options for checkboxes
+                const selectedCheckboxes = Array.from(questionCard.querySelectorAll('input[type="checkbox"]:checked')).map(input => ({
+                    value: input.value,
+                    label: input.nextSibling.textContent.trim()
+                }));
+
+                if (selectedCheckboxes.length > 0) {
+                    questionData.selectedOptions = selectedCheckboxes;
+                }
+            } else if (questionCard.querySelector('input[type="text"]')) {
+                questionData.type = 'text';
+                questionData.placeholder = questionCard.querySelector('input').placeholder;
+            } else if (questionCard.querySelector('textarea')) {
+                questionData.type = 'textarea';
+                questionData.placeholder = questionCard.querySelector('textarea').placeholder;
+            } else if (questionCard.querySelector('img')) {
+                questionData.type = 'image';
+                questionData.src = questionCard.querySelector('img').getAttribute('src');
+            }
+
+            // Include placeholder in the questionData object
+            const placeholderElement = questionCard.querySelector('[placeholder]');
+            questionData.placeholder = placeholderElement ? placeholderElement.getAttribute('placeholder') : '';
+
+            // Check if label is non-empty before pushing to formData
+            if (questionData.label.trim() !== '' || questionData.placeholder.trim() !== '') {
+                // Push a new instance of the question data to the form data array
+                formData.push({ ...questionData });
+
+                console.log(formData);
+            }
+        });
+         $.ajax({
+        url: '/api/CustomForm/AddUpdateCustomFormDetail',
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify(formData),
+        //contentType: 'application/json',
+        type: "POST",
+        success: function (dataResponse) {
+            // If successfully added/updated
+            if (dataResponse.status === 1) {
+                swal("Success!", dataResponse.message, "success");
+            } else {
+                swal({
+                    title: 'Error!',
+                    icon: 'error',
+                    text: dataResponse.message
+                });
+                StopLoading();
+                return;
+            }
+
+            ResetAddView();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}*@
+
+    function saveFormData() {
+       // var _mode = (CustomFormId_Global > 0) ? 2 : 1;
+
+        const formNameInput = document.getElementById('formNameInput').value;
+
+        // Create an array to store the form data
+        const formData = [];
+
+        // Add the form name to the formData array
+        formData.push({
+            label: 'Form Name',
+            type: 'text',
+            value: formNameInput,
+        });
+
+
+       
+
+
+        const formContainer = document.getElementById('form-container');
+
+        // Iterate over each question card in the form container
+        formContainer.querySelectorAll('.question-card').forEach(questionCard => {
+            const labelElement = questionCard.querySelector('label');
+
+            // Skip if the question card does not contain a label
+            if (!labelElement) {
+                return;
+            }
+
+            const questionData = {};
+            questionData.label = labelElement.textContent;
+
+
+
+            if (questionCard.querySelector('select')) {
+                questionData.type = 'select';
+
+                const selectElement = questionCard.querySelector('select');
+
+                // Get options for the select dropdown
+                const selectOptions = Array.from(selectElement.options).map(option => ({
+                    value: option.value,
+                    label: option.text
+                }));
+
+                questionData.options = selectOptions;
+
+                // Get the selected options for the select dropdown
+                const selectedOptions = Array.from(selectElement.selectedOptions).map(option => ({
+                    value: option.value,
+                    label: option.text
+                }));
+
+                if (selectedOptions.length > 0) {
+                    questionData.selectedOptions = selectedOptions;
+                }
+            }
+            else if (questionCard.querySelector('input[type="radio"]')) {
+                questionData.type = 'radio';
+
+                // Get options for radio buttons
+                const radioOptions = Array.from(questionCard.querySelectorAll('input[type="radio"]')).map(radio => ({
+                    value: radio.value,
+                    label: radio.nextSibling.textContent.trim()
+                }));
+
+                questionData.options = radioOptions;
+
+                // Get the selected options for radio buttons
+                const selectedRadios = Array.from(questionCard.querySelectorAll('input[type="radio"]:checked')).map(radio => ({
+                    value: radio.value,
+                    label: radio.nextSibling.textContent.trim()
+                }));
+
+                if (selectedRadios.length > 0) {
+                    questionData.selectedOptions = selectedRadios;
+                }
+            }
+            else if (questionCard.querySelector('.submit-button')) {
+                questionData.type = 'submit';
+            }
+
+            else if (questionCard.querySelector('input[type="checkbox"]')) {
+                questionData.type = 'checkbox';
+
+                // Get options for checkboxes
+                const checkboxOptions = Array.from(questionCard.querySelectorAll('input[type="checkbox"]')).map(checkbox => ({
+                    value: checkbox.value,
+                    label: checkbox.nextSibling.textContent.trim()
+                }));
+
+                questionData.options = checkboxOptions;
+
+                // Get the selected options for checkboxes
+                const selectedCheckboxes = Array.from(questionCard.querySelectorAll('input[type="checkbox"]:checked')).map(input => ({
+                    value: input.value,
+                    label: input.nextSibling.textContent.trim()
+                }));
+
+                if (selectedCheckboxes.length > 0) {
+                    questionData.selectedOptions = selectedCheckboxes;
+                }
+            }
+            //} else if (questionCard.querySelector('input[type="text"]')) {
+            //    questionData.type = 'text';
+            //    questionData.placeholder = questionCard.querySelector('input').placeholder;
+            //}
+            else if (questionCard.querySelector('input[type="text"]') || questionCard.querySelector('input[type="email"]') || questionCard.querySelector('input[type="number"]')) {
+                questionData.type = 'text'; // For simplicity, assume the type is text if it's not explicitly email or number
+
+                if (questionCard.querySelector('input[type="email"]')) {
+                    questionData.type = 'email';
+                } else if (questionCard.querySelector('input[type="number"]')) {
+                    questionData.type = 'number';
+                }
+                questionData.placeholder = questionCard.querySelector('input').placeholder;
+            }
+
+
+
+
+            else if (questionCard.querySelector('textarea')) {
+                questionData.type = 'textarea';
+                questionData.placeholder = questionCard.querySelector('textarea').placeholder;
+            } else if (questionCard.querySelector('img')) {
+                questionData.type = 'image';
+                questionData.src = questionCard.querySelector('img').getAttribute('src');
+            }
+
+            // Include placeholder in the questionData object
+            const placeholderElement = questionCard.querySelector('[placeholder]');
+            questionData.placeholder = placeholderElement ? placeholderElement.getAttribute('placeholder') : '';
+
+            // Check if label is non-empty before pushing to formData
+            if (questionData.label.trim() !== '' || questionData.placeholder.trim() !== '') {
+                // Push a new instance of the question data to the form data array
+                formData.push({ ...questionData });
+
+                console.log(formData);
+            }
+        });
+         $.ajax({
+             url: '/api/CustomForm/AddUpdateCustomFormDetail',
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+             data: JSON.stringify(formData),
+            
+        contentType: 'application/json',
+        type: "POST",
+        success: function (dataResponse) {
+            // If successfully added/updated
+            if (dataResponse.status === 1) {
+                swal("Success!", dataResponse.message, "success");
+            } else {
+                swal({
+                    title: 'Error!',
+                    icon: 'error',
+                    text: dataResponse.message
+                });
+                StopLoading();
+                return;
+            }
+
+            ResetAddView();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+    // To Edit the Record From Form
+    //function addTextQuestion(label, placeholder, existingValue) {
+    //    const formContainer = document.getElementById('form-container');
+    //    const questionCard = document.createElement('div');
+    //    questionCard.className = 'question-card';
+
+    //    const labelElement = document.createElement('label');
+    //    labelElement.textContent = label;
+    //    questionCard.appendChild(labelElement);
+
+    //    addDeleteButton(questionCard);
+
+
+    //    if (questionType === 'text') {
+    //        const input = document.createElement('input');
+    //        input.setAttribute('placeholder', placeholder);
+
+    //        // Set the existing value if available
+    //        if (existingValue) {
+    //            input.value = existingValue;
+    //        }
+
+    //        questionCard.appendChild(input);
+    //    }
+    //    else if (questionType === 'select') {
+    //        const select = document.createElement('select');
+    //        input.setAttribute('placeholder', placeholder);
+
+    //        // Set the existing value if available
+    //        if (existingValue) {
+    //            input.value = existingValue;
+    //        }
+
+    //        questionCard.appendChild(input);
+    //        const optionsArray = value.split(',');
+
+    //        optionsArray.forEach(optionText => {
+    //            const option = document.createElement('option');
+    //            option.value = optionText.trim().toLowerCase();
+    //            option.text = optionText.trim();
+    //            select.appendChild(option);
+    //        });
+
+    //        questionCard.appendChild(select);
+    //    }
+    //    else if (questionType === 'textarea') {
+    //        const textarea = document.createElement('textarea');
+    //        textarea.setAttribute('placeholder', value || '');
+    //        questionCard.appendChild(textarea);
+    //    }
+    //    else if (questionType === 'radio' || questionType === 'checkbox') {
+    //        const optionsArray = value.split(',');
+
+    //        optionsArray.forEach(optionText => {
+    //            const label = document.createElement('label');
+    //            const input = document.createElement('input');
+    //            input.setAttribute('type', questionType);
+    //            input.setAttribute('value', optionText.trim().toLowerCase());
+    //            label.appendChild(input);
+    //            label.appendChild(document.createTextNode(optionText.trim()));
+    //            questionCard.appendChild(label);
+    //        });
+    //    }
+    //    else if (questionType === 'submit') {
+    //        const submitButton = document.createElement('button');
+    //        submitButton.setAttribute('type', 'button');
+    //        submitButton.textContent = 'Submit'; // Set a default text if no label is provided
+
+    //        submitButton.addEventListener('click', function () {
+    //            if (onClickFunction && typeof onClickFunction === 'function') {
+    //                onClickFunction(); // Pass the identifier to the function
+    //            }
+    //        });
+    //        questionCard.appendChild(submitButton);
+    //    }
+    //    // ... existing code
+    //}
+
+
+</script>

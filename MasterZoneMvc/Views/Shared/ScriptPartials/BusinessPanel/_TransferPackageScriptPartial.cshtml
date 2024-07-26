@@ -1,0 +1,716 @@
+﻿<script>
+    var PackageId_Global = 0;
+    var UserToken_Global = "";
+    var _packageTable;
+
+
+        function initializeDataTable_packagetransfer() {
+            _packageTable = $("#ViewForPackage").DataTable();
+        }
+
+        $(document).ready(function () {
+            $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+
+                    initializeDataTable_packagetransfer();
+                    GetAllViewPackage();
+                    getAllActiveBusinessLists();
+                    //StopLoading();
+                }
+                else {
+                    $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                        if (dataToken != "" && dataToken != null) {
+                            UserToken_Global = dataToken;
+
+                            initializeDataTable_packagetransfer();
+                            GetAllViewPackage();
+                            getAllActiveBusinessLists();
+                            //StopLoading();
+                        }
+                        else {
+                            StopLoading();
+                        }
+                    });
+                }
+            });
+        });
+
+    function getAllActiveBusinessLists() {
+        let _url =  "/api/TransferPackage/GetAllFollowerBusinessList";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _selectList = '<option value="0">Select Business</option>';
+                $("#ddlSelectedBusinessForNotification").html('');
+                for (var i = 0; i < response.data.length; i++) {
+                    var _businessName =  response.data[i].BusinessName;
+                    _selectList += '<option value="' + response.data[i].Id + '">' + _businessName + '</option>';
+                }
+                $("#ddlSelectedBusinessForNotification").html('').append(_selectList); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+        function GetAllViewPackage() {
+            
+            // ---------------- Pagination Data Table --------------------
+            var _url_val = "/api/TransferPackage/GetAllPackageByPagination";
+            _packageTable.clear().destroy();
+            _packageTable = $("#ViewForPackage").DataTable({
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "orderMulti": false,
+                "ordering": true,
+                "paginate": true,
+                "order": [[3, "desc"]],
+                "ajax": {
+                    "headers": {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    "url": _url_val,
+                    "type": "POST",
+                    "error": function (result) {
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+                    }
+                    , {
+                        "data": "TransferFromStudentName", "name": "TransferFromStudentName", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            var _studentDetail = `<a target="_blank" href="/Business/StudentDetail?studentLoginId=${row.TransferFromUserLoginId}">
+                                         <div class="d-flex align-items-center">
+                                             <div class="mr-2">
+                                                 <img src="${row.TrasferFromStudentProfileImageWithPath}" class="img-size-sm" />
+                                             </div>
+                                             <div>${row.TransferFromStudentName} </div>
+                                         </div></a>`;
+                            return _studentDetail;
+                        }
+                    }
+                    , {
+                        "data": "TransferType", "name": "TransferType", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            var _data = (row.TransferType == 1) ? "Same Business" : "Another Business";
+                            return _data;
+                        }
+                    }
+                    , {
+                        "data": "TransferToStudentName", "name": "TransferToStudentName", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            var _transferToDetail = '';
+
+                            if (row.TransferType == 1) {
+
+                                _transferToDetail = `<a target="_blank" href="/Business/StudentDetail?studentLoginId=${row.TransferToUserLoginId}">
+                                 <div class="d-flex align-items-center">
+                                     <div class="mr-2">
+                                         <img src="${row.TrasferToStudentProfileImageWithPath}" class="img-size-sm" />
+                                     </div>
+                                     <div>${row.TransferToStudentName} </div>
+                                 </div></a>`;
+                            }
+                            else if (row.TransferType == 2) {
+                                _transferToDetail = `<a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.TransferToUserLoginId}">
+                                  <div class="d-flex align-items-center">
+                                      <div class="mr-2">
+                                          <img src="${row.TransferToBusinessLogoWithPath}" class="img-size-sm" />
+                                      </div>
+                                      <div>${row.TrasferToBusinessName} </div>
+                                  </div></a>`;
+                            }
+                            return _transferToDetail;
+                        }
+                    }
+                    , {
+                        "data": "PlanName", "name": "PlanName", "autoWidth": true
+
+                    }
+                    ,{
+                        "data": "TransferDate",
+                        "name": "TransferDate",
+                        "autoWidth": true,
+                        "render": function (data, type, row) {
+                            // Parse the TransferDate to a Date object
+                            var transferDate = new Date(data);
+
+                            // Get day, month, and year components
+                            var day = transferDate.getDate();
+                            var month = transferDate.getMonth() + 1; // January is 0
+                            var year = transferDate.getFullYear();
+
+                            // Add leading zero if day or month is a single digit
+                            day = (day < 10) ? '0' + day : day;
+                            month = (month < 10) ? '0' + month : month;
+
+                            // Format the date as dd/mm/yyyy
+                            var formattedDate = day + '/' + month + '/' + year;
+
+                            return formattedDate;
+                        }
+                     }
+
+
+
+                    , {
+                        "data": null, "": "TransferStatus", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            //---Check Rating-Status
+                            var _status = '';
+                            if (row.TransferStatus == 0) {
+                                _status = '<span class="badge badge-warning text-white" style="width:max-content;">Pending</span>';
+                            }
+                            else if (row.TransferStatus == 1){
+                                _status = '<span class="badge badge-success text-white" style="width:max-content;">Accepted</span>';
+                            }
+                            else if (row.TransferStatus == 2) {
+                                _status = '<span class="badge badge-danger text-white" style="width:max-content;">Rejected</span>';
+                            }
+                            return _status;
+                        }
+                    }
+
+                    , {
+                        "data": null,
+                        "": "TransferType",
+                        "autowidth": true,
+                        "render": function (data, type, row) {
+                            var _view = '';
+                            var _notification = '';
+                            var _notificationDetail = '';
+                            //if (row.TransferType == 1) {
+                            //    var _view = `<a href="javascript:ViewTransferPackageDetails(${row.Id});"><i class="fas fa-eye" title="view  transfer package details"></i></a>`;
+                            //    var _notification = `<a href="#"><i class="fas fa-bell disabled" title="send notification details"></i></a>`;
+                            //    //var _notificationDetail = `<a href="Business/NotificationDetail?id=${row.Id}"><i class="fas fa-bell disabled" title="send notification details"></i></a>`;
+                            //}
+
+                            //else if (row.TransferType == 2) {
+
+                            //    var _view = `<a href="javascript:ViewTransferPackageDetails(${row.Id});"><i class="fas fa-eye" title="view  transfer package details"></i></a>`;
+                            //    var _notification = `<a href="javascript:NotificationSendToBusinessOwner(${row.Id});"><i class="fas fa-bell" title="send notification details"></i></a>`;
+                            //    var _notificationDetail = `<a href="/Business/NotificationDetail?id=${row.Id}"><i class="fas fa-bell" title="send notification details"></i></a>`;
+                            //}
+                            //var _action = `<div class="edbt">
+                            if (row.TransferType == 1) {
+                                var _view = `<a href="javascript:ViewTransferPackageDetails(${row.Id});" class="btn btn-info text-white btn-xs mb-1">View</a>`;
+                                //var _notification = `<a href="#" class="btn btn-info text-white btn-xs mb-1 disabled">Notification</a>`;
+                                //var _notificationDetail = `<a href="/Business/NotificationDetail?id=${row.Id}" class="btn btn-info text-white btn-xs mb-1">send notification details</a>`;
+                            }
+                            else if (row.TransferType == 2) {
+                                var _view = `<a href="javascript:ViewTransferPackageDetails(${row.Id});"class="btn btn-info text-white btn-xs mb-1">View</a>`;
+                                var _notification = `<a href="javascript:NotificationSendToBusinessOwner(${row.Id});" class="btn btn-info text-white btn-xs mb-1">Send</a>`;
+                                var _notificationDetail = `<a href="/Business/NotificationDetail?id=${row.Id}" class="btn btn-info text-white btn-xs mb-1">Details</a>`;
+                            }
+                            var _action = `<div class="edbt d-flex flex-column">
+                         ${_view}
+                         ${_notification}
+                         ${_notificationDetail}
+                     </div>`;
+                            return _action;
+                        }
+                    }
+
+
+
+                ],
+
+                "responsive": true,
+                "autoWidth": false,
+
+                "columnDefs": [{
+                    "targets": [0,6,7], // column index (start from 0)
+                    "orderable": false, // set orderable false for selected columns
+                }]
+            });
+
+            // for enabling search box only send requet on pressing enter
+            $('#ViewForPackage_filter input').unbind();
+            $('#ViewForPackage_filter input').bind('keyup', function (e) {
+                if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                    _packageTable.search(this.value).draw();
+                }
+            });
+
+
+    }
+    
+
+        $(document).ready(function () {
+            $('#ddlSelectedStatusForPackage').on('change', function () {
+                var selectedOption = $(this).val();
+                if (selectedOption === '2') {
+                    $('#ViewRejectionreason').show();
+                } else {
+                    $('#ViewRejectionreason').hide();
+                }
+                //if (selectedOption === '0') {
+                //    $('#Closed').css('display', 'none');
+                //}
+                //else {
+                //    $('#Closed').css('display','initial');
+                //}
+            });
+        });
+
+        $('#ViewPackageDetialsModal').on('hide.bs.modal', function () {
+            ResetViewPackageDetialModal();
+        });
+
+        function ResetViewPackageDetialModal() {
+            PackageId_Global = 0;
+            $('#ViewPackageDetails_ForUserDetailModal').html('');
+        }
+        function ViewTransferPackageDetails(Id) {
+            PackageId_Global = Id;
+            $('#ViewPackageDetails_ForUserDetailModal').html('');
+            getViewPackageDetail(callbackPackageDataModal);
+        }
+        function callbackPackageDataModal(apiResponse) {
+
+            PackageId_Global = apiResponse.data.Id;
+            var BusinessName = '';
+            var StudentName = '';
+            if (apiResponse.data.TransferToStudentName != " ") {
+                StudentName += ``;
+            }
+            if (apiResponse.data.BusinessName != " ") {
+                BusinessName += `<div class="col-md-6">
+                    <h4>Business Name</h4>
+                    <p>${apiResponse.data.BusinessName}</p>
+                </div>`;
+            }
+            else {
+                BusinessName = `<div class="col-md-6" style="display:none;">
+                    <h4>Business Name</h4>
+                    <p>${apiResponse.data.BusinessName}</p>
+                </div>`;
+            }
+
+            var _transferFromDetail = `<a target="_blank" href="/Business/StudentDetail?studentLoginId=${apiResponse.data.TransferFromUserLoginId}">
+                <div class="d-flex align-items-center">
+                    <div class="mr-2">
+                        <img src="${apiResponse.data.TrasferFromStudentProfileImageWithPath}" class="img-size-sm" />
+                    </div>
+                    <div>${apiResponse.data.TransferFromStudentName} </div>
+                </div></a>`;
+
+            var _transferToDetail = '';
+            if (apiResponse.data.TransferType == 1) {
+                _transferToDetail = `<a target="_blank" href="/Business/StudentDetail?studentLoginId=${apiResponse.data.TransferToUserLoginId}">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-2">
+                            <img src="${apiResponse.data.TrasferToStudentProfileImageWithPath}" class="img-size-sm" />
+                        </div>
+                        <div>${apiResponse.data.TransferToStudentName} </div>
+                    </div></a>`;
+            }
+            else if (apiResponse.data.TransferType == 2) {
+                _transferToDetail = `<a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${apiResponse.data.TransferToUserLoginId}">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-2">
+                            <img src="${apiResponse.data.TransferToBusinessLogoWithPath}" class="img-size-sm" />
+                        </div>
+                        <div>${apiResponse.data.TrasferToBusinessName} </div>
+                    </div></a>`;
+            }
+
+            var _transferType = (apiResponse.data.TransferType == 1) ? "Transfer to Student in same business" : "Transfer self to Another Business";
+
+            var _transferStatus = '';
+
+            if (apiResponse.data.TransferStatus == 0) {
+                _transferStatus = 'Pending';
+            }
+            else {
+                _transferStatus = (apiResponse.data.TransferStatus == 1) ? 'Accepted' : 'Rejected';
+            }
+
+            // Set the name value to the 'name' element
+                var _htmlData = `
+                            <div class="row">
+                              <div class="col-md-6">
+                                <h4>Request By</h4>
+                                <p>${_transferFromDetail}</p>
+                              </div>
+                             <div class="col-md-6">
+                                <h4>Transfer To</h4>
+                                <p>${_transferToDetail}</p>
+                            </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Transfer Type</h4>
+                                    <p>${_transferType}</p>
+                                </div>
+                              <div class="col-md-6">
+                                <h4>Package</h4>
+                                <p>${apiResponse.data.PlanName}</p>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-md-6">
+                                <h4>Transfer On</h4>
+                                <p>${apiResponse.data.TransferDate}</p>
+                              </div>
+                              <div class="col-md-6">
+                                <h4>Transfer Reason</h4>
+                                <p>${apiResponse.data.TransferReason}</p>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-md-6">
+                                <h4>Transfer Status</h4>
+                                <p>${_transferStatus}</p>
+                              </div>
+                              <div class="col-md-6">
+                                <h4>Rejection Reson</h4>
+                                <p>${apiResponse.data.RejectionReason}</p>
+                              </div>
+                            </div>
+                            `;
+
+            $('#ViewPackageDetails_ForUserDetailModal').html(_htmlData);
+
+            $('#ddlSelectedStatusForPackage').val(apiResponse.data.TransferStatus).trigger('change');
+
+            if (apiResponse.data.TransferStatus == 0) {
+                $('#ViewSelectTransferStatus').show();
+                $('#Closed').css('display', 'initial');
+            }
+            else {
+                $('#ViewSelectTransferStatus').hide();
+                $('#ViewRejectionreason').hide();
+                $('#Closed').css('display', 'none');
+            }
+
+            $('#ViewPackageDetialsModal').modal('show');
+         
+        }
+
+        function getViewPackageDetail(callbackFunction) {
+
+            let _url = "/api/TransferPackage/GetPackageDetailById?id=" + PackageId_Global;
+            StartLoading();
+
+            $.ajax({
+                type: "GET",
+                url: _url,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.status < 1) {
+                        $.iaoAlert({
+                            msg: response.message,
+                            type: "error",
+                            mode: "dark",
+                        });
+                        return;
+                    }
+
+                    PackageId_Global = response.data.Id;
+
+                    callbackFunction(response);
+
+                    StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+             function btnSubmitPackage() {
+               
+            let is_valid = true;
+            $(".error-class").html('');
+
+               let _selectedtransferStatus = $("#ddlSelectedStatusForPackage").val();
+               let _transferrejectionreason = $("#txtTransferReasonDescription").val().trim();
+
+                let _error_selectedtransferStatus = $("#error_ddlSelectedStatusForPackage");
+                 let _error_transferrejectionreason = $("#error_txtTransferReasonDescription");
+
+
+                   if (validate_IsEmptySelectInputFieldValue(_selectedtransferStatus)) {
+                       is_valid = false;
+                       _error_selectedtransferStatus.html('@(Resources.BusinessPanel.TransferStatusRequired)');
+                 }
+                 if (_selectedtransferStatus == '2') {
+                   if (validate_IsEmptyStringInputFieldValue(_transferrejectionreason)) {
+                is_valid = false;
+                     _error_transferrejectionreason.html('@(Resources.BusinessPanel.RejectionReasonRequired)');
+               }
+
+                 }
+
+
+
+
+            if (is_valid) {
+                var data = new FormData();
+
+                data.append("Id", PackageId_Global);
+                data.append("TransferStatus", _selectedtransferStatus);
+                data.append("RejectionReason", _transferrejectionreason);
+
+
+                $.ajax({
+                    url: '/api/TransferPackage/UpdatePackageStatus',
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global,
+
+                    },
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    //contentType: 'application/json',
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+                            ResetAddView();                            
+                            GetAllViewPackage();
+                            $('#ViewPackageDetialsModal').modal('hide');
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+
+                            return;
+                        }
+
+                        StopLoading();
+                    },
+                    error: function (result) {
+                        //StopLoading();
+
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+            }
+
+        }
+
+
+    function ResetAddView() {
+        $('#ddlSelectedBusinessForNotification').val('').trigger('change');
+        $('#text_Description').val('');
+    }
+
+
+    //Notification PopUp Show
+    function NotificationSendToBusinessOwner(Id) {
+        
+        PackageId_Global = Id;
+        $('#NotificationDetailsModal').modal('show');
+
+    }
+
+    function btnSubmitNotification() {
+               
+            let is_valid = true;
+            $(".error-class").html('');
+
+         let _selectedBusinessOwnerlst = $("#ddlSelectedBusinessForNotification").val();
+         let _transfernotificationdescription = $("#text_Description").val().trim();
+
+         let _error_selectedBusinessOwnerlst = $("#error_ddlSelectedBusinessForNotification");
+         let _error_transfernotificationdescription = $("#error_text_Description");
+
+
+         if (validate_IsEmptySelectInputFieldValue(_selectedBusinessOwnerlst)) {
+                       is_valid = false;
+             _error_selectedBusinessOwnerlst.html('@(Resources.BusinessPanel.SelectBusinessOwnerRequired)');
+                 }
+               
+                     if (validate_IsEmptyStringInputFieldValue(_transfernotificationdescription)) {
+                is_valid = false;
+                         _error_transfernotificationdescription.html('@(Resources.BusinessPanel.SelectNotificationDescriptionRequired)');
+               }
+
+            if (is_valid) {
+                var data = new FormData();
+                 _selectedBusinessOwnerlst = _selectedBusinessOwnerlst.join(',');
+                data.append("Id", PackageId_Global);
+                data.append("TransferSenderId", _selectedBusinessOwnerlst);
+                data.append("MessageNotification", _transfernotificationdescription);
+        
+
+                $.ajax({
+                    url: '/api/TransferPackage/AddNotification/' + PackageId_Global,
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global,
+
+                    },
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    //contentType: 'application/json',
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+                         
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+
+                            return;
+                        }
+
+                        ResetAddView();
+                        StopLoading();
+
+                    },
+                    error: function (result) {
+                        //StopLoading();
+
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+            }
+
+        }
+
+
+
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

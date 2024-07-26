@@ -1,0 +1,238 @@
+﻿
+@{
+    ViewBag.Title = "CustomForm";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+
+
+@section Styles {
+    <script src="/Content/business-panel/js/vendor/jquery-3.3.1.min.js"></script>
+    <style>
+        /* .delete-button {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }*/
+
+        .delete-icon {
+            color: #dc3545;
+            cursor: pointer;
+            float: right; /* Align icon to the right */
+            margin-top: -22px;
+            margin-bottom: 3px;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 12%;
+            position: fixed;
+            z-index: 1;
+            top: 105px;
+            right: 0;
+            /* background-color: #111;*/
+            background-color: white;
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+
+
+            .sidenav a {
+                padding: 6px 8px 6px 16px;
+                text-decoration: none;
+                font-size: 25px;
+                color: #818181;
+                display: block;
+            }
+
+                .sidenav a:hover {
+                    color: #f1f1f1;
+                }
+
+        /*.main {
+          margin-left: 160px;*/ /* Same as the width of the sidenav */
+        /*font-size: 28px;*/ /* Increased text to enable scrolling */
+        /*padding: 0px 10px;
+        }*/
+
+        @@media screen and (max-height: 450px) {
+            .sidenav {
+                padding-top: 15px;
+            }
+
+                .sidenav a {
+                    font-size: 18px;
+                }
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+
+        textarea {
+            width: 100%;
+        }
+
+        
+           
+        .card {
+            margin-right: 113px;
+        }
+        /*.card {
+            margin-top: 94px;*/
+        /* margin-left: 56px;
+            margin-right: 150px;*/
+        /*margin-left: 313px;
+           margin-right: 136px;
+            height: 525px;
+            overflow-x: hidden;
+            overflow-x: scroll;
+        }*/
+
+        #ftxt {
+            margin-right: 155px;
+        }
+
+        .form-container {
+            width: 400px;
+            /*margin-left: 230px;*/
+            margin-left: 145px;
+        }
+
+        h2 {
+            margin-left: 12px;
+        }
+
+        .question-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            margin-top: 10px;
+            width: 160%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+       
+        /*input[type="radio"] {
+            margin-right: 5px;*/ /* Adjust the spacing between radio button and label */
+        /*}*/
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 8px 12px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            margin-left: 12px;
+        }
+    </style>
+
+}
+
+
+
+<div class="sidenav">
+    <h2>Select Element</h2>
+    <button onclick="changeFormName()">Change Form Name</button>
+    <button onclick="addTextQuestion()">Input Button</button>
+    <button onclick="addSelectQuestion()"> Select Button</button>
+    <button onclick="addTextareaQuestion()"> Textarea Button</button>
+    <button onclick="addRadioQuestion()"> Radio Button </button>
+    <button onclick="addCheckboxQuestion()"> Checkbox Button </button>
+    <button onclick="addSubmitButton()"> Submit</button>
+
+</div>
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange" onclick="ChangeNameForForm();"> Form</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Feedback">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Form</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="ShowAddCustomDetail">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4" style="margin-right: 488px; width: 85%;">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Custom Form</h5>
+                            <div class="form-container" id="form-container">
+                                <input type="text" id="formNameInput" placeholder="Enter Form Name" style="width: 158%;">
+                            </div>
+                            <div id="ButtonAddCustom" style="margin-left: 132px;">
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="saveFormData()">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        @*<div id="sectionViewCustomForm">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblCustomFormView" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Custom Form Name</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+
+    </div>
+</main>
+
+
+@section Scripts{
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageCustomFormScriptPartial.cshtml")
+
+}

@@ -1,0 +1,186 @@
+﻿
+@{
+    ViewBag.Title = "Manage Sponsors";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+@section Styles{
+    <style>
+        .sponsorIcon {
+            width: 75px;
+            height: 75px;
+        }
+
+        .sponsorIconPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Manage Sponsors</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Manage Sponsors</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- View content -->
+    <section class="content" id="sectionViewSponsors_ManageSponsors">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-sm-9 d-flex align-items-center">
+                                    <h3 class="card-title">View Sponsors</h3>
+                                </div>
+                                <div class="col-sm-3 d-flex justify-content-end">
+                                    <button type="button" class="btn btn-primary" onclick="showAddUpdateSponsorsSection();">
+                                        &plus; Add New Sponsors
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <span class="text-muted font-weight-bold">@Resources.SuperAdminPanel.HomePageVisibilityDefination</span>
+                                </div>
+                            </div>
+
+                            <table id="tblBusinessSponsors" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>HPV</th>
+                                        <th>SponsorTitle</th>
+                                        <th>SponsorIcon</th>
+                                        <th>SponsorLink</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>HPV</th>
+                                        <th>SponsorTitle</th>
+                                        <th>SponsorIcon</th>
+                                        <th>SponsorLink</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- Main content -->
+    <section class="content d-none" id="sectionAddUpdateSponsors_ManageSponsors">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Default box -->
+                    <div class="card card-default">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-sm-9 d-flex align-items-center">
+                                    <h3 class="card-title">Add New Sponsors</h3>
+                                </div>
+                                <div class="col-sm-3 d-flex justify-content-end">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="btnClickCancel_ManageSponsor();">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 ">
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Sponsor Title<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtSponsorTitle_ManageSponsor" class="border form-control">
+                                        <div class="error-class" id="error_txtSponsorTitle_ManageSponsor"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Sponsor Link<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtSponsorLink_ManageSponsor" class="border form-control">
+                                        <div class="error-class" id="error_txtSponsorLink_ManageSponsor"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <!-- /.form-group -->
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <label>Sponsor Icon<span class="text-danger">*</span></label>
+                                    <div class="sponsorIconPreview">
+                                        <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="fileSponsorImage_ManageSponsor" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileSponsorImage_ManageSponsor"></div>
+                                </div>
+                                <!-- /.col -->
+                            </div>
+                            <!-- /.row -->
+
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="button" id="btnSave_ManageSponsor" class="btn btn-primary" onclick="AddUpdate_ManageSponsor()">Save</button>
+                            <button type="button" id="btnCancel_ManageSponsor" class="btn btn-danger" onclick="btnClickCancel_ManageSponsor()">Cancel</button>
+                        </div>
+                        <!-- /.card-body -->
+                        <!-- <div class="card-footer">
+                          Visit <a href="https://select2.github.io/">Select2 documentation</a> for more examples and information about
+                          the plugin.
+                        </div> -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+@section Scripts {
+
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Scripts/js/Validation.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageSponsorScriptPartial.cshtml")
+}
+

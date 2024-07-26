@@ -1,0 +1,452 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var MultipleItemId_Global = 0;
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+               getAllEventCategories();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+
+                        UserToken_Global = dataAdminToken;
+                        getAllEventCategories();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function AddUpdate_ManageEventCategory() {
+
+    var is_valid = true;
+    $(".error-class").html('');
+    var _mode = (MultipleItemId_Global > 0) ? 2 : 1;
+
+
+
+    //var _id_substring = "_ManageMultipleImage";
+        let _categoryName = $("#txtcategoryName").val().trim();
+       let _error_categoryName = $("#error_txtcategoryName" );
+            if (validate_IsEmptyStringInputFieldValue(_categoryName)) {
+                is_valid = false;
+                _error_categoryName.html('@(Resources.SuperAdminPanel.CategoryNameRequired)');
+            }
+
+    if (is_valid) {
+        StartLoading();
+
+         var _status = 0;
+        if ($('#chkIsActive_ManageEventCategories').is(':checked')) {
+             _status = 1;
+         }
+
+         var data = new FormData();
+
+         data.append("Id", MultipleItemId_Global);
+         data.append("CategoryName", _categoryName);
+         data.append("Status", _status);
+         data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/EventCategory/AddUpdateEventCategory',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            contentType: false,
+            mimeType: 'multipart/form-data',
+            //contentType: 'application/json',
+            type: 'POST',
+            dataType: "json",
+            success: function (dataResponse) {
+
+                //--If successfully added
+                if (dataResponse.status == 1) {
+                    swal("Success!", dataResponse.message, "success");
+
+                    getAllEventCategories();
+                    resetAddUpdateEventCategory();
+                   showViewEventCategorySection();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    }
+
+
+
+    function showAddUpdateEventCategorySection() {
+        $('#sectionViewEventCategories_ManageCategories').addClass('d-none');
+        $('#sectionAddUpdateEventCategory_ManageCategories').removeClass('d-none');
+        getAllEventCategories();
+    }
+
+
+    function showViewEventCategorySection() {
+        $('#sectionAddUpdateEventCategory_ManageCategories').addClass('d-none');
+        $('#sectionViewEventCategories_ManageCategories').removeClass('d-none');
+    }
+
+
+    function btnClickCancel_ManageEventCategories() {
+        showViewEventCategorySection();
+        resetAddUpdateEventCategory();
+    }
+
+    function resetAddUpdateEventCategory() {
+        $('.error-class').html('');
+        $("#txtcategoryName").val('');
+        $('#chkIsActive_ManageEventCategories').prop('checked', false);
+        $('#sectionAddUpdateEventCategory_ManageCategories .card-title').html('Add  Event Category');
+        MultipleItemId_Global = 0;
+
+
+    }
+
+  function getAllEventCategories() {
+      let _url = "/api/EventCategory/GetAllEventCategoryDetail";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+
+            }
+
+            var _table = $('#tblEventCategories').DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _categoryName = '';
+            var _status = '';
+            var _action = '';
+            var data = [];
+            for (var i = 0; i < response.data.length; i++) {
+                sno++;
+                _categoryName = response.data[i].CategoryName;
+                _action = '<div class="edbt">';
+                _action += '<a href="javascript:EditEventCategory(' + response.data[i].Id + ');"><i class="fas fa-edit"></i></a>';
+                _action += `<a href="javascript:confrimDelete_ManageEventCategory(`+ response.data[i].Id +`);"><i class="fas fa-trash "></i></a>`;
+                _action += '</div>';
+
+                //---Check Staff-Status
+                if (response.data[i].Status == 1) {
+                    _status = '<a class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeEventStatus(' + response.data[i].Id + ');">Active</a>';
+                }
+                else {
+                    _status = '<a class="btn btn-danger btn-sm" style="width:80px;" onclick="ConfirmChangeEventStatus(' + response.data[i].Id + ');">In-Active</a>';
+                }
+
+                data.push([
+                    sno,
+                    _categoryName,
+                    _status,
+                    _action
+                ]);
+            }
+
+            $('#tblEventCategories').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+  function ChangeStatusEventCategory(sid) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/EventCategory/ChangeStatusEventCategoryType?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    getAllEventCategories();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+  function ConfirmChangeEventStatus(sid) {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmChangeStatusCategoryTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmChangeStatusCategoryText)",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+        cancelButtonText: "@(Resources.ErrorMessage.No)"
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusEventCategory(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+      }
+
+    function EditEventCategory(id) {
+
+    if (id <= 0)
+        return;
+
+    StartLoading();
+      let _url = API_Base_URL + "/api/EventCategory/GetEventCategoryTypeById?id="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            let _eventCategory = response.data;
+            $("#txtcategoryName").val(_eventCategory.CategoryName);
+            //--Category-Status
+            if (_eventCategory.Status == 1) {
+                $('#chkIsActive_ManageEventCategories').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive_ManageEventCategories').prop('checked', false);
+            }
+
+            MultipleItemId_Global =id;
+            $('#sectionAddUpdateEventCategory_ManageCategories .card-title').html('Edit Category');
+            showAddUpdateEventCategorySection();
+            StopLoading();
+            //getAllEventCategories();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+ function confrimDelete_ManageEventCategory(sid) {
+     swal({
+         title: "@(Resources.SuperAdminPanel.ConfirmDeleteEventCategoryTitle)",
+         text: "@(Resources.SuperAdminPanel.ConfirmDeleteEventCategoryText)",
+         type: "warning",
+         buttons: true,
+         cancel: {
+             text: "@(Resources.ErrorMessage.Cancel)",
+             value: null,
+             visible: false,
+             className: "",
+             closeModal: true,
+         }
+     }).then((willDelete) => {
+         if (willDelete) {
+             DeleteEventCategory(sid);
+         } else {
+             //swal("Your imaginary file is safe!");
+         }
+     });
+ }
+
+ function DeleteEventCategory(sid) {
+     StartLoading();
+     $.ajax({
+         type: "POST",
+         url: "/api/EventCategory/DeleteEventCategory?id=" + sid,
+         headers: {
+             "Authorization": "Bearer " + UserToken_Global,
+             "Content-Type": "application/json"
+         },
+         contentType: 'application/json',
+         success: function (dataResponse) {
+             StopLoading();
+
+             //--Check if staff successfully deleted
+             if (dataResponse.status == 1) {
+                 setTimeout(function () {
+                     swal("Success!", dataResponse.message, "success");
+                     getAllEventCategories();
+                 }, 100);
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         },
+         error: function (result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+ }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+</script>

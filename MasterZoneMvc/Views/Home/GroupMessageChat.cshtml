@@ -1,0 +1,272 @@
+﻿
+@{
+    ViewBag.Title = "GroupMessageChat";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+    long businessLoginId = Convert.ToInt64(ViewBag.BusinessLoginId);
+}
+
+@section Styles {
+
+    @*<link rel="stylesheet" href="~/Content/business-panel/font/simple-line-icons/css/simple-line-icons.css" />*@
+    @*<link rel="stylesheet" href="~/Content/business-panel/css/vendor/perfect-scrollbar.css" />*@
+    <style>
+        .img-thumbnail {
+            height: 50px;
+            width: 50px;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            height: calc(1.5em + 0.75rem + 2px);
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+
+        .separator {
+            border-bottom: 1px solid #d7d7d7;
+        }
+        
+        /* #MessageView {
+            height: 350px;
+            overflow-y: scroll;
+        }*/
+
+        #MessageView {
+            padding: 20px;
+            height: 70vh;
+            overflow-y: auto;
+            background-color: #f8f8f8;
+        }
+
+        .card-body {
+            border-top: none;
+        }
+
+        .text-extra-small {
+            font-size: 12px;
+        }
+
+   
+        .col-4 {
+            -ms-flex: 0 0 33.333333%;
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+        }
+
+        .gruop-msg-img > img {
+            height: 50px;
+            width: 50px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+            box-shadow: 8px 8px 10px 0 rgba(0, 0, 0, 30%);
+        }
+
+        img {
+            vertical-align: middle;
+            border-style: none;
+        }
+        .gruop-msg-text img.verify-img {
+            height: 20px;
+            object-fit: contain;
+            padding-right: 5px;
+        }
+        .gruop-msg-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border-bottom: 0.5px solid #d7d7d7;
+            padding-bottom: 15px;
+        }
+        h6.img-flex {
+            display: flex;
+            text-transform: uppercase;
+            align-items: center;
+        }
+
+        .gruop-msg-text > * {
+            margin-bottom: 0;
+            font-size: 14px;
+            text-transform: capitalize;
+        }
+        .gruop-msg-text {
+            padding-left: 20px;
+        }
+        .gruop-search {
+            margin-bottom: 30px;
+        }
+        input.chat-search {
+            border-radius: 10px;
+            border: 1px solid #d7d7d7;
+            height: 45px;
+            padding: 8px 20px;
+            line-height: 45px;
+            box-shadow: 5px 5px 5px 0 rgba(0, 0, 0, 10%);
+            width:80%;
+        }
+        .gruop-msg-sidebar {
+            padding-top: 20px;
+            background: #fff;
+        }
+
+        .col-8 {
+            -ms-flex: 0 0 66.666667%;
+            flex: 0 0 66.666667%;
+            max-width: 66.666667%;
+        }
+        div#sidebarGroupListForChat {
+            overflow-y: scroll;
+            height: 77vh;
+        }
+        #visitor-panel-sidebar {
+            max-height: 450px !important;
+            overflow-y: auto;
+        }
+        .sid-br-m-43dgg{
+            max-height:500px !important;
+            overflow:hidden;
+        }
+    </style>
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+
+        #MessageChat .col-6 {
+            flex: 0% !important;
+        }
+
+        .gruop-search {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-search {
+            flex: 1;
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .fa-search {
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .gruop-msg-iner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        p.time-gruop {
+            padding: 15px;
+        }
+
+        p.student-in {
+            color: #f3a762;
+            font-size: 19px;
+            font-weight: 500;
+        }
+        p.time-gruop {
+            font-size: 18px;
+        }
+        #sidebarGroupListForChat>a {
+            text-decoration: none !important;
+            color: black !important;
+        }
+        #sidebarGroupListForChat>a:hover {
+            color: #f3a762 !important;
+        }
+    </style>
+}
+
+<input type="hidden" id="hiddenGroupId" value="@ViewBag.GroupId" />
+
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4">
+                @Html.Partial("_VisitorPanelSidebarPartial")
+            </div>
+            <div class="col-sm-9">
+                <div id="MessageChat" class="section-2-enquiries inrsection-mltp ">
+                    <div class="row rewrsfjdkslfjalksj d-flex" id="MainStudentUser">
+                        @*<div class="col-8" id="Groupchatdetails">
+                            <div class="gruop-msg-iner">
+                                <h2 class="mk-hdffjsdkfj-enq">Group Message</h2>
+                                <p class="time-gruop">Bolly wood 5 to 6 pm </p>
+                                <p class="student-in">Student 10/29</p>
+                            </div>
+                        </div>
+                        <div class="col-4 text-right" ></div>*@
+                    </div>
+                </div>
+
+                <div class="separator"></div>
+                <div id="ShowChatList">
+                    <div class="container-iner">
+                        <div class="row padding-bottom-section">
+                            <div class="col-8">
+                                <div id="MessageView" class="pt-3">
+                                  
+                                </div>
+                                <div id="chatForm">
+                                    <div class="d-inline-flex justify-content-between align-items-center" style="width: 100%;">
+                                        <input class="form-control flex-grow-1" type="text" id="MessageBodyText" placeholder="Say something...">
+                                        <div class="error-class" id="error_MessageBodyText"></div>
+                                        <div id="divforbtn">
+
+                                        </div>
+                                        @*<button type="button" class="btn btn-primary icon-button large" onclick="btnSubmitGroupMessage();">
+                                            <i class="fa fa-chevron-right"></i>
+                                        </button>*@
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-4">
+                              
+                                <div class="gruop-msg-sidebar chat-side-bar">
+                                    <div class="gruop-search d-flex">
+                                        <input class="chat-search" type="search" name="gruop-search" id="searchvaluegroupnme" placeholder="Group Search">
+                                        <i class="fa fa-search" onclick="GetGroupList()"></i>
+                                    </div>
+                                    <div class="gruop-msg-flex" id="sidebarGroupListForChat">
+
+                                       
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+@section Scripts{
+
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_GroupMessageChatScriptPartial.cshtml")
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/perfect-scrollbar.min.js"></script>
+    <script src="/Content/business-panel/js/dore.script.js"></script>
+    @*<script src="/Content/business-panel/js/scripts.js"></script>*@
+}

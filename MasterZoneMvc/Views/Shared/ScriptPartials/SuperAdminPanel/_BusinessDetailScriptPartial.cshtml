@@ -1,0 +1,406 @@
+﻿
+<script>
+    var BusinessId_Global = 0;
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                GetBusinessDetailById();
+
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        GetBusinessDetailById();
+
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetBusinessDetailById() {
+        var _businessOwnerLoginId = $("#businessOwnerLoginId").val();
+        var _url = "/api/Business/BusinessDetailById?businessOwnerLoginId="+_businessOwnerLoginId;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('#ViewBusinessDetail').html('');
+
+                var htmlData1 = '';
+                var htmlData2 = '';
+
+                for (var i = 0; i < response.data.BusinessDocuments.length; i++) {
+                    //var btn_class = response.data.BusinessDocuments[i].Status == 1 ? "btn-success" : "btn-danger";
+                    //htmlData1 += `<div class="row"><div class="col-md-3" ><img class="img-fluid" src="${response.data.BusinessDocuments[i].FilePath}"></div><div class="col-md-3"><p>${response.data.BusinessDocuments[i].DocumentTitle}</p><p>${response.data.BusinessDocuments[i].UpdatedOn_FormatDate}</p></div><div class="col-md-2"><button class= "btn ${btn_class}">${response.data.BusinessDocuments[i].IsAcception}</button></div></div>`;
+                    var btn_class = response.data.BusinessDocuments[i].Status == 0 ? "btn-warning" : (response.data.BusinessDocuments[i].Status == 1 ? "btn-success" : "btn-danger");
+                    var documentAction = ``;
+                    if (response.data.BusinessDocuments[i].Status == 0) {
+                        documentAction = `
+                            <button class="btn btn-success" m-2>Accept</button>
+                            <button class="btn btn-danger " >Reject</button>
+                        `;
+                    }
+
+                    var tableStart = `<table class="table">
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                    var tableEnd = `</tbody></table>`;
+
+                    var tableRows = '';
+
+                    for (var i = 0; i < response.data.BusinessDocuments.length; i++) {
+                        var btn_class = response.data.BusinessDocuments[i].Status == 0 ? "badge-warning" : (response.data.BusinessDocuments[i].Status == 1 ? "badge-success" : "badge-danger");
+                        var documentAction = '';
+                        if (response.data.BusinessDocuments[i].Status == 0) {
+                            documentAction = `
+                             <td style="display:flex" p-3>
+                             <button class="btn btn-success mr-2">Accept</button>
+                             <button class="btn btn-danger" >Reject</button>
+                             </td>`;
+                        }
+
+                        var rowData = `<tr>
+                        <td>
+                            <img class="img-fluid" src="${response.data.BusinessDocuments[i].FilePath}">
+                            <form action="/SuperAdmin/DownloadBusinessDocument" method="POST">
+                                <input type="hidden" name="ExportData" value="${response.data.BusinessDocuments[i].FilePath}">
+                                <input type="submit" class="btn btn-success mt-3" style="width: 98px;" value="Download">
+                            </form>
+                        </td>
+                        <td>${response.data.BusinessDocuments[i].DocumentTitle}</td>
+                        <td>${response.data.BusinessDocuments[i].UpdatedOn_FormatDate}</td>
+                        <td><span class="badge ${btn_class}">${response.data.BusinessDocuments[i].IsAcception}</span></td>
+                        ${documentAction}
+                    </tr>`;
+
+                        tableRows += rowData;
+                    }
+
+                    var htmlData1 = tableStart + tableRows + tableEnd;
+
+                    // Now htmlData1 contains the table structure with the provided content arranged as table rows and cells
+
+                }
+
+                if (response.data.BusinessDocuments.length <= 0) {
+                    htmlData1 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Documents in this Business Detail.</div>`;
+                }
+                var htmlData3 = '';
+                for (var i = 0; i < response.data.BusinessTrainingDetailResponse.length; i++) {
+                    htmlData3 += `<div class="row">
+                                                <div class="col-md-4">
+                                                  <p><label>Instructor Name : </label><span style="margin-left: 15px">${response.data.BusinessTrainingDetailResponse[i].InstructorName}</span></p>
+
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                  <p><label>Instructor Email : </label><span style="margin-left: 15px">${response.data.BusinessTrainingDetailResponse[i].InstructorEmail}</span></p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                  <p><label>Instructor Phone Number : </label><span style="margin-left: 15px">${response.data.BusinessTrainingDetailResponse[i].InstructorAlternateNumber}</span></p>
+                                                </div>
+                                             </div>
+                                               <div class="row">
+                                                <div class="col-md-4">
+                                                   <p><label> Training Name : </label><span>${response.data.BusinessTrainingDetailResponse[i].TrainingName}</span></p>
+                                                </div>
+                                    <div class="col-md-4"><p><label> Start Date : </label><span>${response.data.BusinessTrainingDetailResponse[i].StartDate}</span></p>
+                                                </div><div class="col-md-4"><p><label> End Date : </label><span>${response.data.BusinessTrainingDetailResponse[i].EndDate}</span></p>
+                                                </div></div><div class="row"><div class="col-md-4"><p><label> Short Decription  : </label><span>${response.data.BusinessTrainingDetailResponse[i].ShortDescription}</span></p>
+                                                </div><div class="col-md-4"><p><label>Address: </label><span style="margin-left: 15px">
+                                                ${response.data.BusinessTrainingDetailResponse[i].Address}</span></p></div>
+                                                  <div class="col-md-4"><p><label>Music Type: </label><span style="margin-left: 15px">
+                                                ${response.data.BusinessTrainingDetailResponse[i].MusicType}</span></p></div>
+                                                  </div>
+                                          <hr>
+                                     `;
+                }
+                if (response.data.BusinessTrainingDetailResponse.length <= 0) {
+                    htmlData3 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Detail in this Business Detail.</div>`;
+                }
+
+                var htmlData4 = '';
+                for (var i = 0; i < response.data.BusinessPlanDetailResponse.length; i++) {
+                    htmlData4 += `<div class="row">
+                                                <div class="col-md-3">
+                        <img  src="${response.data.BusinessPlanDetailResponse[i].ProfileImageWithPath}" id="previewImage"></p ></div>
+                         <div class="col-md-3"> <p><label> Plan  Name : </label><span>
+                         ${response.data.BusinessPlanDetailResponse[i].Name}
+                           <p><label>Start Date: </label><span style="margin-left: 15px">
+                                                ${response.data.BusinessPlanDetailResponse[i].StartDate}</span></p>
+                            <p><label>Price: </label><span style="margin-left: 15px">
+                                                ${response.data.BusinessPlanDetailResponse[i].Price}</span></p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                  <p><label> Plan Duration Name : </label><span>${response.data.BusinessPlanDetailResponse[i].PlanDurationTypeKey}</span></p>
+                                    <p><label> End Date : </label><span>${response.data.BusinessPlanDetailResponse[i].EndDate}</span></p>
+                                    <p><label>Discount: </label><span style="margin-left: 15px">
+                                                ${response.data.BusinessPlanDetailResponse[i].Discount}</span></p>
+
+                                    </div></div><div class="row">
+                                            <div class="col-md-4">
+
+                                                </div><div class="col-md-4">
+                                                </div>
+                                             </div>
+
+                                          </div><hr>
+                                     `;
+                }
+                if (response.data.BusinessPlanDetailResponse.length <= 0) {
+                    htmlData4 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Plan Detail in this Business Detail.</div>`;
+                }
+
+                if (response.data.BusinessDetail) {
+                    htmlData2 += `<div class="card">
+                                       <div class="card-body">
+                                          <div class="tab-content">
+                                             <div class="active tab-pane" id="activity">
+                                                <div class="post">
+                                                   <h4>Business Detail</h4>
+                                                   <hr>
+                                                   <div class="user-block">
+                                                      <div class="row">
+                                                         <div class="col-md-8">
+                                                            <img class="img-circle img-bordered-sm" src="${response.data.BusinessDetail.ProfileImage}" alt="user image">
+                                                            <span class="username">
+                                                               <a href="#">
+                                                                  <span style="margin-left:20px">${response.data.BusinessDetail.BusinessName}</span>
+                                                                </a>
+                                                         </div>
+                                                         <div class="float-right"><label>Business Category</label><span style="margin-left:15px;">${response.data.BusinessDetail.BusinessCategoryName}</span> <p class="uniqueclass"><label>Is Prime Member </label><span style="margin-left:15px">${response.data.BusinessDetail.IsPrimeMemberStatus}</span> <button class="btn btn-sm btn-primary ml-2" onclick="ToggleBusinessPrimeMemberStatus(${response.data.BusinessDetail.Id})">Change Status</button></p><p class="uniqueclass"><label>Unique Id </label><span style="margin-left:15px">${response.data.BusinessDetail.UniqueUserId}</span></p><p class="uniqueclass"><label>Master Id </label><span style="margin-left:15px">${response.data.BusinessDetail.MasterId}</span></p></div></div><div class="row"><div class="col-md-12"><a class="btn btn-sm btn-info mr-1" target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${response.data.BusinessDetail.BusinessOwnerLoginId}"> Visit Profile</a><a class="btn btn-sm btn-info mr-1" href="/SuperAdmin/BusinessUserImageDetail?businessOwnerLoginId=${response.data.BusinessDetail.BusinessOwnerLoginId}"> View Images</a><a class="btn btn-sm btn-info mr-1" href="/SuperAdmin/BusinessUserVedioDetail?businessOwnerLoginId=${response.data.BusinessDetail.BusinessOwnerLoginId}"> View Videos</a></div></div>
+                                                   </div>
+
+                                                </div>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    </div>
+                                    </div></div>
+                                    <div class="card">
+                                       <div class="card-body">
+                                          <div class="tab-content">
+                                             <h4>Personal Information  </h4>
+                                             <hr>
+                                             <div class="row">
+                                                <div class="col-md-6">
+                                                  <p><label>Name : </label><span style="margin-left: 15px">${response.data.BusinessDetail.Name}</span></p>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                   <p><label>Contact Number : </label><span style="margin-left: 15px">${response.data.BusinessDetail.PhoneNumber}</span></p>
+                                                </div>
+                                             </div>
+                                               <div class="row">
+                                                <div class="col-md-6">
+                                           <p><label>Email : </label><span style="margin-left: 15px">
+                                                ${response.data.BusinessDetail.Email}</span></p>
+                                                                    </div>
+                                                <div class="col-md-6">
+                                                   <p><label>Address : </label><span style="margin-left: 15px">${response.data.BusinessDetail.Address}</span></p>
+                                                </div>
+                                                  </div>
+                                                  <div class="row">
+                                                <div class="col-md-6">
+                                                   <p><label>Account Status: </label><span style="margin-left:15px">${response.data.BusinessDetail.AccountStatus}</span> <button class="btn btn-sm btn-primary ml-2" onclick="ToggleBusinessAccountStatus(${response.data.BusinessDetail.Id})">Change Status</button></p ></div>
+                                                <div class="col-md-6">
+                                                   <p><label>About : </label><span style="margin-left:15px">${response.data.BusinessDetail.About}</span></p ></div>
+                                               </div>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                         <h4>Documents  </h4>
+
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                             ${htmlData1}
+                                          </div>
+                                       </div>
+                                    </div>
+
+
+                                    <div class="card">
+                                       <div class="card-header">
+                                         <h4>Training Detail</h4>
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                             ${htmlData3}
+                                          </div>
+                                       </div>
+                                    </div>
+                                    <div class="card">
+                                    <div class="card-header">
+                                        <h4>Package Detail  </h4>
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                             ${htmlData4}
+                                          </div>
+                                       </div>
+                                    </div>`;
+
+                }
+
+
+                $('#ViewBusinessDetail').append(htmlData2);
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+function ToggleBusinessAccountStatus(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/ToggleBusinessAccountAcceptedStatus/" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                swal("Success!", dataResponse.message, "success");
+                GetBusinessDetailById();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function ToggleBusinessPrimeMemberStatus(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/ToggleBusinessPrimeMemberStatus/" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                swal("Success!", dataResponse.message, "success");
+                GetBusinessDetailById();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+</script>

@@ -1,0 +1,236 @@
+﻿
+@{
+    ViewBag.Title = "Advertisement";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<style>
+    .Image {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imagePreview {
+        height: 200px;
+        padding: 2px;
+        border: 2px dashed #cecece;
+        text-align: center;
+    }
+
+    #ProfileImage {
+        height: 100%;
+        width: 100%;
+    }
+</style>
+<div id="AllAdvertisement">
+    <div class="wrapper">
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Manage Advertisement</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active">View Advertisement</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title">View Advertisement</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <a href="javascript:;" id="AddAdvertisement">
+                                                <button type="submit" class="btn btn-primary">
+                                                    &plus; Add New
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <table id="tblAdvertisementViewForSuperAdmin" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>SNo.</th>
+                                                <th>Image</th>
+                                                <th>Advertisement Category</th>
+                                                <th>Image Type</th>
+                                                <th>Created On</th>
+                                                <th>Status</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>SNo.</th>
+                                                <th>Image</th>
+                                                <th>Advertisement Category</th>
+                                                <th>Image Type</th>
+                                                <th>Created On</th>
+                                                <th>Status</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- /.card -->
+                            <!-- /.card -->
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+    </div>
+</div>
+
+<aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+</aside>
+<!-- /.control-sidebar -->
+
+<div id="AddNewAdvertisement" style="display: none">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 id="TochangeHeader">Manage Advertisement</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active" id="pageUpTextChange">Add New Advertisement</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+
+                <!-- Default box -->
+                <div class="card card-default">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-sm-9 d-flex align-items-center">
+                                <h3 class="card-title" id="ToChangeTextTitle">Add New Advertisement</h3>
+                            </div>
+                            <div class="col-sm-3 d-flex justify-content-end">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="btnChangeView();">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Image</label>
+                                    <div class="imagePreview">
+                                        <img id="ProfileImage" class="d-none">
+                                    </div>
+
+                                    <input type="file" id="fileProfileImage_ManageAdvertisement" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileProfileImage_ManageAdvertisement"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlAdvertisement_ManageCategoryForSuperAdmin">Advertisement Category</label>
+                                    <select name="ddlAdvertisement_ManageCategoryForSuperAdmin" id="ddlAdvertisement_ManageCategoryForSuperAdmin" form="carform" default="unslected" class="form-control">
+                                        <option value="0">Select Advertisement Category</option>
+                                    </select>
+                                    <div class="error-class" id="error_ddlAdvertisement_ManageCategoryForSuperAdmin"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlAdvertisement_ManageLinkForSuperAdmin">Advertisement Link </label>
+                                    <input type="text" name="ddlAdvertisement_ManageLinkForSuperAdmin" id="ddlAdvertisement_ManageLinkForSuperAdmin" class="form-control" />
+                                    <div class="error-class" id="error_ddlAdvertisement_ManageLink"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ddlAdvertisement_ManageAdvertisementForSuperAdmin"> Image Type</label>
+                                    <select name="ddlAdvertisement_ManageAdvertisementForSuperAdmin" id="ddlAdvertisement_ManageAdvertisementForSuperAdmin" form="carform" default="unslected" class="form-control">
+                                        <option value="0">Select Image Type</option>
+                                        <option value="Horizontal">horizontal</option>
+                                        <option value="Vertical">Vertical</option>
+
+                                    </select>
+
+                                    <div class="error-class" id="error_ddlAdvertisement_ManageAdvertisementForSuperAdmin"></div>
+
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="chkIsActive_ManageAdvertisementForSuperAdmin" checked>
+                                        <label class="form-check-label" for="chkIsActive_ManageAdvertisementForSuperAdmin" style="cursor:pointer;">Is Active</label>
+                                    </div>
+                                </div>
+                                <!-- /.col -->
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary" id="ToChangeUpdateText" onclick="btnToSubmitAdvertisementInfoForSuperAdmin();">Save</button>
+                            @*<button type="submit" class="btn btn-danger" id="ResetCancel" onclick="CancelbtnChange();">Cancel</button>*@
+                            <button type="button" class="btn btn-danger" id="ResetCancelbtn" onclick="btnChangeView();">Cancel</button>
+                        </div>
+                        <!-- /.card-body -->
+                        <!-- <div class="card-footer">
+                          Visit <a href="https://select2.github.io/">Select2 documentation</a> for more examples and information about
+                          the plugin.
+                        </div> -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+    </div>
+</div>
+<!-- Control Sidebar -->
+
+
+
+@section Scripts{
+
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Scripts/js/Validation.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageAdvertisementScriptPartial.cshtml")
+}

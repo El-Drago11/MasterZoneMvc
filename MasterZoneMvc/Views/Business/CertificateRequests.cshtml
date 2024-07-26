@@ -1,0 +1,149 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Certificate Request";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+    </style>
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Certificate Requests</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Certificate Requests</li>
+                            </ol>
+                        </nav>
+                    </div>
+                   
+                    @*<div class="col-4 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddRequest">New Request</a>
+                    </div>*@
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewRequest">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblCertificateRequests" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Certification</th>
+                                        <th>License Title</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Commission Type</th>
+                                        <th>Commission Value</th>
+                                        <th>Status</th>
+                                        <th>Created On</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddRequest" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Certificate Request</h5>
+                            <form>
+                                <div class="form-group">
+                                    <label for="ddlCertificationProfile">Certification Profile</label>
+                                    <select name="ddlCertificationProfile" id="ddlCertificationProfile" class="form-control select-2" onchange="getAllActiveCertificateLicenses();">
+                                        <option value="0">Select</option>
+                                    </select>
+                                    <div class="error-class" id="error_ddlCertificationProfile"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ddlLicense">Select License</label>
+                                    <select id="ddlLicense" class="form-control select-2" data-width="100%">
+                                        <option value="0">Select</option>
+                                    </select>
+                                    <div class="error-class" id="error_ddlLicense"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="txtLicenseQuantity">Quantity</label>
+                                    <input type="text" id="txtLicenseQuantity" class="form-control" />
+                                    <div class="error-class" id="error_txtLicenseQuantity"></div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" onclick="btnSubmitRequest()">Submit</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_CertificateRequestScriptPartial.cshtml")
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+
+}
+
+

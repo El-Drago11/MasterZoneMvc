@@ -1,0 +1,445 @@
+﻿
+@{
+    ViewBag.Title = "Schedule Courses";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+@section Styles{
+
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.bubble.css" />
+
+    @Html.Partial("/Views/Shared/ScriptPartials/_GoogleMapsScriptPartial.cshtml");
+
+    <style>
+        .imagePreview {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .CourseCountryState {
+            cursor: no-drop;
+        }
+    </style>
+}
+
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">My Schedule/Courses</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ScheduleCourses">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">  My Schedule/Courses</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="col-4 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddCourse">Add Schedule/Courses</a>
+                    </div>
+
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+
+        <div id="sectionViewCourse">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblCourse" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Price</th>
+                                        <th>Duration/DurationType</th>
+                                        <th>Course Mode</th>
+                                         <th>IsActive</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddCourse" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Schedule/Courses</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="CourseName">Course Name</label>
+                                        <input type="text" id="CourseName" class="form-control" placeholder="CourseName" />
+                                        <div class="error-class" id="error_txtCourseName"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="CourseshortDescription">Short Description</label>
+                                        <input type="text" id="CourseShortDescription" class="form-control" placeholder=" Short Description" />
+                                        <div class="error-class" id="error_CourseShortDescription"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="Course_Price">Course Price</label>
+                                        <div class="row" style="padding: 0px 0px 0px 15px;">
+                                            <div class="col-6 px-0">
+                                                <div class="custom-control custom-radio col-12">
+                                                    <input type="radio" id="CoursePriceFree" name="Course_Price" class="custom-control-input" value="0" checked>
+                                                    <label class="custom-control-label" for="CoursePriceFree">Free</label>
+                                                </div>
+
+                                                @*<div id="CoursePriceFree_DemoCourse_Section" class="custom-control custom-radio col-12">
+                                                    <hr />
+                                                    <input type="radio" id="CoursePriceFree_DemoCourse" name="Course_Paid" class="custom-control-input" value="demo" checked>
+                                                    <label class="custom-control-label" for="CoursePriceFree_DemoCourse">Demo(Single Course)</label>
+                                                    <hr />
+                                                </div>*@
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="custom-control custom-radio col-12">
+                                                    <input type="radio" id="CoursePricePaid" name="Course_Price" class="custom-control-input" value="1">
+                                                    <label class="custom-control-label" for="CoursePricePaid">Paid</label>
+                                                </div>
+
+                                                <div id="CoursePrice_PaidSection" class="form-group col-12" style="display:none;max-width:100%;padding:0px;">
+                                                    <hr />
+                                                    <div class="row" style="padding: 0px 0px 0px 15px;">
+                                                        <div class="custom-control custom-radio col-6">
+                                                            <input type="radio" id="CoursePricePaid_PerCourse" name="Course_Paid" class="custom-control-input" value="per_class">
+                                                            <label class="custom-control-label" for="CoursePricePaid_PerCourse">Per Course</label>
+                                                        </div>
+                                                        <div class="custom-control custom-radio col-6">
+                                                            <input type="radio" id="CoursePricePaid_PerMonth" name="Course_Paid" class="custom-control-input" value="per_month">
+                                                            <label class="custom-control-label" for="CoursePricePaid_PerMonth">Per Month</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="CoursePrice">Price</label>
+                                                        <input type="number" id="CoursePrice" class="form-control" placeholder="Enter Price" required />
+                                                        <div class="error-class" id="error_txtCoursePricePaid"></div>
+                                                    </div>
+                                                    <hr />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group col-6">
+
+                                        <label>Select Duration</label>
+                                        <select id="ddlDurationType" class="form-control select2" data-width="100%">
+                                            <option value="0">Select Duration Type</option>
+                                            <option value="Weekly">Weekly</option>
+                                            <option value="Day">Day</option>
+                                            <option value="Yearly">Yearly</option>
+                                            <option value="Monthly">Monthly</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlDurationType"></div>
+
+                                        <div class="form-group">
+                                            <label for="text_duration">Duration</label>
+                                            <input type="number" id="text_duration" class="form-control" placeholder=" Enter Integer Duration Value" />
+                                            <div class="error-class" id="error_text_duration"></div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="ddlParentCourseCategoryType">Course Category</label>
+                                        <select id="ddlParentCourseCategoryType" class="form-control" data-width="100%" placeholder="please select Course Category">
+                                            <option value="0">Select Course Category</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlParentCourseCategory"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+
+                                        <label for="date_time">Start Date</label>
+                                        <input type="date" class="form-control" id="Schedule_StartDate" placeholder=" Enter StartDate" required />
+                                        <div class="error-class" id="error_Schedule_StartDate"></div>
+
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="CourseMode">Course Mode</label>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="CourseOnlineMode" name="CourseMode" class="custom-control-input" value="1" checked>
+                                            <label class="custom-control-label" for="CourseOnlineMode">Online</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="CourseOfflineMode" name="CourseMode" class="custom-control-input" value="0">
+                                            <label class="custom-control-label" for="CourseOfflineMode">Offline</label>
+                                        </div>
+                                        <div class="error-class" id="error_CourseMode"></div>
+
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    @* show fields according to the class Mode ------------------ *@
+                                    <div id="CourseURL_Link" class="col-12">
+                                        <div class="row">
+                                            <div class="form-group col-6">
+                                                <label for="CourseOnlineURL_Link">Course Link</label>
+                                                <input type="text" id="CourseOnlineURL_Link" class="form-control" placeholder="Enter Course Link" />
+                                                <div class="error-class" id="error_CourseOnlineURL_Link"></div>
+                                            </div>
+                                            <div class="form-group col-6">
+                                                <label for="CourseOnlineURL_Link_Password">Course Link Password</label>
+                                                <input type="text" id="CourseOnlineURL_Link_Password" class="form-control" placeholder="Enter a link Password" />
+                                                <div class="error-class" id="error_CourseOnlineURL_Link_Password"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="CourseMapLocation" class="col-12" style="display:none;padding-bottom:15px;">
+                                        <div class="row">
+                                            <div id="Coursemap" style="width: 100%; height: 400px;"></div>
+                                            <input type="hidden" id="LocationLatitude" value="" />
+                                            <input type="hidden" id="LocationLongitude" value="" />
+
+                                            <div class="col-12 from-group text-center mt-4 mb-4">
+                                                <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                            </div>
+                                            <div class="from-group col-6">
+                                                <label for="CourseOfflineAddress">Address Line 1</label>
+                                                <input type="text" id="CourseOfflineAddress" class="form-control" />
+                                                <div class="error-class" id="error_CourseOfflineAddress"></div>
+                                            </div>
+                                            <div class="from-group col-6">
+                                                <label for="CourseOfflineLandMark">Land Mark</label>
+                                                <input type="text" id="CourseOfflineLandMark" class="form-control" />
+                                                <div class="error-class" id="error_CourseOfflineLandMark"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ddl_CourseOfflineCountry">Country</label>
+                                                <select id="ddl_CourseOfflineCountry" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                                </select>
+                                                <input type="text" id="ddl_CourseOfflineCountry" class="form-control CourseCountryState MapLocation d-none" readonly />
+                                                <div class="error-class" id="error_ddl_CourseOfflineCountry"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ddl_CourseOfflineState">State</label>
+                                                <select id="ddl_CourseOfflineState" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();">
+                                                </select>
+                                                <input type="text" id="ddl_CourseOfflineState" class="form-control CourseCountryState  MapLocation d-none" readonly />
+                                                <div class="error-class" id="error_ddl_CourseOfflineState"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ddl_CourseOfflineCity">City</label>
+                                                <select id="ddl_CourseOfflineCity" class="form-control WithoutMapLocation" data-width="100%">
+                                                </select>
+                                                <input type="text" id="ddl_CourseOfflineCity" class="form-control MapLocation d-none" value="" />
+                                                <div class="error-class" id="error_ddl_CourseOfflineCity"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="CourseOfflinePinCode">Pin Code</label>
+                                                <input type="text" id="CourseOfflinePinCode" class="form-control" />
+                                                <div class="error-class" id="error_CourseOfflinePinCode"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="margin-bottom:10px;">
+
+
+                                    <div class="form-group col-6">
+                                        <label for="ddlSelectedInstructorUserLoginId">Select Instructor</label>
+                                        <select id="ddlSelectedInstructorUserLoginId" class="form-control" data-width="100%">
+                                        </select>
+                                        <div class="error-class" id="error_ddlSelectedInstructorUserLoginId"></div>
+                                    </div>
+                                    <div class="from-group col-6">
+                                        <label for="txtHowToBookCourse">How to Book Description</label>
+                                        <textarea type="text" id="txtHowToBookCourse" class="form-control" rows="3" placeholder="How To Book Course"></textarea>
+                                        <div class="error-class" id="error_txtHowToBookCourse"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group d-flex flex-column">
+                                            <label>Course Image</label>
+                                            <div class="imagePreview">
+                                                <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileCourseImage_ManageCourse" class="border form-control" accept="image/*">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+
+                                        <div class="form-group">
+                                            <label for="ddlSelectedGroupId">Select Group List</label>
+                                            <select id="ddlSelectedGroupId" class="form-control" data-width="100%">
+                                            </select>
+                                            <div class="error-class" id="error_ddlSelectedGroupId"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="description"> Description</label>
+                                            <div class="html-editor form-control" id="text_description"  style="height: 114px"></div>
+                                            <div class="error-class" id="error_text_description"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label>Is Exam Required</label>
+                                        <select id="ddlExamType" class="form-control select2" data-width="100%" onchange="toggleExamDetail();">
+                                            <option value="0">Select Exam </option>
+                                            <option value="1">Yes</option>
+                                            <option value="2">No</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlExamType"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div id="Exam_ListDetail" style="display: none;">
+                                            <div class="form-group">
+                                                <label for="ddlSelectedExamId">Select Exam</label>
+                                                <select id="ddlSelectedExamId" class="form-control" data-width="100%">
+                                                    <option value="0">Select Exam </option>
+                                                </select>
+                                                <div class="error-class" id="error_ddlSelectedExamId"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label>Is Certified Required</label>
+                                        <select id="ddlCertifiedType" class="form-control select2" data-width="100%" onchange="toggleCertificateDetail();">
+                                            <option value="0">Select Certified </option>
+                                            <option value="1">Yes</option>
+                                            <option value="2">No</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlCertificateType"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <div id="Certificate_ListDetail" style="display: none;">
+                                            <div class="form-group">
+                                                <label>Certification Profile/Brand</label>
+                                                <select id="ddlCertificationProfileId" class="form-control" placeholder="Select Certification Profile" data-width="100%" onchange="GetBusinessAvailableBookedLicenseListByCertificate();">
+                                                    <option value="0">Select Certification profile</option>
+                                                    @*<option label="&nbsp;">&nbsp;</option>*@
+                                                </select>
+                                                <div class="error-class" id="error_ddlCertificationProfileId"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Certification License</label>
+                                                <select id="ddlLicenseBookingId" class="form-control" placeholder="Select License" data-width="100%">
+                                                    <option value="0">Select License</option>
+                                                    @*<option label="&nbsp;">&nbsp;</option>*@
+                                                </select>
+                                                <div class="error-class" id="error_ddlLicenseBookingId"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="form-group d-flex flex-column">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="chkIsActive" checked>
+                                                <label class="form-check-label" for="chkIsActive" style="cursor:pointer;">Is Active</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitCourse()">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetCourseAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</main>
+
+
+
+@section Scripts{
+
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+    <script>
+        var toolbarOptionsAdditionalInfo = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAdditionalInformation = new Quill('#text_description', {
+            modules: {
+                toolbar: toolbarOptionsAdditionalInfo
+            },
+            theme: 'snow'
+        });
+    </script>
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ScheduleCourseScriptPartial.cshtml")
+
+
+
+}
+

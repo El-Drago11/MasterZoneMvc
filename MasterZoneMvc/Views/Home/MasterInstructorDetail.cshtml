@@ -1,0 +1,337 @@
+﻿
+@{
+    Layout = null;
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+    // long userLoginId = ViewBag.UserLoginId;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.3.3/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/js/bootstrap.min.js"></script>
+
+    <!-- jquery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js" integrity="sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js" integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- fontawesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- font link -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+    <!-- font link end -->
+    <link rel="stylesheet" href="~/Content/visitor-panel/css/stylesheet.css">
+    <link href="~/Content/assets/MasterProfileAPI.css" rel="stylesheet" />
+    <script src="~/Scripts/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js" integrity="sha512-1/RvZTcCDEUjY/CypiMz+iqqtaoQfAITmNSJY17Myp4Ms5mdxPS5UV7iOfdZoxcGhzFbOm6sntTKJppjvuhg4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.1/animate.min.css">
+</head>
+<body class="instructor-details-template">
+    <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+    <input type="hidden" id="hiddenUserLoginId" value="@ViewBag.UserLoginId" />
+    <input type="hidden" id="hiddenInstructorUserLoginId" value="@ViewBag.InstructorUserLoginId" />
+    <!-- header -->
+    <header class="header">
+        <div class="page-center">
+            <div class="header-main">
+                <div class="logo" id="BindBusinessLogoDetail">
+                    @*<a href="index.html">
+                            <img src="~/Content/visitor-panel/image/LOGO.png" alt="logo" loading="lazy">
+                        </a>*@
+                </div>
+                <div class="nav-sec">
+                    <div class="menu">
+                        <ul>
+                            <li><a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.UserLoginId">Home</a></li>
+                            <li><a class="active_menu" href="/Home/MasterInstructors?businessOwnerLoginId=@ViewBag.UserLoginId">Instructor </a></li>
+                            <li><a href="/Home/MemberShip?businessOwnerLoginId=@ViewBag.UserLoginId">Membership</a></li>
+                            <li><a href="/Home/TimeTable?businessOwnerLoginId=@ViewBag.UserLoginId">Time Table</a></li>
+                            <li><a href="/Home/BusinessRoom?businessOwnerLoginId=@ViewBag.UserLoginId">Room</a></li>
+                            <li><a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.UserLoginId#contactsection">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div class="mobile_menu navmain-opener"><span></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- end header -->
+    <div class="instructor-detail-section">
+        <div class="page-center">
+            <div class="teacher-details-col">
+                <div class="teacher-details-col-lt">
+                    <div class="teacher-proile-img" id="BindSingleInstructorImageDetail">
+                        @*<img src="~/Content/visitor-panel/image/teacher-1.jpg" alt="profile" loading="lazy">*@
+                    </div>
+                </div>
+                <div class="teacher-details-col-rt">
+                    <div id="BindBusinessInstructorDetail">
+                        @*<div class="profile-name">
+                                <h2> Tanya Mey</h2>
+                                <p class="light-weight">Passion for Dance</p>
+                            </div>
+                            <div class="line-iner">
+                                <p> Classic Ballet</p>
+                            </div>
+                            <div class="des-iner">
+                                <p>
+                                    But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great.
+
+                                </p>
+                            </div>*@
+
+                        @*<div class="social-follow">
+                                               <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-facebook-f"></i>	</a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-twitter"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-instagram"></i></a>
+                            </div>
+                                    </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- schedule -->
+    <div class="schedule-section">
+        <div class="page-center">
+            <div class="schedule-section-flex">
+                <div class="schedule-left">
+                    <div class="heading" id="businessdetails">
+
+                    </div>
+                    <div class="small-slider">
+                        <div class="small-slider-items" id="classesimagedetails">
+
+                        </div>
+                    </div>
+                    <div class="body-content" id="intermediatedetails">
+
+                    </div>
+
+
+                    <div class="classes-section">
+                        <h2>Classes </h2>
+                        <div id="BindBusinessInstructorClassInformation"></div>
+
+                    </div>
+
+                </div>
+                <div class="schedule-right" id="BindBusinessClassesDetail">
+                    <div class="schedule-right-iner">
+                        <div class="wcs-day__date">
+
+                            @*<div class="wcs-day__wrapper">
+                                    26
+                                    <small>Fri</small>
+                                </div>*@
+                        </div>
+                        <div class="schedule-timimg" id="BindBusinessClassesDetail">
+                            @*<div class="wcs-class__duration color-primary"><span>1h</span></div>
+                                <div class="schedule-deatil-iner">
+                                    <div class="day-date"> SATURDAY, MAY 27, 2023</div>
+                                    <div class="title">Advanced Salsa — Alegrias</div>
+                                    <div class="timing">
+                                        <span>10:00  Am- 12:00 Pm</span>
+                                        <span class="location">Jose Oviedo, Viviana Lopez</span>
+                                    </div>
+                                </div>*@
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    <!-- gallery section -->
+    <!--<div id="gallery" class="container-fluid">-->
+    @*<img src="~/Content/visitor-panel/image/gallery01.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery02.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery03.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery04.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery05.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery01.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery02.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery03.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery04.jpg" class="img-responsive">
+        <img src="~/Content/visitor-panel/image/gallery05.jpg" class="img-responsive">*@
+    <!--</div>-->
+    <!-- footer -->
+    <footer class="footer">
+        <div class="page-center">
+            <div class="row-sec">
+                <div class="col-lg-one">
+                    <div id="BindBusinessContentAboutDetail">
+                        @*<div class="footer-logo">
+
+                                <a href="index.html">
+                                    <img src="~/Content/visitor-panel/image/LOGO.png" alt="logo" loading="lazy">
+                                </a>
+                                <div class="logo-title">
+                                    <h6>NrityamRuchi Academy Of Performing Arts </h6>
+                                </div>
+                            </div>
+
+                            <p class="small">Vestibulum in ultrices justo. Praesent placerat justo metus, vitae malesuada lacus eleifend vel. Vivamus viverra volutpat leo, a gravida dolor posuere congue.</p>*@
+                    </div>
+                    <div id="BindBusinessSocailContactDetail">
+                        <!--<div class="footer-social">-->
+                        @*<div class="social-icon">
+                                <a href=""><i class="fa-brands fa-facebook-f"></i>	</a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-twitter"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-instagram"></i></a>
+                            </div>*@
+                        <!--</div>-->
+                    </div>
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">Quick Links</h5>
+                        <ul>
+                            <li>
+                                <a href="#">Home</a>
+                            </li>
+                            <li>
+                                <a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#BindBusinessAboutDetail">About Us</a>
+                            </li>
+
+                            <li>
+                                <a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#eventsection">Event</a>
+                            </li>
+                            <li>
+                                <a href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId#contactsection">Contact Us</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">
+                            Useful Links
+
+                        </h5>
+                        <ul>
+                            <li>
+                                <a href="#">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="#">Terms and Conditions</a>
+                            </li>
+
+                            <li>
+                                <a href="#">Support</a>
+                            </li>
+                            <li>
+                                <a href="#">Faq</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+                <div class="col-lg-two" id="BindContactInfomation">
+                    @*<h5>Contact Us</h5>
+                        <p>
+                            178 West 27th Street, Suite 527, New York NY 10012 United States
+                        </p>
+                        <a href="tel:1234567890">1234567890</a>
+                        <a href="mailto:company@yourname.com">company@yourname.com</a>*@
+                </div>
+
+            </div>
+        </div>
+    </footer>
+    <!-- copyright section -->
+    <div class="copyrights border-top pt-3" style="background-color: #f3a762;">
+        <div class="page-center">
+            <div class="row">
+
+                <div class="col-sm-12 col-md-6">
+                    <strong class="d-flex copyrights-text " style="white-space: nowrap;">
+                        <p class="text-white"> Copyright © 2023</p> <a class="copyright-company-name mr-2 ml-2" href="index.html"> Master Zone.</a>
+                        <p class="text-white">All rights reserved.</p>
+                    </strong>
+
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="float-md-right d-sm-inline-block">
+                        <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                            <p class="text-white text-center" id="footer-text" style="color: #869099;
+                          font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
+<script>
+
+    $('.schedule-section .schedule-section-flex .small-slider-items .img-slider').slick({
+        dots: true,
+        infinite: false,
+        arrows: false,
+        speed: 300,
+        slidesToShow: 1,
+        slidesToScroll: 1
+
+    });
+    // gallery
+    $(document).ready(function () {
+        $("img").click(function () {
+            var t = $(this).attr("src");
+            $(".modal-body").html("<img src='" + t + "' class='modal-img'>");
+            $("#myModal").modal();
+        });
+
+        $("video").click(function () {
+            var v = $("video > source");
+            var t = v.attr("src");
+            $(".modal-body").html("<video class='model-vid' controls><source src='" + t + "' type='video/mp4'></source></video>");
+            $("#myModal").modal();
+        });
+    });//EOF Document.ready
+</script>
+<script src="/Scripts/js/loader.js"></script>
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+@Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_MasterInstructorDetailScriptPartial.cshtml")

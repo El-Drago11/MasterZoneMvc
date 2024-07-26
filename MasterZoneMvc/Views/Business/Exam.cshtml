@@ -1,0 +1,294 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Exam";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            /* margin: 5px 0px;
+            padding: 5px;*/
+        }
+
+        #sectionAddExamForm input {
+            margin-bottom: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #f3a762;
+            border-radius: 5px;
+        }
+
+        .ql-toolbar.ql-snow {
+            border: 1px solid #f3a762;
+            border-radius: 5px 5px 0px 0px;
+        }
+
+        .ql-editor.ql-blank, div#ImportantInstruction_ExamForm {
+            border: 1px solid #f3a762;
+            border-radius: 0px 0px 5px 5px;
+        }
+
+        textarea#NameWithAddress_ExamForm {
+            border: 1px solid #f3a762;
+            border-radius: 5px;
+        }
+    </style>
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Exam</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Exam">Exam</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> List</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageExams_AddExam"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddExamForm">Add Exam Form</a>
+                        </div>
+
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewExamFrom">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblExamForms" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Title</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Logo</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddExamForm" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Exam Form</h5>
+
+                            @*BusinessId, BusinessMasterId and CenterNo*@
+                            <div class="row">
+                                <div class="col-4">
+                                    <label for="BusinessId">Business-ID</label>
+                                    <input type="text" id="BusinessId" class="form-control" />
+                                    <div class="error-class" id="error_BusinessId"></div>
+                                </div>
+                                <div class="col-4">
+                                    <label for="BusinessMasterId">Business MasterId</label>
+                                    <input id="BusinessMasterId" class="form-control" />
+                                    <div class="error-class" id="error_BusinessMasterId"></div>
+                                </div>
+                                <div class="col-4">
+                                    <label for="CenterNo">Center No</label>
+                                    <input type="text" id="CenterNo" class="form-control" />
+                                    <div class="error-class" id="error_CenterNo"></div>
+                                </div>
+                            </div>
+
+                            @*ESTD and Exam session*@
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="txtExamFromTitle">Form Title</label>
+                                    <input type="text" id="txtExamFromTitle" class="form-control" />
+                                    <div class="error-class" id="error_txtExamFromTitle"></div>
+
+                                </div>
+                                <div class="col-6">
+                                    <label for="EstablishedYear_ExamForm">Established Year </label>
+                                    <input type="text" id="EstablishedYear_ExamForm" class="form-control" />
+
+                                    <div class="error-class" id="error_EstablishedYear_ExamForm"></div>
+
+                                </div>
+                            </div>
+
+                            @*Logo and NameWithAddress*@
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="BusinessLogo_ExamForm">Logo</label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="imagePreview d-flex align-items-center">
+                                            <img id="previewBusinessLogo_ExamForm" class="d-none" style="width:100%; height:100%;">
+                                        </div>
+                                        <input type="file" id="BusinessLogo_ExamForm" class="form-control ml-3" accept="image/*" />
+                                    </div>
+                                    <div class="error-class" id="error_BusinessLogo_ExamForm"></div>
+                                </div>
+                                <div class=" col-6">
+                                    <div class="col-12 p-0">
+                                        <label for="NameWithAddress_ExamForm">Full Name With Address </label>
+                                        <textarea id="NameWithAddress_ExamForm" class="form-control p-3" /></textarea>
+                                        <div class="error-class" id="error_NameWithAddress_ExamForm"></div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            @*Start Date and End Date*@
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="StartDate_ExamForm">Start Date</label>
+                                    <input type="date" id="StartDate_ExamForm" class="form-control" />
+                                    <div class="error-class" id="error_StartDate_ExamForm"></div>
+
+                                </div>
+
+                                <div class="col-6">
+                                    <label for="EndDate_ExamForm">End Date</label>
+                                    <input type="date" id="EndDate_ExamForm" class="form-control" />
+                                    <div class="error-class" id="error_EndDate_ExamForm"></div>
+                                </div>
+                            </div>
+
+                            @*SecretaryNumber and RegistrarNumber*@
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="SecretaryNumber_ExamForm">Secretary Number</label>
+                                    <input type="text" id="SecretaryNumber_ExamForm" class="form-control" />
+                                    <div class="error-class" id="error_SecretaryNumber_ExamForm"></div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="RegistrarNumber_ExamForm">Registrar Office</label>
+                                    <input type="text" id="RegistrarNumber_ExamForm" class="form-control" />
+                                    <div class="error-class" id="error_RegistrarNumber_ExamForm"></div>
+                                </div>
+                            </div>
+
+                            @*Email And WebsiteLink*@
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="Email_ExamForm">Email</label>
+                                    <input type="text" id="Email_ExamForm" class="form-control" />
+                                    <div class="error-class" id="error_Email_ExamForm"></div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="WebsiteLink_ExamForm">Website Link</label>
+                                    <input type="text" id="WebsiteLink_ExamForm" class="form-control" />
+                                    <div class="error-class" id="error_WebsiteLink_ExamForm"></div>
+                                </div>
+                            </div>
+
+                            @*ImportantInstruction*@
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="ImportantInstruction_ExamForm">Imortant Instruction</label>
+                                    <div class="html-editor" id="ImportantInstruction_ExamForm" style="height:auto"></div>
+                                    <div class="error-class" id="error_ImportantInstruction_ExamForm"></div>
+
+                                </div>
+
+                            </div>
+
+                            @*status*@
+                            <div class="row">
+                                <div class="d-flex flex-column">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="chkIsActive_ManageExam" checked="">
+                                        <label class="form-check-label" for="chkIsActive_ManageExam" style="cursor:pointer;">Is Active</label>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitExamForm()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddUpdateExamForm()">Cancel</a>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+
+@section Scripts{
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+    <script>
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAbout = new Quill('#ImportantInstruction_ExamForm', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+
+
+    </script>
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ExamScriptPartial.cshtml")
+}

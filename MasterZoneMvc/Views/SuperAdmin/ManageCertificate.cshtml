@@ -1,0 +1,327 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+    ViewData["Title"] = "Manage Certificate";
+}
+
+@section Styles{
+
+    <style>
+        .certificateIcon {
+            width: 53px;
+            height: 53px;
+        }
+
+        .certificateIconPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .business-logo {
+            height: 50px;
+            width: 50px;
+            object-fit: contain
+        }
+    </style>
+}
+
+
+
+<div id="AllCertificate">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 id="ManagePageTextCertificate">Manage Certificate</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active" id="pageTextchange">Manage Certificate</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12" id="ViewDetailForCertificate">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title" id="pageStageChange">View Certificate</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <button id="AddCertificate" type="submit" class="btn btn-primary">
+                                                &plus; Add Certificate
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <span class="text-muted font-weight-bold">@Resources.SuperAdminPanel.HomePageVisibilityDefination</span>
+                                        </div>
+                                    </div>
+
+                                    <table id="ViewCertificateForSuperAdmin" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>HPV</th>
+                                                <th>Certificate Icon</th>
+                                                <th>Name</th>
+                                                <th>Profile Page</th>
+                                                <th>Short Description</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>S.No</th>
+                                                <th>HPV</th>
+                                                <th>Certificate Icon</th>
+                                                <th>Name</th>
+                                                <th>Profile Page</th>
+                                                <th>Short Description</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+
+
+            <section class="content" id="CertificateAdd" style="display: none;">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Default box -->
+                            <div class="card card-default">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-9 d-flex align-items-center">
+                                            <h3 class="card-title" id="ChangePageTextForEdit">Add Certificate</h3>
+                                        </div>
+                                        <div class="col-sm-3 d-flex justify-content-end">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="resetAddUpdateCertificateForm();">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <form>
+                                        <div class="row">
+                                            <div class="col-md-6 ">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label> Name<span class="text-danger"></span></label>
+                                                    <input type="text" id="txtCertificateName_ManageCertificates" class="border form-control">
+                                                    <div class="error-class" id="error_txtCertificateName_ManageCertificates"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="profilePageTypeId">Profile Type</label>
+                                                    <select id="profilePageTypeId" class="form-control select2">
+                                                        <option value="0">Select</option>
+                                                    </select>
+                                                    <div class="error-class" id="error_profilePageTypeId"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Short Description<span class="text-danger"></span></label>
+                                                    <textarea name="description" class="form-control" rows="5" id="certificate_description"></textarea>
+                                                    <div class="error-class" id="error_certificate_description"></div>
+                                                </div>
+                                                <!-- /.form-group -->
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="certificateType">Certificate Type</label>
+                                                    <select id="certificateType" class="form-control select2">
+                                                        <option value="0">Select</option>
+                                                    </select>
+                                                    <div class="error-class" id="error_certificateType"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Certificate Icon<span class="text-danger"></span></label>
+                                                    <div class="certificateIconPreview">
+                                                        <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                                    </div>
+                                                    <input type="file" id="fileCertifcateImage_ManageCertificate" class="border form-control" accept="image/*">
+                                                    <div class="error-class" id="error_fileCertificateImage_ManageCertificate"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group d-flex flex-column">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="chkIsActive">
+                                                        <label class="form-check-label" for="chkIsActive" style="cursor:pointer;">Is Active</label>
+                                                    </div>
+                                                </div>
+                                                <!-- /.form-group -->
+                                            </div>
+                                            <div class="col-md-6 ">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Link (Optional)<span class="text-danger"></span></label>
+                                                    <input type="text" id="txtCertificateLink_ManageCertificates" class="border form-control">
+                                                    <div class="error-class" id="error_txtCertificateLink_ManageCertificates"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @*<div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group d-flex flex-column">
+                                                        <label>Additional Information</label>
+                                                        <div class="html-editor form-control" id="Additional_Information" style="height: 163px;"></div>
+                                                        <div class="error-class" id="error_Additional_Information"></div>
+                                                    </div>
+                                                </div>
+                                            </div>*@
+                                    </form>
+                                    <!-- /.row -->
+
+                                </div>
+
+                                <div class="card-footer">
+                                    <button type="button" id="pageTextchangeSave" class="btn btn-primary" onclick="AddUpdate_ManageCertificate();">Save</button>
+                                    <button type="button" class="btn btn-danger" onclick="resetAddUpdateCertificateForm()">Cancel</button>
+                                </div>
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                    </div>
+
+                    <div class="row d-none" id="AssignedBusinessOwnerSection">
+                        <div class="col-sm-12">
+                            <!-- Default box -->
+                            <div class="card card-default">
+                                <div class="card-header">
+                                    <h3 class="card-title">Assigned Business Owners</h3>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body" style="max-height:350px; overflow-y:scroll;">
+                                    <div class="row">
+                                        <div id="assignedBusinessData" class="col-sm-12">
+                                            <table class="table table-bordered table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>S.No</th>
+                                                        <th>MasterID</th>
+                                                        <th>Business Name</th>
+                                                        <th>Owner</th>
+                                                        <th>Category</th>
+                                                        <th>Sub-Category</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer">
+                                </div>
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                    </div>
+
+                    <div class="row d-none" id="AssignCertificateProfileSection">
+                        <div class="col-sm-12">
+                            <!-- Default box -->
+                            <div class="card card-default">
+                                <div class="card-header">
+                                    <h3 class="card-title">Assign Certification Profile</h3>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 ">
+                                            <div class="form-group d-flex flex-column">
+                                                @*<label>Search<span class="text-danger"></span></label>*@
+                                                <input type="search" id="txtSearchBusiness" class="border form-control" placeholder="Search...">
+                                                <div class="error-class" id="error_txtSearchBusiness"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <button type="button" id="btnSearchBusiness" class="btn btn-success" onclick="getBusinessOnwersBySearch();">Search</button>
+                                            <button type="button" id="btnClearBusinessCertificate" class="btn btn-default" onclick="resetAssignCertificateSection();">Clear</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div id="searchedBusinessOwnersList" class="row w-100"></div>
+                                        <div class="col-sm-12 text-center"><a id="btnSearchBusinessShowMore" class="btn btn-outline-primary d-none" href="javascript:getBusinessOnwersBySearch(false)">Show More</a></div>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer">
+                                </div>
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <!-- Select2 -->
+    <script src="/Content/superadmin-panel/plugins/select2/js/select2.full.min.js"></script>
+    <script src="~/Scripts/js/Validation.js"></script>
+
+    <script>
+        $(function () {
+            $('.select2').select2();
+        });
+    </script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageCertificateScriptPartial.cshtml")
+}
+
+

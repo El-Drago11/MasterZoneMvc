@@ -1,0 +1,1539 @@
+﻿
+@{
+    ViewBag.Title = "OtherProfile";
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+}
+<style>
+
+    .btnViewMoreUpcomingImages {
+        display: none !important;
+    }
+
+    .btnViewMoreUpcomingVideos {
+        display: none !important;
+    }
+
+    .btnViewMoreUpcomingDetail {
+        display: none !important;
+    }
+
+    .header.header {
+        background: #f3a762;
+        border-bottom: 1px solid #ffffff85;
+    }
+
+    footer#footer {
+        display: none;
+    }
+
+    .copyright_sec {
+        color: white;
+    }
+    @@media(max-width: 800px) {
+
+        #section-yoga-8 .slick-slide {
+            min-width: auto;
+        }
+
+        div#contact {
+            margin-top: 456px;
+        }
+
+        .contact-section .address-sec {
+            padding: 20px 7px;
+        }
+
+        #BindBusinessAllImageAndVideos .img-inr {
+            margin-top: 20px;
+        }
+
+        #BindBusinessImages .img-inr {
+            margin-top: 20px;
+        }
+
+        #BindBusinessVideos .img-inr {
+            margin-top: 20px;
+        }
+        .address-text > * {
+            font-size: 18px;
+        }
+        #BindBusinessPersonalInformation .deatil-inr {
+            display: grid;
+            grid-template-columns: repeat(1,1fr);
+        }
+    }
+    #BindBusinessAllImageAndVideos .img-inr {
+        margin-left: 20px;
+        margin-top: 20px;
+    }
+
+    #BindBusinessImages .img-inr {
+        margin-left: 20px;
+        margin-top: 20px;
+    }
+
+    #BindBusinessVideos .img-inr {
+        margin-left: 20px;
+        margin-top: 20px;
+    }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js" integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- fontawesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css" integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="~/Content/visitor-panel/othersProfile/Profile section/css/stylesheet.css">
+    <link href="~/Content/assets/frontend_common.css" rel="stylesheet" />
+    <script src="~/Content/visitor-panel/othersProfile/Profile section/js/mainjs.js"></script>
+    <!-- isotop filter -->
+    <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
+    <!-- calendar cdn -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link href="https://maxcdn.icons8.com/fonts/line-awesome/1.1/css/line-awesome-font-awesome.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/css/datepicker.css">
+    <!-- js link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/js/datepicker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/js/i18n/datepicker.en.js"></script>
+    <script src="https://unpkg.com/tooltip.js/dist/umd/tooltip.min.js"></script>
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js" integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+</head>
+<body>
+    <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+
+    <div class="profile-section">
+        <div class="page-center">
+            <div class="column-section">
+                <div class="left-col">
+                    <div class="left-col-inr" id="BindBusinessUserDetail">
+                        @*<div class="img-profile">
+                                <p class="id-text">Id :<span>534567</span></p>
+                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/profile.jpg" alt="profile-img">
+
+                            </div>
+                            <div class="profile-name">
+
+                                <h3>Master</h3>
+                                <p>Creative Designer</p>
+                            </div>
+                            <div class="social-follow">
+                                <div class="social-icon">
+                                    <a href=""><i class="fa-brands fa-facebook-f"></i>	</a>
+                                </div>
+                                <div class="social-icon">
+                                    <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                                </div>
+                                <div class="social-icon">
+                                    <a href=""><i class="fa-brands fa-twitter"></i></a>
+                                </div>
+                                <div class="social-icon">
+                                    <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                                </div>
+                            </div>
+                            <div class="cta-inr">
+                                <a class="download-cta" href="">Share CV</a>
+                            </div>*@
+                    </div>
+
+
+                    <div class="top-bar side-nav mt-5">
+                        <ul class="tabs">
+
+                            <li>
+                                <a href="#about_me" id="BindAbout_Section_Detail"> About Me </a>
+                            </li>
+                            @*<li>
+                                    <a href="#resume"> Resume </a>
+                                </li>*@
+                            <li>
+                                <a href="#working_now" id="BindWorkingDetail_Section"> Working Now </a>
+                            </li>
+                            @*<li>
+                                    <a href="#certificates"> Certificates </a>
+                                </li>*@
+                            <li>
+                                <a href="#portfolio" id="BindAllImageVideoDetail_Section">
+                                    Portfolio
+                                </a>
+                            </li>
+                            @*<li>
+                                    <a href="#experience">
+                                        Experience
+                                    </a>
+                                </li>*@
+                            <li>
+
+                                <a href="#review" id="bindbusinessreview_section">
+                                    Review
+                                </a>
+                            </li>
+                            @*<li>
+                                    <a href="#education">
+                                        Education
+                                    </a>
+                                </li>*@
+                            <li>
+                                <a href="#client" id="clientsponsor_section">
+                                    Sponsor
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#intersts" id="businessservice_section">
+                                    Services
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#section-yoga-8" id="planpackage_section">
+                                    Plans
+                                </a>
+
+                            </li>
+                            <li>
+                                <a href="#classes01" id="bindclass_section"> Classes</a>
+                            </li>
+
+
+                            <li>
+
+                                <a href="#events" id="bindevent_section">
+                                    Events
+                                </a>
+                            </li>
+                            <li data-tab="#contact" id="bindcontact_section">
+                                <a href="#contact">
+                                    Contact
+                                </a>
+                            </li>
+
+                        </ul>
+
+
+
+                    </div>
+
+                </div>
+
+                <div class="right-col">
+                    <div class="right-col-inr">
+
+                        <div class="tabbing-section" id="about_me">
+                            <!-- client profile -->
+                            <div class="profile-deatils" id="BindBusinessProfileDetail">
+                                @*<div class="image-pro">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/profile.jpg" alt="profile-img">
+                                    </div>
+                                    <div class="des">
+                                        <p>Web Designer</p>
+                                        <h2>HELLO, I’M MASTER!</h2>
+                                        <p>
+                                            I am a talanted Freelance Graphic Designer and Illustrator.
+                                            I design websites, logos, brochures, banners, book covers,
+                                            and everything related to design and inspiration.
+                                            I have graduated from International University of Design.
+                                            Some of my works featured on international exhibition of design.
+                                        </p>
+
+                                        <div class="located">
+                                            <div class="id-text">
+                                                <p> ID:<span>534567</span></p>
+                                            </div>
+                                            <h5>Location </h5>
+                                            <div class="location">
+                                                <p>Amritsar</p>
+                                                <p>Punjab</p>
+                                                <p>Delhi</p>
+                                            </div>
+                                        </div>
+                                    </div>*@
+
+                            </div>
+                            <div class="personal-information">
+
+                                <div class="personal-col">
+                                    <div class="personal-left" id="BindBusinessPersonalInformation">
+                                        @*<h2> personal information</h2>
+                                            <div class="deatil-inr">
+                                                <div class="title">
+                                                    <h6>FULL NAME</h6>
+                                                </div>
+                                                <div class="deatils">
+                                                    <p>Master</p>
+                                                </div>
+                                            </div>
+                                            <div class="deatil-inr">
+                                                <div class="title">
+                                                    <h6>D.O.B. </h6>
+                                                </div>
+                                                <div class="deatils">
+                                                    <p>05 Sep 1986</p>
+                                                </div>
+                                            </div>
+                                            <div class="deatil-inr">
+                                                <div class="title">
+                                                    <h6>
+                                                        ADDRESS
+                                                    </h6>
+                                                </div>
+                                                <div class="deatils">
+                                                    <p>24058, Belgium, Brussels, Liutte 27, BE</p>
+                                                </div>
+                                            </div>
+                                            <div class="deatil-inr">
+                                                <div class="title">
+                                                    <h6>
+                                                        E-MAIL
+                                                    </h6>
+                                                </div>
+                                                <div class="deatils">
+                                                    <p>support@px-lab.com</p>
+                                                </div>
+                                            </div>
+                                            <div class="deatil-inr">
+                                                <div class="title">
+                                                    <h6>
+                                                        PHONE
+                                                    </h6>
+                                                </div>
+                                                <div class="deatils">
+                                                    <p>
+                                                        +1 256 254 84 56
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="deatil-inr">
+                                                <div class="title">
+                                                    <h6>
+                                                        FREELANCE
+
+                                                    </h6>
+                                                </div>
+                                                <div class="deatils">
+                                                    <p>Available </p>
+                                                </div>
+                                            </div>*@
+                                    </div>
+                                    <div class="right-left" >
+                                        <h2><strong>languages</strong></h2>
+                                        <div id="BusinessLanguageBind">
+
+
+                                        </div>
+                                        @*<h2>languages</h2>
+                                            <div class="progress-bullets crt-animated">
+                                                <strong class="progress-title">English</strong>
+                                            </div>
+                                            <div class="progress-bullets crt-animated">
+                                                <strong class="progress-title">Punjabi</strong>
+                                            </div>
+                                            <div class="progress-bullets crt-animated">
+                                                <strong class="progress-title">Italian</strong>
+                                            </div>
+                                            <div class="progress-bullets crt-animated">
+                                                <strong class="progress-title"></strong>
+                                            </div>
+                                            <div class="progress-bullets crt-animated">
+                                                <strong class="progress-title"> Chinese</strong>
+                                            </div>
+                                            <div class="progress-bullets crt-animated">
+                                                <strong class="progress-title"> Spanish</strong>
+                                            </div>*@
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="resume" style="border-bottom: 1px solid #eee; padding-bottom:30px;" class="mb-4">
+                            <h2 class="resume-title">Resume</h2>
+                            <div class="resume">
+                                <div class="education-col">
+                                    <h2 class="skill-title">Education</h2>
+                                    <div class="container" id="OtherProfileEducationDetails">
+                                        @*<div class="timeline">
+                                                <div class="rt-col">
+                                                    <h5 class="item-period">2008</h5>
+                                                    <span class="item-company">University of Studies</span>
+                                                </div>
+
+                                                <div class="divder">
+                                                </div>
+                                                <div class="lt-col">
+                                                    <div class="title">Frontend Development </div>
+                                                    <p>
+                                                        Maecenas finibus nec sem ut imperdiet. Ut tincidunt est ac dolor aliquam sodales.
+                                                        Phasellus sed mauris hendrerit, laoreet sem in, lobortis ante.
+                                                    </p>
+                                                </div>
+
+                                            </div>
+                                            <div class="timeline">
+                                                <div class="rt-col">
+
+                                                    <h5 class="item-period">2007</h5>
+                                                    <span class="item-company">University of Studies</span>
+                                                </div>
+
+                                                <div class="divder">
+                                                </div>
+                                                <div class="lt-col">
+                                                    <div class="title">Graphic Design </div>
+                                                    <p>
+                                                        Aliquam tincidunt malesuada tortor vitae iaculis. In eu turpis iaculis,
+                                                        feugiat risus quis, aliquet urna. Quisque fringilla mollis risus,
+                                                        eu pulvinar dolor.
+
+                                                    </p>
+                                                </div>
+
+                                            </div>*@
+
+
+                                        @*<div class="timeline">
+                                                <div class="rt-col">
+                                                    <h5 class="item-period">2016 <br>Current</h5>
+                                                    <span class="item-company">
+                                                        Envato
+                                                    </span>
+                                                </div>
+
+                                                <div class="divder">
+                                                </div>
+                                                <div class="lt-col">
+                                                    <div class="title">
+                                                        Lead Ui/Ux Designer
+                                                    </div>
+                                                    <p>
+                                                        Praesent dignissim sollicitudin justo, sed elementum quam lacinia quis.
+                                                        Phasellus eleifend tristique posuere. Sed vitae dui nec magna.
+
+
+                                                    </p>
+                                                </div>
+
+                                            </div>
+                                            <div class="timeline">
+                                                <div class="rt-col">
+
+                                                    <h5 class="item-period">2013 - 2016</h5>
+                                                    <span class="item-company">Envato</span>
+                                                </div>
+
+                                                <div class="divder">
+                                                </div>
+                                                <div class="lt-col">
+                                                    <div class="title">
+                                                        Senior Ui/Ux Designer
+                                                    </div>
+                                                    <p>
+                                                        Maecenas tempus faucibus rutrum. Duis eu aliquam urna. Proin vitae nulla tristique,
+                                                        ornare felis id, congue libero. Nam volutpat euismod quam.
+                                                    </p>
+                                                </div>
+
+                                            </div>
+                                            <div class="timeline">
+                                                <div class="rt-col">
+
+                                                    <h5 class="item-period">
+                                                        2011 - 2013
+                                                    </h5>
+                                                    <span class="item-company">Envato</span>
+                                                </div>
+
+                                                <div class="divder">
+                                                </div>
+                                                <div class="lt-col">
+                                                    <div class="title">
+                                                        Junior Ui/Ux Designer
+
+                                                    </div>
+                                                    <p>
+                                                        Duis mollis nunc quis quam viverra venenatis. Nulla nulla arcu, congue vitae nunc ac,
+                                                        sodales ultricies diam.
+                                                        Nullam justo leo, tincidunt sit amet.
+                                                    </p>
+                                                </div>
+
+                                            </div>*@
+
+                                    </div>
+                                </div>
+                                <div class="education-col">
+                                    <h2 class="skill-title">Experience</h2>
+                                    <div id="OtherExperienceDetails" class="container">
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <div class="elementor-widget-container">
+                            <h2 class="skill-title">Design Skills</h2>
+                            <ul class="knowledges" id="BindBusinessUserSkillsDetail">
+                            </ul>
+                        </div>
+
+
+                        <!-- working now -->
+                        <div class="certificates-section" id="working_now">
+                            <h2>Currently Working</h2>
+                            <div class="certi-main" id="BindBusinessCurrentlyWorkingDetaillst">
+                                @*<div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>*@
+                            </div>
+                        </div>
+
+
+                        @*<div class="certificates-section" id="certificates">
+                                <h2>Certificates</h2>
+                                <div class="certi-main">
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                    <div class="certi-inr">
+                                        <img src="~/Content/visitor-panel/othersProfile/Profile section/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                        <p>Master Zone</p>
+                                    </div>
+                                </div>
+                            </div>*@
+                        <!-- portfilio -->
+                        <div class="tabbing-section" id="portfolio">
+                            <div class="filter-sec">
+                                <h2>Portfolio</h2>
+                                <ul class="tabs-main">
+                                    <li data-tab="#all">
+                                        All
+                                    </li>
+
+                                    <li data-tab="#interior">
+                                        Images
+                                    </li>
+                                    <li data-tab="#video">
+                                        Videos
+                                    </li>
+
+                                </ul>
+                                <div class="port-tab">
+                                    <div class="port-tabbing" id="all">
+                                        <div class="img-main" id="BindBusinessAllImageAndVideos">
+                                            @*<div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio01.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio05.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio04.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_bench.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <video width="320" height="240" controls>
+                                                        <source src="~/Content/visitor-panel/othersProfile/Profile section/video/video-dummy.mp4" type="video/mp4">
+                                                    </video>
+                                                </div>
+
+                                                <div class="img-inr">
+                                                    <video width="320" height="240" controls>
+                                                        <source src="~/Content/visitor-panel/othersProfile/Profile section/video/video-dummy.mp4" type="video/mp4">
+                                                    </video>
+                                                </div>*@
+                                        </div>
+                                        <div class="btn-outtrkjkd text-center mb-5" style="margin-top: 12px;">
+                                            <a href="javascript:ViewMoreUpcomingDetail();" id="BtnViewMoreUpcomingDetail"
+                                               class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                                                View More
+                                            </a>
+                                        </div>
+                                    </div>
+                                    @*<div class="port-tabbing" id="art">
+                                            <div class="img-main">
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio01.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio.jpg">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="port-tabbing" id="decor">
+                                            <div class="img-main">
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio05.jpg">
+                                                </div>
+                                            </div>
+                                        </div>*@
+                                    <div class="port-tabbing" id="interior">
+                                        <div class="img-main" id="BindBusinessImages">
+                                            @*<div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_Porfolio04.jpg">
+                                                </div>
+                                                <div class="img-inr">
+                                                    <img src="~/Content/visitor-panel/othersProfile/Profile section/image/Certy_bench.jpg">
+                                                </div>*@
+                                        </div>
+                                        <div class="btn-outtrkjkd text-center mb-5">
+                                            <a href="javascript:ViewMoreUpcomingImages();" id="BtnViewMoreUpcomingImages"
+                                               class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                                                View More
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="port-tabbing" id="video">
+                                        <div class="img-main" id="BindBusinessVideos">
+                                            @*<div class="img-inr">
+                                                    <video width="320" height="240" controls>
+                                                        <source src="~/Content/visitor-panel/othersProfile/Profile section/video/video-dummy.mp4" type="video/mp4">
+                                                    </video>
+                                                </div>
+
+                                                <div class="img-inr">
+                                                    <video width="320" height="240" controls>
+                                                        <source src="~/Content/visitor-panel/othersProfile/Profile section/video/video-dummy.mp4" type="video/mp4">
+                                                    </video>
+                                                </div>*@
+
+                                        </div>
+                                        <div class="btn-outtrkjkd text-center mb-5 ">
+                                            <a href="javascript:ViewMoreUpcomingVideo();" id="BtnViewMoreUpcomingVideo"
+                                               class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                                                View
+                                                More
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- experince start -->
+                        <!--<div class="tabbing-section" id="experience">
+
+                            <div class="experince-section">
+                                <div class="exp-title">
+                                    <h2>WORK EXPERIENCE</h2>
+                                </div>
+                                <div class="container">
+                                    <div class="timeline">
+                                        <div class="rt-col">
+                                            <span class="education-date">
+                                                <span>2014 - 2017</span>
+                                            </span>
+                                        </div>
+
+                                        <div class="divder">
+                                        </div>
+                                        <div class="lt-col">
+                                            <div class="title">Creative Designer </div>
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-themeforest.png" alt="img" loading="lazy">
+                                            <span class="education-company">Noemi Productions LTD</span>
+                                            <p>
+                                                Your brand is the core of your marketing, the central theme around your products and services.
+                                                Your brand is not your Logo or your Company Name
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                    <div class="timeline">
+                                        <div class="rt-col">
+                                            <span class="education-date">
+                                                <span>2011 - 2014</span>
+                                            </span>
+                                        </div>
+
+                                        <div class="divder">
+                                        </div>
+                                        <div class="lt-col">
+                                            <div class="title">Designer </div>
+
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-envato.png" alt="img" loading="lazy">
+                                            <span class="education-company">Loft Studio</span>
+                                            <p>
+                                                Your brand is the core of your marketing,
+                                                the central theme around your products and services.
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                    <div class="timeline">
+                                        <div class="rt-col">
+                                            <span class="education-date">
+                                                <span>2008 - 2011</span>
+                                            </span>
+                                        </div>
+
+                                        <div class="divder">
+                                        </div>
+                                        <div class="lt-col">
+                                            <div class="title">Junior Designer </div>
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-audio-jungle.png" alt="img" loading="lazy">
+
+                                            <span class="education-company">Boombox Group</span>
+                                            <p>
+                                                Your brand is the core of your marketing,
+                                                the central theme around your products and services.
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>-->
+                        <!-- end experience -->
+                        <!-- EDUCATION section start -->
+                        <!--<div class="tabbing-section" id="education">
+                            <div class="experince-section">
+                                <div class="exp-title">
+                                    <h2>EDUCATION</h2>
+                                </div>
+                                <div class="container education">
+                                    <div class="timeline">
+                                        <div class="rt-col">
+                                            <span class="education-date">
+                                                <span>2006 - 2008</span>
+                                            </span>
+                                        </div>
+
+                                        <div class="divder">
+                                        </div>
+                                        <div class="lt-col">
+                                            <div class="title">Design University</div>
+                                            <span class="education-company">MA in design</span>
+                                        </div>
+
+                                    </div>
+                                    <div class="timeline ">
+                                        <div class="rt-col">
+                                            <span class="education-date">
+                                                <span>2002 - 2006</span>
+                                            </span>
+                                        </div>
+
+                                        <div class="divder">
+                                        </div>
+                                        <div class="lt-col">
+                                            <div class="title">School of Creative Design</div>
+                                            <span class="education-company">BA in design</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>-->
+                        <!-- end EDUCATION -->
+                        <!-- reference section -->
+                        <div class="tabbing-section" id="review">
+                            <div class="reference-section">
+                                <h2> Review</h2>
+                                <a href="/Home/Review?userLoginId=@ViewBag.BusinessOwnerLoginId" class="btn btn-primary">Review</a>
+                                <div class="reference-inr" id="BusinessReviewDetail">
+                                    @*<div class="image-text">
+                                            <div class="reference-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/tourguide.jpg" alt="img">
+                                            </div>
+                                            <div class="description">
+                                                <h5> EDWIN BALLARD</h5>
+                                                <div class="str-str">
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                </div>
+
+                                                <div class="des-inr">
+                                                    <p>
+                                                        Lorem ipsum dolor sit amet,
+                                                        consectetur adipisicing elit.
+                                                        Maxime deleniti eligendi accusantium dicta, odio modi,
+                                                        quisquam enim perspiciatis impedit aliquid, adipisci eos!
+                                                        Temporibus doloribus sed porro laborum hic dolor, libero quaerat atque asperiores dolorum recusandae commodi facere odit repudiandae dolores non nesciunt dicta modi esse aliquam fuga perferendis illo quidem.
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                            <div class="date-inr">
+                                                17 Jan, 2023
+                                            </div>
+                                        </div>
+                                        <div class="image-text">
+                                            <div class="reference-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/tourguide.jpg" alt="img">
+                                            </div>
+                                            <div class="description">
+                                                <h5>Robert</h5>
+                                                <div class="str-str">
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                </div>
+
+                                                <div class="des-inr">
+                                                    <p>
+                                                        Lorem ipsum dolor sit amet,
+                                                        consectetur adipisicing elit.
+                                                        Maxime deleniti eligendi accusantium dicta, odio modi,
+                                                        quisquam enim perspiciatis impedit aliquid, adipisci eos!
+                                                        Temporibus doloribus sed porro laborum hic dolor, libero quaerat atque asperiores dolorum recusandae commodi facere odit repudiandae dolores non nesciunt dicta modi esse aliquam fuga perferendis illo quidem.
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                            <div class="date-inr">
+                                                17 Jan, 2023
+                                            </div>
+                                        </div>
+                                        <div class="image-text">
+                                            <div class="reference-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/tourguide.jpg" alt="img">
+                                            </div>
+                                            <div class="description">
+                                                <h5>Oliver</h5>
+                                                <div class="str-str">
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                </div>
+
+                                                <div class="des-inr">
+                                                    <p>
+                                                        Lorem ipsum dolor sit amet,
+                                                        consectetur adipisicing elit.
+                                                        Maxime deleniti eligendi accusantium dicta, odio modi,
+                                                        quisquam enim perspiciatis impedit aliquid, adipisci eos!
+                                                        Temporibus doloribus sed porro laborum hic dolor, libero quaerat atque asperiores dolorum recusandae commodi facere odit repudiandae dolores non nesciunt dicta modi esse aliquam fuga perferendis illo quidem.
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                            <div class="date-inr">
+                                                17 Jan, 2023
+                                            </div>
+                                        </div>
+                                        <div class="image-text">
+                                            <div class="reference-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/tourguide.jpg" alt="img">
+                                            </div>
+                                            <div class="description">
+                                                <h5>Andy</h5>
+                                                <div class="str-str">
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <i class="fa-solid fa-star"></i>
+                                                </div>
+
+                                                <div class="des-inr">
+                                                    <p>
+                                                        Lorem ipsum dolor sit amet,
+                                                        consectetur adipisicing elit.
+                                                        Maxime deleniti eligendi accusantium dicta, odio modi,
+                                                        quisquam enim perspiciatis impedit aliquid, adipisci eos!
+                                                        Temporibus doloribus sed porro laborum hic dolor, libero quaerat atque asperiores dolorum recusandae commodi facere odit repudiandae dolores non nesciunt dicta modi esse aliquam fuga perferendis illo quidem.
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                            <div class="date-inr">
+                                                17 Jan, 2023
+                                            </div>
+                                        </div>*@
+                                </div>
+
+                            </div>
+                        </div>
+                        <!--  end reference -->
+
+                        <div class="tabbing-section" id="client">
+                            <div class="client-section">
+                                <h2>Sponsors</h2>
+                                <div class="client-img" id="BindBusinessSponsorDetail">
+
+                                    @*<div class="logo-img">
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-wordpress.png" alt="img" loading="lazy">
+                                        </div>
+
+
+                                        <div class="logo-img">
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-bootstrap.png" alt="img" loading="lazy">
+                                        </div>
+
+                                        <div class="logo-img">
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-jquery.png" alt="img" loading="lazy">
+                                        </div>
+
+                                        <div class="logo-img">
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-compass.png" alt="img" loading="lazy">
+                                        </div>
+
+                                        <div class="logo-img">
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-teaspoon.png" alt="img" loading="lazy">
+                                        </div>
+
+                                        <div class="logo-img">
+                                            <img src="~/Content/visitor-panel/othersProfile/Profile section/image/logo-evernote.png" alt="img" loading="lazy">
+                                        </div>*@
+                                </div>
+                            </div>
+                        </div>
+                        <!-- INTERESTS -->
+
+                        <div class="tabbing-section" id="intersts">
+                            <div class="intersts-section">
+                                <h2>Services</h2>
+                                <div class="intersts-inr" id="BindBusinessServiceDetail">
+                                    @*<div class="intersts-text">
+                                            <div class="text-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/dog .png" alt="dog" loading="lazy">
+                                                <p>Animals</p>
+                                            </div>
+
+                                        </div>
+                                        <div class="intersts-text">
+                                            <div class="text-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/island.png" alt="dog" loading="lazy">
+                                                <p>Travel</p>
+                                            </div>
+                                        </div>
+                                        <div class="intersts-text">
+                                            <div class="text-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/bicycle.png" alt="dog" loading="lazy">
+                                                <p>Bicycle</p>
+                                            </div>
+                                        </div>
+                                        <div class="intersts-text">
+                                            <div class="text-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/dance.png" alt="dog" loading="lazy">
+                                                <p>Parties</p>
+                                            </div>
+                                        </div>
+                                        <div class="intersts-text">
+                                            <div class="text-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/magic-wand.png" alt="dog" loading="lazy">
+                                                <p>Harry Potter</p>
+                                            </div>
+                                        </div>
+                                        <div class="intersts-text">
+                                            <div class="text-img">
+                                                <img src="~/Content/visitor-panel/othersProfile/Profile section/image/coffee-cup.png" alt="dog" loading="lazy">
+                                                <p>Coffee</p>
+                                            </div>
+                                        </div>*@
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- blog section -->
+                        @*<div class="tabbing-section" id="blog">
+                                <div class="blog-section">
+                                    <h2>Blog</h2>
+                                    <div class="blog-text">
+                                        <p>
+                                            For those who are interested in latest trends in graphic and industrial
+                                            design may be found useful and intersting to read my Blog.
+                                            I am writing daily posts which includes freebies and giveaways as well.
+                                            I would be glad to any comment and will appreciate your questions and feedback.
+
+                                        </p>
+                                        <div class="btn-cta">
+                                            <a class="cta-button" href="">
+                                                Check out my Blog
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>*@
+
+                        <!----------  Package Detail ------------->
+
+                        <div id="classes01" class="classes-section mb-4" style="border-top: 1px solid #e1e1e1;">
+                            <div class="container">
+                                <div class="classes-title" id="BindOurClassContentDetails_OtherProfile">
+
+                                    @*<h6 class="sub-title sbttl">Our Classes</h6>
+                                        <h2>
+                                            Choose Your Class
+                                        </h2>*@
+                                </div>
+
+                                <div class="card-main" id="BindOurClassesList_OtherProfile">
+                                    <h2>Our Classes</h2>
+                                    @*<div class="card-inr">
+                                            <div class="icon-img">
+                                                <img src="~/Content/visitor-panel/image/date-icon-3.png" alt="date">
+                                            </div>
+                                            <div class="cls-inr">
+                                                <h5> Piano Classes</h5>
+                                                <span>Cost:</span><strong class="color-second">199$</strong>
+                                            </div>
+                                            <div class="class-date">
+                                                <span class="date-day">09</span>
+                                                <span class="date-my">April<br>2023</span>
+                                            </div>
+                                            <div class="time">
+                                                <p>
+                                                    Every day: 12:00 - 14:30
+                                                </p>
+                                                <p>
+                                                    Sunday: 17:00 - 19:30
+                                                </p>
+                                            </div>
+                                            <div class="cta">
+                                                <a class="primary-button" href="#">find more</a>
+                                            </div>
+                                        </div>
+
+                                        <div class="card-inr">
+                                            <div class="icon-img">
+                                                <img src="~/Content/visitor-panel/image/date-icon-1.png" alt="date">
+                                            </div>
+                                            <div class="cls-inr">
+                                                <h5>
+                                                    GUITAR CLASSES
+                                                </h5>
+                                                <span>Cost:</span><strong class="color-second">199$</strong>
+                                            </div>
+                                            <div class="class-date">
+                                                <span class="date-day">12</span>
+                                                <span class="date-my">April<br>2023</span>
+                                            </div>
+                                            <div class="time">
+                                                <p> Monday: 10:00 - 12:30</p>
+                                                <p> Wednesday: 12:00 - 14:30</p>
+                                                <p>Friday: 17:00 - 19:30</p>
+
+                                            </div>
+                                            <div class="cta">
+                                                <a class="primary-button" href="#">find more</a>
+                                            </div>
+                                        </div>
+                                        <div class="card-inr">
+                                            <div class="icon-img">
+                                                <img src="~/Content/visitor-panel/image/date-icon-4.png" alt="date">
+                                            </div>
+                                            <div class="cls-inr">
+                                                <h5>
+                                                    DRUM CLASSES
+
+                                                </h5>
+                                                <span>Cost:</span><strong class="color-second">199$</strong>
+                                            </div>
+                                            <div class="class-date">
+                                                <span class="date-day">25</span>
+                                                <span class="date-my">April<br>2023</span>
+                                            </div>
+                                            <div class="time">
+                                                <p>
+                                                    Every day: 10:00 - 12:30
+                                                </p>
+
+                                            </div>
+                                            <div class="cta">
+                                                <a class="primary-button" href="#">find more</a>
+                                            </div>
+                                        </div>
+                                        <div class="card-inr">
+                                            <div class="icon-img">
+                                                <img src="~/Content/visitor-panel/image/date-icon-5.png" alt="date">
+                                            </div>
+                                            <div class="cls-inr">
+                                                <h5>
+                                                    VIOLIN CLASSES
+
+
+                                                </h5>
+                                                <span>Cost:</span><strong class="color-second">199$</strong>
+                                            </div>
+                                            <div class="class-date">
+                                                <span class="date-day">25</span>
+                                                <span class="date-my">April<br>2023</span>
+                                            </div>
+                                            <div class="time">
+                                                <p>
+                                                    Every day: 10:00 - 12:30
+                                                </p>
+
+                                            </div>
+                                            <div class="cta">
+                                                <a class="primary-button" href="#">find more</a>
+                                            </div>
+                                        </div>
+                                        <div class="card-inr">
+                                            <div class="icon-img">
+                                                <img src="~/Content/visitor-panel/image/date-icon-2.png" alt="date">
+                                            </div>
+                                            <div class="cls-inr">
+                                                <h5>
+                                                    VOCAL CLASSES
+                                                </h5>
+                                                <span>Cost:</span><strong class="color-second">199$</strong>
+                                            </div>
+                                            <div class="class-date">
+                                                <span class="date-day">26</span>
+                                                <span class="date-my">April<br>2023</span>
+                                            </div>
+                                            <div class="time">
+                                                <p>
+                                                    Every day: 10:00 - 12:30
+                                                </p>
+
+                                            </div>
+                                            <div class="cta">
+                                                <a class="primary-button" href="#">find more</a>
+                                            </div>
+                                        </div>*@
+
+                                </div>
+                                <div class="cta-inr">
+                                    <a class="btn btn-primary" href="javascript:;" id="BtnViewMoreClassList" onclick=" ViewMoreClassList();">Read more</a>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!---- Package Detail ------>
+                        <section id="section-yoga-8" class="section sc-yg-01y" style="border-top: 1px solid #e1e1e1;">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col w-25 text-center">
+                                        <div class="abut-sc-srv " id="BusinessContentPackagePPC_MetaDetail">
+                                            <h2 class="mp-plkfjdkjfk mb-4 mt-4"> Plan & Packages</h2>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row pricing-sl" id="PackageCardDetails" style="height: max-content;">
+                                    @*<div class="col-sm-12 col-md-4">
+                                            <div class="card">
+                                                <div class="card-body text-center card-89jkop">
+                                                    <h5 class="card-title bsc-akfjak">Basic</h5>
+                                                    <p class="card-text yg-crd w-100 txt-jfdkj1kd">
+                                                        Lorem, ipsum dolor sit amet consectetur
+                                                        adipisicing elit.
+                                                        Odio, perspiciatis.
+                                                    </p>
+                                                    <h1>$35</h1>
+                                                    <p class="w-100">/Month</p>
+                                                    <div class="detail-outer">
+                                                        <h6>10 class Available</h6>
+                                                        <h6>Max 3 Class Per-week</h6>
+                                                        <h6>Free Lunch</h6>
+                                                        <h6>Free E-Book </h6>
+                                                    </div>
+                                                    <a href="#" class="btn btn-outline-dark gts-btkjk">Get Started</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                                          <div class="col-sm-12 col-md-4">
+                                                <div class="card">
+                                                    <div class="card-body text-center card-89jkop">
+                                                        <h5 class="card-title bsc-akfjak">Standard</h5>
+                                                        <p class="card-text yg-crd w-100 txt-jfdkj1kd">
+                                                            Lorem, ipsum dolor sit amet consectetur
+                                                            adipisicing elit.
+                                                            Odio, perspiciatis.
+                                                        </p>
+                                                        <h1>$55</h1>
+                                                        <p class="w-100">/Month</p>
+                                                        <div class="detail-outer">
+                                                            <h6>15 class Available</h6>
+                                                            <h6>Max 4 Class Per-week</h6>
+                                                            <h6>Free Lunch</h6>
+                                                            <h6>Free E-Book </h6>
+                                                        </div>
+                                                        <a href="#" class="btn btn-outline-dark gts-btkjk">Get Started</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                                     <div class="col-sm-12 col-md-4">
+                                                <div class="card">
+                                                    <div class="card-body text-center card-89jkop">
+                                                        <h5 class="card-title bsc-akfjak">Premium</h5>
+                                                        <p class="card-text yg-crd w-100 txt-jfdkj1kd">
+                                                            Lorem, ipsum dolor sit amet consectetur
+                                                            adipisicing elit.
+                                                            Odio, perspiciatis.
+                                                        </p>
+                                                        <h1>$105</h1>
+                                                        <p class="w-100">/Month</p>
+                                                        <div class="detail-outer">
+                                                            <h6>Unlimited class Available</h6>
+                                                            <h6>Unlimited Class Per-week</h6>
+                                                            <h6>Free Lunch</h6>
+                                                            <h6>Free E-Book </h6>
+                                                        </div>
+                                                        <a href="#" class="btn btn-outline-dark gts-btkjk">Get Started</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                    <div class="col-sm-12 col-md-4">
+                                                <div class="card">
+                                                    <div class="card-body text-center card-89jkop">
+                                                        <h5 class="card-title bsc-akfjak">Premium+</h5>
+                                                        <p class="card-text yg-crd w-100 txt-jfdkj1kd">
+                                                            Lorem, ipsum dolor sit amet consectetur
+                                                            adipisicing elit.
+                                                            Odio, perspiciatis.
+                                                        </p>
+                                                        <h1>$205</h1>
+                                                        <p class="w-100">/Month</p>
+                                                        <div class="detail-outer">
+                                                            <h6>Unlimited class Available</h6>
+                                                            <h6>Unlimited Class Per-week</h6>
+                                                            <h6>Free Lunch</h6>
+                                                            <h6>Free E-Book </h6>
+                                                        </div>
+                                                        <a href="#" class="btn btn-outline-dark gts-btkjk">Get Started</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                   <div class="col-sm-12 col-md-4">
+                                                <div class="card">
+                                                    <div class="card-body text-center card-89jkop">
+                                                        <h5 class="card-title bsc-akfjak">Premium++</h5>
+                                                        <p class="card-text yg-crd w-100 txt-jfdkj1kd">
+                                                            Lorem, ipsum dolor sit amet consectetur
+                                                            adipisicing elit.
+                                                            Odio, perspiciatis.
+                                                        </p>
+                                                        <h1>$405</h1>
+                                                        <p class="w-100">/Month</p>
+                                                        <div class="detail-outer">
+                                                            <h6>Unlimited class Available</h6>
+                                                            <h6>Unlimited Class Per-week</h6>
+                                                            <h6>Free Lunch</h6>
+                                                            <h6>Free E-Book </h6>
+                                                        </div>
+                                                        <a href="#" class="btn btn-outline-dark" style="border-color: black;">Get Started</a>
+                                                    </div>
+                                                </div>
+                                            </div>*@
+                                </div>
+                            </div>
+                        </section>
+
+                        <!---- End Package Detail -->
+                        <!-- upcoming events -->
+
+                        <div class="tabbing-section" id="events">
+                            <div class="upcoming-events" style="height: 109px;">
+                                <div class="title-up">
+                                    <h2> Upcoming events</h2>
+                                </div>
+                                <div class="box-main" id="BusinessUpComingEvents_OtherProfile">
+
+
+
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end -->
+                        <!-- contact us section -->
+                        <div class="tabbing-section" id="contact">
+                            <div class="contact-section">
+                                <h2>Contact</h2>
+                                <div class="contact-col">
+                                    <div class="contact-left" id="BindBusinessContactDetail">
+                                        @*<div class="address-sec">
+                                                <div class="font-icon">
+                                                    <i class="fa-solid fa-location-dot"></i>
+                                                </div>
+                                                <div class="address-text">
+                                                    <h4>
+                                                        San Francisco
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                            <div class="address-sec">
+                                                <div class="font-icon">
+                                                    <i class="fa-solid fa-phone"></i>
+                                                </div>
+                                                <div class="address-text">
+                                                    <a href="tel:415-832-2000">
+                                                        415-832-2000
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="address-sec">
+                                                <div class="font-icon">
+                                                    <i class="fa-regular fa-envelope"></i>
+                                                </div>
+                                                <div class="address-text">
+                                                    <a href="mailto:alex@example.com">
+                                                        alex@example.com
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="address-sec">
+                                                <div class="font-icon">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </div>
+                                                <div class="address-text">
+                                                    <h4>Freelance Available</h4>
+                                                </div>
+                                            </div>*@
+
+
+
+                                    </div>
+                                    <div class="contact-right">
+                                        <div class="map-section">
+                                            <div class="elementor-custom-embed">
+                                                <iframe loading="lazy"
+                                                        src="https://maps.google.com/maps?q=San%20Francisco%2C%20S601%20Townsend%20Street%2C%20California%2C%20USA&amp;t=m&amp;z=16&amp;output=embed&amp;iwloc=near" title="San Francisco, S601 Townsend Street, California, USA" aria-label="San Francisco, S601 Townsend Street, California, USA"></iframe>
+                                            </div>
+                                            <div class="form-section">
+                                                <h4>How Can <span>I Help You?</span> </h4>
+                                                <form id="contact_form_6438c711d9675" class="contact-form" method="post" novalidate="true">
+                                                    <div class="controls two-columns">
+                                                        <div class="fields-sec">
+                                                            <div class="left-column">
+                                                                <div class="form-group form-group-with-icon">
+                                                                    <input id="text_Contact_Name" type="text" name="name" class="form-control" placeholder="Full Name" required="required" data-error="Name is required.">
+                                                                    <div class="error-class" id="error_text_Contact_Name"></div>
+                                                                </div>
+
+                                                                <div class="form-group form-group-with-icon">
+                                                                    <input id="text_Email_Address" type="email" name="email" class="form-control" placeholder="Email Address" required="required" data-error="Valid email is required.">
+                                                                    <div class="error-class" id="error_text_Email_Address"></div>
+                                                                </div>
+
+                                                                <div class="form-group form-group-with-icon">
+                                                                    <input id="text_phone" type="text" name="phoneNumber" class="form-control" placeholder="PhoneNumber" required="required" data-error="Subject is required.">
+                                                                    <div class="error-class" id="error_text_phone"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="right-column">
+                                                                <div class="form-group form-group-with-icon">
+                                                                    <textarea id="text_Messages" name="message" class="form-control" placeholder="Message" rows="7" required="required" data-error="Please, leave me a message."></textarea>
+                                                                    <div class="error-class" id="error_text_Messages"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+
+                                                        @*<div class="g-recaptcha" data-sitekey="6LdqmCAUAAAAAMMNEZvn6g4W5e0or2sZmAVpxVqI">
+                                                                <div style="width: 304px; height: 78px;">
+                                                                    <div><iframe title="reCAPTCHA" src="https://www.google.com/recaptcha/api2/anchor?ar=1&amp;k=6LdqmCAUAAAAAMMNEZvn6g4W5e0or2sZmAVpxVqI&amp;co=aHR0cHM6Ly9sbXBpeGVscy5jb206NDQz&amp;hl=en&amp;v=6MY32oPwFCn9SUKWt8czDsDw&amp;size=normal&amp;cb=tqag4ddolru8" width="304" height="78" role="presentation" name="a-f0aoiocw5nrs" frameborder="0" scrolling="no" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation allow-modals allow-popups-to-escape-sandbox"></iframe></div><textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid rgb(193, 193, 193); margin: 10px 25px; padding: 0px; resize: none; display: none;"></textarea>
+                                                                </div><iframe style="display: none;"></iframe>
+                                                            </div>*@
+
+                                                        <input type="button" class="button-submit btn-send" value="Send message" onclick=" btnSubmitUser();">
+                                                    </div>
+                                                </form>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="copyrights border-top pt-3" style="background-color: #f3a762">
+        <div class="container ">
+            <div class="row">
+
+                <div class="col-sm-12 col-md-6">
+                    <strong class="d-flex crptxt" style="white-space: nowrap;">
+                        <p class="copyright_sec"> Copyright © 2023</p> <a class="cpr mr-2 ml-2" href="/Home/Index"> Master Zone.</a>
+                        <p class="copyright_sec">All rights reserved.</p>
+                    </strong>
+
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="float-md-right d-sm-inline-block">
+                        <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                            <p class="text-white text-center" id="ftxt" style="color: #869099;
+              font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        //$('.box-main').slick({
+        //    dots: true,
+        //    arrows: false,
+        //    infinite: false,
+        //    speed: 300,
+        //    slidesToShow: 2,
+        //    slidesToScroll: 2,
+        //    responsive: [
+        //        {
+        //            breakpoint: 767,
+        //            settings: {
+        //                slidesToShow: 1,
+        //                slidesToScroll: 1
+        //            }
+        //        }
+        //    ]
+        //});
+
+        $('.tabs-main>li').click(function () {
+            $('.port-tabbing').hide();
+            $('.tabs-main>li.tab-open').removeClass('tab-open');
+            $(this).addClass('tab-open');
+
+            var panel = $(this).attr('data-tab');
+            $(panel).fadeIn(1000);
+
+            return false;  // prevents link action
+
+        });  // end click
+
+        $('.tabs-main>li:first').click();
+
+
+
+    </script>
+</body>
+
+</html>
+<script src="/Scripts/js/loader.js"></script>
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+@Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_OtherProfileScriptPartial.cshtml")

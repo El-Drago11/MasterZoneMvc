@@ -1,0 +1,1920 @@
+﻿
+@{
+    ViewBag.Title = "ProfileDetail";
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+}
+
+@section Styles{
+
+    <link rel="stylesheet" href="~/Content/assets/profile-details.css">
+    <link rel="stylesheet" href="~/Content/assets/music-stylesheet.css">
+    <link rel="stylesheet" href="~/Content/assets/style.css">
+    <style>
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 2rem 0;
+            position: relative;
+            width: 58%;
+            margin: auto;
+        }
+
+        #feedback {
+            max-width: 106%;
+            width: 100%;
+            margin: 0px auto;
+            padding: 2rem 20px 0 20px;
+        }
+
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 0.5rem 0 !important;
+            position: relative;
+        }
+
+        div#cls-x01 {
+            position: absolute;
+            right: 1rem;
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .form-control:focus {
+            color: #495057;
+            background-color: #fff;
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem #f3a76252;
+        }
+
+        button.btn.btn-outline-dark {
+            color: #f3a762;
+            border-color: currentColor;
+        }
+
+        .pinfo {
+            margin-left: 1rem !important;
+        }
+
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 2rem 0;
+            position: relative;
+        }
+
+        ::placeholder {
+            color: #afafaf !important;
+            font-weight: 400;
+        }
+
+        h2.text-center.adr-rw-btn {
+            padding: 2rem 0 1rem 0;
+        }
+
+        @@media (max-width: 720px) {
+            #feedback {
+                max-width: 90%;
+            }
+
+            h2.description-heading {
+                font-size: 28px;
+            }
+        }
+
+        @@media (max-width: 500px) {
+            #feedback {
+                padding: 10px;
+            }
+        }
+
+        #fh2 {
+            padding: 2px 15px;
+            color: #ff4d4d;
+            text-align: center;
+        }
+
+        @@media (max-width: 400px) {
+            #fh2 {
+                font-size: 20px;
+            }
+        }
+
+
+        #fh6 {
+            padding: 2px 15px;
+            color: #4d0er;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        @@media (max-width: 400px) {
+            #fh6 {
+                font-size: 12px;
+            }
+        }
+
+        .pinfo {
+            margin: 8px auto;
+            font-weight: bold;
+            line-height: 1.5;
+            color: #0d0d0d;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.25;
+            font-weight: bold;
+            color: #6C6262;
+            background-color: #fff;
+            background-image: none;
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+            -webkit-transition: border-color ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+            -o-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+        }
+
+            .form-control::-ms-expand {
+                background-color: transparent;
+                border: 0;
+            }
+
+            .form-control:focus {
+                color: #696060;
+                background-color: #fff;
+                border-color: #f3a762;
+                outline: none;
+            }
+
+            .form-control::-webkit-input-placeholder {
+                color: #F34949;
+                opacity: 1;
+            }
+
+            .form-control::-moz-placeholder {
+                color: brown;
+                opacity: 1;
+            }
+
+            .form-control:-ms-input-placeholder {
+                color: blue;
+                opacity: 1;
+            }
+
+            .form-control::placeholder {
+                color: white;
+                opacity: 1;
+            }
+
+            .form-control:disabled,
+            .form-control[readonly] {
+                background-color: red;
+                opacity: 1;
+            }
+
+            .form-control:disabled {
+                cursor: not-allowed;
+            }
+
+        select.form-control:not([size]):not([multiple]) {
+            height: calc(2.25rem + 2px);
+        }
+
+        select.form-control:focus::-ms-value {
+            color: green;
+            background-color: #fff;
+        }
+
+        .form-control-file,
+        .form-control-range {
+            display: block;
+        }
+
+        .input-group {
+            position: relative;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            width: 100%;
+        }
+
+            .input-group .form-control {
+                position: relative;
+                z-index: 2;
+                -webkit-box-flex: 1;
+                -webkit-flex: 1 1 auto;
+                -ms-flex: 1 1 auto;
+                flex: 1 1 auto;
+                width: 1%;
+                margin-bottom: 0;
+            }
+
+                .input-group .form-control:focus,
+                .input-group .form-control:active,
+                .input-group .form-control:hover {
+                    z-index: 3;
+                }
+
+            .input-group-addon,
+            .input-group-btn,
+            .input-group .form-control {
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+                -webkit-box-pack: center;
+                -webkit-justify-content: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+            }
+
+                .input-group-addon:not(:first-child):not(:last-child),
+                .input-group-btn:not(:first-child):not(:last-child),
+                .input-group .form-control:not(:first-child):not(:last-child) {
+                    border-radius: 0;
+                }
+
+        .input-group-addon,
+        .input-group-btn {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .input-group-addon {
+            width: 45px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0;
+            font-size: 1rem;
+            font-weight: normal;
+            line-height: 1.25;
+            color: #2e2e2e;
+            text-align: center;
+            background-color: #eceeef;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+        }
+
+            .input-group-addon.form-control-sm,
+            .input-group-sm > .input-group-addon,
+            .input-group-sm > .input-group-btn > .input-group-addon.btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+                border-radius: 0.2rem;
+            }
+
+            .input-group-addon.form-control-lg,
+            .input-group-lg > .input-group-addon,
+            .input-group-lg > .input-group-btn > .input-group-addon.btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 1.25rem;
+                border-radius: 0.3rem;
+            }
+
+            .input-group-addon input[type="radio"],
+            .input-group-addon input[type="checkbox"] {
+                margin-top: 0;
+            }
+
+            .input-group .form-control:not(:last-child),
+            .input-group-addon:not(:last-child),
+            .input-group-btn:not(:last-child) > .btn,
+            .input-group-btn:not(:last-child) > .btn-group > .btn,
+            .input-group-btn:not(:last-child) > .dropdown-toggle,
+            .input-group-btn:not(:first-child) > .btn:not(:last-child):not(.dropdown-toggle),
+            .input-group-btn:not(:first-child) > .btn-group:not(:last-child) > .btn {
+                border-bottom-right-radius: 0;
+                border-top-right-radius: 0;
+            }
+
+            .input-group-addon:not(:last-child) {
+                border-right: 0;
+            }
+
+            .input-group .form-control:not(:first-child),
+            .input-group-addon:not(:first-child),
+            .input-group-btn:not(:first-child) > .btn,
+            .input-group-btn:not(:first-child) > .btn-group > .btn,
+            .input-group-btn:not(:first-child) > .dropdown-toggle,
+            .input-group-btn:not(:last-child) > .btn:not(:first-child),
+            .input-group-btn:not(:last-child) > .btn-group:not(:first-child) > .btn {
+                border-bottom-left-radius: 0;
+                border-top-left-radius: 0;
+            }
+
+        .form-control + .input-group-addon:not(:first-child) {
+            border-left: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            font-weight: normal;
+            line-height: 1.25;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 0.25rem;
+            -webkit-transition: all 0.2s ease-in-out;
+            -o-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .btn:focus,
+            .btn:hover {
+                text-decoration: none;
+            }
+
+            .btn:focus,
+            .btn.focus {
+                outline: 0;
+                -webkit-box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.25);
+                box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.25);
+            }
+
+            .btn.disabled,
+            .btn:disabled {
+                cursor: not-allowed;
+                opacity: .65;
+            }
+
+            .btn:active,
+            .btn.active {
+                background-image: none;
+            }
+
+        a.btn.disabled,
+        fieldset[disabled] a.btn {
+            pointer-events: none;
+        }
+
+        .btn-primary {
+            color: #fff;
+            background-color: #0275d8;
+            border-color: #0275d8;
+        }
+
+            .btn-primary:hover {
+                color: #fff;
+                background-color: #025aa5;
+                border-color: #01549b;
+            }
+
+            .btn-primary:focus,
+            .btn-primary.focus {
+                -webkit-box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.5);
+                box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.5);
+            }
+
+            .btn-primary.disabled,
+            .btn-primary:disabled {
+                background-color: #0275d8;
+                border-color: #0275d8;
+            }
+
+            .btn-primary:active,
+            .btn-primary.active,
+            .show > .btn-primary.dropdown-toggle {
+                color: #fff;
+                background-color: #025aa5;
+                background-image: none;
+                border-color: #01549b;
+            }
+    </style>
+    <style>
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 2rem 0;
+            position: relative;
+            width: 58%;
+            margin: auto;
+        }
+
+        .msg-txt-ar {
+            height: 10rem !important;
+        }
+
+        #feedback {
+            max-width: 106%;
+            width: 100%;
+            margin: 0px auto;
+            padding: 2rem 20px 0 20px;
+        }
+
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 0.5rem 0 !important;
+            position: relative;
+        }
+
+        div#cls-x01 {
+            position: absolute;
+            right: 1rem;
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .form-control:focus {
+            color: #495057;
+            background-color: #fff;
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem #f3a76252;
+        }
+
+        button.btn.btn-outline-dark {
+            color: #f3a762;
+            border-color: currentColor;
+        }
+
+        .pinfo {
+            margin-left: 1rem !important;
+        }
+
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 2rem 0;
+            position: relative;
+        }
+
+        ::placeholder {
+            color: #afafaf !important;
+            font-weight: 400;
+        }
+
+        h2.text-center.adr-rw-btn {
+            padding: 2rem 0 1rem 0;
+        }
+
+        @@media (max-width: 720px) {
+            #feedback {
+                max-width: 90%;
+            }
+        }
+
+        @@media (max-width: 500px) {
+            #feedback {
+                padding: 10px;
+            }
+        }
+
+        #fh2 {
+            padding: 2px 15px;
+            color: #ff4d4d;
+            text-align: center;
+        }
+
+        @@media (max-width: 400px) {
+            #fh2 {
+                font-size: 20px;
+            }
+        }
+
+
+        #fh6 {
+            padding: 2px 15px;
+            color: #4d0er;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        @@media (max-width: 400px) {
+            #fh6 {
+                font-size: 12px;
+            }
+        }
+
+        .pinfo {
+            margin: 8px auto;
+            font-weight: bold;
+            line-height: 1.5;
+            color: #0d0d0d;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.25;
+            font-weight: bold;
+            color: #6C6262;
+            background-color: #fff;
+            background-image: none;
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+            -webkit-transition: border-color ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+            -o-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+        }
+
+            .form-control::-ms-expand {
+                background-color: transparent;
+                border: 0;
+            }
+
+            .form-control:focus {
+                color: #696060;
+                background-color: #fff;
+                border-color: #f3a762;
+                outline: none;
+            }
+
+            .form-control::-webkit-input-placeholder {
+                color: #F34949;
+                opacity: 1;
+            }
+
+            .form-control::-moz-placeholder {
+                color: brown;
+                opacity: 1;
+            }
+
+            .form-control:-ms-input-placeholder {
+                color: blue;
+                opacity: 1;
+            }
+
+            .form-control::placeholder {
+                color: white;
+                opacity: 1;
+            }
+
+            .form-control:disabled,
+            .form-control[readonly] {
+                background-color: red;
+                opacity: 1;
+            }
+
+            .form-control:disabled {
+                cursor: not-allowed;
+            }
+
+        select.form-control:not([size]):not([multiple]) {
+            height: calc(2.25rem + 2px);
+        }
+
+        select.form-control:focus::-ms-value {
+            color: green;
+            background-color: #fff;
+        }
+
+        .form-control-file,
+        .form-control-range {
+            display: block;
+        }
+
+        .input-group {
+            position: relative;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            width: 100%;
+        }
+
+            .input-group .form-control {
+                position: relative;
+                z-index: 2;
+                -webkit-box-flex: 1;
+                -webkit-flex: 1 1 auto;
+                -ms-flex: 1 1 auto;
+                flex: 1 1 auto;
+                width: 1%;
+                margin-bottom: 0;
+            }
+
+                .input-group .form-control:focus,
+                .input-group .form-control:active,
+                .input-group .form-control:hover {
+                    z-index: 3;
+                }
+
+            .input-group-addon,
+            .input-group-btn,
+            .input-group .form-control {
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+                -webkit-box-pack: center;
+                -webkit-justify-content: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+            }
+
+                .input-group-addon:not(:first-child):not(:last-child),
+                .input-group-btn:not(:first-child):not(:last-child),
+                .input-group .form-control:not(:first-child):not(:last-child) {
+                    border-radius: 0;
+                }
+
+        .input-group-addon,
+        .input-group-btn {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .input-group-addon {
+            width: 45px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0;
+            font-size: 1rem;
+            font-weight: normal;
+            line-height: 1.25;
+            color: #2e2e2e;
+            text-align: center;
+            background-color: #eceeef;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+        }
+
+            .input-group-addon.form-control-sm,
+            .input-group-sm > .input-group-addon,
+            .input-group-sm > .input-group-btn > .input-group-addon.btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+                border-radius: 0.2rem;
+            }
+
+            .input-group-addon.form-control-lg,
+            .input-group-lg > .input-group-addon,
+            .input-group-lg > .input-group-btn > .input-group-addon.btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 1.25rem;
+                border-radius: 0.3rem;
+            }
+
+            .input-group-addon input[type="radio"],
+            .input-group-addon input[type="checkbox"] {
+                margin-top: 0;
+            }
+
+            .input-group .form-control:not(:last-child),
+            .input-group-addon:not(:last-child),
+            .input-group-btn:not(:last-child) > .btn,
+            .input-group-btn:not(:last-child) > .btn-group > .btn,
+            .input-group-btn:not(:last-child) > .dropdown-toggle,
+            .input-group-btn:not(:first-child) > .btn:not(:last-child):not(.dropdown-toggle),
+            .input-group-btn:not(:first-child) > .btn-group:not(:last-child) > .btn {
+                border-bottom-right-radius: 0;
+                border-top-right-radius: 0;
+            }
+
+            .input-group-addon:not(:last-child) {
+                border-right: 0;
+            }
+
+            .input-group .form-control:not(:first-child),
+            .input-group-addon:not(:first-child),
+            .input-group-btn:not(:first-child) > .btn,
+            .input-group-btn:not(:first-child) > .btn-group > .btn,
+            .input-group-btn:not(:first-child) > .dropdown-toggle,
+            .input-group-btn:not(:last-child) > .btn:not(:first-child),
+            .input-group-btn:not(:last-child) > .btn-group:not(:first-child) > .btn {
+                border-bottom-left-radius: 0;
+                border-top-left-radius: 0;
+            }
+
+        .form-control + .input-group-addon:not(:first-child) {
+            border-left: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            font-weight: normal;
+            line-height: 1.25;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 0.25rem;
+            -webkit-transition: all 0.2s ease-in-out;
+            -o-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .btn:focus,
+            .btn:hover {
+                text-decoration: none;
+            }
+
+            .btn:focus,
+            .btn.focus {
+                outline: 0;
+                -webkit-box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.25);
+                box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.25);
+            }
+
+            .btn.disabled,
+            .btn:disabled {
+                cursor: not-allowed;
+                opacity: .65;
+            }
+
+            .btn:active,
+            .btn.active {
+                background-image: none;
+            }
+
+        a.btn.disabled,
+        fieldset[disabled] a.btn {
+            pointer-events: none;
+        }
+
+        .btn-primary {
+            color: #fff;
+            background-color: #0275d8;
+            border-color: #0275d8;
+        }
+
+            .btn-primary:hover {
+                color: #fff;
+                background-color: #025aa5;
+                border-color: #01549b;
+            }
+
+            .btn-primary:focus,
+            .btn-primary.focus {
+                -webkit-box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.5);
+                box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.5);
+            }
+
+            .btn-primary.disabled,
+            .btn-primary:disabled {
+                background-color: #0275d8;
+                border-color: #0275d8;
+            }
+
+            .btn-primary:active,
+            .btn-primary.active,
+            .show > .btn-primary.dropdown-toggle {
+                color: #fff;
+                background-color: #025aa5;
+                background-image: none;
+                border-color: #01549b;
+            }
+    </style>
+    <style>
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 2rem 0;
+            position: relative;
+            width: 58%;
+            margin: auto;
+        }
+
+        .msg-txt-ar {
+            height: 10rem !important;
+        }
+
+        #feedback {
+            max-width: 106%;
+            width: 100%;
+            margin: 0px auto;
+            padding: 2rem 20px 0 20px;
+        }
+
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 0.5rem 0 !important;
+            position: relative;
+        }
+
+        div#cls-x01 {
+            position: absolute;
+            right: 1rem;
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .form-control:focus {
+            color: #495057;
+            background-color: #fff;
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem #f3a76252;
+        }
+
+        button.btn.btn-outline-dark {
+            color: #f3a762;
+            border-color: currentColor;
+        }
+
+        .pinfo {
+            margin-left: 1rem !important;
+        }
+
+        .modal-content.modal-content-outer_d {
+            padding: 0 0 2rem 0;
+            position: relative;
+        }
+
+        ::placeholder {
+            color: #afafaf !important;
+            font-weight: 400;
+        }
+
+        h2.text-center.adr-rw-btn {
+            padding: 2rem 0 1rem 0;
+        }
+
+        @@media (max-width: 720px) {
+            #feedback {
+                max-width: 90%;
+            }
+        }
+
+        @@media (max-width: 500px) {
+            #feedback {
+                padding: 10px;
+            }
+        }
+
+        #fh2 {
+            padding: 2px 15px;
+            color: #ff4d4d;
+            text-align: center;
+        }
+
+        @@media (max-width: 400px) {
+            #fh2 {
+                font-size: 20px;
+            }
+        }
+
+
+        #fh6 {
+            padding: 2px 15px;
+            color: #4d0er;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        @@media (max-width: 400px) {
+            #fh6 {
+                font-size: 12px;
+            }
+        }
+
+        .pinfo {
+            margin: 8px auto;
+            font-weight: bold;
+            line-height: 1.5;
+            color: #0d0d0d;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.25;
+            font-weight: bold;
+            color: #6C6262;
+            background-color: #fff;
+            background-image: none;
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+            -webkit-transition: border-color ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+            -o-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+            transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s, -webkit-box-shadow ease-in-out 0.15s;
+        }
+
+            .form-control::-ms-expand {
+                background-color: transparent;
+                border: 0;
+            }
+
+            .form-control:focus {
+                color: #696060;
+                background-color: #fff;
+                border-color: #f3a762;
+                outline: none;
+            }
+
+            .form-control::-webkit-input-placeholder {
+                color: #F34949;
+                opacity: 1;
+            }
+
+            .form-control::-moz-placeholder {
+                color: brown;
+                opacity: 1;
+            }
+
+            .form-control:-ms-input-placeholder {
+                color: blue;
+                opacity: 1;
+            }
+
+            .form-control::placeholder {
+                color: white;
+                opacity: 1;
+            }
+
+            .form-control:disabled,
+            .form-control[readonly] {
+                background-color: red;
+                opacity: 1;
+            }
+
+            .form-control:disabled {
+                cursor: not-allowed;
+            }
+
+        select.form-control:not([size]):not([multiple]) {
+            height: calc(2.25rem + 2px);
+        }
+
+        select.form-control:focus::-ms-value {
+            color: green;
+            background-color: #fff;
+        }
+
+        .form-control-file,
+        .form-control-range {
+            display: block;
+        }
+
+        .input-group {
+            position: relative;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            width: 100%;
+        }
+
+            .input-group .form-control {
+                position: relative;
+                z-index: 2;
+                -webkit-box-flex: 1;
+                -webkit-flex: 1 1 auto;
+                -ms-flex: 1 1 auto;
+                flex: 1 1 auto;
+                width: 1%;
+                margin-bottom: 0;
+            }
+
+                .input-group .form-control:focus,
+                .input-group .form-control:active,
+                .input-group .form-control:hover {
+                    z-index: 3;
+                }
+
+            .input-group-addon,
+            .input-group-btn,
+            .input-group .form-control {
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+                -webkit-box-pack: center;
+                -webkit-justify-content: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+            }
+
+                .input-group-addon:not(:first-child):not(:last-child),
+                .input-group-btn:not(:first-child):not(:last-child),
+                .input-group .form-control:not(:first-child):not(:last-child) {
+                    border-radius: 0;
+                }
+
+        .input-group-addon,
+        .input-group-btn {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .input-group-addon {
+            width: 45px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0;
+            font-size: 1rem;
+            font-weight: normal;
+            line-height: 1.25;
+            color: #2e2e2e;
+            text-align: center;
+            background-color: #eceeef;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+        }
+
+            .input-group-addon.form-control-sm,
+            .input-group-sm > .input-group-addon,
+            .input-group-sm > .input-group-btn > .input-group-addon.btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+                border-radius: 0.2rem;
+            }
+
+            .input-group-addon.form-control-lg,
+            .input-group-lg > .input-group-addon,
+            .input-group-lg > .input-group-btn > .input-group-addon.btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 1.25rem;
+                border-radius: 0.3rem;
+            }
+
+            .input-group-addon input[type="radio"],
+            .input-group-addon input[type="checkbox"] {
+                margin-top: 0;
+            }
+
+            .input-group .form-control:not(:last-child),
+            .input-group-addon:not(:last-child),
+            .input-group-btn:not(:last-child) > .btn,
+            .input-group-btn:not(:last-child) > .btn-group > .btn,
+            .input-group-btn:not(:last-child) > .dropdown-toggle,
+            .input-group-btn:not(:first-child) > .btn:not(:last-child):not(.dropdown-toggle),
+            .input-group-btn:not(:first-child) > .btn-group:not(:last-child) > .btn {
+                border-bottom-right-radius: 0;
+                border-top-right-radius: 0;
+            }
+
+            .input-group-addon:not(:last-child) {
+                border-right: 0;
+            }
+
+            .input-group .form-control:not(:first-child),
+            .input-group-addon:not(:first-child),
+            .input-group-btn:not(:first-child) > .btn,
+            .input-group-btn:not(:first-child) > .btn-group > .btn,
+            .input-group-btn:not(:first-child) > .dropdown-toggle,
+            .input-group-btn:not(:last-child) > .btn:not(:first-child),
+            .input-group-btn:not(:last-child) > .btn-group:not(:first-child) > .btn {
+                border-bottom-left-radius: 0;
+                border-top-left-radius: 0;
+            }
+
+        .form-control + .input-group-addon:not(:first-child) {
+            border-left: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            font-weight: normal;
+            line-height: 1.25;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 0.25rem;
+            -webkit-transition: all 0.2s ease-in-out;
+            -o-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .btn:focus,
+            .btn:hover {
+                text-decoration: none;
+            }
+
+            .btn:focus,
+            .btn.focus {
+                outline: 0;
+                -webkit-box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.25);
+                box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.25);
+            }
+
+            .btn.disabled,
+            .btn:disabled {
+                cursor: not-allowed;
+                opacity: .65;
+            }
+
+            .btn:active,
+            .btn.active {
+                background-image: none;
+            }
+
+        a.btn.disabled,
+        fieldset[disabled] a.btn {
+            pointer-events: none;
+        }
+
+        .btn-primary {
+            color: #fff;
+            background-color: #0275d8;
+            border-color: #0275d8;
+        }
+
+            .btn-primary:hover {
+                color: #fff;
+                background-color: #025aa5;
+                border-color: #01549b;
+            }
+
+            .btn-primary:focus,
+            .btn-primary.focus {
+                -webkit-box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.5);
+                box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.5);
+            }
+
+            .btn-primary.disabled,
+            .btn-primary:disabled {
+                background-color: #0275d8;
+                border-color: #0275d8;
+            }
+
+            .btn-primary:active,
+            .btn-primary.active,
+            .show > .btn-primary.dropdown-toggle {
+                color: #fff;
+                background-color: #025aa5;
+                background-image: none;
+                border-color: #01549b;
+            }
+    </style>
+
+}
+<div class="profile-section">
+    <div class="container">
+
+        <div class="column-section">
+            <div class="right-col">
+                <div class="right-col-inr">
+
+                    <div class="tabbing-section" id="about_me">
+                        <!-- client profile -->
+                        <div class="profile-deatils">
+                            <div class="image-pro">
+                                <img src="~/Content/visitor-panel/image/profile.jpg" alt="profile-img">
+                            </div>
+                            <div class="description">
+                                <p>Senior Ui/Ux Designer</p>
+                                <h2 class="description-heading">HELLO, I’M PRIYANKA ! </h2>
+                                <p>
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                    Pellentesque ut turpis sagittis, viverra nisi rhoncus, gravida quam.
+                                    Curabitur id nisi vestibulum, facilisis lorem ut, tincidunt tellus.
+                                    Sed laoreet lacus sapien,
+                                    a scelerisque nunc scelerisque quis
+                                </p>
+                                <div class="user-details-txt">
+                                    <div class="user-details-outer">
+                                        <div class="id-text">
+                                            <p> ID:<span>534567</span></p>
+                                        </div>
+                                        <a href="#" data-toggle="modal"
+                                           data-target=".bd-example-modal-lg1">message</a>
+                                    </div>
+                                    <div class="located">
+                                        <h5>Location </h5>
+                                        <div class="location">
+                                            <p>Punjab</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                        <div class="personal-information">
+
+                            <div class="personal-information-wrap">
+                                <div class="personal-left">
+                                    <h2> personal information</h2>
+                                    <div class="personal-information-content">
+                                        <div class="title">
+                                            <h6>FULL NAME</h6>
+                                        </div>
+                                        <div class="deatils">
+                                            <p>Priyanka</p>
+                                        </div>
+                                    </div>
+                                    <div class="personal-information-content">
+                                        <div class="title">
+                                            <h6>D.O.B. </h6>
+                                        </div>
+                                        <div class="deatils">
+                                            <p>05 Sep 1986</p>
+                                        </div>
+                                    </div>
+                                    <div class="personal-information-content">
+                                        <div class="title">
+                                            <h6>
+                                                ADDRESS
+                                            </h6>
+                                        </div>
+                                        <div class="deatils">
+                                            <p>New Shanti Bhuvan, Station Road, Kandivali (west)</p>
+                                        </div>
+                                    </div>
+                                    <div class="personal-information-content">
+                                        <div class="title">
+                                            <h6>
+                                                E-MAIL
+                                            </h6>
+                                        </div>
+                                        <div class="deatils">
+                                            <p>priyanka@gmail.com</p>
+                                        </div>
+                                    </div>
+                                    <div class="personal-information-content">
+                                        <div class="title">
+                                            <h6>
+                                                PHONE
+                                            </h6>
+                                        </div>
+                                        <div class="deatils">
+                                            <p>
+                                                +91 8233245569
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="personal-information-content">
+                                        <div class="title">
+                                            <h6>
+                                                FREELANCE
+
+                                            </h6>
+                                        </div>
+                                        <div class="deatils">
+                                            <p>Available </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="right-left">
+                                    <h2>languages</h2>
+                                    <div class="right-left-inr">
+                                        <div class="progress-bullets personal-information-language">
+                                            <strong class="progress-title">English</strong>
+                                        </div>
+                                        <div class="progress-bullets personal-information-language">
+                                            <strong class="progress-title">Hindi</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div id="resume">
+                        <h2 class="resume-title prflsc-heading">Resume</h2>
+                        <div class="resume">
+                            <div class="education-col">
+                                <div class="skill-title">
+                                    <h2>
+                                        Education
+                                    </h2>
+                                </div>
+                                <div class="container">
+                                    <div class="timeline">
+                                        <div class="resume-right-col">
+                                            <h5 class="item-period">2008</h5>
+                                            <span class="item-company">University of Studies</span>
+                                        </div>
+
+                                        <div class="divder">
+                                        </div>
+                                        <div class="resume-left-col">
+                                            <div class="title">Frontend Development </div>
+                                            <p>
+                                                Maecenas finibus nec sem ut imperdiet. Ut tincidunt est ac dolor
+                                                aliquam sodales.
+                                                Phasellus sed mauris hendrerit, laoreet sem in, lobortis ante.
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                    <div class="timeline">
+                                        <div class="resume-right-col">
+
+                                            <h5 class="item-period">2007</h5>
+                                            <span class="item-company">University of Studies</span>
+                                        </div>
+                                        <div class="divder">
+                                        </div>
+                                        <div class="resume-left-col">
+                                            <div class="title">Graphic Design </div>
+                                            <p>
+                                                Aliquam tincidunt malesuada tortor vitae iaculis. In eu turpis
+                                                iaculis,
+                                                feugiat risus quis, aliquet urna. Quisque fringilla mollis risus,
+                                                eu pulvinar dolor.
+
+                                            </p>
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="experience-inr">
+                                <h2 class="exp-title">Experience</h2>
+                                <div class="timeline">
+                                    <div class="resume-right-col">
+                                        <h5 class="item-period">2023<br>Current</h5>
+                                        <!-- <span class="item-company">
+                                            Envato</span> -->
+                                    </div>
+
+                                    <div class="divder">
+                                    </div>
+                                    <div class="resume-left-col">
+                                        <div class="title">
+                                            Lead Ui/Ux Designer
+                                        </div>
+                                        <p>
+                                            Praesent dignissim sollicitudin justo, sed elementum quam lacinia quis.
+                                            Phasellus eleifend tristique posuere. Sed vitae dui nec magna.
+
+
+                                        </p>
+                                    </div>
+
+                                </div>
+                                <div class="timeline">
+                                    <div class="resume-right-col">
+
+                                        <h5 class="item-period">2013 - 2016</h5>
+                                        <!-- <span class="item-company">Envato</span> -->
+                                    </div>
+
+                                    <div class="divder">
+                                    </div>
+                                    <div class="resume-left-col">
+                                        <div class="title">
+                                            Senior Ui/Ux Designer
+                                        </div>
+                                        <p>
+                                            Maecenas tempus faucibus rutrum. Duis eu aliquam urna. Proin vitae nulla
+                                            tristique,
+                                            ornare felis id, congue libero. Nam volutpat euismod quam.
+                                        </p>
+                                    </div>
+
+                                </div>
+                                <div class="timeline">
+                                    <div class="resume-right-col">
+
+                                        <h5 class="item-period">
+                                            2011 - 2013
+                                        </h5>
+                                        <!-- <span class="item-company">Envato</span> -->
+                                    </div>
+
+                                    <div class="divder">
+                                    </div>
+                                    <div class="resume-left-col">
+                                        <div class="title">
+                                            Junior Ui/Ux Designer
+
+                                        </div>
+                                        <p>
+                                            Duis mollis nunc quis quam viverra venenatis. Nulla nulla arcu, congue
+                                            vitae nunc ac,
+                                            sodales ultricies diam.
+                                            Nullam justo leo, tincidunt sit amet.
+                                        </p>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <!-- working now -->
+                    <div class="skills-current">
+                        <div class="skills-col-inr">
+                            <div class="skill-title">
+                                <h2>Design Skills</h2>
+                            </div>
+                            <div class="elementor-widget-container">
+                                <ul class="knowledges">
+                                    <li>Marketing</li>
+                                    <li>Print</li>
+                                    <li>Digital Design</li>
+                                    <li>Social Media</li>
+                                    <li>Time Management</li>
+                                    <li>Communication</li>
+                                    <li>Problem-Solving</li>
+                                    <li>Social Networking</li>
+                                    <li>Flexibility</li>
+                                </ul>
+                            </div>
+
+                        </div>
+                        <div class="certificates-section">
+                            <div class="heading-title">
+                                <h2>Currently Working</h2>
+                                <a href="">Past Working</a>
+                            </div>
+                            <div class="certificate-main">
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                                <div class="certificate-content" data-toggle="modal"
+                                     data-target=".bd-example-modal-lg2">
+                                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                                    <p>Master Zone</p>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- reference section -->
+                    <div class="tabbing-section">
+                        <div class="reference-section">
+                            <div class="adr-tp-outer d-flex justify-content-between align-items-center mb-4">
+                                <h2 class="prflsc-heading"> Review</h2> <a class="btn btn-outline-dark adrbntt1"
+                                                                           data-toggle="modal" data-target=".bd-example-modal-lg">Add Review</a>
+                            </div>
+                            <div class="reference-inr">
+                                <div class="reference-content-wrap">
+                                    <div class="image-text">
+                                        <div class="reference-img">
+                                            <img src="~/Content/visitor-panel/image/tourguide.jpg" alt="img">
+                                        </div>
+                                        <div class="description">
+                                            <h5> EDWIN BALLARD</h5>
+                                            <div class="str-str">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+
+                                            <div class="description-content-wrap">
+                                                <p>
+                                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                    Pellentesque ut turpis sagittis,
+                                                    viverra nisi rhoncus, gravida quam. Curabitur id nisi
+                                                    vestibulum, facilisis lorem ut,
+                                                    tincidunt tellus. Sed laoreet lacus sapien,
+                                                    a scelerisque nunc scelerisque quis
+                                                </p>
+                                                <div class="description-content-time">
+                                                    17 Jan, 2023
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="reference-content-wrap">
+                                    <div class="image-text">
+                                        <div class="reference-img">
+                                            <img src="~/Content/visitor-panel/image/tourguide.jpg" alt="img">
+                                        </div>
+                                        <div class="description">
+                                            <h5>Robert</h5>
+                                            <div class="str-str">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+
+                                            <div class="description-content-wrap">
+                                                <p>
+                                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                    Pellentesque ut turpis sagittis,
+                                                    viverra nisi rhoncus, gravida quam. Curabitur id nisi
+                                                    vestibulum, facilisis lorem ut,
+                                                    tincidunt tellus. Sed laoreet lacus sapien,
+                                                    a scelerisque nunc scelerisque quis
+                                                </p>
+                                                <div class="description-content-time">
+                                                    17 Jan, 2023
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="reference-content-wrap">
+                                    <div class="image-text">
+                                        <div class="reference-img">
+                                            <img src="~/Content/visitor-panel/image/tourguide.jpg" alt="img">
+                                        </div>
+                                        <div class="description">
+                                            <h5>Oliver</h5>
+                                            <div class="str-str">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+
+                                            <div class="description-content-wrap">
+                                                <p>
+                                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                    Pellentesque ut turpis sagittis,
+                                                    viverra nisi rhoncus, gravida quam. Curabitur id nisi
+                                                    vestibulum, facilisis lorem ut,
+                                                    tincidunt tellus. Sed laoreet lacus sapien,
+                                                    a scelerisque nunc scelerisque quis
+                                                </p>
+                                                <div class="description-content-time">
+                                                    17 Jan, 2023
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="reference-content-wrap">
+                                    <div class="image-text">
+                                        <div class="reference-img">
+                                            <img src="~/Content/visitor-panel/image/tourguide.jpg" alt="img">
+                                        </div>
+                                        <div class="description">
+                                            <h5>Andy</h5>
+                                            <div class="str-str">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+
+                                            <div class="description-content-wrap">
+                                                <p>
+                                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                    Pellentesque ut turpis sagittis,
+                                                    viverra nisi rhoncus, gravida quam. Curabitur id nisi
+                                                    vestibulum, facilisis lorem ut,
+                                                    tincidunt tellus. Sed laoreet lacus sapien,
+                                                    a scelerisque nunc scelerisque quis
+                                                </p>
+                                                <div class="description-content-time">
+                                                    17 Jan, 2023
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--  end reference -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="adrw-mdl01" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog"
+     aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content modal-content-outer_d">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="exampleModalLabel">Add Review</h5>
+                <button type="button" class="close modal-content-close-btn" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="feedback" action="">
+                <!-- <div class="pinfo">Your personal info</div> -->
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <div></div>
+                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                            <!-- <label>Name</label> -->
+                            <input name="name" placeholder="Name" class="form-control" type="text">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                            <!-- <label>Email</label> -->
+                            <input name="email" type="email" class="form-control" placeholder="Email">
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- <div class="pinfo">Rate our overall services.</div> -->
+
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-star"></i></span>
+                            <select class="form-control" id="rate">
+                                <option value="1star">1</option>
+                                <option value="2stars">2</option>
+                                <option value="3stars">3</option>
+                                <option value="4stars">4</option>
+                                <option value="5stars">5</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pinfo">Write your feedback</div>
+
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
+                            <textarea class="form-control" id="review" rows="3"></textarea>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center"></div>
+                <!-- <button type="submit-btn-rw-001" class="btn btn-outline-dark frm-insd">Submit</button> -->
+            </form>
+
+            <div class="modal-footer border-0">
+                <button id="modal-opner-btn" type="submit-btn-rw-001"
+                        class="btn btn-outline-dark form-custom-submit-btn">
+                    Submit
+                </button>
+                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<div id="adrw-mdl01" class="modal fade bd-example-modal-lg1" tabindex="-1" role="dialog"
+     aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content modal-content-outer_d">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="exampleModalLabel">Leave Message</h5>
+                <button type="button" class="close modal-content-close-btn" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="feedback" action="">
+                <!-- <div class="pinfo">Your personal info</div> -->
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <div></div>
+                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                            <!-- <label>Name</label> -->
+                            <input name="name" placeholder="Name" class="form-control" type="text">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                            <!-- <label>Email</label> -->
+                            <input name="email" type="email" class="form-control" placeholder="Email">
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- <div class="pinfo">Rate our overall services.</div> -->
+                <!-- <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-star"></i></span>
+                            <select class="form-control" id="rate">
+                                <option value="1star">1</option>
+                                <option value="2stars">2</option>
+                                <option value="3stars">3</option>
+                                <option value="4stars">4</option>
+                                <option value="5stars">5</option>
+                            </select>
+                        </div>
+                    </div>
+                </div> -->
+
+                <div class="pinfo">Message</div>
+
+
+                <div class="form-group">
+                    <div class="col-md-12 inputGroupContainer">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
+                            <textarea class="form-control msg-txt-ar" id="review" rows="3"></textarea>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center"></div>
+                <!-- <button type="submit-btn-rw-001" class="btn btn-outline-dark frm-insd">Submit</button> -->
+            </form>
+
+            <div class="modal-footer border-0">
+                <button id="modal-opner-btn" type="submit-btn-rw-001"
+                        class="btn btn-outline-dark form-custom-submit-btn">
+                    Submit
+                </button>
+                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<div id="adrw-mdl01" class="modal fade bd-example-modal-lg2" tabindex="-1" role="dialog"
+     aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content modal-content-outer_d">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="exampleModalLabel">Lorem, ipsum.</h5>
+                <button type="button" class="close modal-content-close-btn" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <p class="mdl3txt pl-4 pr-4 text-justify">
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                Pariatur maiores facilis
+                reprehenderit sed quaerat earum, veritatis odit nam quo adipisci, necessitatibus sequi quos. Nobis
+                obcaecati quae tempore illum a rerum aliquid voluptate aperiam iure deleniti necessitatibus sint,
+                commodi vitae dolor eaque cum ad rem maiores veritatis. Consequuntur tenetur laboriosam fuga
+                excepturi alias quasi inventore dicta voluptatem et asperiores ut id labore, iste pariatur rem,
+                eligendi aliquid quae, corporis voluptates hic ea cumque fugit cum deleniti. Aspernatur magnam
+                minima ratione fuga, eveniet corporis doloribus aperiam ipsam accusamus necessitatibus obcaecati
+                voluptate similique accusantium aliquid praesentium nu
+            </p>
+
+            <div class="modal-footer border-0">
+                <!-- <button id="modal-opner-btn" type="submit-btn-rw-001"
+                class="btn btn-outline-dark form-custom-submit-btn">Submit</button> -->
+                <!-- <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button> -->
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+@section Scripts{
+
+    <script>
+        document.querySelector("header.header .mobile_menu.navmain-opener").onclick = function () { document.querySelector("header.header .navigation-section-wrap").classList.toggle("active"); }
+        $('.reference-inr').slick({
+            dots: true,
+            arrows: false,
+            infinite: false,
+            speed: 300,
+            slidesToShow: 2,
+            slidesToScroll: 2,
+            responsive: [
+                {
+                    breakpoint: 767,
+                    settings: {
+                        slidesToShow: 1,
+                        slidesToScroll: 1
+                    }
+                }
+            ]
+        });
+
+        $(".certificate-content").click(function () {
+            $(".certificate-content").removeClass('active');
+            $(this).addClass('active');
+        });
+
+
+    </script>
+    <script src="~/Content/assets/profile-details.js"></script>
+}
+}
+

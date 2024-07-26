@@ -1,0 +1,168 @@
+﻿<script>
+    var StudentId_Global = 0;
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                GeUserDetailById();
+
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        GeUserDetailById();
+
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GeUserDetailById() {
+        
+        var _userLoginId = $("#userLoginId").val();
+        var _url = "/api/StudentUser/GetUserDetailById?id=" + _userLoginId;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlData2 = '';
+                for (var i = 0; i < response.data.UserImageDetailResponse.length; i++) {
+                    htmlData2 += `              <div class="card m-2">
+                                                    <div class="card-body">
+                                                        <div class="d-flex flex-column">
+                                                            <img src="${response.data.UserImageDetailResponse[i].ImageWithPath}" class="previewImage">
+                                                            <a class="btn btn-xs btn-danger m-2" onclick="ConfirmUserImageDelete(${_userLoginId},${response.data.UserImageDetailResponse[i].Id})">Delete</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                     `;
+                }
+                if (response.data.UserImageDetailResponse.length <= 0) {
+                    htmlData2 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Images in this Student Detail.</div>`;
+                }
+                    $('#ViewUserImageDetail').append(htmlData2);
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmUserImageDelete(UserLoginId , Id) {
+        
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmDeleteUserImageTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmDeleteUserImageText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    }).then((willDelete) => {
+        if (willDelete) {
+            DeleteUserContentImageDetail(UserLoginId, Id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+    function DeleteUserContentImageDetail(UserLoginId, Id) {
+        
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/StudentUser/DeleteUserImageBySuperAdmin?id=" + Id + "&UserLoginId=" + UserLoginId,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GeUserDetailById();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+</script>
+

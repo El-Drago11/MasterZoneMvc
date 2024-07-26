@@ -1,0 +1,645 @@
+﻿
+@{
+    ViewBag.Title = "Profile Settings";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+
+@section Styles{
+    @Html.Partial("~/Views/Shared/ScriptPartials/_GoogleMapsScriptPartial.cshtml");
+
+    <style>
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .imagePreview img {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Profile Setting</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Profile Setting </li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="sectionAddProfileSetting">
+            <div class="row mb-4">
+                <div class="col-8 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+
+                            <form>
+
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="ProfileFirstName">First Name</label>
+                                        <input type="text" id="txtProfileFirstName" class="form-control" />
+                                        <div class="error-class" id="error_txtProfileFirstName"></div>
+                                    </div>
+
+                                    <div class="form-group col-6">
+                                        <label for="StaffLastName">Last Name</label>
+                                        <input type="text" id="txtProfileLastName" class="form-control" />
+                                        <div class="error-class" id="error_txtProfileLastName"></div>
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="Email">Email</label>
+                                        <input type="text" id="txtEmail" class="form-control" />
+                                        <div class="error-class" id="error_txtEmail"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="PhoneNumber">Phone Number</label>
+                                        <input type="tel" id="PhoneNumber" class="form-control" />
+                                        <div class="error-class" id="error_PhoneNumber"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="text_about">About</label>
+                                        <input type="text" id="text_about" class="form-control" />
+                                        <div class="error-class" id="error_text_about"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="text_dbo">Date of Birth</label>
+                                        <input type="date" id="text_dbo" class="form-control" />
+                                        <div class="error-class" id="error_text_dbo"></div>
+                                    </div>
+                                </div>
+                                <h3>Address Location</h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description">Address</label>
+                                            <textarea name="description" class="form-control" rows="6" id="Business_Address"></textarea>
+                                            <div class="error-class" id="error_Business_Address"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="country">Country</label>
+                                            @*<input type="text" class="form-control" id="country" readonly />*@
+                                            <select id="country" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                            </select>
+                                            <input type="text" id="country" class="form-control EventCountryState MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_txtCountry"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="state">State</label>
+                                            @*<input type="text" class="form-control" id="state" readonly />*@
+                                            <select id="state" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();">
+                                            </select>
+                                            <input type="text" id="state" class="form-control EventCountryState  MapLocation d-none" readonly />
+
+                                            <div class="error-class" id="error_state"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="Staff_ManageProfileMap" style="width: 100%; height: 259px;"></div>
+                                        <input type="hidden" id="LocationLatitude" value="" />
+                                        <input type="hidden" id="LocationLongitude" value="" />
+                                        <div class="col-12 from-group text-center mt-4 mb-4">
+                                            <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-md-6">
+                                        <label for="city">City</label>
+                                        @*<input type="text" class="form-control" id="txt_City" required />*@
+                                        <select id="txt_City" class="form-control WithoutMapLocation" data-width="100%">
+                                        </select>
+                                        <input type="text" id="txt_City" class="form-control MapLocation d-none" value="" />
+                                        <div class="error-class" id="error_txt_City"></div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="txt_PinCode">PinCode</label>
+                                        <input type="text" class="form-control" id="txt_PinCode" required />
+                                        <div class="error-class" id="error_txt_PinCode"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="Landmark">Please Enter Location Landmark</label>
+                                    <input type="text" class="form-control" id="Landmark_name" required />
+                                    <div class="error-class" id="error_Landmark_name"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="website">FaceBook Profile Link</label>
+                                        <input type="text" class="form-control" id="Facebook_Profilelink" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">Instagram Profile Link</label>
+                                        <input type="text" class="form-control" id="Instagram_Profilelink" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">LinkedIn Profile Link</label>
+                                        <input type="text" class="form-control" id="LinkedInWebsite_ProfileLink" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">Twitter Profile Link</label>
+                                        <input type="text" class="form-control" id="TwitterWebsite_ProfileLink" />
+                                    </div>
+                                </div>
+
+
+                                <!-- /.form-group -->
+
+
+                                <div id="BusinessPanelPermissions_ManageStaff">
+
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateProfile()">Submit</button>
+                                @*  <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>*@
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-4 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h2>Master ID</h2>
+                            <div class="d-flex justify-content-between">
+                                <span class="font-weight-bold">Master ID:</span>
+                                <div class="d-flex flex-column">
+                                    <span class="font-weight-bold" id="businessMasterId"></span>
+                                    <span id="businessUniqueUserId"></span>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <span class="font-weight-bold">Linked Master ID:</span>
+                                <div class="d-flex flex-column">
+                                    <span class="font-weight-bold" id="studentUserMasterId"></span>
+                                    <span id="studentUniqueUserId"></span>
+                                </div>
+                            </div>
+                            <hr />
+                            <h4>Temporary IDs</h4>
+                            <div id="sectionTemporaryMasterIdDetails">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <div class="row">
+                                <div class="form-group d-flex flex-column col-12">
+                                    <label>Profile Image</label>
+                                    <div class="imagePreview">
+                                        <img id="ProfileImage" class="d-none">
+                                    </div>
+                                    <input type="file" id="fileProfileImage_ManageProfile" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileProfileImage_ManageProfile"></div>
+
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0 ml-3" id="ChangeUpdateProfileImageText" onclick="btnAddUpdateProfileImage()">Save</button>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <div class="row">
+                                <div class="card-body text-center">
+                                    <h2>Visitor Profile Page</h2>
+                                    <a id="btnVisitorStaffProfilePage" href="#" target="_blank" class="btn btn-primary mb-0 text-center">Visit</a>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="row mb-4">
+                <div class="col-8 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="summary"> Summary</label>
+                                            <textarea name="description" class="form-control" rows="6" id="txt_summary"></textarea>
+                                            <div class="error-class" id="error_txt_summary"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ddlSkills_Managetag">Skills</label>
+
+                                            <input data-role="tagsinput" id="text_tagSkills" type="text">
+                                            <div class="error-class" id="error_text_tagSkills"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ddl_ManageFreelance">Select Freelance</label>
+                                            <select name="ddl_ManageFreelance" id="txt_freelance" form="carform" default="unslected" class="form-control">
+                                                <option value="-1">SelectFreelance </option>
+                                                <option value="1">Avaiable</option>
+                                                <option value="2"> Not Avaiable</option>
+
+                                            </select>
+
+                                            <div class="error-class" id="error_txt_freelance"></div>
+
+                                        </div>
+
+                                        @*<div class="form-group">
+                                            <label for="freelance"> Freelance</label>
+                                            <input type="number" id="txt_freelance" class="form-control" />
+                                            <div class="error-class" id="error_txt_freelance"></div>
+                                        </div>*@
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+
+                                        <div class="form-group">
+                                            <label>Select Students</label>
+                                            <select id="ddlLanguage_LanguageList" class="form-control select2-multiple" multiple="multiple" data-width="100%">
+                                                @*<option label="&nbsp;">&nbsp;</option>*@
+                                            </select>
+                                            <div class="error-class" id="error_ddlLanguage_LanguageList"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateUserResume()">Submit</button>
+
+                            </form>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+
+
+                    <div class="col-12 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddExperienceStaff">Add Experience</a>
+                    </div>
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        <div id="sectionAddStaffExperience" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Experience</h5>
+
+
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Title">  Title</label>
+                                            <input type="text" id="txtTitle" class="form-control" />
+                                            <div class="error-class" id="error_txtTitle"></div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="CompanyName">CompanyName</label>
+                                            <input type="text" id="txtCompanyName" class="form-control" />
+                                            <div class="error-class" id="error_txtCompanyName"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ButtonText">StartMonth</label>
+                                            <div class="input-daterange input-group" id="datepickerStartMonth">
+                                                <input type="text" class="input-sm form-control" id="StartMonth" name="start" placeholder="StartMonth"> <span class="input-group-addon"></span>
+
+                                            </div>
+                                            <div class="error-class" id="error_txtStartMonth"></div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ButtonText">EndMonth</label>
+                                            <div class="input-daterange input-group" id="datepickerEndMonth">
+                                                <input type="text" class="input-sm form-control" id="EndMonth" name="start" placeholder="EndMonth"> <span class="input-group-addon"></span>
+
+                                            </div>
+                                            <div class="error-class" id="error_txtEndMonth"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ButtonText">Start Year</label>
+                                            <div class="input-daterange input-group" id="datepickerStartYear">
+                                                <input type="text" class="input-sm form-control" name="start" id="StartYear" placeholder="StartYear"> <span class="input-group-addon"></span>
+
+                                            </div>
+                                            <div class="error-class" id="error_txtStartYear"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="ButtonText">End Year</label>
+                                        <div class="input-daterange input-group" id="datepickerEndYear">
+                                            <input type="text" class="input-sm form-control" id="EndYear" name="start" placeholder="EndYear"> <span class="input-group-addon"></span>
+
+                                        </div>
+                                        <div class="error-class" id="error_txtEndYear"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time"> Start Date</label>
+                                            <input type="date" class="form-control" id="Business_StartDate" required />
+                                            <div class="error-class" id="error_Business_StartDate"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time"> End Date</label>
+                                            <input type="date" class="form-control" id="Business_EndDate" required />
+                                            <div class="error-class" id="error_Business_EndDate"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="description"> Description</label>
+                                            <textarea name="description" class="form-control" rows="6" id="experience_description"></textarea>
+                                            <div class="error-class" id="error_experience_description"></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateExperienceProfile()">Save</button>
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="ResetAddExperienceView()">cancel</button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="sectionViewExperience">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblExperienceDetailView" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th> Title</th>
+                                        <th> CompanyName</th>
+                                        <th>StartMonth/EndMonth</th>
+                                        <th>StartYear/EndYear</th>
+                                        <th>Description</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+
+
+                    <div class="col-12 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEducationDetail">Add Education</a>
+                    </div>
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        <div id="sectionAddStaffEducation" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Education</h5>
+
+
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="SchoolName">  SchoolName</label>
+                                            <input type="text" id="txtSchoolName" class="form-control" />
+                                            <div class="error-class" id="error_txtSchoolName"></div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Designation">Designation</label>
+                                            <input type="text" id="txtDesignation" class="form-control" />
+                                            <div class="error-class" id="error_txtDesignation"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ButtonText">StartMonth</label>
+                                            <div class="input-daterange input-group" id="datepickerStartMonth">
+                                                <input type="text" class="input-sm form-control" id="StartEducationMonth" name="start" placeholder="StartMonth"> <span class="input-group-addon"></span>
+
+                                            </div>
+                                            <div class="error-class" id="error_txtStartEducationMonth"></div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ButtonText">EndMonth</label>
+                                            <div class="input-daterange input-group" id="datepickerEndMonth">
+                                                <input type="text" class="input-sm form-control" id="EndEducationMonth" name="start" placeholder="EndMonth"> <span class="input-group-addon"></span>
+
+                                            </div>
+                                            <div class="error-class" id="error_txtEndEducationMonth"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ButtonText">Start Year</label>
+                                            <div class="input-daterange input-group" id="datepickerStartYear">
+                                                <input type="text" class="input-sm form-control" name="start" id="StartEducationYear" placeholder="StartYear"> <span class="input-group-addon"></span>
+
+                                            </div>
+                                            <div class="error-class" id="error_txtStartEducationYear"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="ButtonText">End Year</label>
+                                        <div class="input-daterange input-group" id="datepickerEndYear">
+                                            <input type="text" class="input-sm form-control" id="EndEducationYear" name="start" placeholder="EndYear"> <span class="input-group-addon"></span>
+
+                                        </div>
+                                        <div class="error-class" id="error_txtEndEducationYear"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time"> Start Date</label>
+                                            <input type="date" class="form-control" id="Education_StartDate" required />
+                                            <div class="error-class" id="error_Education_StartDate"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time"> End Date</label>
+                                            <input type="date" class="form-control" id="Education_EndDate" required />
+                                            <div class="error-class" id="error_Education_EndDate"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description"> Description</label>
+                                            <textarea name="description" class="form-control" rows="6" id="education_description"></textarea>
+                                            <div class="error-class" id="error_education_description"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Grade">  Grade</label>
+                                            <input type="text" id="txtGrade" class="form-control" />
+                                            <div class="error-class" id="error_txtGrade"></div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateEducationProfile()">Save</button>
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="ResetAddEducationView()">cancel</button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="sectionViewEducation">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblEducationDetailView" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th> SchoolName</th>
+                                        <th> Designation</th>
+                                        <th>StartMonth/EndMonth</th>
+                                        <th>StartYear/EndYear</th>
+                                        <th>Description</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+
+
+
+</main>
+
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_StaffProfileSettingScriptPartial.cshtml")
+}
+
+

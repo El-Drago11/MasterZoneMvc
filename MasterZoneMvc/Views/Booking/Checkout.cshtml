@@ -1,0 +1,155 @@
+﻿
+@{
+    ViewBag.Title = "Checkout";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+    int IsItemAlreadyPurchased = ViewBag.IsItemAlreadyPurchased;
+    string alreadyPurchasedMessage = ViewBag.AlreadyPurchasedMessage;
+}
+
+
+@section Styles {
+
+    <style>
+        .error-class {
+            color: red;
+        }
+
+        #txtCouponCode:valid {
+            text-transform: uppercase;
+        }
+
+        .dashed-seperator {
+            border-bottom: 5px dashed #f1f1f1;
+        }
+
+        .slick-slide:hover {
+            transform: none;
+            transition-duration: 0.5s;
+        }
+
+        .slick-list.draggable {
+            padding-bottom: 0px;
+        }
+
+        section#adv-slider-section {
+            line-height: 0;
+        }
+
+        .adv-slider {
+            max-height: 220px;
+            min-height: 220px;
+            overflow: hidden;
+        }
+    </style>
+}
+
+<input type="hidden" id="hiddenCheckoutId" value="@ViewBag.ItemId" />
+<input type="hidden" id="hiddenCheckoutType" value="@ViewBag.ItemType" />
+<input type="hidden" id="hiddenExamid" value="@ViewBag.ExamStatus" />
+<input type="hidden" id="hiddenplanTypeId" value="2" />
+
+
+
+<!--- advertisement slider --------->
+<section id="adv-slider-section">
+    <div class="adv-slider-container">
+        <div class="adv-slider">
+            <div id="GetAllAdvertisementList" class="adv-main advertisement-slide">
+
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<div class="pt-5 text-center dashed-seperator">
+    <h2 class="text-black-50 font-weight-bold">CHECKOUT</h2>
+</div>
+
+<div class="container-fluid my-4 d-none" id="sectionError">
+    <div class="d-flex flex-column justify-content-center align-items-center">
+        <i class="h1 fas fa-exclamation text-danger"></i>
+        <h4>Invalid Item</h4>
+        <p>Item not found for checkout!</p>
+        <a href="/Home/" class="btn btn-sm btn-success">Go to Home</a>
+    </div>
+</div>
+
+<div class="container my-4 pb-5 dashed-seperator" id="sectionCheckout">
+    <div class="row">
+        <div class="col-sm-6" id="divItemDetail">
+
+        </div>
+        <div class="col-sm-6">
+            <div class="d-flex flex-column">
+                @*<div class="text-center h6 p-4" style="background:#f1f1f1">Total: <span id="TotalPrice">Rs. 699</span></div>*@
+                <div class="text-center h6 p-4" style="background:#f1f1f1" id="divOrderBillingDetail">
+                    @* Append by JS *@
+                </div>
+                @if (IsItemAlreadyPurchased == 1)
+                {
+                    <div class="w-100 text-center text-success">@alreadyPurchasedMessage</div>
+                }
+                else
+                {
+
+                    <div>
+                        <div class="form-group">
+                            <div id="divAppliedCoupons">
+
+                            </div>
+                            <label for="txtCouponCode" class="h6">Apply Coupon</label>
+                            <div class="input-group">
+                                <input type="text" id="txtCouponCode" class="form-control" placeholder="Coupon Code" />
+                                <button type="button" class="btn btn-success border-0" id="btnApplyCoupon" onclick="ApplyCoupon();">Apply</button>
+                            </div>
+                            <div class="error-class" id="error_txtCouponCode"></div>
+                            <div class="text-success" id="success_txtCouponCode"></div>
+                        </div>
+                        <fieldset class="form-group">
+                            <legend class="form-label h6">Payment Method</legend>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode1" value="1" checked>
+                                <label class="form-check-label" for="paymentMode1">
+                                    Cash
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode2" value="2">
+                                <label class="form-check-label" for="paymentMode2">
+                                    Card
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div id="btnpurchase">
+                        <button type="button" class="btn btn-primary w-100" onclick="verifyPurchase();">Purchase</button>
+                    </div>
+
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    @* --------------------------     SCRIPT TAGS ----------------------------------------------*@
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+            crossorigin="anonymous"></script>
+
+    <!--Stylish-ALERT-->
+    <script src="/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+
+    <script src="/Scripts/js/site.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+
+    @*---------slider advertisement ----------*@
+    @Html.Partial("/Views/Shared/ScriptPartials/_AdvertisementSliderScriptPartial.cshtml")
+
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_CheckoutScriptsPartial.cshtml")
+}
+
+

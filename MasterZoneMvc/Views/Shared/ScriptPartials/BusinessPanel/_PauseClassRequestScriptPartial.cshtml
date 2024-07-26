@@ -1,0 +1,310 @@
+﻿<script>
+    var UserToken_Global = "";
+    var _pauseClassTable;
+    var ClassBookingGlobalId = 0;
+    var ClassPauseDaysGlobal = 0;
+
+
+    function initializeDataTable_PauseClass() {
+        _pauseClassTable = $("#tblPauseClassDetailView").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                initializeDataTable_PauseClass();
+                UserToken_Global = dataToken;
+                GetAllPauseClassForBusinessPagination();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_PauseClass();
+                        GetAllPauseClassForBusinessPagination();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetAllPauseClassForBusinessPagination() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllPauseClassRequestDetailByPagination";
+         _pauseClassTable.clear().destroy();
+         _pauseClassTable = $("#tblPauseClassDetailView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[7, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+
+                , {
+                    "data": null, "name": "StaffMasterId", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _studentDetail = `<a href="/Business/StudentDetail?studentLoginId=${row.StudentUserLoginId}">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-2">
+                                <img src="${row.StudentProfileImageWithPath}" class="img-size-sm" />
+                            </div>
+                            <div>${row.MasterId}<br/>${row.StudentName} </div>
+                        </div></a>`;
+
+                        return _studentDetail;
+                    }
+                }
+                , { "data": "ClassName", "name": "ClassName", "autoWidth": true }
+                , { "data": "PauseStartDate", "name": "PauseStartDate", "autoWidth": true }
+                , { "data": "PauseEndDate", "name": "PauseEndDate", "autoWidth": true }
+                , { "data": "Reason", "name": "Reason", "autoWidth": true }
+
+                   , {
+                    "data": null, "": "Status", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _status = '';
+                        if (row.Status == 1) {
+                            _status = '<span class="badge badge-warning text-white " style="width:max-content;">Pending</span>';
+                                }
+                        else if (row.Status == 2) {
+                            _status = '<span class="badge badge-success text-white " style="width:max-content;">Approved</span>';
+                        }
+                        else if (row.Status == 3) {
+                            _status = '<span class="badge badge-danger text-white" style="width:max-content;">Rejected</span>';
+                        }
+
+
+                        return _status;
+                    }
+                }
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                        var isButtonDisabled = !(row.Status == 2 || row.Status == 3);
+
+                        if (row.Status == 2 || row.Status == 3) {
+                            //$(".action-button").prop("disabled", isButtonDisabled);
+                            _edit = `<button class="btn btn-info text-white btn-sm" style="width:max-content;" disabled="disabled" onclick="OpenClassPauseModel(${row.ClassBookingId}, ${isButtonDisabled},${row.PauseDays}, ${row.Id});">Take Action</button>`;
+                        }
+                        else if (row.Status == 1) {
+                            //$(".action-button").removeClass("disabled", isButtonDisabled);
+                            _edit = `<button class="btn btn-info text-white btn-sm" style="width:max-content;" onclick="OpenClassPauseModel(${row.ClassBookingId}, ${isButtonDisabled},${row.PauseDays}, ${row.Id});">Take Action</button>`;
+                        }
+
+                        var _action = `<div class="edbt">${_edit}</div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            "columnDefs": [{
+                "targets": [0,7], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+         $('#tblPauseClassDetailView_filter input').unbind();
+         $('#tblPauseClassDetailView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _pauseClassTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+    function handleStatusChange(selectElement) {
+        var selectedValue = selectElement.value;
+
+        if (selectedValue === "2") {
+            // Call your function for Accepted status
+            btnUpdateEndDateForClassBooking();
+        } else if (selectedValue === "3") {
+            // Handle Rejected status
+        }
+    }
+
+
+
+    function OpenClassPauseModel(classBookingId, isButtonDisabled ,pauseDays, classPasuseRequestId) {
+        if (!isButtonDisabled) {
+            // Perform the action or open the model
+            // Add your existing code here
+            $('#EditBusinessActionPauseClassModal').modal('hide');
+            ClassBookingGlobalId = classBookingId;
+            ClassPauseDaysGlobal = pauseDays;
+            ClassPauseRequestIdGlobal = classPasuseRequestId;
+        }
+        else {
+            $('#EditBusinessActionPauseClassModal').modal('show');
+            ClassBookingGlobalId = classBookingId;
+            ClassPauseDaysGlobal = pauseDays;
+            ClassPauseRequestIdGlobal = classPasuseRequestId;
+        }
+    }
+
+    function ResetAddPauseClassView() {
+        PauseStatusGlobalId = 0;
+        $("#txtBusinessReason").val('');
+        $("#ddlSelectedStatus").val('');
+    }
+
+       function btnSubmitToBusinessDecision() {
+          
+        let is_valid = true;
+           $(".error-class").html('');
+           var _mode = 2;
+
+           let _selectedreason = $("#txtBusinessReason").val().trim();
+        let _selectedChangeStatus = $("#ddlSelectedStatus").val();
+
+           let _error_selectedreason = $("#error_txtBusinessReason");
+
+        let _error_selectedChangeStatus = $("#error_ddlSelectedStatus");
+
+
+
+           if (validate_IsEmptyStringInputFieldValue(_selectedreason)) {
+                is_valid = false;
+               _error_selectedreason.html('@(Resources.BusinessPanel.BusinessReplyRequired)');
+            }
+           if (validate_IsEmptySelectInputFieldValue(_selectedChangeStatus)) {
+
+                  is_valid = false;
+               _error_selectedChangeStatus.html('@(Resources.BusinessPanel.Business_StatusRequired)');
+           }
+           if (_selectedChangeStatus === '2') {
+               //btnUpdateEndDateForClassBooking();
+           }
+
+           if (is_valid) {
+               var data = new FormData();
+               data.append("Id", ClassPauseRequestIdGlobal);
+               data.append("BusinessReply", _selectedreason);
+               data.append("Status", _selectedChangeStatus);
+               data.append("Mode", _mode);
+
+
+
+               $.ajax({
+                   //url: '/api/Class/AddPauseRequest?classBookingId=' + ClassBookingGlobalId,
+                   url: '/api/PauseClass/PauseRequestUpdateAction',
+                   headers: {
+                       "Authorization": "Bearer " + UserToken_Global,
+                   },
+                   data: data,
+                   processData: false,
+                   mimeType: 'multipart/form-data',
+                   contentType: false,
+                   //contentType: 'application/json',
+                   type: 'POST',
+                   success: function (dataResponse) {
+
+                       //--Parse into Json of response-json-string
+                       dataResponse = JSON.parse(dataResponse);
+
+                       //--If successfully added/updated
+                       if (dataResponse.status === 1) {
+                           swal("Success!", dataResponse.message, "success");
+                           //btnUpdateEndDateForClassBooking();
+                           ResetAddPauseClassView();
+                           $('#EditBusinessActionPauseClassModal').modal('hide');
+                           GetAllPauseClassForBusinessPagination();
+                       }
+                       else {
+                           swal({
+                               title: 'Error!',
+                               icon: 'error',
+                               text: dataResponse.message
+                           });
+                           StopLoading();
+
+                           return;
+                       }
+
+                       ResetAddPauseClassView();
+                       StopLoading();
+
+                   },
+                   error: function (result) {
+                       StopLoading();
+
+
+                       if (result["status"] == 401) {
+                           $.iaoAlert({
+                               msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                               type: "error",
+                               mode: "dark",
+                           });
+                       }
+                       else {
+                           $.iaoAlert({
+                               msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                               type: "error",
+                               mode: "dark",
+                           });
+                       }
+                   }
+               });
+           }
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>
+

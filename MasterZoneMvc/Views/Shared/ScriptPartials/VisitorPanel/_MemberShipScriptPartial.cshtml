@@ -1,0 +1,666 @@
+﻿<script>
+
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+
+    $(document).ready(function () {
+        GetAllMemberShipBannerDetail();
+        GetBusinessAboutDetail();
+        GetContactInformationDetail();
+        GetTermConditionInformationDetail();
+        GetMemberShipPackageInformationDetail();
+        GetAllMemberShipPlanServiceDetail();
+        GetAllMemberShipActivePlanDetail();
+        GetAllMemberShipAdvancePlanDetail();
+        GetAdvanceMemberShipPackageInformationDetail();
+    });
+
+    // Bind MemberShip  Banner Detail
+
+    function GetAllMemberShipBannerDetail() {
+
+
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetInstructorBannerMasterProfileDetailListFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessMemberShipBannerDetail = '';
+                if (response.data.length === 0) {
+                    BusinessMemberShipBannerDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No MemberShip Banner Detail. </div>';
+                } else {
+                    for (var i = 0; i < response.data.length; i++) {
+                        var data = response.data[i];
+                        if (data.BannerType === "MemberShip") {
+
+                            BusinessMemberShipBannerDetail += `<div class="membership-banner" style="background-image: url('${data.BannerImageWithPath}');">
+                                            <div class="page-center">
+                                                <div class="content">
+                                                    <h1>${data.Title}</h1>
+                                                    <p>
+                                                       ${data.Description}
+                                                    </p>
+
+                                                </div>
+                                            </div>
+
+                                        </div>`;
+
+
+                        }
+                    }
+                }
+
+                if (BusinessMemberShipBannerDetail === '') {
+                    BusinessMemberShipBannerDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No MemberShip Banner Detail. </div>';
+                }
+
+                $("#BindBusinessMemberShipDetail").append(BusinessMemberShipBannerDetail);
+
+
+
+
+              //  $("#tab1").removeClass('d-none');
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //Bind MemberShip Footer About Detail
+    function GetBusinessAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentAboutDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessLogoDetail = '';
+                if (response.data === null) {
+                    BusinessLogoDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Logo   Detail. </div>';
+                }
+                else {
+                    BusinessLogoDetail = ` <a href="/Home/BusinessProfile?businessOWnerLoginId= ${BusinessOwnerLoginId_Global}">
+                        <img src="${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy">
+                    </a>`;
+                    $("#BindBusinessLogoDetail").append(BusinessLogoDetail);
+
+                }
+
+                var htmlBusinessAboutDetail = '';
+                if (response.data === null) {
+                    htmlBusinessAboutDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No About  Detail. </div>';
+                } else {
+                    htmlBusinessAboutDetail += `<h3 class="dnc-cl-hd">${response.data.Title}</h3>
+                            <p class="dnc-cl-txt-01">
+                                ${response.data.About}
+                            </p>`;
+                    var fullAbout = response.data.About;
+                    var maxLength = 130;
+                    var truncatedAbout = ``;
+                    if (fullAbout.length > maxLength) {
+                        truncatedAbout = fullAbout.substr(0, maxLength) + '...';
+                    } else {
+                        truncatedAbout = fullAbout + '...';
+
+                    }
+                       htmlBusinessAboutDetail = `<div class="footer-logo">
+                            <a href="/Home/BusinessProfile?businessOWnerLoginId= ${BusinessOwnerLoginId_Global}">
+                                <img src="  ${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 52px;
+                       width: auto;">
+                            </a>
+                            <div class="logo-title">
+                              <h6>${response.data.BusinessName}</h6>
+                            </div>
+                        </div>
+                        <p class="small">${truncatedAbout}<a href="/Home/MasterProfileAPI?businessOWnerLoginId=${BusinessOwnerLoginId_Global}#BindBusinessAboutDetail">Read More</a</p>`;
+
+                }
+
+                $("#BindBusinessAboutDetail").append(htmlBusinessAboutDetail);
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind  Footer Business Contact Detail
+    function GetContactInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessSocial = ''; // Declare BusinessSocial variable
+
+
+                if (response.data.BusinessTimingDetail.FacebookProfileLink && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+    </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.TwitterProfileLink && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+    </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+    </div>`;
+                }
+                $("#BusinessSocialDetail_Footer").append(BusinessSocial);
+
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data === null) {
+                    htmlBusinessContactDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Contact  Detail. </div>';
+                    $("#BindContactDetailInformation").html(htmlBusinessContactDetail);
+                }
+                else {
+                    htmlBusinessContactDetail = `<h5>Contact Us</h5>
+                    <p>
+                         ${response.data.BusinessTimingDetail.Address}
+                    </p>
+                    <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}"> ${response.data.BusinessTimingDetail.PhoneNumber}</a>
+                    <a href="${response.data.BusinessTimingDetail.Email}">${response.data.BusinessTimingDetail.Email}</a>`;
+
+
+                    $("#BindContactDetailInformation").append(htmlBusinessContactDetail);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind Business Term Condition Detail
+
+    function GetTermConditionInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetTermConditionDetailFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BindTitleDetail = '';
+                if (response.data === null) {
+                    htmlBusinessTermConditonDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Term Condition  Detail. </div>';
+                    $("#BindTermConditionTitleDetail").html(htmlBusinessTermConditonDetail);
+                }
+                else {
+                    BindTitleDetail = `<h2 class="title-sec">${response.data.Title}</h2>`;
+                    $("#BindTermConditionTitleDetail").append(BindTitleDetail);
+                }
+
+
+                var htmlBusinessTermConditonDetail = '';
+
+
+                if (response.data === null) {
+                    htmlBusinessTermConditonDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Term Condition  Detail. </div>';
+                    $("#BindTermConditionInformation").html(htmlBusinessTermConditonDetail);
+                }
+                else {
+                    htmlBusinessTermConditonDetail = `${response.data.Description}`;
+
+
+                    $("#BindTermConditionInformation").append(htmlBusinessTermConditonDetail);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //Bind Business Member ship Package Detail
+    function GetMemberShipPackageInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetMemberShipPackageDetailFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BindMemberShipPackageDetail = '';
+                if (response.data === null) {
+                    BindMemberShipPackageDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Term Condition  Detail. </div>';
+                    $("#BindBusinessMemberShipPackageDetail").html(BindMemberShipPackageDetail);
+                }
+                else {
+                    BindMemberShipPackageDetail = ` <div class="title">
+                        <h2> ${response.data.Title}</h2>
+
+
+                    </div>
+                    <div class="des">
+                        <p>
+                            ${response.data.Description}
+                        </p>
+
+
+                    </div>`;
+
+                    $("#BindBusinessMemberShipPackageDetail").append(BindMemberShipPackageDetail);
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind Business Member Ship Plan Serive Detail
+    function GetAllMemberShipPlanServiceDetail() {
+
+
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetMemberShipPlanDetailFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessMemberShipPlanserviceDetail = '';
+                if (response.data.length === 0) {
+                    BusinessMemberShipPlanserviceDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No MemberShip Plan Service Detail. </div>';
+                } else {
+                    for (var i = 0; i < response.data.length; i++) {
+
+
+
+                        BusinessMemberShipPlanserviceDetail += ` <div class="icon-text-item">
+                    <div class="icon">
+                        <img src="  ${response.data[i].MemberShipPlanImageWithPath}" alt="logo" loading="lazy" style="height: 52px;
+    width: auto;">
+                    </div>
+                    <div class="text">
+                        <p>${response.data[i].Title}/</p>
+                    </div>
+                </div>`;
+
+
+
+                    }
+                }
+
+
+
+                $(".BindBusinessMemberShipPlanServiceDetail").append(BusinessMemberShipPlanserviceDetail);
+
+
+
+
+              //  $("#tab1").removeClass('d-none');
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    // Bind Business Active MemberShip Plan Detail List
+    function GetAllMemberShipActivePlanDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetActivePlansList?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var BusinessMemberShipActivePlansDetail = '';
+                if (response.data.BusinessActivePlans.length === 0) {
+                    BusinessMemberShipActivePlansDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No MemberShip Active Plan  Detail. </div>';
+                }
+                else
+                {
+                    for (var i = 0; i < response.data.BusinessActivePlans.length; i++) {
+                         BusinessMemberShipActivePlansDetail += `<div class="membership-col-one" > <div class="membership-price">
+                            <span class="sub-title">${response.data.BusinessActivePlans[i].Name}</span>
+                            <span class="prize">Rs.${response.data.BusinessActivePlans[i].Price}/-</span>
+                            <span class="text">${response.data.BusinessActivePlans[i].BusinessPlanDurationTypeName}</span>
+                            <a class="primary-button" href="/Booking/Checkout?itemId=${response.data.BusinessActivePlans[i].Id}&itemType=plan">Buy now</a>
+                            </div>
+                         </div> `;
+                    }
+
+                }
+                $("#BindBusinessActivePlanDetaillst").html(BusinessMemberShipActivePlansDetail);
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+     function GetAllMemberShipAdvancePlanDetail() {
+     $.ajax({
+         type: "GET",
+         url: '/api/Business/GetActivePlansList?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+         contentType: 'application/json',
+         success: function (response) {
+             if (response.status < 1) {
+                 $.iaoAlert({
+                     msg: response.message,
+                     type: "error",
+                     mode: "dark",
+                 });
+                 return;
+             }
+             var BusinessMemberShipActivePlansDetail = '';
+             if (response.data.BusinessadvancePlans.length === 0) {
+                 BusinessMemberShipActivePlansDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No MemberShip Active Plan  Detail. </div>';
+             }
+             else
+             {
+                 for (var i = 0; i < response.data.BusinessadvancePlans.length; i++) {
+                             BusinessMemberShipActivePlansDetail += `<div class="membership-col-one" > <div class="membership-price">
+                             <span class="sub-title">${response.data.BusinessadvancePlans[i].Name}</span>
+                             <span class="prize">Rs.${response.data.BusinessadvancePlans[i].Price}/-</span>
+                             <span class="text">${response.data.BusinessadvancePlans[i].BusinessPlanDurationTypeName}</span>
+                             <a class="primary-button" href="/Booking/Checkout?itemId=${response.data.BusinessadvancePlans[i].Id}&itemType=plan">Buy now</a>
+                             </div>
+                            </div> `;
+                     }
+
+             }
+             $("#advanceplandetails").html(BusinessMemberShipActivePlansDetail);
+         },
+
+         error: function(result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+    }
+
+
+    //Bind Business Member ship Package Detail
+    function GetAdvanceMemberShipPackageInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetAdvanceMemberShipPackageDetailFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BindMemberShipPackageDetail = '';
+                if (response.data === null) {
+                    BindMemberShipPackageDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Term Condition  Detail. </div>';
+                    $("#advancemembership").html(BindMemberShipPackageDetail);
+                }
+                else {
+                      BindMemberShipPackageDetail = `<div class="title">
+                     <h2> ${response.data.Title}</h2>
+
+                     </div>
+                 <div class="des">
+                     <p>
+                         ${response.data.Description}
+                     </p>
+                 </div>`;
+
+                    $("#advancemembership").append(BindMemberShipPackageDetail);
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

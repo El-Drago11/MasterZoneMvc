@@ -1,0 +1,252 @@
+﻿
+@{
+    ViewBag.Title = "Staff Detail";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .img-small {
+            width: 50px;
+            height: 50px;
+        }
+
+        .card-img-top {
+            height: 250px;
+            object-fit: cover;
+        }
+
+
+
+        .fc-event.color-Absent {
+            background-color: #e23848 !important;
+        }
+
+        .fc-event.color-Present {
+            background-color: #28a745 !important;
+        }
+
+        .fc-event.color-leave {
+            background-color: #7c8083 !important;
+        }
+
+        #staffPermissionDetail_Card {
+            max-height: 60vh;
+            overflow: scroll;
+            padding-bottom: 40px;
+        }
+        .fc-day-grid-event{
+            width: 105px;
+        }
+        
+        table.dataTable td, table.dataTable th {
+            text-align: center;
+        }
+        .simple-icon-arrow-left::before {
+            content: "\f053"; /* Unicode for the chevron left icon */
+            font-family: 'Font Awesome 5 Free';
+            color: #fff;
+            font-weight: bolder;
+        }
+        .simple-icon-arrow-right::before {
+            content: "\f054"; /* Unicode for the chevron left icon */
+            font-family: 'Font Awesome 5 Free';
+            color: #fff;
+            font-weight: bolder;
+        }
+        .fc-toolbar.fc-header-toolbar .btn-group .fc-next-button:hover, .fc-toolbar.fc-header-toolbar .btn-group .fc-prev-button:hover {
+            background-color: #00365a;
+        }
+
+    </style>
+}
+
+<input type="hidden" id="hiddenStaffLoginId" value="@ViewBag.StaffLoginId" />
+
+<main>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+
+                <div class="mb-2">
+                    <h1>Staff Detail</h1>
+                    @*<div class="text-zero top-right-button-container">
+                            <button type="button"
+                                    class="btn btn-lg btn-outline-primary dropdown-toggle dropdown-toggle-split top-right-button top-right-button-single"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                ACTIONS
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                            </div>
+                        </div>*@
+                    <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                        <ol class="breadcrumb pt-0">
+                            <li class="breadcrumb-item">
+                                <a href="/">Home</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">Staff Detail</li>
+                        </ol>
+                    </nav>
+                </div>
+
+
+                <ul class="nav nav-tabs separator-tabs ml-0 mb-5" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#profile" role="tab"
+                           aria-controls="profile" aria-selected="true">PROFILE</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link " id="Batch-tab" data-toggle="tab" href="#Batch" role="tab"
+                           aria-controls="plans" aria-selected="false">BATCH INFO</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " id="Follow-tab" data-toggle="tab" href="#EnquiryDetails" role="tab"
+                           aria-controls="classes" aria-selected="false">FOLLOW UP</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " id="attendance-tab" data-toggle="tab" href="#attendance" role="tab"
+                           aria-controls="classes" aria-selected="false">ATTENDANCE</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane show active" id="profile" role="tabpanel" aria-labelledby="first-tab">
+                        <div class="row">
+                            <div class="col-12 col-lg-5 col-xl-4 col-left">
+                                <div class="card mb-4">
+                                    <div class="text-center mt-4">
+                                        <img style="height: 150px; width: 150px; object-fit: cover; border-radius: 50%; display: inline-block;" src="@Resources.StaticResources.DefaultUserImage" id="imgStaffProfile" alt="Picture" class="card-img-top" />
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="staffDetail_Card"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-7 col-xl-8 col-right">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h4 class="mb-4">STAFF PERMISSIONS </h4>
+                                        <div id="staffPermissionDetail_Card">
+                                            @* Permissions List will be binded here *@
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="tab-pane fade" id="Batch" role="tabpanel" aria-labelledby="Batch-tab">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">BATCH DETAILS</h5>
+                                        <table id="tblBatchDetails" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Sno.</th>
+                                                    <th>Batch Name</th>
+                                                    <th>Start Time</th>
+                                                    <th>End Time</th>
+                                                    <th>Group Name</th>
+                                                    <th>Max Student</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="EnquiryDetails" role="tabpanel" aria-labelledby="Follow-tab">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card">
+
+                                    <div class="card-body">
+                                        <h5 class="card-title">ENQUIRY DETAILS</h5>
+                                        <table id="tblEnquiryDetails" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>SNo.</th>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Notes</th>
+                                                    <th>Enquiry Date</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="tab-pane fade" id="attendance" role="tabpanel" aria-labelledby="attendance-tab">
+                        @*<input type="text" class="currentyear" id="currentyear" value="@(DateTime.UtcNow.AddMinutes(330).ToString("yyyy"))" />
+        <input type="text" class="currentmonth" id="currentmonth" value="@(DateTime.Now.ToString("MM"))" />*@
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="col-xl-12 col-lg-12 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+
+                                                    <h5 class="card-title">ATTENDANCE</h5>
+                                                    <div class="attendance_calendar"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Attendance Details</h5>
+                                        <table id="tblAttendenceDetails" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center" style="width:10%">Sno.</th>
+                                                    <th class="text-center">Date</th>
+                                                    <th class="text-center">Status</th>
+                                                    <th class="text-center">Leave Reason</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_StaffDetailsScriptPartial.cshtml")
+}

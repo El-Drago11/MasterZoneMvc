@@ -1,0 +1,673 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "Training";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.bubble.css" />
+    @Html.Partial("/Views/Shared/ScriptPartials/_GoogleMapsScriptPartial.cshtml");
+
+
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .TrainingCountryState {
+            cursor: no-drop;
+        }
+
+        .cursor-not-allowed {
+            cursor: not-allowed;
+        }
+    </style>
+
+
+
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Training</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Training</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageBusinessPlans_ViewTrainings_AddTrainings"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnTrainingAdd">Add Training</a>
+                        </div>
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewTraining">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="ViewForTraining" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S No.</th>
+                                        <th>InstructorName</th>
+                                        <th>TrainingName</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Price</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddTraining" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h3 class="mb-4" id="myText">Training Basic Details</h3>
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="training-name">Training Name</label>
+                                            <input type="text" class="form-control" id="training_name" required />
+                                            <div class="error-class" id="error_training_Name"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Select Instructor</label>
+                                            <select id="ddlSelectedInstructorId" class="form-control" placeholder="Select Instructor" data-width="100%">
+
+                                                @*<option label="&nbsp;">&nbsp;</option>*@
+                                            </select>
+                                            <div class="error-class" id="error_ddlSelectedInstructorId"></div>
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description">Training Short Description</label>
+                                            <textarea name="description" class="form-control" rows="6" id="training_description"></textarea>
+                                            <div class="error-class" id="error_training_description"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="instructor_email">Instructor Email</label>
+                                            <input type="text" class="form-control" id="instructor_email" required />
+                                            <div class="error-class" id="error_instructor_email"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+
+                                            <label for="mobile_number">Instructor Mobile Number</label>
+                                            <input type="number" class="form-control" id="instructor_number" required />
+                                            <div class="error-class" id="error_instructor_number"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="alternate_number">Alternate Mobile Number</label>
+                                            <input type="number" class="form-control" id="alternate_number" required />
+                                            <div class="error-class" id="error_alternate_number"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Certification Profile/Brand</label>
+                                            <select id="ddlCertificationProfileId" class="form-control" placeholder="Select Certification Profile" data-width="100%" onchange="GetBusinessAvailableBookedLicenseListByCertificate();">
+                                                <option value="0">Select Certification profile</option>
+                                                @*<option label="&nbsp;">&nbsp;</option>*@
+                                            </select>
+                                            <div class="error-class" id="error_ddlCertificationProfileId"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Certification License</label>
+                                            <select id="ddlLicenseBookingId" class="form-control" placeholder="Select License" data-width="100%">
+                                                <option value="0">Select License</option>
+                                                @*<option label="&nbsp;">&nbsp;</option>*@
+                                            </select>
+                                            <div class="error-class" id="error_ddlLicenseBookingId"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    @*<div class="col-md-12">
+                                        <div class="form-group">
+                                            
+                                        </div>
+                                    </div>*@
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Training Price</label>
+                                            <div class="radio-button">
+                                                <div class="radio-iner">
+                                                    <input type="radio" id="Paid" name="fav_language" checked value="1">
+                                                    <label for="Paid">Paid</label>
+                                                    <input type="radio" id="free" name="fav_language" value="0">
+                                                    <label for="free">Free</label>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+
+                                    <div class="col-md-6">
+
+                                        <div class="form-group">
+                                            <label for="Price">Price</label>
+                                            <input type="number" class="form-control" id="price_number" required />
+                                            <div class="error-class" id="error_price_number"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+
+                                        <div class="form-group">
+                                            <label for="Additionalprice_Information">Price Additional Information</label>
+                                            <input type="text" class="form-control" id="Additionalprice_Information" required />
+                                            <div class="error-class" id="error_Additionalprice_Information"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <h3>Training Location</h3>
+                                <div id="TrainingMap" style="width: 100%; height: 400px;"></div>
+
+                                <input type="hidden" id="LocationLatitude" value="" />
+                                <input type="hidden" id="LocationLongitude" value="" />
+                                <div class="col-12 from-group text-center mt-4 mb-4">
+                                    <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Center">Center Name</label>
+                                            <input type="text" class="form-control" id="center_name" required />
+                                            <div class="error-class" id="error_center_name"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Landmark">Please Enter Location Landmark</label>
+                                            <input type="text" class="form-control" id="Landmark_name" required />
+                                            <div class="error-class" id="error_Landmark_name"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description">Address</label>
+                                            <textarea name="description" class="form-control" rows="6" id="training_Address"></textarea>
+                                            <div class="error-class" id="error_training_Address"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="country">Country</label>
+                                            <select id="country" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                            </select>
+                                            <input type="text" id="country" class="form-control TrainingCountryState MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_txtCountry"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="state">State</label>
+                                            <select id="state" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();"></select>
+                                            <input type="text" id="state" class="form-control TrainingCountryState  MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_state"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="txt_City">City</label>
+                                            <select id="txt_City" class="form-control WithoutMapLocation" data-width="100%">
+                                            </select>
+                                            <input type="text" id="txt_City" class="form-control MapLocation d-none" value="" />
+                                            <div class="error-class" id="error_txt_City"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="txt_PinCode">PinCode</label>
+                                            <input type="text" class="form-control" id="txt_PinCode" required />
+                                            <div class="error-class" id="error_txt_PinCode"></div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="location">Google Map Location Url</label>
+                                            <input type="text" class="form-control" id="location" required />
+                                            <div class="error-class" id="error_location"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time">Traning Start Date</label>
+                                            <input type="date" class="form-control" id="Training_StartDate" required />
+                                            <div class="error-class" id="error_Training_StartDate"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time">Traning End Date</label>
+                                            <input type="date" class="form-control" id="Training_EndDate" required />
+                                            <div class="error-class" id="error_Training_EndDate"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time">Traning Start Time</label>
+                                            <input type="Time" class="form-control" id="Training_StartTime" required />
+                                            <div class="error-class" id="error_Training_StartTime"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_time">Traning End Time</label>
+                                            <input type="Time" class="form-control" id="Training_EndTime" required />
+                                            <div class="error-class" id="error_Training_EndTime"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label for="About_Event">About Training</label>
+                                        <div class="html-editor form-control" id="About_Training" style="height: 114px"></div>
+                                        <div class="error-class" id="error_About_Training"></div>
+
+                                    </div>
+                                </div>
+                                <br />
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="city">Music Type</label>
+                                            <input type="text" class="form-control" id="txt_music" required />
+                                            <div class="error-class" id="error_txt_music"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="energy">Energy Level</label>
+                                            <input type="text" class="form-control" id="txt_energy" required />
+                                            <div class="error-class" id="error_txt_energy"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="dance">Dance Style</label>
+                                            <input type="text" class="form-control" id="txt_dance" required />
+                                            <div class="error-class" id="error_txt_dance"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Training Image</label>
+                                            <div class="imagePreview">
+                                                <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileTrainingImage" class="border form-control" accept="image/*">
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <h2>What To Expect?</h2>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="description">Exceptation Description</label>
+                                            <div class="html-editor form-control" id="training_exceptationdescription" style="height: 114px"></div>
+                                            <div class="error-class" id="error_training_exceptationdescription"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h2>Become Instructor</h2>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Rules"> Instructor Becomes </label>
+                                            <div class="html-editor form-control" id="training_InstructorBecomes" style="height: 114px"></div>
+                                            <div class="error-class" id="error_training_InstructorBecomes"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Rules">Training Rules </label>
+                                            <div class="html-editor form-control" id="training_Rules" style="height: 114px"></div>
+                                            <div class="error-class" id="error_training_Rules"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="description">Additional Information</label>
+                                            <div class="html-editor form-control" id="training_Additionaldescription" style="height: 114px"></div>
+                                            <div class="error-class" id="error_training_Additionaldescription"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h2>Included With  Session</h2>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Seats">Total Seats</label>
+                                            <input type="number" class="form-control" id="txt_Seats" placeholder="Total Seats" required />
+                                            <div class="error-class" id="error_txt_Seats"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Lectures">Total Lectures</label>
+                                            <input type="number" class="form-control" id="txt_Lectures" placeholder=" Lectures" required />
+                                            <div class="error-class" id="error_txt_Lectures"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Classes">Total Classes </label>
+                                            <input type="number" class="form-control" id="txt_Classes" placeholder=" Classes" required />
+                                            <div class="error-class" id="error_txt_Classes"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="ClassDays">Training Class Days </label>
+                                            @*<input type="text" class="form-control" id="txt_ClassDays" placeholder="Class Days" required />*@
+
+                                            <select id="ddlSelectedClassDays" class="form-control select2-multiple" data-placeholder="Select Class Days" multiple="multiple" data-width="100%">
+                                                <optgroup label="Days Of Week">
+                                                    <option value="Sunday">Sunday</option>
+                                                    <option value="Monday">Monday</option>
+                                                    <option value="Tuesday">Tuesday</option>
+                                                    <option value="Wednesday">Wednesday</option>
+                                                    <option value="Thursday">Thursday</option>
+                                                    <option value="Friday">Friday</option>
+                                                    <option value="Saturday">Saturday</option>
+                                                </optgroup>
+                                            </select>
+                                            <div class="error-class" id="error_txt_ClassDays"></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Credits">Total Credits </label>
+                                            <input type="number" class="form-control" id="txt_Credits" placeholder=" Credits" required />
+                                            <div class="error-class" id="error_txt_Credits"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Duration"> Duration</label>
+                                            <input type="text" class="form-control" id="txt_Duration" placeholder=" Duration" required />
+                                            <div class="error-class" id="error_txt_Duration"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitToTrainingInfo();">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</main>
+
+
+
+@section Scripts{
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/business-panel/js/dore-plugins/select.from.library.js"></script>
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+    <script>
+        var toolbarOptionsAbout = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAbout = new Quill('#About_Training', {
+            modules: {
+                toolbar: toolbarOptionsAbout
+            },
+            theme: 'snow'
+        });
+    </script>
+    <script>
+        var toolbarOptionsAdditionalInfo = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAdditionalInformation = new Quill('#training_Additionaldescription', {
+            modules: {
+                toolbar: toolbarOptionsAdditionalInfo
+            },
+            theme: 'snow'
+        });</script>
+    <script>
+        var toolbarOptionsTrainingRules = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillTrainingRule = new Quill('#training_Rules', {
+            modules: {
+                toolbar: toolbarOptionsTrainingRules
+            },
+            theme: 'snow'
+        });
+    </script>
+
+    <script>
+        var toolbarOptionsInstructorBecome = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillInstructorBecome = new Quill('#training_InstructorBecomes', {
+            modules: {
+                toolbar: toolbarOptionsInstructorBecome
+            },
+            theme: 'snow'
+        });
+    </script>
+    <script>
+        var toolbarOptionsExpectation = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillExpectation = new Quill('#training_exceptationdescription', {
+            modules: {
+                toolbar: toolbarOptionsExpectation
+            },
+            theme: 'snow'
+        });
+    </script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_TrainingScriptPartial.cshtml")
+}
+
+
+

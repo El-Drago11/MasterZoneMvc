@@ -1,0 +1,1512 @@
+﻿<script>
+    var UserToken_Global = "";
+    var LandMarkBusinessLocation = '';
+    var CountryBusinessLocation = 'Select';
+    var LocationChooseMap = 0;
+    var StateBusinessLocation = 'Select';
+    var CityBusinessLocation = 'Select';
+
+$(document).ready(function () {
+    $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            EditBusinessProfile();
+            GetAllMasterIdDetails();
+            GetCurrentPackageDetail();
+            initMap();
+            //GetCountriesList();
+            //GetCountriesList();
+            //GetStatesLists();
+            //GetCitiesList();
+        }
+        else {
+            $.get("/Business/GetStaffToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                    GetAllMasterIdDetails();
+                    GetCurrentPackageDetail();
+                    initMap();
+                    //StopLoading();
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+});
+
+ function GetCurrentPackageDetail() {
+
+     $.ajax({
+         type: "GET",
+         url: '/api/Booking/GetBusinessCurrentPackageBookingDetail',
+         headers: {
+             "Authorization": "Bearer " + UserToken_Global,
+             "Content-Type": "application/json"
+         },
+         contentType: 'application/json',
+         success: function (response) {
+             if (response.status < 1) {
+                 $.iaoAlert({
+                     msg: response.message,
+                     type: "error",
+                     mode: "dark",
+                 });
+                 return;
+             }
+
+             var res_currentdetail = '';
+             if (response.data == null) {
+                 res_currentdetail =  $("#bind_currentpackage").append(res_currentdetail);
+             }
+             else {
+                 res_currentdetail = ` <tr><th>Title</th><td>${response.data.Name}</td></tr>
+                                    <tr><th>Start Date</th><td>${response.data.StartDate}</td></tr>
+                                    <tr><th>End Date</th><td>${response.data.EndDate}</td></tr>`;
+                 $("#bind_currentpackage").append(res_currentdetail);
+             }
+             
+
+         },
+        error: function (result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+ }
+
+
+function ResetProfileform() {
+    // Reset data
+    $("#txtProfileFirstName").val('');
+    $("#txtProfileLastName").val('');
+    $("#txtEmail").val('');
+    $("#txtProfileAbout").val('');
+    $("#txtBusinessName").val('');
+    $("#fileProfileImage_ManageProfile").val('');
+    $("#ProfileImage").attr('src', '');
+    $("#fileBusinesslogo_ManageProfile").val('');
+    $("#BusinessLogo").attr('src', '');
+    $("input#country").val('');
+    $("input#state").val('');
+    $("input#txt_City").val('');
+    $(".WithoutMapLocation").removeClass('d-none');
+    $(".MapLocation").addClass('d-none');
+    $("#txt_City").html('');
+    $("#txt_City").append('<option value="0">Select</option>');
+    $("#state").html('');
+    $("#state").append('<option value="0">Select</option>');
+    $("#country").html('');
+    $("#country").append('<option value="0">Select</option>');
+    CountryBusinessLocation = 'Select';
+    LandMarkBusinessLocation = '';
+    LocationChooseMap = 0;
+    $("#text_DocumentTitile_ManageProfile").val('');
+    $("#fileBusinessDocument_ManageProfile").val('');
+    $("#PhoneNumber").val('');
+    $("#Business_Address").val('');
+    $('#Landmark_name').val('');
+    $("#txt_PinCode").val('');
+    $("#officialWebSiteUrl").val('');
+    $("#Facebook_Profilelink").val('');
+    $("#Instagram_Profilelink").val('');
+    $("#LinkedInWebsite_ProfileLink").val('');
+    $("#LinkedInWebsite_ProfileLink").val('');
+
+    $(".error-class").html('');
+}
+
+    function btnAddUpdateProfile() {
+        let is_valid = true;
+        $(".error-class").html('');
+
+        // var _Mode = (StaffId_Global > 0) ? 2 : 1;
+        var _Mode = 1;
+        let _Country = '';
+        let _state = '';
+        let _cityinput = '';
+
+        let _businessFirstName = $("#txtProfileFirstName").val().trim();
+        let _businessLastName = $("#txtProfileLastName").val().trim();
+        let _email = $("#txtEmail").val().trim();
+        let _about = $("#txtProfileAbout").val().trim();
+        let _businessName = $("#txtBusinessName").val().trim();
+        let _Landmarkname = $("#Landmark_name").val().trim();
+        let _BusinessAddress = $("#Business_Address").val();
+        let _locationLatitude = $("#LocationLatitude").val();
+        let _locationLongitude = $("#LocationLongitude").val();
+        let _PinCode = $("#txt_PinCode").val().trim();
+
+        var _businessPhoneNumber = $("#PhoneNumber").val();
+        let _instructorexperience = $("#txtExperience").val().trim();
+        let _privacyuniqueId = $('input[name="Privacy_Id"]:checked').val();
+        let _OfficialWebsiteUrl = $("#officialWebsite_URl").val().trim();
+        let _facebookProfileLink = $("#Facebook_Profilelink").val().trim();
+        let _instagramProfileLink = $("#Instagram_Profilelink").val().trim();
+        let _twitterProfileLink = $("#LinkedInWebsite_ProfileLink").val().trim();
+        let _linkedInProfileLink = $("#LinkedInWebsite_ProfileLink").val().trim();
+
+
+
+        if (LocationChooseMap == 1) {
+            _Country = $("input#country").val();
+            _state = $("input#state").val();
+            _cityinput = $("input#txt_City").val();
+        }
+        else {
+            _Country = $("#country").val();
+            _state = $("#state").val();
+            _cityinput = $("#txt_City").val();
+
+        }
+
+        let _error_businessFirstName = $("#error_txtProfileFirstName");
+        let _error_businessLastName = $("#error_txtProfileLastName");
+        let _error_email = $("#error_txtEmail");
+        let _error__about = $("#error_txtProfileAbout");
+        let _error_businessName = $("#error_txtBusinessName");
+        let _error_Landmarkname = $("#error_Landmark_name");
+        let _error_BusinessAddress = $("#error_Business_Address");
+        let _error_Country = $("#error_txtCountry");
+        let _error_state = $("#error_state");
+        let _error_cityinput = $("#error_txt_City");
+        let _error_PinCode = $("#error_txt_PinCode");
+        let _error_PhoneNumber = $("#error_PhoneNumber");
+
+        let _errorinstructorexperience = $("#error_txtExperience");
+        let _error_privacyuniqueId = $('.radio-button');
+
+
+        var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+        var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+
+        if (validate_IsEmptyStringInputFieldValue(_businessFirstName)) {
+            is_valid = false;
+            _error_businessFirstName.html('@(Resources.BusinessPanel.FirstNameRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_businessLastName)) {
+            is_valid = false;
+            _error_businessLastName.html('@(Resources.BusinessPanel.LastNameRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_email)) {
+            is_valid = false;
+            _error_email.html('@(Resources.BusinessPanel.EmailRequired)');
+        }
+        else if (!TestEmail.test(_email)) {
+            is_valid = false;
+            _error_email.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_about)) {
+            is_valid = false;
+            _error__about.html('@(Resources.BusinessPanel.AboutRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_businessName)) {
+            is_valid = false;
+            _error_businessName.html('@(Resources.BusinessPanel.BusinessNameRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_Landmarkname)) {
+            is_valid = false;
+            _error_Landmarkname.html('@(Resources.BusinessPanel.LandmarkNameRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_BusinessAddress)) {
+            is_valid = false;
+            _error_BusinessAddress.html('@(Resources.BusinessPanel.TrainingAddressRequired)');
+        }
+        if (_Country == "" || _Country <= 0) {
+            is_valid = false;
+            _error_Country.html('@(Resources.BusinessPanel.CountryNameRequired)');
+        }
+
+        if (_state == "" || _state <= 0) {
+            is_valid = false;
+            _error_state.html('@(Resources.BusinessPanel.StateNameRequired)');
+        }
+        if (_cityinput == "" /*|| _cityinput <= 0*/) {
+            is_valid = false;
+            _error_cityinput.html('@(Resources.BusinessPanel.CityNameRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_PinCode)) {
+            is_valid = false;
+            _error_PinCode.html('@(Resources.BusinessPanel.PinCodeRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_businessPhoneNumber)) {
+            is_valid = false;
+            _error_PhoneNumber.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+        }
+        else if (!phone_test.test(_businessPhoneNumber)) {
+            is_valid = false;
+            _error_PhoneNumber.html('@(Resources.BusinessPanel.ValidPhoneNumberRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_instructorexperience)) {
+            is_valid = false;
+              _errorinstructorexperience.html('@(Resources.BusinessPanel.ExperienceRequired)');
+        }
+        @*if (validate_IsEmptySelectInputFieldValue(_privatevalue) || parseInt(_privatevalue) <= 0) {
+        is_valid = false;
+            _errorpublicid.html('@(Resources.BusinessPanel.SelectVerifiedRequired)');
+    }*@
+
+        if (validate_IsEmptyStringInputFieldValue(_OfficialWebsiteUrl)) {
+            is_valid = false;
+
+        }
+        if (!$('input[name="Privacy_Id"]:checked').val()) {
+            is_valid = false;
+            _error_privacyuniqueId.append('<div class="error-message">Please select an option</div>'); // appending error message
+        }
+
+
+        if (is_valid) {
+            StartLoading();
+
+            var data = new FormData();
+            //data.append("Id", StaffId_Global);
+            data.append("Email", _email);
+            data.append("FirstName", _businessFirstName);
+            data.append("LastName", _businessLastName);
+            data.append("About", _about);
+            data.append("BusinessName", _businessName);
+            data.append("Mode", _Mode);
+
+            //var _staffImageFile_MS = $("#fileProfileImage_ManageProfile").get(0);
+            //var _staffImageFiles = _staffImageFile_MS.files;
+            //data.append('ProfileImage', _staffImageFiles[0]);
+            //var _staffLogoFile_MS = $("#fileBusinesslogo_ManageProfile").get(0);
+            //var _staffLogoFiles = _staffLogoFile_MS.files;
+            //data.append('BusinessLogo', _staffLogoFiles[0]);
+            //data.append("DocumentTitle", _DocumentTitle);
+            //data.append("DocumentUploadedFile", _businessDocumentFiles[0]);
+            data.append("PhoneNumber", _businessPhoneNumber);
+            data.append("LandMark", _Landmarkname);
+            data.append("Address", _BusinessAddress);
+            data.append("Country", _Country);
+            data.append("State", _state);
+            data.append("PinCode", _PinCode);
+            data.append("City", _cityinput);
+            data.append("LocationLatitude", _locationLatitude);
+            data.append("LocationLongitude", _locationLongitude);
+            data.append("Experience", _instructorexperience);
+            data.append("Privacy_UniqueUserId", _privacyuniqueId);
+            data.append("OfficialWebSiteUrl", _OfficialWebsiteUrl);
+            data.append("FacebookProfileLink", _facebookProfileLink);
+            data.append("InstagramProfileLink", _instagramProfileLink);
+            data.append("TwitterProfileLink", _twitterProfileLink);
+            data.append("LinkedInProfileLink", _linkedInProfileLink);
+
+
+            $.ajax({
+                url: '/api/Business/Profile/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetProfileform();
+                    StopLoading();
+                    EditBusinessProfile();
+                    GetCountriesList();
+                    //GetStatesLists();
+                    //GetCitiesList();
+                    initMap();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function btnAddUpdateProfileImage()
+    {
+        var _BusinessProfileImageFile_MS = $("#fileProfileImage_ManageProfile").get(0);
+        var _BusinessProfileImageFiles = _BusinessProfileImageFile_MS.files;
+        $("#error_fileProfileImage_ManageProfile").html('');
+
+        if (_BusinessProfileImageFiles.length <= 0) {
+            $("#error_fileProfileImage_ManageProfile").html('@(Resources.BusinessPanel.PleaseSelectAnImage_ErrorMessage)');
+            return;
+        }
+
+        var data = new FormData();
+        data.append('ProfileImage', _BusinessProfileImageFiles[0]);
+
+         $.ajax({
+             url: '/api/Business/Profile/AddUpdateProfileImage',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetProfileform();
+                    StopLoading();
+                    EditBusinessProfile();
+                    GetCountriesList();
+                    //GetStatesLists();
+                    //GetCitiesList();
+                    initMap();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+
+    }
+    function btnAddUpdateCoverImage()
+    {
+        var _BusinessCoverImageFile_MS = $("#fileCoverImage_ManageProfile").get(0);
+        var _BusinessCoverImageFiles = _BusinessCoverImageFile_MS.files;
+        $("#error_fileCoverImage_ManageProfile").html('');
+
+        if (_BusinessCoverImageFiles.length <= 0) {
+            $("#error_fileCoverImage_ManageProfile").html('@(Resources.BusinessPanel.PleaseSelectAnImage_ErrorMessage)');
+            return;
+        }
+
+        var data = new FormData();
+        data.append('CoverImage', _BusinessCoverImageFiles[0]);
+
+         $.ajax({
+             url: '/api/Business/Profile/AddUpdateCoverImage',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetProfileform();
+                    StopLoading();
+                    EditBusinessProfile();
+                    GetCountriesList();
+                    //GetStatesLists();
+                    //GetCitiesList();
+                    initMap();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+
+    }
+
+    function btnAddUpdateBusinessLogo()
+    {
+        var _BusinessLogoFile_MS = $("#fileBusinesslogo_ManageProfile").get(0);
+        var _BusinessLogoFiles = _BusinessLogoFile_MS.files;
+
+        if (_BusinessLogoFiles.length <= 0) {
+            $("#error_filebusinesslogo_ManageProfile").html('@(Resources.BusinessPanel.PleaseSelectAnImage_ErrorMessage)');
+            return;
+        }
+
+        var data = new FormData();
+        data.append('BusinessLogo', _BusinessLogoFiles[0]);
+
+         $.ajax({
+             url: '/api/Business/Profile/AddUpdateBusinessLogo',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetProfileform();
+                    StopLoading();
+                    EditBusinessProfile();
+                    GetCountriesList();
+                    GetStatesLists();
+                    GetCitiesList();
+                    initMap();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+    function btnAddBusinessDocuments()
+    {
+        let is_valid = true;
+        $(".error-class").html('');
+
+        let _DocumentTitle = $("#text_DocumentTitile_ManageProfile").val().trim();
+        var _businessDocumentFile_MS = $("#fileBusinessDocument_ManageProfile").get(0);
+        var _businessDocumentFiles = _businessDocumentFile_MS.files;
+
+        if (_DocumentTitle == "") {
+                is_valid = false;
+            $("#error_text_DocumentTitile_ManageProfile").html('@(Resources.BusinessPanel.BusinessProfileDocumentTitleErrorMessage)');
+
+        }
+        if (_businessDocumentFiles.length <= 0) {
+                is_valid = false;
+            $("#error_fileBusinessDocument_ManageProfile").html('@(Resources.BusinessPanel.BusinessProfileDocumentErrorMessage)');
+
+        }
+        if (is_valid) {
+
+            StartLoading();
+            var data = new FormData();
+            data.append("DocumentTitle", _DocumentTitle);
+            data.append("DocumentUploadedFile", _businessDocumentFiles[0]);
+
+                $.ajax({
+                    url: '/api/Business/Profile/AddBusinessOwnerDocuments',
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    //contentType: 'application/json',
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+
+                            return;
+                        }
+
+                        ResetProfileform();
+                        StopLoading();
+                        EditBusinessProfile();
+                        GetCountriesList();
+                        GetStatesLists();
+                        GetCitiesList();
+                        initMap();
+                    },
+                    error: function (result) {
+                        StopLoading();
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+        }
+    }
+
+    function GetCountriesList() {
+
+        $("#country").html('');
+        $("#country").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#country").append(res_country);
+
+                if (CountryBusinessLocation != undefined && CountryBusinessLocation != "" && CountryBusinessLocation != "Select" && CountryBusinessLocation != 0)
+                    $("#country").val(CountryBusinessLocation).trigger('change');
+
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeCountry() {
+
+        StartLoading();
+        //var _country_id = $("#ddl_ClassOfflineCountry").val();
+        var _country_id = $('#country').find('option:selected').attr('data-phonecode-val');
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+                var hasListItem = false;
+                for (var i = 0; i < dataState.data.length; i++) {
+                    if (StateBusinessLocation != undefined && StateBusinessLocation != "" && StateBusinessLocation.toLowerCase() == dataState.data[i].Name.toLowerCase()) {
+                        hasListItem = true;
+                    }
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+
+                if (StateBusinessLocation != "" && StateBusinessLocation != undefined) {
+                    if (hasListItem) {
+                        $("#state").val(StateBusinessLocation).trigger('change');
+                    }
+                    else {
+                        $("#state").addClass('d-none');
+                        $("input#state").val(StateBusinessLocation);
+                        $("input#state").removeClass('d-none');
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+                $("#state").val(StateBusinessLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#state').find('option:selected').attr('data-phonecode-val');;
+
+        $("#txt_City").html('');
+        $("#txt_City").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+                    var hasListItem = false;
+                    for (var i = 0; i < dataCity.data.length; i++) {
+                        if (CityBusinessLocation != undefined && CityBusinessLocation != "" && CityBusinessLocation.toLowerCase() == dataCity.data[i].Name.toLowerCase()) {
+                            hasListItem = true;
+                        }
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+
+                    if (CityBusinessLocation != undefined && CityBusinessLocation != "") {
+                        if (hasListItem) {
+                            $("#txt_City").val(CityBusinessLocation).trigger('change');
+                        }
+                        else {
+                            $("#txt_City").addClass('d-none');
+                            $("input#txt_City").val(CityBusinessLocation);
+                            $("input#txt_City").removeClass('d-none');
+                        }
+                    }
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+       function GetCitiesList() {
+
+        StartLoading();
+           $("#txt_City").html('');
+           $("#txt_City").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+                    $("#txt_City").val(CityBusinessLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+// Image File Preview -------------------------------------------------------------
+    document.getElementById('fileCoverImage_ManageProfile').addEventListener('change', handleCoverImageUpload);
+
+function handleCoverImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#CoverImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#CoverImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('CoverImage').src = event.target.result;
+        $('#CoverImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+// Image File Preview -------------------------------------------------------------
+document.getElementById('fileProfileImage_ManageProfile').addEventListener('change', handleProfileImageUpload);
+
+function handleProfileImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#ProfileImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#ProfileImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('ProfileImage').src = event.target.result;
+        $('#ProfileImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+document.getElementById('fileBusinesslogo_ManageProfile').addEventListener('change', handleBusinessLogoUpload);
+
+function handleBusinessLogoUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#BusinessLogo').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#BusinessLogo').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('BusinessLogo').src = event.target.result;
+        $('#BusinessLogo').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function EditBusinessProfile() {
+
+    var _url = "/api/Business/Profile/Get/";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            LandMarkBusinessLocation = response.data.LandMark;
+            CountryBusinessLocation = response.data.Country;
+            StateBusinessLocation = response.data.State;
+            CityBusinessLocation = response.data.City;
+
+            $("#txtProfileFirstName").val(response.data.FirstName);
+            $("#txtProfileLastName").val(response.data.LastName);
+            $("#txtEmail").val(response.data.Email);
+            $("#txtProfileAbout").val(response.data.About);
+            $("#txtBusinessName").val(response.data.BusinessName);
+            $("#PhoneNumber").val(response.data.PhoneNumber);
+            $("#Business_Address").val(response.data.Address);
+            $("#country").val(CountryBusinessLocation);
+            $("#txt_City").val(CityBusinessLocation);
+            $("#state").val(StateBusinessLocation);
+            $("#txt_PinCode").val(response.data.PinCode);
+            $("#Landmark_name").val(LandMarkBusinessLocation);
+            $("#txtExperience").val(response.data.Experience);
+            $("#officialWebsite_URl").val(response.data.OfficialWebSiteUrl);
+            $("#Facebook_Profilelink").val(response.data.FacebookProfileLink);
+            $("#LinkedInWebsite_ProfileLink").val(response.data.LinkedInProfileLink);
+            $("#Instagram_Profilelink").val(response.data.InstagramProfileLink);
+            $("#TwitterWebsite_ProfileLink").val(response.data.TwitterProfileLink);
+
+
+            $("#fileProfileImage_ManageProfile").val('');
+
+            if (response.data.ProfileImageWithPath != "") {
+                $("#ProfileImage").attr('src', response.data.ProfileImageWithPath);
+                $("#ProfileImage").removeClass('d-none');
+            }
+            $("#fileCoverImage_ManageProfile").val('');
+            if (response.data.CoverImageWithPath != "") {
+                $("#CoverImage").attr('src', response.data.CoverImageWithPath);
+                $("#CoverImage").removeClass('d-none');
+
+            }
+            $("#fileBusinesslogo_ManageProfile").val('');
+            if (response.data.BusinessLogoWithPath != "") {
+                $("#BusinessLogo").attr('src', response.data.BusinessLogoWithPath);
+                $("#BusinessLogo").removeClass('d-none');
+            }
+       
+
+           
+
+            var _privacyuniqueId = response.data.Privacy_UniqueUserId;
+            console.log(_privacyuniqueId);
+            if (_privacyuniqueId == 1) {
+               // console.log('');
+                $("#Private").prop('checked', true).trigger('change');
+            }
+            else if (_privacyuniqueId == 2) {
+                //console.log('');
+                $("#Public").prop('checked', true).trigger('change');
+            }
+            else if (_privacyuniqueId == 3) {
+                //console.log('');
+                $("#Protected").prop('checked', true).trigger('change');
+            }
+
+            $('#displayBusinessCategory').html(response.data.BusinessCategoryName);
+            $('#displayBusinessSubCategory').html(response.data.BusinessSubCategoryName);
+
+            //var profilePageLink = GetBusinessProfilePageViewLink(response.data.ProfilePageTypeKey, response.data.BusinessOwnerLoginId);
+            var profilePageLink = `/Home/BusinessProfile?businessOwnerLoginId=${response.data.BusinessOwnerLoginId}`;
+            $('#btnVisitorProfilePage').attr('href', profilePageLink);
+
+            GetCountriesList();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    // Document File Preview -------------------------------------------------------------
+    @*document.getElementById('fileBusinessDocument_ManageProfile').addEventListener('change', handleBusinessDocumentUpload);
+
+    function handleBusinessDocumentUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#BusinessDocument').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('ViewBusinessDocument').href = event.target.result;
+        $('#BusinessDocument').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+    }*@
+
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("Business_ManageProfileMap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+    var postal_code = '';
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#Landmark_name").val(LandMarkBusinessLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == "street_number" || results[0].address_components[i].types[0] == "premise") {
+                                var street = results[0].address_components[i].long_name;
+                                $("#mapstreetInput").val(street);
+                            }
+                            if (results[0].address_components[i].types[0] == 'sublocality_level_1' || results[0].address_components[i].types[1] == 'sublocality_level_1' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                var neighbourhood = results[0].address_components[i].long_name;
+                                if (pp == 1) {
+                                    $("#mapneighbourhoodInput").val();
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                } else {
+                                    $("#mapneighbourhoodInput").val(neighbourhood);
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                }
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#txt_City").val(city);
+        $("#txt_PinCode").val(postal_code);
+        $("input#state").val(State);
+        $("input#country").val(Country);
+        $("#Landmark_name").val(LandMark);
+        $("#Business_Address").val(FullAddress);
+        LocationChooseMap = 1;
+    })
+
+    function GetBusinessProfilePageViewLink(profilePageTypeKey, businessOwnerLoginId) {
+        var link = "#";
+
+        if (profilePageTypeKey == "sports") {
+            link = `/Home/Sports?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "dance_web") {
+            link = `/Home/Dance?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "gym_web") {
+            link = `/Home/Gym?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "music_web") {
+            link = `/Home/Music?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "yoga_web") {
+            link = `/Home/Yoga?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "education_web") {
+            link = `/Home/Education?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "event_organisation") {
+            link = `/Home/EventOrganisation?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "teacher") {
+            link = `/Home/Teacher?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        else if (profilePageTypeKey == "instructor") {
+            link = `/Home/Instructor?businessOwnerLoginId=${businessOwnerLoginId}`;
+        }
+        return link;
+    }
+
+    function GetAllMasterIdDetails() {
+
+        var _url = "/api/Business/GetAllMasterIdDetail";
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $("#businessMasterId").html(response.data.BusinessMasterId);
+                $("#businessUniqueUserId").html(response.data.BusinessUniqueUserId);
+                $("#studentUserMasterId").html(response.data.StudentUserMasterId);
+                $("#studentUniqueUserId").html(response.data.StudentUniqueUserId);
+
+
+                var _tempMasterIds = ``;
+                for (var i = 0; i < response.data.TemporaryMasterIds.length; i++)
+                {
+                    var _item = response.data.TemporaryMasterIds[i];
+                    _tempMasterIds += `
+                                    <div class="d-flex justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <img src="${_item.BusinessLogoWithPath}" class="img-size-sm mr-2" />
+                                            <span class="font-weight-bold">${_item.BusinessName}</span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="font-weight-bold">${_item.BusinessMasterId}</span>
+                                            <span>${_item.BusinessUniqueUserId}</span>
+                                        </div>
+                                    </div>
+                                    <hr />`;
+                }
+                _tempMasterIds += ``;
+
+                if (response.data.TemporaryMasterIds.length <= 0) {
+                    _tempMasterIds = `<div class="text-muted">No Temporary IDs</div>`;
+                }
+
+                $('#sectionTemporaryMasterIdDetails').html(_tempMasterIds);
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

@@ -1,0 +1,176 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "Manage Apartment";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Manage Apartment</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageApartment">Manage Apartment</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Manage Batch</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @*@if (permissionKeys.Contains("ManageStaff_ViewStaff_AddStaff"))
+                        {*@
+                    <div class="col-4 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddApartment">Add Apartment</a>
+                    </div>
+                    @*}*@
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="sectionViewApartment">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblApartment" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Name</th>
+                                        @*<th>Blocks</th>
+                                        <th>Areas</th>*@
+                                        <th>Status</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddApartment" style="display: none">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Apartment</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="form-group col-12">
+                                        <label for="txtName">Name</label>
+                                        <input type="text" id="txtName" class="form-control" />
+                                        <div class="error-class" id="error_txtName"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <!--<div class="form-group col-12">
+                            <label class="w-100">Blocks <a href="javascript:generateBlockInputGroup();" class="btn btn-sm btn-primary float-right">Add Block</a></label>
+                        </div>
+
+                        <div id="formBlockSection">-->
+                                    @* Embedded inputs with jquery *@
+                                    <!--</div>
+
+                        <div class="form-group col-12">
+                            <label class="w-100">Room/Area/Ground <a href="javascript:generateAreaInputGroup();" class="btn btn-sm btn-primary float-right">Add Area</a></label>
+                        </div>
+
+                        <div id="formAreaSection">-->
+                                    @* Embedded inputs with jquery *@
+                                    <!--</div>-->
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="form-group d-flex flex-column">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="chkIsActive" checked>
+                                                <label class="form-check-label" for="chkIsActive" style="cursor:pointer;">Active</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateApartment()">Submit</button>
+                                <button type="button" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                
+            </div>
+            <div class="row">
+                <div class="col-6 mb-4 d-none" id="sectionManageBlock">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-4">Manage Block</h5>
+                            <form>
+                                <div class="row">
+
+                                    <div class="col-12 d-flex align-items-center justify-content-between">
+                                        <h5>Blocks</h5>
+                                        <button type="button" onclick="generateBlockInputGroup();" class="btn btn-sm btn-primary float-right">Add Block</button>
+                                    </div>
+
+                                    <div id="formBlockSection">
+                                        @* Embedded inputs with jquery *@
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-6 mb-4 d-none" id="sectionManageArea">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-4">Manage Area</h5>
+                            <form>
+                                <div class="row">
+
+                                    <div class="col-12 d-flex align-items-center justify-content-between">
+                                        <h5>Areas</h5>
+                                        <button type="button" onclick="generateAreaInputGroup();" class="btn btn-sm btn-primary float-right">Add Area</button>
+                                    </div>
+
+                                    <div id="formAreaSection">
+                                        @* Embedded inputs with jquery *@
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageApartmentScriptPartial.cshtml")
+
+}

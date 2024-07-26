@@ -1,0 +1,1162 @@
+﻿
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var ApartmentId_Global = 0;
+    var _apartmentTable;
+    var ApartmentGroupId_Global = 0;
+    var BlockNumberCount_Global = 0;
+    var FamilyNumberCount_Global = 0;
+    var FamilyRelationTypesOptionList_Global = "<option value='0'>Select Relation</option>";
+
+    function initializeDataTable_ApartmentBooking() {
+        _apartmentTable = $("#tblApartmentBooking").DataTable();
+    }
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_ApartmentBooking();
+                GetAllActiveApartments();
+                GetAllClassList();
+                GetAllApartmentBookings();
+                GetAllActiveFamilyRelationTypeList();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_ApartmentBooking();
+                        GetAllActiveApartments();
+                        GetAllClassList();
+                        GetAllApartmentBookings();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+        $('#btnBookApartment').click(function () {
+            $('#sectionBookApartment').show();
+            $('#btnAddApartment').hide();
+            $('#sectionViewApartmentBooking').hide();
+            document.getElementById("pageTextchange").innerHTML = "Book Apartment";
+            document.getElementById("pageStageChange").innerHTML = "Book Apartment";
+            $('#btnUpdateCredential').addClass('d-none');
+
+            generateFamilyMemberInputGroup();
+        });
+
+        $(document).on('change', 'input[name="propertyManagementType"]', function () {
+            var value = $(this).val();
+            if (value == 4) {
+                $('#txtPropertyManagementTypeOtherName').parents('.form-group').removeClass('d-none');
+            }
+            else {
+                $('#txtPropertyManagementTypeOtherName').parents('.form-group').addClass('d-none');
+            }
+        });
+
+        $(document).on('change', '#chkMasterId', function () {
+            switchMasterIdAndPersonalDetails();
+        });
+
+    });
+
+    function GetAllApartmentBookings() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Apartment/GetAllApartmentBookingForBOByPagination";
+        _apartmentTable.clear().destroy();
+        _apartmentTable = $("#tblApartmentBooking").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[9, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , { "data": "ApartmentName", "name": "ApartmentName", "autoWidth": true }
+                , { "data": "BlockName", "name": "BlockName", "autoWidth": true }
+                , { "data": "Phase", "name": "Phase", "autoWidth": true }
+                , { "data": "AreaName", "name": "AreaName", "autoWidth": true }
+                , { "data": "FlatOrVillaNumber", "name": "FlatOrVillaNumber", "autoWidth": true }
+                , {
+                    "data": "PersonFullName", "name": "PersonFullName", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _personDetail = `
+                            <div class="d-flex align-items-center">
+                                <img src="${row.PersonProfileImageWithPath}" class="user-img"/>
+                                <span>${row.PersonFullName}</span>
+                            </div>
+                        `;
+                        return _personDetail;
+                    }
+                }
+                , {
+                    "data": "ClassName", "name": "ClassName", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _detail = '';
+
+                        _detail = `
+                        <div class="d-flex flex-column">
+                            <span><b>Class:</b> ${row.ClassName}</span>
+                            <hr/>
+                            <span><b>Batch:</b> ${row.BatchName}</span>
+                        </div>`;
+
+                        return _detail;
+                    }
+                }
+                , { "data": "Activity", "name": "Activity", "autoWidth": true }
+                , { "data": "CreatedOn_FormatDate", "name": "CreatedOn", "autoWidth": true }
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _detail = '';
+
+                        _detail = `<a href="/Business/ApartmentBookingDetail/${row.Id}" class="btn btn-sm btn-info">Details</a>`;
+
+                        var _action = `<div class="edbt">
+                                        ${_detail}
+                                    </div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,10], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblApartmentBooking_filter input').unbind();
+        $('#tblApartmentBooking_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _eventTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+function showEditApartmentPage() {
+    $('#sectionBookApartment').show();
+    $('#sectionViewApartmentBooking').hide();
+    document.getElementById("myText").innerHTML = "Edit Apartment";
+    document.getElementById("ChangeUpdateText").innerHTML = "Update";
+    document.getElementById("pageTextchange").innerHTML = "Edit Apartment";
+    document.getElementById("pageStageChange").innerHTML = "Edit Apartment";
+    $('#ChangeUpdateText').show();
+    $('#btnAddApartment').hide();
+    $(".error-class").html('');
+
+    $('#btnUpdateCredential').removeClass('d-none');
+};
+
+function EditApartment(id) {
+    var _url = "/api/Apartment/GetById?apartmentId="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            ResetAddView();
+
+            ApartmentId_Global = id;
+
+            $("#txtName").val(response.data.Name);
+            var BlockList = response.data.Blocks.split(',');
+            for (var bi = 0; bi < BlockList.length; bi++) {
+                generateBlockInputGroup(BlockList[bi]);
+            }
+
+            var AreaList = response.data.Areas.split(',');
+            for (var ai = 0; ai < AreaList.length; ai++) {
+                generateAreaInputGroup(AreaList[ai]);
+            }
+
+            ////---Check Apartment-Status
+            if (response.data.Status == 1) {
+                $('#chkIsActive').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive').prop('checked', false);
+            }
+
+            showEditApartmentPage();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function ShowingViewApartmentList() {
+
+    $('#sectionViewApartmentBooking').show();
+}
+
+function ResetAddView() {
+    // Reset data
+    $("#ddlApartment").val('0').trigger('change');
+    $("#ddlBlock").val('0');
+    $("#txtFlatOrVillaNum").val('');
+    $("#txtPhase").val('');
+    $("#txtLane").val('');
+    $("#txtPropertyManagementTypeOtherName").val('');
+    $('#chkMasterId').prop('checked', true).trigger('change');
+    $('#txtMasterId').val('');
+    $("#filePersonProfileImage").val('');
+    $('#txtFirstName').val('');
+    $('#txtLastName').val('');
+    $('#txtEmail').val('');
+    $('#txtPhoneNumber').val('');
+    $('#ddlGender').val('0');
+    $('#ddlCourse').val('0').trigger('change');
+    $('#ddlCourseBatch').val('0');
+    $('#ddlArea').val('0');
+    $('#txtActivity').val('');
+
+    $("#formFamilyMemberSection").html('');
+    $("#sectionExistingFamilyMembers").html('');
+
+    ApartmentId_Global = 0;
+    FamilyNumberCount_Global = 0;
+
+    // show hide panel
+    $('#sectionViewApartmentBooking').show();
+    $('#sectionBookApartment').hide();
+    $('#btnAddApartment').show();
+    document.getElementById("pageTextchange").innerHTML = "View Apartment Booking";
+    document.getElementById("pageStageChange").innerHTML = "View Apartment Booking";
+    document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+    $(".error-class").html('');
+
+}
+
+function btnAddUpdateApartment() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+    var _Mode = 1; // (ApartmentId_Global > 0) ? 2 : 1;
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var TestPhoneNumber = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+
+    let _ApartmentId = $("#ddlApartment").val();
+    let _error_ApartmentId = $("#error_ddlApartment");
+
+    let _BlockId = $("#ddlBlock").val();
+    let _error_BlockId = $("#error_ddlBlock");
+
+    let _FlatOrVillaNumber = $("#txtFlatOrVillaNum").val();
+    let _error_FlatOrVillaNumber = $("#error_txtFlatOrVillaNum");
+
+    let _PhaseName = $("#txtPhase").val();
+    let _error_PhaseName = $("#error_txtPhase");
+
+    let _LaneName = $("#txtLane").val();
+    let _error_LaneName = $("#error_txtLane");
+
+    let _propertyManagementTypeValue = $("input[name='propertyManagementType']:checked").val();
+    let _OtherPMTypeValue = $("#txtPropertyManagementTypeOtherName").val();
+    let _error_OtherPMTypeValue = $("#error_txtPropertyManagementTypeOtherName");
+
+    let _HasMasterId = ($('#chkMasterId').is(':checked')) ? 1 : 0;
+    let _MasterId = $('#txtMasterId').val();
+    let _error_MasterId = $('#error_txtMasterId');
+
+    let _PFirstName = $('#txtFirstName').val();
+    let _error_PFirstName = $('#error_txtFirstName');
+
+    let _PLastName = $('#txtLastName').val();
+    let _error_PLastName = $('#error_txtLastName');
+
+    let _PEmail = $('#txtEmail').val();
+    let _error_PEmail = $('#error_txtEmail');
+
+    let _PPhoneNumber = $('#txtPhoneNumber').val();
+    let _error_PPhoneNumber = $('#error_txtPhoneNumber');
+
+    let _PGender = $('#ddlGender').val();
+    let _error_PGender = $('#error_ddlGender');
+
+    let _CourseId = $('#ddlCourse').val();
+    let _error_CourseId = $('#error_ddlCourse');
+
+    let _CourseBatchId = $('#ddlCourseBatch').val();
+    let _error_CourseBatchId = $('#error_ddlCourseBatch');
+
+    let _ApartmentArea = $('#ddlArea').val();
+    let _error_ApartmentArea = $('#error_ddlArea');
+
+    let _Activity = $('#txtActivity').val();
+    let _error_Activity = $('#error_txtActivity');
+
+    // person Image Get and test
+
+    // if no masterId then check for Person Detail
+    if (_HasMasterId == 0) {
+        if (validate_IsEmptyStringInputFieldValue(_PFirstName)) {
+            is_valid = false;
+            _error_PFirstName.html('@(Resources.BusinessPanel.ApartmentBooking_PersonFirstNameRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_PLastName)) {
+            is_valid = false;
+            _error_PLastName.html('@(Resources.BusinessPanel.ApartmentBooking_PersonLastNameRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_PEmail)) {
+            is_valid = false;
+            _error_PEmail.html('@(Resources.BusinessPanel.ApartmentBooking_PersonEmailRequired)');
+        }
+        else if (!TestEmail.test(_PEmail)) {
+            is_valid = false;
+            _error_PEmail.html('@(Resources.BusinessPanel.ApartmentBooking_PersonValidEmailRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_PPhoneNumber)) {
+            is_valid = false;
+            _error_PPhoneNumber.html('@(Resources.BusinessPanel.ApartmentBooking_PersonPhoneNumberRequired)');
+        }
+        else if (!TestPhoneNumber.test(_PPhoneNumber)) {
+            is_valid = false;
+            _error_PPhoneNumber.html('@(Resources.BusinessPanel.ApartmentBooking_PersonValidPhoneNumberRequired)');
+        }
+
+        if (validate_IsEmptySelectInputFieldValue(_PGender)) {
+             is_valid = false;
+             _error_PGender.html('@(Resources.BusinessPanel.ApartmentBooking_PersonGenderRequired)');
+        }
+
+        // validate family members if added
+        $('.familyMemberInputGroup').each(function () {
+            var id = $(this).data('id');
+            //console.log(id);
+            $txtMasterId = $(`#txtFamilyMasterId_${id}`).parents('.form-group');
+            $sectionPersonalDetail = $(`#NewFamilyMember_${id}`);
+
+            if ($(`#chkMasterId_${id}`).is(':checked')) {
+                if (validate_IsEmptyStringInputFieldValue($('#txtFamilyMasterId_' + id).val().trim())) {
+                    is_valid = false;
+                    $('#error_txtFamilyMasterId_' + id).html('@(Resources.BusinessPanel.FamilyMember_FirstNameRequired)');
+                }
+            }
+            else {
+
+                if (validate_IsEmptyStringInputFieldValue($('#txtFirstName_' + id).val().trim())) {
+                    is_valid = false;
+                    $('#error_txtFirstName_' + id).html('@(Resources.BusinessPanel.FamilyMember_FirstNameRequired)');
+                }
+                if (validate_IsEmptyStringInputFieldValue($('#txtLastName_' + id).val().trim())) {
+                    is_valid = false;
+                    $('#error_txtLastName_' + id).html('@(Resources.BusinessPanel.FamilyMember_LastNameRequired)');
+                }
+                if (validate_IsEmptyStringInputFieldValue($('#txtEmail_' + id).val().trim())) {
+                    is_valid = false;
+                    $('#error_txtEmail_' + id).html('@(Resources.BusinessPanel.FamilyMember_EmailRequired)');
+                }
+                //if (validate_IsEmptyStringInputFieldValue($('#txtRelation_' + id).val().trim())) {
+                //    is_valid = false;
+                //    $('#error_txtRelation_' + id).html('@(Resources.BusinessPanel.FamilyMember_RelationRequired)');
+                //}
+                if (validate_IsEmptySelectInputFieldValue($('#ddlGender_' + id).val())) {
+                    is_valid = false;
+                    $('#error_ddlGender_' + id).html('@(Resources.BusinessPanel.FamilyMember_GenderRequired)');
+                }
+            }
+
+            if (validate_IsEmptySelectInputFieldValue($('#ddlFamilyRelation_' + id).val().trim())) {
+                is_valid = false;
+                $('#error_ddlFamilyRelation_' + id).html('@(Resources.BusinessPanel.FamilyMember_RelationRequired)');
+            }
+        });
+    }
+
+    // if has master Id then check for it.
+    if (_HasMasterId == 1) {
+         if (validate_IsEmptyStringInputFieldValue(_MasterId)) {
+             is_valid = false;
+             _error_MasterId.html('@(Resources.BusinessPanel.ApartmentBooking_PersonMasterId_Required)');
+         }
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_ApartmentId)) {
+        is_valid = false;
+        _error_ApartmentId.html('@(Resources.BusinessPanel.ApartmentBooking_Apartment_Required)');
+    }
+    if (validate_IsEmptySelectInputFieldValue(_BlockId)) {
+        is_valid = false;
+        _error_BlockId.html('@(Resources.BusinessPanel.ApartmentBooking_Block_Required)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_FlatOrVillaNumber)) {
+        is_valid = false;
+        _error_FlatOrVillaNumber.html('@(Resources.BusinessPanel.ApartmentBooking_FlatVillaNum_Required)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_PhaseName)) {
+        is_valid = false;
+        _error_PhaseName.html('@(Resources.BusinessPanel.ApartmentBooking_Phase_Required)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_LaneName)) {
+        is_valid = false;
+        _error_LaneName.html('@(Resources.BusinessPanel.ApartmentBooking_Lane_Required)');
+    }
+
+    if (_propertyManagementTypeValue == 4) {
+        if (validate_IsEmptyStringInputFieldValue(_OtherPMTypeValue)) {
+            is_valid = false;
+            _error_OtherPMTypeValue.html('@(Resources.BusinessPanel.ApartmentBooking_OccupantType_Required)');
+        }
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_CourseId)) {
+        is_valid = false;
+        _error_CourseId.html('@(Resources.BusinessPanel.ApartmentBooking_Course_Required)');
+    }
+    if (validate_IsEmptySelectInputFieldValue(_CourseBatchId)) {
+        is_valid = false;
+        _error_CourseBatchId.html('@(Resources.BusinessPanel.ApartmentBooking_Batch_Required)');
+    }
+    if (validate_IsEmptySelectInputFieldValue(_ApartmentArea)) {
+        is_valid = false;
+        _error_ApartmentArea.html('@(Resources.BusinessPanel.ApartmentBooking_Area_Required)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_Activity)) {
+        is_valid = false;
+        _error_Activity.html('@(Resources.BusinessPanel.ApartmentBooking_Activity_Required)');
+    }
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        var arrOccupantTypes = ['Owner', 'Tenant', 'Guest', 'Other'];
+
+        if (_propertyManagementTypeValue == 4) {
+            _propertyManagementTypeValue = _OtherPMTypeValue;
+        }
+        else {
+            _propertyManagementTypeValue = arrOccupantTypes[parseInt(_propertyManagementTypeValue)-1]
+        }
+
+
+        var _FamilyMembersObjList = [];
+        //if (_HasMasterId == 0) {
+            $('.familyMemberInputGroup').each(function () {
+                var id = $(this).data('id');
+                _FamilyMembersObjList.push(
+                    {
+                        Id: id,
+                        FamilyMemberHasMasterId: ($('#chkMasterId_' + id).is(':checked')) ? 1 : 0,
+                        FamilyMemberMasterId: $('#txtFamilyMasterId_' + id).val().trim(),
+                        FirstName: $('#txtFirstName_' + id).val().trim(),
+                        LastName: $('#txtLastName_' + id).val().trim(),
+                        Email: $('#txtEmail_' + id).val().trim(),
+                        FamilyRelationTypeKey: $('#ddlFamilyRelation_' + id).val(),
+                        Gender: $('#ddlGender_' + id).val()
+                    }
+                );
+                var _familyMemberImageFile = $("#fileFamilyMemberProfileImage_" + id).get(0);
+                var _familyMemberImage = _familyMemberImageFile.files;
+                data.append('FamilyMemberImage_'+id, _familyMemberImage[0]);
+            });
+        //}
+
+        var _PersonImageFile = $("#filePersonProfileImage").get(0);
+        var _PersonImage = _PersonImageFile.files;
+        data.append('PersonProfileImage', _PersonImage[0]);
+        data.append("ApartmentId", _ApartmentId);
+        data.append("BatchId", _CourseBatchId);
+        data.append("ApartmentBlockId", _BlockId);
+        data.append("FlatOrVillaNumber", _FlatOrVillaNumber);
+        data.append("Phase", _PhaseName);
+        data.append("Lane", _LaneName);
+        data.append("OccupantType", _propertyManagementTypeValue);
+        data.append("ApartmentAreaId", _ApartmentArea);
+        data.append("Activity", _Activity);
+        data.append("PersonHasMasterId", _HasMasterId);
+        data.append("PersonMasterId", _MasterId);
+        data.append("PersonFirstName", _PFirstName);
+        data.append("PersonLastName", _PLastName);
+        data.append("PersonEmail", _PEmail);
+        data.append("PersonPhoneNumber", _PPhoneNumber);
+        data.append("PersonGender", _PGender);
+        data.append("FamilyMemberList", JSON.stringify(_FamilyMembersObjList));
+        data.append("Mode", _Mode);
+
+        $.ajax({
+            url: '/api/Apartment/BookApartment',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+                ResetAddView();
+                StopLoading();
+                GetAllApartmentBookings();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+    function switchMasterIdAndPersonalDetails() {
+        $txtMasterId = $('#txtMasterId').parents('.form-group');
+        $sectionPersonalDetail = $('#formSectionPersonalDetail');
+        if ($('#chkMasterId').is(':checked')) {
+            $txtMasterId.removeClass('d-none');
+            $sectionPersonalDetail.addClass('d-none');
+        }
+        else {
+            $txtMasterId.addClass('d-none');
+            $sectionPersonalDetail.removeClass('d-none');
+        }
+    }
+
+    function switchMasterIdAndFamilyDetails(familyCount_id) {
+        $txtMasterId = $(`#txtFamilyMasterId_${familyCount_id}`).parents('.form-group');
+        $sectionPersonalDetail = $(`#NewFamilyMember_${familyCount_id}`);
+        $allNewMemberInputGroups = $(`#NewFamilyMember_${familyCount_id} div[data-new-member='1']`);
+        if ($(`#chkMasterId_${familyCount_id}`).is(':checked')) {
+            $txtMasterId.removeClass('d-none');
+            //$sectionPersonalDetail.addClass('d-none');
+            $allNewMemberInputGroups.each(function (i) {
+                $(this).addClass('d-none');
+            });
+        }
+        else {
+            $txtMasterId.addClass('d-none');
+            //$sectionPersonalDetail.removeClass('d-none');
+            $allNewMemberInputGroups.each(function (i) {
+                $(this).removeClass('d-none');
+            });
+        }
+    }
+
+    function generateFamilyMemberInputGroup(val = "") {
+        FamilyNumberCount_Global += 1;
+        var _inputFormGroup = `
+
+
+
+            <div class="familyMemberInputGroup p-2 my-1" style="border:1px solid #cecece" data-id="${FamilyNumberCount_Global}">
+                <div class="d-flex flex-column">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5>Member Detail</h5>
+                            <button type="button" class="btn btn-sm btn-danger btnDeleteInputGroup"><i class="fa fa-trash"></i></button>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="chkMasterId_${FamilyNumberCount_Global}" onchange="switchMasterIdAndFamilyDetails(${FamilyNumberCount_Global})">
+                                <label class="form-check-label" for="chkMasterId_${FamilyNumberCount_Global}" style="cursor:pointer;">Do you have Master-Id?</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="" id="NewFamilyMember_${FamilyNumberCount_Global}">
+                    <div class="d-flex align-items-center ">
+                         <div class="form-group col d-none">
+                             <input type="text" class="form-control" id="txtFamilyMasterId_${FamilyNumberCount_Global}" placeholder="Master User Id">
+                             <div class="error-class" id="error_txtFamilyMasterId_${FamilyNumberCount_Global}"></div>
+                         </div>
+
+                        <div class="form-group col" data-new-member="1">
+                            <!--<div class="imagePreview">
+                                <img id="previewImageFamilyMember_${FamilyNumberCount_Global}" class="d-none" style="width:100%; height:100%;">
+                            </div>-->
+                            <input type="file" id="fileFamilyMemberProfileImage_${FamilyNumberCount_Global}" class="border form-control" accept="image/*">
+                        </div>
+
+                        <div class="form-group col" data-new-member="1">
+                            <input type="text" id="txtFirstName_${FamilyNumberCount_Global}" class="form-control" placeholder="First Name*" />
+                            <div class="error-class" id="error_txtFirstName_${FamilyNumberCount_Global}"></div>
+                        </div>
+
+                        <div class="form-group col" data-new-member="1">
+                            <input type="text" id="txtLastName_${FamilyNumberCount_Global}" class="form-control" placeholder="Last Name*" />
+                            <div class="error-class" id="error_txtLastName_${FamilyNumberCount_Global}"></div>
+                        </div>
+
+                        <div class="form-group col" data-new-member="1">
+                            <input type="text" id="txtEmail_${FamilyNumberCount_Global}" class="form-control" placeholder="Email*" />
+                            <div class="error-class" id="error_txtEmail_${FamilyNumberCount_Global}"></div>
+                        </div>
+
+                        <div class="form-group col" data-new-member="1">
+                            <select id="ddlGender_${FamilyNumberCount_Global}" class="form-control">
+                                <option value="0">Gender</option>
+                                <option value="1">Male</option>
+                                <option value="2">Female</option>
+                            </select>
+                            <div class="error-class" id="error_ddlGender_${FamilyNumberCount_Global}"></div>
+                        </div>
+
+                        <div class="form-group col">
+                            <select id="ddlFamilyRelation_${FamilyNumberCount_Global}" class="form-control" placeholder="Relation*">
+                                ${FamilyRelationTypesOptionList_Global}
+                            </select>
+                            <div class="error-class" id="error_ddlFamilyRelation_${FamilyNumberCount_Global}"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        `;
+
+        $('#formFamilyMemberSection').append(_inputFormGroup);
+    }
+
+    $(document).on('click', '.btnDeleteInputGroup', function() {
+        $(this).parents('.familyMemberInputGroup').remove();
+    });
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function GetAllActiveApartments()
+    {
+        var _url = "/api/Apartment/GetAllActiveApartments";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var optionList = '<option value="0">Select</option>';
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    optionList += `<option value="${item.Id}">${item.Name}</option>`;
+                }
+                $('#ddlApartment').html('').append(optionList);
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllApartmentBlocks()
+    {
+        var _apartmentId = $('#ddlApartment').val();
+        var _url = "/api/Apartment/GetAllApartmentBlocks?apartmentId="+_apartmentId;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var optionList = '<option value="0">Select</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                optionList += `<option value="${item.Id}">${item.Name}</option>`;
+            }
+            $('#ddlBlock').html('').append(optionList);
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function GetAllApartmentAreas()
+    {
+        var _apartmentId = $('#ddlApartment').val();
+        var _url = "/api/Apartment/GetAllApartmentAreas?apartmentId="+_apartmentId;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var optionList = '<option value="0">Select</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                optionList += `<option value="${item.Id}">${item.Name}</option>`;
+            }
+            $('#ddlArea').html('').append(optionList);
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function GetAllClassList()
+    {
+        var _url = "/api/Class/GetAllActiveOfflineClasses";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionList = '<option value="0">Select</option>';
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    optionList += `<option value="${item.Id}">${item.Name}</option>`;
+                }
+
+                $('#ddlCourse').html('').append(optionList);
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllClassBatchList()
+    {
+        var _classId = $('#ddlCourse').val();
+        var _url = "/api/Class/GetAllActiveClassBatchesForDropdown?classId="+_classId;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var optionList = '<option value="0">Select</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                optionList += `<option value="${item.Id}">${item.Name}</option>`;
+            }
+
+            $('#ddlCourseBatch').html('').append(optionList);
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    function onChangeApartmentSelection() {
+        GetAllApartmentBlocks();
+        GetAllApartmentAreas();
+    }
+
+    function GetAllActiveFamilyRelationTypeList()
+{
+        var _url = "/api/FieldTypeCatalog/GetAllActiveByKeyName?keyName=FamilyRelationTypes";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+
+            var optionList = '<option value="0">Select Relation</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                optionList += `<option value="${item.KeyName}">${item.TextValue}</option>`;
+            }
+            FamilyRelationTypesOptionList_Global = optionList;
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+    function VerifyMasterIdAndGetFamilyMembers() {
+        var _masterId = $("#txtMasterId").val().trim();
+        var _url = "/api/Student/GetUserFamilyMembersByMasterId?masterId="+encodeURIComponent(_masterId);
+        $('#sectionExistingFamilyMembers').html('');
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var familyMembersList = '';
+                if (response.data != null) {
+
+                    for (var fm = 0; fm < response.data.length; fm++) {
+                        familyMembersList += bindFamilyMemberDetailListItem(response.data[fm]);
+                    }
+
+                    if (response.data.length <= 0) {
+                        familyMembersList += `
+                             <div class="col-6 p-2" style="border:1px solid #cecece">Use doesn't have any Family Member!</div>
+                        `;
+                    }
+                }
+
+
+                $('#sectionExistingFamilyMembers').html('<div class="row col-12">' + familyMembersList + '</div>');
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindFamilyMemberDetailListItem(familyMember) {
+        return `
+        <div class="col-6 p-2" style="border:1px solid #cecece">
+            <div class="d-flex align-items-center">
+                <div class="col">
+                    <div class="imagePreview">
+                        <img src="${familyMember.UserProfileImageWithPath}">
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="d-flex flex-column">
+                        <h5><b>Name</b></h5>
+                        <h5>${familyMember.FullName}</h5>
+                        <h5><b>Relation</b></h5>
+                        <h5>${familyMember.User2Relation_FieldTypeCatalogTextValue}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+</script>

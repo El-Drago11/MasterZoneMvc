@@ -1,0 +1,252 @@
+﻿
+<script>
+    var NotificationId_Global = 0;
+    var UserToken_Global = "";
+    var _notificationtransferTable;
+
+    function initializeDataTable_notificationtransfer() {
+        _notificationtransferTable = $("#ViewForNotification").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+
+                initializeDataTable_notificationtransfer();
+                GetAllViewNotification();
+
+                //StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+
+                        initializeDataTable_notificationtransfer();
+                        GetAllViewNotification();
+
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetAllViewNotification() {
+         
+            // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/NotificationTransfer/GetAllNotificationDetailByPagination";
+            _notificationtransferTable.clear().destroy();
+            _notificationtransferTable = $("#ViewForNotification").DataTable({
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "orderMulti": false,
+                "ordering": true,
+                "paginate": true,
+                "order": [[3, "desc"]],
+                "ajax": {
+                    "headers": {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    "url": _url_val,
+                    "type": "POST",
+                    "error": function (result) {
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": "NotificationMessage", "name": "NotificationMessage", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": null, "": "Status", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            //---Check Rating-Status
+                            var _status = '';
+                            if (row.Status == 0) {
+                                _status = '<a  style="width:max-content;" onclick="ConfirmChange(' + row.Id + ');">Pending</a>';
+                            }
+                            else if (row.Status == 1){
+                                _status = '<a  style="width:max-content;" onclick="ConfirmChange(' + row.Id + ');">Open</a>';
+                            }
+                            else if (row.Status == 2) {
+                                _status = '<a  style="width:max-content;" onclick="ConfirmChange(' + row.Id + ');">Closed</a>';
+                            }
+                            return _status;
+                        }
+                    }
+                    , {
+                        "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                        }
+                    }
+
+                    , {
+                        "data": null,
+                        "": "action",
+                        "autowidth": true,
+                        "render": function (data, type, row) {
+                            if (row.Status == 0) {
+                                var _edit = `<a href="javascript:ConfirmChangeStatusNotification(${row.Id},2);"><button id="editBtn-${row.Id}" type="button" class="btn btn-danger">Reject</button></a>`;
+                                var _delete = `<a href="javascript:ConfirmChangeStatusNotification(${row.Id},1);"><button id="deleteBtn-${row.Id}" type="button" class="btn btn-success">Accept</button></a>`;
+                            }
+                            else if (row.Status == 1) {
+                                var _edit = `<a href="javascript:ConfirmChangeStatusNotification(${row.Id});"><button id="editBtn-${row.Id}" type="button" class="btn btn-danger"disabled>Reject</button></a>`;
+                                var _delete = `<a href="javascript:ConfirmChangeStatusNotification(${row.Id});"><button id="deleteBtn-${row.Id}" type="button" class="btn btn-success"disabled>Accept</button></a>`;
+                            }
+                            else if (row.Status == 2) {
+                                var _edit = `<a href="javascript:ConfirmChangeStatusNotification(${row.Id});"><button id="editBtn-${row.Id}" type="button" class="btn btn-danger"disabled>Reject</button></a>`;
+                                var _delete = `<a href="javascript:ConfirmChangeStatusNotification(${row.Id});"><button id="deleteBtn-${row.Id}" type="button" class="btn btn-success" disabled>Accept</button></a>`;
+                            }
+                            var _action = `<div class="edbt">
+                                  ${_edit}
+                                  ${_delete}
+                                </div>`;
+
+
+                            $(document).on('click', `#editBtn-${row.Id}`, function () {
+                                $(`#deleteBtn-${row.Id}`).prop('disabled', true);
+                              $(`#editBtn-${row.Id}`).prop('disabled', true);
+                            });
+
+                            $(document).on('click', `#deleteBtn-${row.Id}`, function () {
+                               $(`#editBtn-${row.Id}`).prop('disabled', true);
+                                $(`#deleteBtn-${row.Id}`).prop('disabled', true);
+                            });
+
+                            return _action;
+                        }
+                    }
+
+
+
+                ],
+
+                "responsive": true,
+                "autoWidth": false,
+
+                "columnDefs": [{
+                    "targets": [0,5], // column index (start from 0)
+                    "orderable": false, // set orderable false for selected columns
+                }]
+            });
+
+            // for enabling search box only send requet on pressing enter
+            $('#ViewForNotification_filter input').unbind();
+            $('#ViewForNotification_filter input').bind('keyup', function (e) {
+                if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                    _notificationtransferTable.search(this.value).draw();
+                }
+            });
+    }
+
+
+    function ConfirmChangeStatusNotification(id, Status) {
+        
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmChangeStatusNotificationTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmChangeStatusNotificationText)",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+            cancelButtonText: "@(Resources.ErrorMessage.No)"
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusNotification(id, Status);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function ChangeStatusNotification(id, Status) {
+        
+        StartLoading();
+
+        $.ajax({
+            type: "POST",
+            url: "/api/Notification/ChangeStatus?id=" + id + "&Status=" + Status,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff-status successfully updated
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllViewNotification();
+                      
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    
+
+</script>

@@ -1,0 +1,406 @@
+﻿
+@{
+    ViewBag.Title = "VedioGallery";
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/video-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+
+    <style>
+        header.header.active-h {
+            position: unset;
+        }
+
+        a:hover {
+            color: #f3a762;
+            text-decoration: underline;
+        }
+
+        header.header.active-h div#navbarTogglerDemo03 {
+            width: unset;
+        }
+
+        .w-25 {
+            width: 15% !important;
+        }
+
+        .video-youtb {
+            width: 213px;
+        }
+
+        a#BtnViewMoreUserVideoList {
+            margin-right: 300px;
+        }
+
+        .UserVideoMessage {
+            margin-left: 30%;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .img-main.logo_image {
+            width: 5%;
+        }
+
+        iframe {
+            width: 100%;
+        }
+
+        .more-videos {
+            margin: 30px 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        @@media(max-width: 800px) {
+
+
+            a#BtnViewMoreUserVideoList {
+                margin: 0px;
+                width: 30% !important;
+            }
+
+            #BindUserVideoList .video-youtb {
+                width: 90%;
+                margin:0px auto;
+            }
+        }
+
+       
+
+    </style>
+
+}
+
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+
+                @Html.Partial("_VisitorPanelSidebarPartial")
+
+            </div>
+            <div class="col-sm-9">
+                <div class="tab-show">
+                    <div class="nav-header mt-2">
+                        <div class="nav-inr">
+                            <div class="nav-text">
+                                Master Zone
+                            </div>
+                            <div class="search-main">
+                                <input type="search" placeholder="search" id="SearchUserVideo_ByTitle">
+                                @*<input type="search" placeholder="search">*@
+                            </div>
+                            <div class="cta d-grid">
+                                <button type="submit" onclick="SearchUserVideoByTitle()">Search</button>
+                                <button type="submit" onclick="GetUserVideoListDetail()">Back</button>
+                            </div>
+                        </div>
+                            <div class="searchnotfound text-center text-white d-none"><strong>No record Found !</strong></div>
+                    </div>
+                    <div class="video-section">
+
+                        <div class="video-profile-sec">
+                            <div class="img-main">
+                                <img src="~/Content/Uploads/MasterzoneLogo/logo.png" alt="img">
+                            </div>
+                            <div class="profile-name">
+                                Master Zone
+                            </div>
+                        </div>
+
+
+                        <div class="" id="DisplayFullVideoUser">
+                            @*<iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                        </iframe>
+                        <div class="text-vd">
+                            <h6>Fitness</h6>
+                            <p>30 Mintues Workout</p>
+                        </div>*@
+
+
+                            <iframe width="560" height="315" src="https://www.youtube.com/embed/6k3cV1hLgLw?si=KCJQciaWPqzmZMdc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+
+                        </div>
+
+
+                        @*<div class="video-left" id="video_2">
+                    <div class="video-profile-sec">
+                        <div class="img-main">
+                            <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                        </div>
+                        <div class="profile-name">
+                            Lorem isump
+                        </div>
+                    </div>
+                    <div class="video-text">
+                        <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                        </iframe>
+                        <div class="text-vd">
+                            <h6>Fitness</h6>
+                            <p>30 Mintues Workout</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-left" id="video_3">
+                    <div class="video-profile-sec">
+                        <div class="img-main">
+                            <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                        </div>
+                        <div class="profile-name">
+                            Lorem isump
+                        </div>
+                    </div>
+                    <div class="video-text">
+                        <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                        </iframe>
+
+                        <div class="text-vd">
+                            <h6>Fitness</h6>
+                            <p>30 Mintues Workout</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-left" id="video_4">
+                    <div class="video-profile-sec">
+                        <div class="img-main">
+                            <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                        </div>
+                        <div class="profile-name">
+                            Lorem isump
+                        </div>
+                    </div>
+                    <div class="video-text">
+                        <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                        </iframe>
+                        <div class="text-vd">
+                            <h6>Fitness</h6>
+                            <p>30 Mintues Workout</p>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="video-left" id="video_5">
+                    <div class="video-profile-sec">
+                        <div class="img-main">
+                            <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                        </div>
+                        <div class="profile-name">
+                            Lorem isump
+                        </div>
+                    </div>
+                    <div class="video-text">
+                        <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                        </iframe>
+
+                        <div class="text-vd">
+                            <h6>Fitness</h6>
+                            <p>30 Mintues Workout</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="video-right">
+                <ul class="video-tab">
+                    <li data-tab="#video_1">
+                        <div class="video-text">
+                            <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                            </iframe>
+                            <div class="text-vd">
+                                <h6>Fitness</h6>
+                                <p>30 Mintues Workout</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li data-tab="#video_2">
+                        <div class="video-text">
+                            <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                            </iframe>
+                            <div class="text-vd">
+                                <h6>Fitness</h6>
+                                <p>30 Mintues Workout</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li data-tab="#video_3">
+                        <div class="video-text">
+                            <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                            </iframe>
+                            <div class="text-vd">
+                                <h6>Fitness</h6>
+                                <p>30 Mintues Workout</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li data-tab="#video_4">
+                        <div class="video-text">
+                            <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                            </iframe>
+                            <div class="text-vd">
+                                <h6>Fitness</h6>
+                                <p>30 Mintues Workout</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li data-tab="#video_5">
+                        <div class="video-text">
+                            <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                            </iframe>
+                            <div class="text-vd">
+                                <h6>Fitness</h6>
+                                <p>30 Mintues Workout</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+
+        </div>*@
+                    </div>
+                    </div>
+
+                    <div class="more-videos">
+                        <div class="title-vd ml-3">
+                            <h4>More Videos</h4>
+                        </div>
+
+                        <div class="video-flex" id="BindUserVideoList">
+
+                        </div>
+                        <div class="btn-outtrkjkd text-center mt-4">
+                            <a id="BtnViewMoreUserVideoList" onclick="ViewMoreUserVideoList();" class="v-a-c-guinr-enq-jdfk j  v-a-c-guinr text-center cstm-btn w-25 btn btn-outline-dark">
+                                View
+                                More
+                            </a>
+                        </div>
+                        @*<div class="video-items">
+                                <div class="video-youtb">
+                                    <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                    </iframe>
+                                </div>
+                                <div class="vd-profile-sec">
+                                    <div class="vd-img">
+                                        <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                                    </div>
+                                    <div class="vd-des">
+                                        <p> Lorem isump</p>
+                                        <p> 30 Minutes Workout</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-items">
+                                <div class="video-youtb">
+                                    <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                    </iframe>
+                                </div>
+                                <div class="vd-profile-sec">
+                                    <div class="vd-img">
+                                        <img src="image/profile-01.png" alt="img">
+                                    </div>
+                                    <div class="vd-des">
+                                        <p> Lorem isump</p>
+                                        <p> 30 Minutes Workout</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-items">
+                                <div class="video-youtb">
+                                    <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                    </iframe>
+                                </div>
+                                <div class="vd-profile-sec">
+                                    <div class="vd-img">
+                                        <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                                    </div>
+                                    <div class="vd-des">
+                                        <p> Lorem isump</p>
+                                        <p> 30 Minutes Workout</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-items">
+                                <div class="video-youtb">
+                                    <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                    </iframe>
+                                </div>
+                                <div class="vd-profile-sec">
+                                    <div class="vd-img">
+                                        <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                                    </div>
+                                    <div class="vd-des">
+                                        <p> Lorem isump</p>
+                                        <p> 30 Minutes Workout</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-items">
+                                <div class="video-youtb">
+                                    <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                    </iframe>
+                                </div>
+                                <div class="vd-profile-sec">
+                                    <div class="vd-img">
+                                        <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                                    </div>
+                                    <div class="vd-des">
+                                        <p> Lorem isump</p>
+                                        <p> 30 Minutes Workout</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-items">
+                                <div class="video-youtb">
+                                    <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                    </iframe>
+                                </div>
+                                <div class="vd-profile-sec">
+                                    <div class="vd-img">
+                                        <img src="~/Content/visitor-panel/image/profile-01.png" alt="img">
+                                    </div>
+                                    <div class="vd-des">
+                                        <p> Lorem isump</p>
+                                        <p> 30 Minutes Workout</p>
+
+                                    </div>
+                                </div>
+                            </div>*@
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<script>
+    $("a#updfdsjfjs").click();
+    $("#upc-fhgjfie").click(function () { $("#upc-fhgjfie").addClass('active'); $("#pst-jgmkjs").removeClass("active"); });
+    $("#pst-jgmkjs").click(function () { $("#pst-jgmkjs").addClass('active'); $("#upc-fhgjfie").removeClass("active"); });
+
+
+    // video sectin
+    $('.video-tab>li').click(function () {
+        $('.video-left').hide();
+        $('.video-tab>li.active-tab').removeClass('active-tab');
+        $(this).addClass('active-tab');
+
+        var panel = $(this).attr('data-tab');
+        $(panel).fadeIn(1000);
+
+        return false;  // prevents link action
+
+    });  // end click
+
+    $('.video-tab>li:first').click();
+</script>
+@Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_ManageVideoGalleryScriptPartial.cshtml")

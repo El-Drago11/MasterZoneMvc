@@ -1,0 +1,253 @@
+﻿<script>
+    var StudentId_Global = 0;
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                GetStudentDetailById();
+
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        GetStudentDetailById();
+
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetStudentDetailById() {
+        
+        var _userLoginId = $("#userLoginId").val();
+        var _url = "/api/StudentUser/GetUserDetailById?id=" + _userLoginId;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlData1 = '';
+                for (var i = 0; i < response.data.StudentCourseDetailResponse.length; i++) {
+                    htmlData1 += `<div class="row">
+                                                <div class="col-md-8">
+            <img  src="${response.data.StudentCourseDetailResponse[i].ProfileImageWithPath}" id="previewImage"></p >
+            ${response.data.StudentCourseDetailResponse[i].InstructorName}</span></p>
+ 
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                  <p><label>Class Name : </label><span style="margin-left: 15px">${response.data.StudentCourseDetailResponse[i].ClassName}</span></p>
+                                    <p><label>Start Date : </label><span style="margin-left: 15px">
+                                                ${response.data.StudentCourseDetailResponse[i].ScheduledStartOnTime_24HF}</span></p>
+                                                </div>
+                                             </div>                                             
+                                          </div>
+                                     `;
+                }
+                if (response.data.StudentCourseDetailResponse.length <= 0) {
+                    htmlData1 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Course Detail in this Student Detail.</div>`;
+                }
+
+                var htmlData3 = '';
+                for (var i = 0; i < response.data.UserPlanDetailResponse.length; i++) {
+                    htmlData3 += `<div class="row">
+                                                <div class="col-md-8">
+                        <img  src="${response.data.UserPlanDetailResponse[i].ProfileImageWithPath}" id="previewImage"></p >
+                         ${response.data.UserPlanDetailResponse[i].PlanName}
+ 
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                  <p><label> Plan Duration Type : </label><span>${response.data.UserPlanDetailResponse[i].PlanDurationTypeName}</span></p>
+                                <p><label> End Date : </label><span>${response.data.UserPlanDetailResponse[i].EndDate}</span></p>
+                        <p><label>Description: </label><span style="margin-left: 15px">
+                                                ${response.data.UserPlanDetailResponse[i].PlanDescription}</span></p>
+                                                </div>
+                                             </div>
+                                              
+                                          </div><hr>
+                                     `;
+                }
+                if (response.data.UserPlanDetailResponse.length <= 0) {
+                    htmlData3 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Package Detail in this Student Detail.</div>`;
+                }
+
+                var htmlData4 = '';
+                for (var i = 0; i < response.data.UserTrainingDetailResponse.length; i++) {
+                    htmlData4 += `<div class="row">
+                                                <div class="col-md-4">
+                                                  <p><label>Instructor Name : </label><span style="margin-left: 15px">${response.data.UserTrainingDetailResponse[i].InstructorName}</span></p>
+
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                  <p><label>Instructor Email : </label><span style="margin-left: 15px">${response.data.UserTrainingDetailResponse[i].InstructorEmail}</span></p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                  <p><label>Instructor Phone Number : </label><span style="margin-left: 15px">${response.data.UserTrainingDetailResponse[i].InstructorAlternateNumber}</span></p>
+                                                </div>
+                                             </div>
+                                               <div class="row">
+                                                <div class="col-md-4">
+                                                   <p><label> Training Name : </label><span>${response.data.UserTrainingDetailResponse[i].TrainingName}</span></p>
+                                                </div>
+                                    <div class="col-md-4"><p><label> Start Date : </label><span>${response.data.UserTrainingDetailResponse[i].StartDate}</span></p>
+                                                </div><div class="col-md-4"><p><label> End Date : </label><span>${response.data.UserTrainingDetailResponse[i].EndDate}</span></p>
+                                                </div></div><div class="row"><div class="col-md-4"><p><label> Short Decription  : </label><span>${response.data.UserTrainingDetailResponse[i].ShortDescription}</span></p>
+                                                </div><div class="col-md-4"><p><label>Address: </label><span style="margin-left: 15px">
+                                                ${response.data.UserTrainingDetailResponse[i].Address}</span></p></div>
+                                                  <div class="col-md-4"><p><label>Music Type: </label><span style="margin-left: 15px">
+                                                ${response.data.UserTrainingDetailResponse[i].MusicType}</span></p></div>
+                                                  </div>
+                                          <hr>
+                                     `;
+                }
+                if (response.data.UserTrainingDetailResponse.length <= 0) {
+                    htmlData4 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Detail in this Student Detail.</div>`;
+                }
+                var htmlData5 = '';
+                for (var i = 0; i < response.data.UserCertificateDetailResponse.length; i++) {
+                    htmlData5 += `<div class="row">
+                                                <div class="col-md-4">
+                        <img  src="${response.data.UserCertificateDetailResponse[i].CertificateImageWithPath}" id="previewImage"></p ></div>
+                         <div class="col-md-4"><label>Certificate Name :</label>
+                         ${response.data.UserCertificateDetailResponse[i].Name}
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                  <p><label> Price : </label><span>${response.data.UserCertificateDetailResponse[i].Price}</span></p>                              
+                                                </div>
+                                             </div>
+                                             
+                                            <hr>
+                                     `;
+                }
+
+                if (response.data.UserCertificateDetailResponse.length <= 0) {
+                    htmlData5 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Certificate Detail in this Student Detail.</div>`;
+                }
+                var htmlData2 = '';
+
+            
+                if (response.data.StudentDetail) {
+                    htmlData2 += `<div class="card">
+                                       <div class="card-body">
+                                          <div class="tab-content">
+                                             <div class="active tab-pane" id="activity">
+                                                <div class="post">
+                                                   <h4>Student Detail</h4>
+                                                   <hr>
+                                                   <div class="user-block">
+                                                      <div class="row">
+                                                         <div class="col-md-12">
+                                                            <img class="img-circle img-bordered-sm" src="${response.data.StudentDetail.ProfileImageWithPath}" alt="user image">
+                                                            <span class="username">
+                                                               <a href="#">
+                                                                  <span style="margin-left:20px">${response.data.StudentDetail.Name}</span>                                            <p><span style="margin-left:20px">${response.data.StudentDetail.PhoneNumber}</span></p>
+                                                            </a>
+                                                         </div>
+                                                         <div class="col-md-12">
+                                                            <span style="margin-left:15px;"><label>Master ID: </label></span> ${response.data.StudentDetail.MasterId}
+                                                         </div>
+                                                         <div class="float-right"><label>Joining Date</label><span style="margin-left:15px;">${response.data.StudentDetail.CreatedOn_FormatDate}</span></div></div>
+                                                   
+                                            <div class="row"><div class="col-md-7"><span style="margin-left:15px;"><label>Address: </label></span>${response.data.StudentDetail.Address}</div><span style="margin-left:15px;"><label>Email: </label></span>${response.data.StudentDetail.Email}</div></div><div class="row"><div class="col-md-10" style="text-align: right"><a class="btn btn-sm btn-info mr-1" href="/SuperAdmin/UserImageDetail?userLoginId=${response.data.StudentDetail.UserLoginId}"> ViewImage</a></div></div><div class="row" style="text-align: right"><div class="col-md-10"><a class="btn btn-sm btn-info mr-1" href="/SuperAdmin/UserVedioDetail?userLoginId=${response.data.StudentDetail.UserLoginId}"> View Videos</a></div></div>
+                                                </div>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    </div>
+                                    </div></div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                          <h4>Course Information  </h4>
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                            ${htmlData1}
+                                       </div>
+                                    </div>
+                                    </div>
+                                    <div class="card">                  
+                                       <div class="card-header">
+                                         <h4>Package Information  </h4>
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                            ${htmlData3}
+                                       </div>
+                                    </div>
+                                    </div>
+                                    <div class="card">
+                                    <div class="card-header">
+                                            <h4>Training Information  </h4>
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                            ${htmlData4}
+                                       </div>
+                                    </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                        <h4>Certificates  </h4>
+                                       </div>
+                                       <div class="card-body" id="cardBody">
+                                          <div class="tab-content">
+                                            ${htmlData5}
+                                       </div>
+                                    </div>
+                                    </div>
+                                    `;
+
+                }
+
+
+                $('#ViewBusinessDetail').append(htmlData2);
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

@@ -1,0 +1,133 @@
+﻿<script>
+    var UserToken_Global = "";
+    var BusinessBranchLoginId_Global = $("#hiddenBusinessbranchLoginId").val();
+    var _branchesStaffTable;
+
+    function initializeDataTable_BranchStaff() {
+        _branchesStaffTable = $("#tblBranchesStaffView").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                initializeDataTable_BranchStaff();
+                UserToken_Global = dataToken;
+                GetAllStaffBranchesForBusinessPagination();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_BranchStaff();
+                        GetAllStaffBranchesForBusinessPagination();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+     function GetAllStaffBranchesForBusinessPagination() {
+        // ---------------- Pagination Data Table --------------------
+         var _url_val = "/api/Business/GetAllBranchStaffDetailByPagination?branchBusinessLoginId=" + BusinessBranchLoginId_Global;
+         _branchesStaffTable.clear().destroy();
+         _branchesStaffTable = $("#tblBranchesStaffView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+               
+                , {
+                    "data": null, "name": "StaffMasterId", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                         ${row.StaffMasterId}</div>
+                                        </div class="mb-2">
+                                     ${row.MasterId}</div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+               
+                
+                , {
+                    "data": null, "name": "StaffName", "autoWidth": true, "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                            ${row.StaffName}
+                                        </div>
+                                        <div class="mb-2">
+                                            ${row.PhoneNumber}
+                                        </div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+                , { "data": "StaffCategoryName", "name": "StaffCategoryName", "autoWidth": true }
+
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                    }
+                }
+               
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            "columnDefs": [{
+                "targets": [0,4], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+         $('#tblBranchesStaffView_filter input').unbind();
+         $('#tblBranchesStaffView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _branchesStaffTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+</script>

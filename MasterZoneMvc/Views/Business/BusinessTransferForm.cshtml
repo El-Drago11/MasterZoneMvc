@@ -1,0 +1,108 @@
+﻿
+@{
+    ViewBag.Title = "BusinessTransferForm";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    long customFormId = ViewBag.CustomFormId;
+}
+
+
+@section Styles{
+
+    <style>
+
+
+        .business-logo {
+            height: 50px;
+            width: 50px;
+            object-fit: contain
+        }
+    </style>
+}
+
+<input type="hidden" id="hiddenCustomFormId" value="@ViewBag.CustomFormId" />
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Transfer Custom Form </h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ViewCustomForm">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Transfer Custom Form</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+        <div id="sectionViewCustomForm">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">                      
+                            <div class="card-title" id="FormName"> </div>
+                        </div>
+                        <div class="card-body">
+                            <table id="tblTransferCustomFormView" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th> MasterID</th>
+                                        <th>Business Name</th>
+                                        <th>Owner</th>
+                                        @*<th>Category</th>*@
+                                        @*<th>Sub-Category</th>*@
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12 mb-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 ">
+                                <div class="form-group d-flex flex-column">
+                                    @*<label>Search<span class="text-danger"></span></label>*@
+                                    <input type="search" id="txtSearchBusiness" class="border form-control" placeholder="Search...">
+                                    <div class="error-class" id="error_txtSearchBusiness"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <button type="button" id="btnSearchBusiness" class="btn btn-success" onclick="getBusinessOnwersBySearch();">Search</button>
+                                <button type="button" id="btnClearBusinessCertificate" class="btn btn-default" onclick="resetAssignCertificateSection();">Clear</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div id="searchedBusinessOwnersList" class="row w-100"></div>
+                            <div class="col-sm-12 text-center"><a id="btnSearchBusinessShowMore" class="btn btn-outline-primary d-none" href="javascript:getBusinessOnwersBySearch(false)">Show More</a></div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                    </div>
+</main>
+
+
+@section Scripts{
+
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_BusinessTransferFormScriptPartial.cshtml")
+}
+
+

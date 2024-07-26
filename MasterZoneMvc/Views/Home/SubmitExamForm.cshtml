@@ -1,0 +1,1196 @@
+﻿@using MasterZoneMvc.ViewModels;
+@model ExamFormResponse_VM
+
+
+
+@{
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+    ViewData["Title"] = "Masterzone";
+    long itemcourseid = ViewBag.Itemcourseid;
+}
+@{
+    string[] titleParts = Model.NameWithAddress.Split(new[] { "\r\n" }, StringSplitOptions.None);
+}
+
+@section Styles {
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        p {
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        #section-1 input {
+            margin-bottom: 10px;
+            border: 1px solid #f3a762;
+        }
+
+        .Orange_White_Colour {
+            background: #f3a762;
+            color: #fff;
+        }
+
+        .profile-image-section {
+            width: 224px;
+            height: 254px;
+            border: 2px solid #f3a762;
+            margin-top: 38px;
+            display: flex;
+            justify-content: center;
+        }
+
+        img#profileImage {
+            width: 100%
+        }
+
+        .signature-image-section {
+            width: 260px;
+            height: 110px;
+            border: 2px solid #f3a762;
+            display: flex;
+            justify-content: center;
+        }
+
+        #category input {
+            height: unset;
+            width: unset;
+        }
+
+        img#signature {
+            width: 100%
+        }
+
+        ol li {
+            list-style: unset;
+        }
+
+        .box-dot {
+            /*border: 0;
+            border-bottom: 1px dashed #f3a762;
+            height: 20px;
+            margin-bottom: 10px;
+            width: 100%;
+            outline: 0;*/
+        }
+
+        .form-control:focus {
+            box-shadow: unset;
+        }
+
+        ol, ul {
+            margin: inherit;
+            padding: inherit !important;
+        }
+    </style>
+}
+
+
+
+<div id="exam-page">
+
+
+    <section id="section-1">
+        <div class="container">
+            @*ESTD, Logo, Business Name ,address, contact Details*@
+            <div class="exam-page-row-1 row mb-4">
+                @*ESTD*@
+                <div class="col-sm-2">
+                    <p>ESTD. @Model.EstablishedYear</p>
+                    <img src="@Model.ExamFormLogoWithPath" class="ls-p-lg mblg-ls  mr-2" style="width: 86px;">
+                </div>
+
+                @*Session and Business Name address*@
+                <div class="col-sm-6 text-center">
+                    <h4 class="mb-2">Valid for @Model.Title session</h4>
+                    @for (int n = 1; n <= titleParts.Length; n++)
+                    {
+                        <h@(n+1)>@Html.Raw(HttpUtility.HtmlDecode(titleParts[n - 1]))</h@(n+1)>
+                    }
+                </div>
+
+                @*Contact Details*@
+                <div class="col-sm-4 text-right">
+                    <p class="m-0">New Telephone Nos.</p>
+                    <p class="m-0">
+                        Secretary Chamber: <span id="exampage-top-Secretary-number">@Model.SecretaryNumber</span>
+                    </p>
+                    <p class="m-0">
+                        Registrar Office: <span id="exampage-top-Registrar-number">@Model.RegistrarOfficeNumber</span>
+                    </p>
+                    <p class="m-0">Website: <span id="exampage-top-website">@Model.WebsiteLink</span></p>
+                    <p class="m-0">E-mail: <span id="exampage-top-email">@Model.Email</span></p>
+                </div>
+            </div>
+
+            @*Profile Image and Important Instruction*@
+            <div class="exam-page-row-2 row">
+                @*Profile Image*@
+                <div class="col-sm-4">
+                    <div class="profile-image-section">
+                        <img src="" id="profileImg">
+                    </div>
+                    <input id="CandidateProfileImage" class="form-control" type="file" style="border: none;" onchange="validateImage(this.id)">
+                    <div class="error-class" id="error_CandidateProfileImage"></div>
+                </div>
+
+                @*Important Instruction*@
+                <div class="col-sm-8">
+                    <h5 class="text-center">IMPORTANT INSTRUCTION</h5>
+                    <ol>
+                        @{
+                            List<string> instructions = null;
+                            if (Model.ImportantInstruction != null)
+                            {
+                                instructions = Model.ImportantInstruction
+.Split(new[] { "<li>", "<ol>", "</li>", "</ol>" }, StringSplitOptions.RemoveEmptyEntries)
+.Select(instruction => instruction.Replace("</li>", "").Replace("</ol>", "").Replace("<ol>", "").Replace("<li>", ""))
+.ToList();
+                            }
+                            foreach (var instruction in instructions)
+                            {
+                                <li>@Html.Raw(HttpUtility.HtmlDecode(instruction))</li>
+                            }
+                        }
+                    </ol>
+                </div>
+            </div>
+
+            @*Exam Form Details*@
+            <div class="exam-page-row-3 row">
+                <div class="col-sm-12 m-0">
+
+                    @*Note and session year*@
+                    <div class="row mb-2">
+                        @*note*@
+                        <div class="col-sm-12">
+                            <h5 class="text-center mt-3 text-danger">*Note : Form will not be accepted without Image.</h5>
+                        </div>
+                        @*Session Year*@
+                        <div class="col-sm-12">
+                            <h4 class="d-flex">
+                                Examination Application Form for @Model.Title<input id="SessionYear" type="text" class="form-control box-dot w-auto pt-3"> Examination
+                            </h4>
+                        </div>
+                    </div>
+                    x
+                    @*Category and Roll NO*@
+                    <div class="row">
+                        @*Category*@
+                        <div class="col-sm-6  d-flex align-items-center" id="category">
+                            <p class="pr-3">Category<span class="text-danger">*</span></p>
+                            <label class="pr-sm-3" for="General">
+                                <input type="radio" name="category" id="General"
+                                       value="General" onchange="validateRadioButton(this.name)">
+                                General
+                            </label>
+
+                            <label class="pr-sm-3" for="Teacher">
+                                <input type="radio" name="category" id="Teacher"
+                                       value="Teacher" onchange="validateRadioButton(this.name)">
+                                Teacher
+                            </label>
+
+                            <label class="pr-sm-3" for="ImprovementDiv">
+                                <input type="radio" name="category" id="ImprovementDiv" value="Improvement for Division" onchange="validateRadioButton(this.name)">
+                                Improvement for Division.
+                            </label>
+                            <div class="error-class" id="error_category"></div>
+                        </div>
+                        @*Roll No*@
+                        <div class="col-sm-6">
+                            <p class="ml-sm-1">Candidate Roll No.<span class="text-danger">*</span></p>
+                            <input id="CurrentRollNo" class="form-control box-dot" type="text" disabled>
+                        </div>
+                    </div>
+
+                    @*MasteId,BusinessId, CenterNo*@
+                    <div class="row">
+                        <div class="col-sm-4 ">
+                            <p>Master-Id<span class="text-danger">*</span></p>
+                            <input id="UserMasterId" class="form-control box-dot" type="text" oninput="validateMasterId(this.id)">
+                            <div class="error-class" id="error_UserMasterId"></div>
+                        </div>
+                        <div class="col-sm-4">
+                            <p>Business-Id<span class="text-danger">*</span></p>
+                            <input id="BusinessId" class="form-control box-dot" type="text" value="@Model.BusinessMasterId" disabled>
+                        </div>
+                        <div class="col-sm-4">
+                            <p>Center-No<span class="text-danger">*</span></p>
+                            <input id="CenterNo" class="form-control box-dot" type="text" value="@Model.CenterNo" disabled>
+                        </div>
+                    </div>
+
+                    @*ALl input list*@
+                    <div class="row">
+                        <ol class="px-5">
+                            @*Candidtae Name*@
+                            <li class="mt-1">
+                                <p> Name of the Candidate in English(Block Letters)<span class="text-danger">*</span></p>
+                                <input id="CandidateName" type="text" class="form-control box-dot" oninput="validateAlphabetsAndSpaces(this.id)">
+                                <div class="error-class" id="error_CandidateName"></div>
+                            </li>
+
+                            @*Father Name*@
+                            <li>
+                                <p> Father's Name in English (Block Letters)<span class="text-danger">*</span></p>
+                                <input id="CandidateFather" type="text" class="form-control box-dot" oninput="validateAlphabetsAndSpaces(this.id)">
+                                <div class="error-class" id="error_CandidateFather"></div>
+                            </li>
+
+                            @*Mother Name*@
+                            <li class="mt-1">
+                                <p>Mother's Name in English (Block Letters)<span class="text-danger">*</span></p>
+                                <input id="CandidateMother" type="text" class="form-control box-dot" oninput="validateAlphabetsAndSpaces(this.id)">
+                                <div class="error-class" id="error_CandidateMother"></div>
+                            </li>
+
+                            @*Permanent Address*@
+                            <li class="mt-1">
+                                <p>Permanent Address (Block Letters)<span class="text-danger">*</span></p>
+                                <input id="PermanentAddress" type="text" class="form-control box-dot">
+                                <div class="error-class" id="error_PermanentAddress"></div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>Pin Code<span class="text-danger">*</span></p>
+                                        <input id="PermanentPin" type="text" class="form-control box-dot" oninput="validateNonNegativeNonDecimalNonEmptyAnd6Digit(this.id)">
+                                        <div class="error-class" id="error_PermanentPin"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>Phone/Mob. No<span class="text-danger">*</span></p>
+                                        <input id="PermanentMobNo" type="text" class="form-control box-dot" oninput="validatePhoneNumber(this.id)">
+                                        <div class="error-class" id="error_PermanentMobNo"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*Present Address*@
+                            <li class="mt-1">
+                                <p>Present Address (Block Letters)<span class="text-danger">*</span></p>
+                                <input id="PresentAddress" type="text" class="form-control box-dot">
+                                <div class="error-class" id="error_PresentAddress"></div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>Pin Code<span class="text-danger">*</span></p>
+                                        <input id="PresentPin" type="text" class="form-control box-dot" oninput="validateNonNegativeNonDecimalNonEmptyAnd6Digit(this.id)">
+                                        <div class="error-class" id="error_PresentPin"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>Phone/Mob. No<span class="text-danger">*</span></p>
+                                        <input id="PresentMobNo" type="text" class="form-control box-dot" oninput="validatePhoneNumber(this.id)">
+                                        <div class="error-class" id="error_PresentMobNo"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*Nationality and AadharCard No*@
+                            <li>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>(I.) Nationality<span class="text-danger">*</span></p>
+                                        <input id="Nationality" class="form-control box-dot" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                                        <div class="error-class" id="error_Nationality"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>(II.) AadharCard No<span class="text-danger">*</span></p>
+                                        <input id="AadharCardNo" class="form-control box-dot" type="text" oninput="validateNonNegativeNonDecimalNonEmptyAnd12Digit(this.id)">
+                                        <div class="error-class" id="error_AadharCardNo"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*DOB and Email*@
+                            <li>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>(I.) DOB (DD/MM/YYYY)<span class="text-danger">*</span></p>
+                                        <input id="DOB" class="form-control box-dot" type="text" oninput="validateDateOfBirthFormat(this.id)">
+                                        <div class="error-class" id="error_DOB"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>(II.) Email<span class="text-danger">*</span></p>
+                                        <input id="Email" class="form-control box-dot" type="text" oninput="validateEmail(this.id)">
+                                        <div class="error-class" id="error_Email"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*Education qualification*@
+                            <li>
+                                <p>Educational qualification<span class="text-danger">*</span></p>
+                                <input id="EduQualification" class="form-control box-dot" type="text" oninput="validateAlphabetsNumberAndSpaces(this.id)">
+                                <div class="error-class" id="error_EduQualification"></div>
+                            </li>
+
+                            @*Examination in which the candidate wants to appear*@
+                            <li>
+                                <p>Details of Examination in which the candidate wants to appear-</p>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>(I.) Class<span class="text-danger">*</span></p>
+                                        <input id="CurrentClass" class="form-control box-dot" type="text" oninput="validateAlphabetsNumberAndSpaces(this.id)">
+                                        <div class="error-class" id="error_CurrentClass"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>(II.) Subject<span class="text-danger">*</span></p>
+                                        <input id="CurrentSubject" class="form-control box-dot" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                                        <div class="error-class" id="error_CurrentSubject"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>(III.) Center Name<span class="text-danger">*</span></p>
+                                        <input id="CurrentCenterName" class="form-control box-dot" type="text" oninput="validateAlphabetsNumberAndSpaces(this.id)">
+                                        <div class="error-class" id="error_CurrentCenterName"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>(IV.) City<span class="text-danger">*</span></p>
+                                        <input id="CurrentCenterCity" class="form-control box-dot" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                                        <div class="error-class" id="error_CurrentCenterCity"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*Previous examination Details*@
+                            <li>
+                                <p>
+                                    For eligibility to appear in the examination aforementioned, attach X-rox
+                                    copies of previous examination marksheer/certificates duly attested.
+                                    Details of last music examination passed.
+                                </p>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <p>(I.) Class<span class="text-danger">*</span></p>
+                                        <input id="PreviousClass" class="form-control box-dot" type="text" oninput="validateAlphabetsNumberAndSpaces(this.id)">
+                                        <div class="error-class" id="error_PreviousClass"></div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <p>(II.) Subject<span class="text-danger">*</span></p>
+                                        <input id="PreviousSubject" class="form-control box-dot" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                                        <div class="error-class" id="error_PreviousSubject"></div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <p>(III.) Year<span class="text-danger">*</span></p>
+                                        <input id="PreviousYear" class="form-control box-dot" type="text" oninput="validateYearFrom2000(this.id)">
+                                        <div class="error-class" id="error_PreviousYear"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p>(IV.) Roll No<span class="text-danger">*</span></p>
+                                        <input id="PreviousRollNo" class="form-control box-dot" type="text" oninput="validateNonNegativeNonDecimalNonEmpty(this.id)">
+                                        <div class="error-class" id="error_PreviousRollNo"></div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p>(V.) Result<span class="text-danger">*</span></p>
+                                        <input id="PreviousResult" class="form-control box-dot" type="text">
+                                        <div class="error-class" id="error_PreviousResult"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <p>(VI.) Center<span class="text-danger">*</span></p>
+                                        <input id="PreviousCenterName" class="form-control box-dot" type="text" oninput="validateAlphabetsNumberAndSpaces(this.id)">
+                                        <div class="error-class" id="error_PreviousCenterName"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*Amount of Fee*@
+                            <li>
+                                <p>Amount of fee paid to the Centre Superintendent.</p>
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <p>Amount<span class="text-danger">*</span></p>
+                                        <input id="Amount" class="form-control box-dot" type="text" oninput="validateNonNegativeNonDecimalNonEmpty(this.id)">
+                                        <div class="error-class" id="error_Amount"></div>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <p>(In Word.)<span class="text-danger">*</span></p>
+                                        <input id="AmountInWord" class="form-control box-dot" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                                        <div class="error-class" id="error_AmountInWord"></div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            @*No of Attached*@
+                            <li>
+                                <p>Number of enclosures attached<span class="text-danger">*</span></p>
+                                <input id="NoOfAttached" class="form-control box-dot" type="text" oninput="validateNonNegativeNonDecimalNonEmpty(this.id)">
+                                <div class="error-class" id="error_NoOfAttached">
+                                </div>
+                            </li>
+
+                            @*Certificate required at home or superintendent *@
+                            <li>
+                                <p>
+                                    Mark-sheet and Certificate required at home address or through Centre
+                                    Superintendent
+                                </p>
+                                <input id="CertificateCollectFrom" class="form-control box-dot" type="text">
+                                <div class="error-class" id="error_CertificateCollectFrom"></div>
+                            </li>
+
+                            @*Signature*@
+                            <li>
+                                <p>Signature of Candidate<span class="text-danger">*</span></p>
+                                <div class="signature-image-section">
+                                    <img src="" id="signatureImg">
+                                </div>
+                                <input id="CandidateSignature" class="form-control" type="file" style="border: none;" onchange="validateImage(this.id)">
+                                <div class="error-class" id="error_CandidateSignature"></div>
+                            </li>
+
+                        </ol>
+
+                    </div>
+
+                    @*Term and conditions*@
+                    <div class="row">
+                        @*Term and condtion points*@
+                        <div class="col-sm-12">
+                            <ol type="i">
+                                <li>I have carefully read the rules, regulations and the syllabus concerning the examination and I assure that I will abide by them in word and spirit.</li>
+                                <li>I enclose with this form the prescribed examination fee by Bank Draft / Postal Order or have deposited the fee in cash with the Centre Superintendent.</li>
+                                <li>I agree to appear in the examination at a place other than the centre mentioned in this form which should be Registrar so decide.</li>
+                                <li>I agree to the condition that subject matter of any dispute concerning Prayag Sangit Samiti and myself will be subject to jurisdiction of courts only in Prayagraj (Allahabad).</li>
+                                <li>Entries from 1 to 11 are correct to the best of my knowledge.</li>
+                            </ol>
+                        </div>
+
+                        @*Current date*@
+                        <div class="col-sm-6 text-left mt-5">
+                            <p>Current Date<span class="text-danger">*</span></p>
+                            <input id="termAndConditionsDate" class="form-control box-dot w-50" type="text" style="background-color:unset" disabled>
+                        </div>
+
+                        @*signature*@
+                        <div class="col-sm-6" style="display: flex; align-items: flex-end; flex-direction: column;">
+                            <div style="width: 260px; height: 90px; border: 2px solid #f3a762; display: flex; justify-content: center;">
+                                <img src="" id="signatureAtTermAndConditions">
+                            </div>
+                            <p>Full Signature of the Candidate<span class="text-danger">*</span></p>
+                        </div>
+                    </div>
+                    <hr />
+                    @*Decleration by father / Guardian(If Candiate is minor)*@
+                    <div class="row m-0 p-0 mt-4">
+                        @*Title*@
+                        <div class="col-sm-12 m-0 p-0 text-center">
+                            <h3 class="text-danger">DECLERATION BY FATHER/GUARDIAN(IF CANDIDATE IS MINOR)</h3>
+                        </div>
+                        @*Declareation*@
+                        <div class="col-sm-12 m-0 p-0" id="declerationByGuardian">
+                            I hereby declare that I have carefully read the rules, regulations and syllabus concerning the examination and assure that my ward is fit and eligible to appear in the examination. I take full responsibility of following the prescribed rules, regulations and directions/orders of the Registrar concerning the examination by my ward. The Provision (iv) above regarding jurisdiction of Courts at Prayagraj (Allahabad) is acceptable to me.
+                        </div>
+
+                        @*Current Date*@
+                        <div class="col-sm-6 m-0 p-0 text-left mt-5">
+                            <p>Current Date<span class="text-danger">*</span></p>
+                            <input id="declerationByGuardianDate" class="form-control box-dot w-50" type="text" style="background-color:unset" disabled>
+                        </div>
+
+                        @*Signature*@
+                        <div class="col-sm-6 m-0 p-0" style="display: flex; align-items: flex-end; flex-direction: column;">
+                            <div style="width: 260px; height: 90px; border: 2px solid #f3a762; display: flex; justify-content: center;">
+                                <img src="" id="signatureOfGuradianImg">
+                            </div>
+                            <p>Signature of Father/Guradian<span class="text-danger">*</span></p>
+                            <input id="CandidateGuradianSignature" class="w-50" type="file" style="border: none;" onchange="validateImage(this.id)">
+                            <div class="error-class" id="error_CandidateGuradianSignature"></div>
+                            <div class="d-flex mt-3">
+                                <p style="margin-right:10px">Full Name<span class="text-danger">*</span></p>
+                                <input id="CandidateGuradianName" class="form-control box-dot w-auto m-0 p-0" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                                <div class="error-class" id="error_CandidateGuradianName"></div>
+                            </div>
+                        </div>
+                    </div>
+                    @*Decleration by Superintendent*@
+                    <!--<div class="row m-0 p-0 mt-4">-->
+                    @*Title*@
+                    <!--<div class="col-sm-12 m-0 p-0 text-center">
+                        <h3 class="text-danger">SIGNATURE BY CENTRE SUPERINTENDENT</h3>
+                    </div>-->
+                    @*Declareation*@
+                    <!--<div class="col-sm-12 m-0 p-0" id="declerationBySuperintendent">
+                        I hereby declare
+                        <div class="pl-4">
+                            (i) That the application of Sri/Smt./Km<input class="box-dot w-25 m-0" id="DeclerationCandidateName" type="text" disabled />is fit and eligible to appear in the examination and that there is nothing against him/her to disqualify him/her from appearing in the examination.<br />
+                            (ii) That I have thoroughly checked this Examination Application Form filled in by the candidate and that the particulars given by the candidate in this form are complete, true and in accordance with the examination rules of the Prayag Sangit Samiti, Prayagraj (Allahabad).<br />
+                            (iii) That the candidate has paid the requisite amount of examination fee Rs.<input class=" m-0 box-dot w-25" id="DeclerationAmount" type="text" disabled />vide Bank Draft No<input class=" m-0 box-dot w-25" type="text" id="BankDraftNo" /> dated<input class=" m-0 box-dot w-25" type="text" id="BankDraftDate" />Postal Order No./Nos<input class=" m-0 box-dot w-25" type="text" id="PostalOrderNo" />or cash to me.<br />
+                            (iv) Centre Superintendent is advised to keep Photo copy of Marksheet and Certificate of candidate for future reference.
+                        </div>
+                        <p>Note:</p> The total examination fee of all the candidate must be sent alongwith the examination forms otherwise the examination result will be withheld.
+                    </div>-->
+                    @*Current Date*@
+                    <!--<div class="col-sm-4 m-0 p-0 text-left mt-5">
+                        <p>Current Date<span class="text-danger">*</span></p>
+                        <input id="declerationBySuperintendentDate" class="box-dot w-50" type="text" style="background-color:unset" disabled>
+                    </div>-->
+                    @*Center No*@
+                    <!--<div class="col-sm-4 m-0 p-0 text-left mt-5">
+                        <p>Center No<span class="text-danger">*</span></p>
+                        <input id="declerationBySuperintendentCenterNo" class="box-dot w-50" type="text" style="background-color:unset" value="@Model.CenterNo" disabled>
+                    </div>-->
+                    @*Signature*@
+                    <!--<div class="col-sm-4 m-0 p-0" style="display: flex; align-items: flex-end; flex-direction: column;">
+                        <div style="width: 260px; height: 90px; border: 2px solid #f3a762; display: flex; justify-content: center;">
+                            <img src="" id="signatureOfSuperintendentImg">
+                        </div>
+                        <p>Signature of Superintendent<span class="text-danger">*</span></p>
+                        <input id="SuperintendentSignature" class="w-75" type="file" style="border: none;" onchange="validateImage(this.id)">
+                        <div class="error-class" id="error_SuperintendentSignature"></div>
+                        <div class="d-flex mt-3">
+                            <p style="margin-right:10px">Full Name<span class="text-danger">*</span></p>
+                            <input id="SuperintendentName" class="box-dot w-auto m-0 p-0" type="text" oninput="validateAlphabetsAndSpaces(this.id)">
+                        </div>
+                    </div>-->
+                    @*Pin no , Phone No, Email*@
+                    <!--<div class="col-sm-6 text-left">
+                            <p class="d-flex">Pin No:- <input class="box-dot w-50" type="text" id="SuperintendentPinNo"></p>
+                            <p class="d-flex">Phone/Mob. No:- <input class="box-dot w-50" type="text" id="SuperintendentPhoneNo"></p>
+                            <p class="d-flex">E-mail:-<input class="box-dot w-50" type="text" id="SuperintendentEmail"></p>
+                        </div>
+                    </div>-->
+                    <hr />
+                    @*Submit button*@
+                    <div class="row">
+
+
+
+                        <div class="col-12 mb-3">
+                            <button onclick="SubmitExamForm()" type="submit" class="Orange_White_Colour btn btn-primary">Submit</button>
+                        </div>
+                        @*<div class="col-12 mb-3">
+                                <button onclick="subtmitbtn()" type="submit" class="Orange_White_Colour btn btn-primary">click me</button>
+                            </div>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+
+
+    @**Validation function*@
+    <script>
+        function validateAlphabetsNumberAndSpaces(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^[a-zA-Z0-9\s]+$/.test(value)) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter only alphabets,number and white spaces.');
+                return false;
+            }
+        }
+
+        function validateAlphabetsAndSpaces(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^[a-zA-Z\s]+$/.test(value)) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter only alphabets and white spaces.');
+                return false;
+            }
+        }
+
+        function validateAlphabetsWithoutSpaces(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^[a-zA-Z]+$/.test(value)) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter only alphabets without spaces.');
+                return false;
+            }
+        }
+
+        function validateNonNegativeNonDecimalNonEmpty(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^\d+$/.test(value) && parseInt(value) >= 0 && value !== "") {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter a number is greater than zero and non decimal.');
+                return false;
+            }
+        }
+
+        function validateNonNegativeNonDecimalNonEmptyAnd6Digit(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^\d{6}$/.test(value) && parseInt(value) >= 0 && value !== "") {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter 6-digit non decimal number.');
+                return false;
+            }
+        }
+
+        function validateNonNegativeNonDecimalNonEmptyAnd12Digit(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^\d{12}$/.test(value) && parseInt(value) >= 0 && value !== "") {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter 12-digit non-decimal number.');
+                return false;
+            }
+        }
+
+        function validateYearFrom2000(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^\d{4}$/.test(value) && parseInt(value) >= 2000 && value !== "") {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter valid Year greater than 2000');
+                return false;
+            }
+        }
+
+        function validatePhoneNumber(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im.test(value)) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter valid Phone Number.');
+                return false;
+            }
+        }
+
+        function validateEmail(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/.test(value)) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter valid Email Id.');
+                return false;
+            }
+        }
+
+        function validateImage(inputElementId) {
+
+            var file = $('#' + inputElementId).get(0).files[0];
+            var err_id = '#error_' + inputElementId;
+
+            if (file) {
+                var fileType = file.type.split('/')[0]; // Check if it's an image
+
+                if (fileType === 'image') {
+                    console.log('Valid image selected.');
+                    $(err_id).html('');
+                    return true;
+                } else {
+                    //alert('Please select a valid image file.');
+                    $('#' + inputElementId).val(''); // Reset the input
+                    $(err_id).html('Please select valid image (jpg,jpeg,png).');
+                    return false;
+                }
+            } else {
+                alert('Please select a file.');
+                return false;
+            }
+        }
+
+        function validateRadioButton(inputElementId) {
+            var selected = $("input[name='" + inputElementId + "']:checked").length;
+
+            if (selected > 0) {
+                $("#error_" + inputElementId).text('');
+                return true;
+            } else {
+                $("#error_" + inputElementId).text('Please select at least one option.');
+                return false;
+            }
+        }
+
+        function validateMasterId(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+            else if (/^[A-Za-z0-9_]+$/.test(value)) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter a alpha-numeric number and allow only underscores.');
+                return false;
+            }
+        }
+
+        function validateDateOfBirthFormat(inputElementId) {
+            var err_id = '#error_' + inputElementId;
+            var value = $('#' + inputElementId).val();
+
+            if (value == "") {
+                $(err_id).html('');
+                return false;
+            }
+
+            var parts = value.split('/');
+            var day = parseInt(parts[0], 10);
+            var month = parseInt(parts[1], 10);
+            var year = parseInt(parts[2], 10);
+
+            if (parts.length === 3 && day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
+                $(err_id).html('');
+                return true;
+            } else {
+                $(err_id).html('Please enter a valid date in the format DD/MM/YYYY. example:- 15/05/1999 ');
+                return false;
+            }
+        }
+
+        function GetCurrentDate_DD_MM_YYYY() {
+            var currentDate = new Date();
+
+            var day = currentDate.getDate();
+            var month = currentDate.getMonth() + 1; // Months are 0-based
+            var year = currentDate.getFullYear();
+
+            // Add leading zeros if day or month is a single digit
+            day = day < 10 ? '0' + day : day;
+            month = month < 10 ? '0' + month : month;
+
+            var formattedDate = day + '/' + month + '/' + year;
+            return formattedDate;
+        }
+
+        ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+        const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+            if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+                return true;
+            return false;
+        }
+
+        const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+            if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+                return true;
+            return false;
+        }
+        ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    </script>
+
+    <script>
+
+    $(document).ready(function () {
+        $('header.header').css('position', 'static');
+        $(".header").addClass("active-h");
+        $('#termAndConditionsDate, #declerationByGuardianDate, #declerationBySuperintendentDate ').val(GetCurrentDate_DD_MM_YYYY());
+        $("#CandidateProfileImage").change(function () {
+            var input = this;
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#profileImg').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+        $("#CandidateSignature").change(function () {
+            var input = this;
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#signatureImg').attr('src', e.target.result);
+                    $('#signatureAtTermAndConditions').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+        $("#CandidateGuradianSignature").change(function () {
+            var input = this;
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#signatureOfGuradianImg').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+        $("#SuperintendentSignature").change(function () {
+            var input = this;
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#signatureOfSuperintendentImg').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+        $("#Amount").change(function () {
+            $('#DeclerationAmount').val(this.value)
+        });
+        $("#CandidateName").change(function () {
+            $('#DeclerationCandidateName').val(this.value)
+        });
+    });
+        function SubmitExamForm(id = 0) {
+
+
+        // Get the current URL
+        var currentUrl = window.location.href;
+        // Use URLSearchParams to parse the query string
+        var urlParams = new URLSearchParams(new URL(currentUrl).search);
+
+        var _is_valid = true;
+        $(".error-class").html('');
+        var examId = urlParams.get('examId');
+
+        var _Id = id;
+        var _ExamFormId = examId ?? 0;
+        var _SessionYear = $('#SessionYear').val();
+        var _CandidateProfileImage = $('#CandidateProfileImage').get(0).files;
+        var _Category = $("input[name='category']:checked").val();
+        var _UserMasterId = $('#UserMasterId').val();
+        var _CurrentRollNo = $('#CurrentRollNo').val();
+        var _CandidateName = $('#CandidateName').val();
+        var _CandidateFather = $('#CandidateFather').val();
+        var _CandidateMother = $('#CandidateMother').val();
+        var _PermanentAddress = $('#PermanentAddress').val();
+        var _PermanentPin = $('#PermanentPin').val();
+        var _PermanentMobNo = $('#PermanentMobNo').val();
+        var _PresentAddress = $('#PresentAddress').val();
+        var _PresentPin = $('#PresentPin').val();
+        var _PresentMobNo = $('#PresentMobNo').val();
+        var _Nationality = $('#Nationality').val();
+        var _AadharCardNo = $('#AadharCardNo').val();
+        var _DOB = $('#DOB').val();
+        var _Email = $('#Email').val();
+        var _EduQualification = $('#EduQualification').val();
+        var _CurrentClass = $('#CurrentClass').val();
+        var _CurrentSubject = $('#CurrentSubject').val();
+        var _CurrentCenterName = $('#CurrentCenterName').val();
+        var _CurrentCenterCity = $('#CurrentCenterCity').val();
+        var _PreviousClass = $('#PreviousClass').val();
+        var _PreviousSubject = $('#PreviousSubject').val();
+        var _PreviousYear = $('#PreviousYear').val();
+        var _PreviousRollNo = $('#PreviousRollNo').val();
+        var _PreviousResult = $('#PreviousResult').val();
+        var _PreviousCenterName = $('#PreviousCenterName').val();
+        var _Amount = $('#Amount').val();
+        var _AmountInWord = $('#AmountInWord').val();
+        var _NoOfAttached = $('#NoOfAttached').val();
+        var _CertificateCollectFrom = $('#CertificateCollectFrom').val();
+        var _CandidateSignature = $('#CandidateSignature').get(0).files;
+        var _CandidateGuradianSignature = $('#CandidateGuradianSignature').get(0).files;
+        var _CandidateGuradianName = $('#CandidateGuradianName').val();
+        //var _BankDraftNo = $('#BankDraftNo').val();
+        //var _BankDraftDate = $('#BankDraftDate').val();
+        //var _PostalOrderNo = $('#PostalOrderNo').val();
+        //var _SuperintendentSignature = $('#SuperintendentSignature').get(0).files;
+        //var _SuperintendentName = $('#SuperintendentName').val();
+        //var _SuperintendentPinNo = $('#SuperintendentPinNo').val();
+        //var _SuperintendentPhoneNo = $('#SuperintendentPhoneNo').val();
+        //var _SuperintendentEmail = $('#SuperintendentEmail').val();
+        var _mode = _Id == 0 ? 1 : 2;
+
+
+        if(validate_IsEmptyStringInputFieldValue(_SessionYear)) {$('#error_SessionYear').html('@Resources.VisitorPanel.ExamForm_SessionYear_RequiredMessage');_is_valid = false;}
+        @*if(validate_IsEmptyStringInputFieldValue(_CandidateProfileImage)) {$('#error_CandidateProfileImage').html('@Resources.VisitorPanel.ExamForm_CandidateProfileImage_RequiredMessage');_is_valid = false;}*@
+        //if(validate_IsEmptyStringInputFieldValue(_Category)) {$('#error_Category').html('@Resources.VisitorPanel.ExamForm_Category_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_UserMasterId)) {$('#error_UserMasterId').html('@Resources.VisitorPanel.ExamForm_UserMasterId_RequiredMessage');_is_valid = false;}
+        @*if(validate_IsEmptyStringInputFieldValue(_CurrentRollNo)) {$('#error_CurrentRollNo').html('@Resources.VisitorPanel.ExamForm_CurrentRollNo_RequiredMessage');_is_valid = false;}*@
+        if(validate_IsEmptyStringInputFieldValue(_CandidateName)) {$('#error_CandidateName').html('@Resources.VisitorPanel.ExamForm_CandidateName_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CandidateFather)) {$('#error_CandidateFather').html('@Resources.VisitorPanel.ExamForm_CandidateFather_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CandidateMother)) {$('#error_CandidateMother').html('@Resources.VisitorPanel.ExamForm_CandidateMother_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PermanentAddress)) {$('#error_PermanentAddress').html('@Resources.VisitorPanel.ExamForm_PermanentAddress_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PermanentPin)) {$('#error_PermanentPin').html('@Resources.VisitorPanel.ExamForm_PermanentPin_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PermanentMobNo)) {$('#error_PermanentMobNo').html('@Resources.VisitorPanel.ExamForm_PermanentMobNo_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PresentAddress)) {$('#error_PresentAddress').html('@Resources.VisitorPanel.ExamForm_PresentAddress_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PresentPin)) {$('#error_PresentPin').html('@Resources.VisitorPanel.ExamForm_PresentPin_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PresentMobNo)) {$('#error_PresentMobNo').html('@Resources.VisitorPanel.ExamForm_PresentMobNo_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_Nationality)) {$('#error_Nationality').html('@Resources.VisitorPanel.ExamForm_Nationality_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_AadharCardNo)) {$('#error_AadharCardNo').html('@Resources.VisitorPanel.ExamForm_AadharCardNo_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_DOB)) {$('#error_DOB').html('@Resources.VisitorPanel.ExamForm_DOB_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_Email)) {$('#error_Email').html('@Resources.VisitorPanel.ExamForm_Email_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_EduQualification)) {$('#error_EduQualification').html('@Resources.VisitorPanel.ExamForm_EduQualification_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CurrentClass)) {$('#error_CurrentClass').html('@Resources.VisitorPanel.ExamForm_CurrentClass_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CurrentSubject)) {$('#error_CurrentSubject').html('@Resources.VisitorPanel.ExamForm_CurrentSubject_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CurrentCenterName)) {$('#error_CurrentCenterName').html('@Resources.VisitorPanel.ExamForm_CurrentCenterName_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CurrentCenterCity)) {$('#error_CurrentCenterCity').html('@Resources.VisitorPanel.ExamForm_CurrentCenterCity_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PreviousClass)) {$('#error_PreviousClass').html('@Resources.VisitorPanel.ExamForm_PreviousClass_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PreviousSubject)) {$('#error_PreviousSubject').html('@Resources.VisitorPanel.ExamForm_PreviousSubject_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PreviousYear)) {$('#error_PreviousYear').html('@Resources.VisitorPanel.ExamForm_PreviousYear_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PreviousRollNo)) {$('#error_PreviousRollNo').html('@Resources.VisitorPanel.ExamForm_PreviousRollNo_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PreviousResult)) {$('#error_PreviousResult').html('@Resources.VisitorPanel.ExamForm_PreviousResult_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_PreviousCenterName)) {$('#error_PreviousCenterName').html('@Resources.VisitorPanel.ExamForm_PreviousCenterName_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_Amount)) {$('#error_Amount').html('@Resources.VisitorPanel.ExamForm_Amount_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_AmountInWord)) {$('#error_AmountInWord').html('@Resources.VisitorPanel.ExamForm_AmountInWord_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_NoOfAttached)) {$('#error_NoOfAttached').html('@Resources.VisitorPanel.ExamForm_NoOfAttached_RequiredMessage');_is_valid = false;}
+        if(validate_IsEmptyStringInputFieldValue(_CertificateCollectFrom)) {$('#error_CertificateCollectFrom').html('@Resources.VisitorPanel.ExamForm_CertificateCollectFrom_RequiredMessage');_is_valid = false;}
+      @*  if(validate_IsEmptyStringInputFieldValue(_CandidateSignature)) {$('#error_CandidateSignature').html('@Resources.VisitorPanel.ExamForm_CandidateSignature_RequiredMessage');_is_valid = false;}*@
+      @*  if(validate_IsEmptyStringInputFieldValue(_CandidateGuradianSignature)) {$('#error_CandidateGuradianSignature').html('@Resources.VisitorPanel.ExamForm_CandidateGuradianSignature_RequiredMessage');_is_valid = false;}*@
+        if(validate_IsEmptyStringInputFieldValue(_CandidateGuradianName)) {$('#error_CandidateGuradianName').html('@Resources.VisitorPanel.ExamForm_CandidateGuradianName_RequiredMessage');_is_valid = false;}
+        //if(validate_IsEmptyStringInputFieldValue(_BankDraftNo)) {$('#error_BankDraftNo').html('@Resources.VisitorPanel.ExamForm_BankDraftNo_RequiredMessage');_is_valid = false;}
+        //if(validate_IsEmptyStringInputFieldValue(_BankDraftDate)) {$('#error_BankDraftDate').html('@Resources.VisitorPanel.ExamForm_BankDraftDate_RequiredMessage');_is_valid = false;}
+        //if(validate_IsEmptyStringInputFieldValue(_PostalOrderNo)) {$('#error_PostalOrderNo').html('@Resources.VisitorPanel.ExamForm_PostalOrderNo_RequiredMessage');_is_valid = false;}
+        @*if(validate_IsEmptyStringInputFieldValue(_SuperintendentSignature)) {$('#error_SuperintendentSignature').html('@Resources.VisitorPanel.ExamForm_SuperintendentSignature_RequiredMessage');_is_valid = false;}*@
+        //if(validate_IsEmptyStringInputFieldValue(_SuperintendentName)) {$('#error_SuperintendentName').html('@Resources.VisitorPanel.ExamForm_SuperintendentName_RequiredMessage');_is_valid = false;}
+        //if(validate_IsEmptyStringInputFieldValue(_SuperintendentPinNo)) {$('#error_SuperintendentPinNo').html('@Resources.VisitorPanel.ExamForm_SuperintendentPinNo_RequiredMessage');_is_valid = false;}
+        //if(validate_IsEmptyStringInputFieldValue(_SuperintendentPhoneNo)) {$('#error_SuperintendentPhoneNo').html('@Resources.VisitorPanel.ExamForm_SuperintendentPhoneNo_RequiredMessage');_is_valid = false;}
+        //if(validate_IsEmptyStringInputFieldValue(_SuperintendentEmail)) {$('#error_SuperintendentEmail').html('@Resources.VisitorPanel.ExamForm_SuperintendentEmail_RequiredMessage');_is_valid = false;}
+
+        if (_is_valid == true) {
+            StartLoading();
+            var data = new FormData();
+            data.append("Id", _Id);
+            data.append("ExamFormId", _ExamFormId);
+            data.append("SessionYear", _SessionYear);
+            data.append("CandidateProfileImage", _CandidateProfileImage[0]);
+            data.append("Category", _Category);
+            data.append("UserMasterId", _UserMasterId);
+            /*data.append("CurrentRollNo", _CurrentRollNo);*/
+            data.append("CandidateName", _CandidateName);
+            data.append("CandidateFather", _CandidateFather);
+            data.append("CandidateMother", _CandidateMother);
+            data.append("PermanentAddress", _PermanentAddress);
+            data.append("PermanentPin", _PermanentPin);
+            data.append("PermanentMobNo", _PermanentMobNo);
+            data.append("PresentAddress", _PresentAddress);
+            data.append("PresentPin", _PresentPin);
+            data.append("PresentMobNo", _PresentMobNo);
+            data.append("Nationality", _Nationality);
+            data.append("AadharCardNo", _AadharCardNo);
+            data.append("DOB", _DOB);
+            data.append("Email", _Email);
+            data.append("EduQualification", _EduQualification);
+            data.append("CurrentClass", _CurrentClass);
+            data.append("CurrentSubject", _CurrentSubject);
+            data.append("CurrentCenterName", _CurrentCenterName);
+            data.append("CurrentCenterCity", _CurrentCenterCity);
+            data.append("PreviousClass", _PreviousClass);
+            data.append("PreviousSubject", _PreviousSubject);
+            data.append("PreviousYear", _PreviousYear);
+            data.append("PreviousRollNo", _PreviousRollNo);
+            data.append("PreviousResult", _PreviousResult);
+            data.append("PreviousCenterName", _PreviousCenterName);
+            data.append("Amount", _Amount);
+            data.append("AmountInWord", _AmountInWord);
+            data.append("NoOfAttached", _NoOfAttached);
+            data.append("CertificateCollectFrom", _CertificateCollectFrom);
+            data.append("CandidateSignature", _CandidateSignature[0]);
+            data.append("CandidateGuradianSignature", _CandidateGuradianSignature[0]);
+            data.append("CandidateGuradianName", _CandidateGuradianName);
+            //data.append("BankDraftNo", _BankDraftNo);
+            //data.append("BankDraftDate", _BankDraftDate);
+            //data.append("PostalOrderNo", _PostalOrderNo);
+            //data.append("SuperintendentSignature", _SuperintendentSignature[0]);
+            //data.append("SuperintendentName", _SuperintendentName);
+            //data.append("SuperintendentPinNo", _SuperintendentPinNo);
+            //data.append("SuperintendentPhoneNo", _SuperintendentPhoneNo);
+            //data.append("SuperintendentEmail", _SuperintendentEmail);
+            data.append("mode", _mode);
+            console.log(data);
+            $.ajax({
+                url: '/api/Exam/SubmitExamForm',
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                type: 'POST',
+                success: function (dataResponse) {
+                    
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+                    StopLoading();
+                    //--If successfully added/updated
+                    if (dataResponse.status == 1 || dataResponse.status == 2) {
+                        swal({
+                                title: "Success!",
+                                text: dataResponse.message,
+                                icon: "success",
+                                closeOnClickOutside: false, // This prevents closing on outside click
+                                buttons: {
+                                    confirm: {
+                                        text: "OK",
+                                        value: true,
+                                        visible: true,
+                                        className: "btn btn-success",
+                                        closeModal: true
+                                    }
+                                }
+                            }).then((value) => {
+                                if (value) {
+                                    window.location.href = `/Booking/CheckoutCourse?itemId=${@ViewBag.Itemcourseid}&itemType=course&examid=${examId}&examstatus=1`;
+                                }
+                        });
+
+                        //-----------Set Default Form Values------------
+                        ResetForm();
+                    }
+                    else {
+                        swal("Error!", dataResponse.message, "warning");
+                    }
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: 'Unauthorized! Invalid Token!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+        }
+
+
+
+
+
+
+    function ResetForm() {
+        // Reset input elements
+        $('#SessionYear').val('');
+        $('#CandidateProfileImage').val('');
+        $("input[name='category']").prop('checked', false);
+        $('#UserMasterId').val('');
+        $('#CurrentRollNo').val('');
+        $('#CandidateName').val('');
+        $('#CandidateFather').val('');
+        $('#CandidateMother').val('');
+        $('#PermanentAddress').val('');
+        $('#PermanentPin').val('');
+        $('#PermanentMobNo').val('');
+        $('#PresentAddress').val('');
+        $('#PresentPin').val('');
+        $('#PresentMobNo').val('');
+        $('#Nationality').val('');
+        $('#AadharCardNo').val('');
+        $('#DOB').val('');
+        $('#Email').val('');
+        $('#EduQualification').val('');
+        $('#CurrentClass').val('');
+        $('#CurrentSubject').val('');
+        $('#CurrentCenterName').val('');
+        $('#CurrentCenterCity').val('');
+        $('#PreviousClass').val('');
+        $('#PreviousSubject').val('');
+        $('#PreviousYear').val('');
+        $('#PreviousRollNo').val('');
+        $('#PreviousResult').val('');
+        $('#PreviousCenterName').val('');
+        $('#Amount').val('');
+        $('#AmountInWord').val('');
+        $('#NoOfAttached').val('');
+        $('#CertificateCollectFrom').val('');
+        $('#CandidateSignature').val('');
+        $('#CandidateGuradianSignature').val('');
+        $('#CandidateGuradianName').val('');
+        $('#BankDraftNo').val('');
+        $('#BankDraftDate').val('');
+        $('#PostalOrderNo').val('');
+        $('#SuperintendentSignature').val('');
+        $('#SuperintendentName').val('');
+        $('#SuperintendentPinNo').val('');
+        $('#SuperintendentPhoneNo').val('');
+        $('#SuperintendentEmail').val('');
+
+        $('#profileImg').attr('src', "");
+        $('#BusinessId').val('');
+        $('#CenterNo').val('');
+        $('#termAndConditionsDate').val('');
+        $('#signatureAtTermAndConditions').attr('src', "");
+        $('#declerationByGuardianDate').val('');
+        $('#signatureOfGuradianImg').attr('src', "");
+        $('#DeclerationCandidateName').val('');
+        $('#DeclerationAmount').val('');
+        $('#declerationBySuperintendentDate').val('');
+        $('#declerationBySuperintendentCenterNo').val('');
+        $('#signatureOfSuperintendentImg').attr('src', "");
+    }
+
+    </script>
+}

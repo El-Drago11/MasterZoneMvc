@@ -1,0 +1,136 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var MessageId_Global = 0;
+
+    $(document).ready(function () {
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetBusinessList();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                window.location.href = '/home/login';
+                StopLoading();
+            }
+        });
+    });
+
+
+    function GetBusinessList() {
+
+
+
+        var _url = "/api/Message/BusinessListGetById";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            var htmlData = '';
+
+            for (var i = 0; i < response.data.BusinessDetail.length; i++) {
+                var newMessageCount = response.data.BusinessDetail[i].NewMessageCount;
+
+                if (newMessageCount == 0) {
+                    var element = "";
+
+                }
+                else {
+                    var element = `
+                     <span class="CountMessage">${newMessageCount}</span>
+                          `;
+                }
+                
+                var Verifying = '';
+                if (response.data.BusinessDetail[i].IsVerified == 1) {
+                    Verifying = `<div class="msg-logo" id="business-status">
+                                <img src="/Content/visitor-panel/image/MaskGroup.png" alt="image" loading="lazy"> 
+                                <h6>Verified</h6>
+                                </div>`;
+                }
+                else if (response.data.BusinessDetail[i].IsVerified == 2) {
+                    Verifying = `<div class="msg-logo" id="business-status">
+                        <img src="/Content/visitor-panel/image/trademark.png" alt="image" loading="lazy">
+                        <h6>Registered</h6>
+                        </div>`;
+                }
+                else if (response.data.BusinessDetail[i].IsVerified == 3) {
+                    Verifying = `<div class="msg-logo" id="business-status">
+                        <img src="/Content/visitor-panel/image/trademark1.png" alt="image" loading="lazy">
+                        <h6>Trademark</h6>
+                        </div>`;
+                } else {
+                    Verifying = ``;
+                }
+                htmlData += `<div class="message-main">
+                        <a target="_blank" href="/Home/MessageChat?toUserLoginId=${encodeURIComponent(response.data.BusinessDetail[i].EncryptedUserLoginId)} ">
+                            <div class="card col-md-12 d-inline-block float-left mr-2 my-2 userCard">
+                                <div class="card-body p-0">
+                                    <div class="d-flex flex-row py-2">
+                                        <img alt="Profile Picture" src="${response.data.BusinessDetail[i].ProfileImage}"
+                                                class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall">
+                                        <div class="d-flex flex-grow-1 min-width-zero">
+                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row flex-grow-1 justify-content-between min-width-zero">
+                                                <div class="min-width-zero">
+                                                    <p class="mb-0 truncate list-item-heading">${response.data.BusinessDetail[i].BusinessName}</p>
+                                                </div>${element}
+                                            </div>
+                                        </div>
+                                        ${Verifying}
+                                    </div>
+                                </div>
+                            </div>
+                        </a> </div>`;
+            }
+
+            if (response.data.BusinessDetail.length <= 0) {
+                htmlData = `<div class="w-100 text-center font-italic">@(Resources.VisitorPanel.Message_NoBusinessOwnersToChat)</div>`;
+            }
+
+            $('#UserViewListForChat').append(htmlData);
+
+        },
+
+        error: function(result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    } 
+
+
+</script>
+

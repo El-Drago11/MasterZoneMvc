@@ -1,0 +1,442 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+
+    function initializeDataTable() {
+        $("#tblBusinessVideos").DataTable();
+    }
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable();
+                getAllBusinessVideos();
+                GetAllActiveBusinessVideoCategories();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable();
+                        getAllBusinessVideos();
+                        GetAllActiveBusinessVideoCategories();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+    });
+
+    function ShowModelAddUpdateBusinessVideo()
+    {
+        $("#AddBusinessVideo").modal('show');
+    }
+    function ResetAddViewBusinessVideo() {
+        $("#txtTitle_BusinessVideo").val('');
+        $("#BusinessVideoLink").val('');
+        $("#ddlBusinessVideoCategory").val(0).trigger('change');
+        $(".error-class").html('');
+        $("#ManageBusinessVideoThumbNail").val('');
+        $('#previewManageBusinessVideoThumbNailImage').addClass('d-none');
+        $("#txt_description").val('');
+    }
+
+    function AddUpdateBusinessVideo() {
+
+        var _businessVideoTitle = $("#txtTitle_BusinessVideo").val().trim();
+        var _businessVideoLink = $("#BusinessVideoLink").val();
+        var _businessVideoCategoryId = $("#ddlBusinessVideoCategory").val();
+        var _businessVideodescription = $("#txt_description").val();
+      //  var youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
+        var _businessVideoThumbNailImages_MS = $("#ManageBusinessVideoThumbNail").get(0);
+        var _businessVideoThumbNailImages = _businessVideoThumbNailImages_MS.files;
+        let is_valid = true;
+        $(".error-class").html('');
+
+        if (validate_IsEmptyStringInputFieldValue(_businessVideoTitle)) {
+            is_valid = false;
+            $("#error_txtTitle_BusinessVideo").html('@(Resources.BusinessPanel.BusinessVideoTitleRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_businessVideoLink)) {
+            is_valid = false;
+            $("#error_BusinessVideoLink").html('@(Resources.BusinessPanel.BusinessVideoLinkRequired)');
+        }
+            @*else if (!youtubeRegex.test(_businessVideoLink))
+            {
+                is_valid = false;
+                $("#error_BusinessVideoLink").html('@(Resources.BusinessPanel.ValidYouTubeLinkRequired)');
+            }*@
+        if (_businessVideoThumbNailImages.length <= 0) {
+            is_valid = false;
+            $("#error_ManageBusinessVideoThumbNail").html('@(Resources.BusinessPanel.BusinessVideoThumbnailImageRequired)');
+        }
+        if (_businessVideoCategoryId <= 0) {
+            is_valid = false;
+            $("#error_BusinessVideoCategory").html('@(Resources.BusinessPanel.BusinessVideoCategoryRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_businessVideodescription)) {
+            is_valid = false;
+            $("#error_txtdescription").html('@(Resources.BusinessPanel.BusinessVideoDescriptionRequired)');
+        }
+
+
+        if (is_valid) {
+
+            var data = new FormData();
+            data.append("id", "0");
+            data.append("Title", _businessVideoTitle);
+            data.append("Link", _businessVideoLink);
+            data.append("VideoCategoryId", _businessVideoCategoryId);
+            data.append("Image", _businessVideoThumbNailImages[0]);
+            data.append("description", _businessVideodescription);
+
+            $.ajax({
+                url: '/api/BusinessContent/AddUpdateVideos',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        $("#AddBusinessVideo").modal('hide');
+                        getAllBusinessVideos();
+                        ResetAddViewBusinessVideo();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+                        return;
+                    }
+
+
+
+                    StopLoading();
+
+
+                },
+                error: function (result) {
+                    StopLoading();
+                    //removeBtnLoading(btnSelector);
+                    //enableContinueBtn();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    function getAllBusinessVideos() {
+        let _url = API_Base_URL + "/api/BusinessContent/GetAllVideosList";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblBusinessVideos').DataTable();
+                _table.destroy();
+
+                var sno = 0;
+                var _videoTitle = '';
+                var _videoLink = '';
+                var _action = '';
+                var _Image = '';
+                var _videoCategoryName = '';
+                var _description = '';
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+                    _videoTitle = response.data[i].VideoTitle;
+                    _videoLink = response.data[i].VideoLink;
+                    _videoCategoryName = response.data[i].VideoCategoryName;
+                    _Image = (response.data[i].VideoThumbNailImageWithPath == "") ? '' : '<img src="' + response.data[i].VideoThumbNailImageWithPath + '" class="image" />';
+                    _description = response.data[i].Description;
+                    _action = '<div class="edbt">';
+                    /* _action += `<a href="javascript:EditEventSponsor(${response.data[i].Id}, ${response.data[i].EventId});"><i class="fas fa-edit"></i></a>`;*/
+                    @if (permissionKeys.Contains("Miscellaneous_ManageBusinessVideos_DeleteVideos"))
+                        {
+                            <text>
+                                _action += `<a href="javascript:ConfirmDeleteBusinessVideo(${response.data[i].Id});"><button type="button" class="btn btn-danger mb-0">Delete</button></a>`;
+                            </text>
+                        }
+                    _action += '</div>';
+                    data.push([
+                        sno,
+                        _videoTitle,
+                        _Image,
+                        _videoLink,
+                        _videoCategoryName,
+                        _description,
+                        _action
+
+                    ]);
+
+                }
+
+                $('#tblBusinessVideos').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ConfirmDeleteBusinessVideo(id) {
+        swal({
+            title: "Delete Event Sponsor",
+            text: "Are you sure to delete this Video",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteBusinessVideo(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+    function DeleteBusinessVideo(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/BusinessContent/VideoDeleteById?id=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Event Sponsor List
+                        getAllBusinessVideos();
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllActiveBusinessVideoCategories() {
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: "/api/BusinessContent/GetAllActiveVideoCategoriesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _list = `<option value="0">Select</option>`;
+                for (var i = 0; i < response.data.length; i++) {
+                    var _item = response.data[i];
+                    _list += `<option value="${_item.Id}">${_item.Name}</option>`;
+                }
+                $("#ddlBusinessVideoCategory").html(_list).select2();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    // Image File Preview -------------------------------------------------------------
+    document.getElementById('ManageBusinessVideoThumbNail').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewManageBusinessVideoThumbNailImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewManageBusinessVideoThumbNailImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewManageBusinessVideoThumbNailImage').src = event.target.result;
+        $('#previewManageBusinessVideoThumbNailImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+</script>

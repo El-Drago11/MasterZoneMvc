@@ -1,0 +1,807 @@
+﻿<script>
+    var UserToken_Global = "";
+    var StudentUserLoginId_Global = 0;
+
+    $(document).ready(function () {
+        StartLoading();
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getAllActiveStudentsLists();
+                //StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        getAllActiveStudentsLists();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    $(document).on('change', '#chkMasterId', function () {
+        switchMasterIdAndPersonalDetails();
+    });
+
+    function switchMasterIdAndPersonalDetails() {
+        $txtMasterId = $('#txtMasterId').parents('.form-group');
+        $sectionPersonalDetail = $('#formSectionNewStudent');
+        if ($('#chkMasterId').is(':checked')) {
+            $txtMasterId.removeClass('d-none');
+            $sectionPersonalDetail.addClass('d-none');
+            $('#btnSubmitStudentModal').attr('disabled', true);
+        }
+        else {
+            $txtMasterId.addClass('d-none');
+            $sectionPersonalDetail.removeClass('d-none');
+            $('#sectionUserDetail').html('');
+            $('#previewImageStudent').parents('.form-group').removeClass('d-none');
+            $('#btnSubmitStudentModal').attr('disabled', false);
+        }
+    }
+
+    function getAllActiveStudentsLists() {
+        let _url = API_Base_URL + "/api/Business/GetAllStudents";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblBusinessStudent').DataTable();
+                _table.destroy();
+
+                var sno = 0;
+                var _FirstName = '';
+                var _LastName = '';
+                var _Email = '';
+                var _PhoneNumber = '';
+                var _status = '';
+                var _action = '';
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+                    _FirstName = response.data[i].FirstName;
+                    _LastName = response.data[i].LastName;
+                    _Email = response.data[i].Email;
+                    _PhoneNumber = response.data[i].PhoneNumber;
+
+                    var _studentDetail = `<a href="/Business/StudentDetail?studentLoginId=${response.data[i].StudentUserLoginId}">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-2">
+                            <img src="${response.data[i].BusinessStudentProfileImageWithPath}" class="img-small" />
+                        </div>
+                        <div>${_FirstName} ${_LastName} </div>
+                    </div></a>`;
+
+                    //---Check Staff-Status
+                    if (response.data[i].Status == 1) {
+                        _status = '<a class="badge badge-success text-white" style="width:fit-content;">Active</a>';
+                    }
+                    else {
+                        _status = '<a class="badge badge-danger text-white" style="width:fit-content;">In-Active</a>';
+                    }
+
+                    _action = `
+                        <div class="d-flex flex-column">
+                            <a href="javascript:showBookClassModal(${response.data[i].StudentUserLoginId})" class="btn btn-xs btn-info mb-1">Book Class</a>
+                            <a href="javascript:showBookEventModal(${response.data[i].StudentUserLoginId})" class="btn btn-xs btn-info mb-1">Book Event</a>
+                            <a href="javascript:showBookPlanModal(${response.data[i].StudentUserLoginId})" class="btn btn-xs btn-info mb-1">Book Plan</a>
+                            <a href="javascript:showBookTrainingModal(${response.data[i].StudentUserLoginId})" class="btn btn-xs btn-info mb-1">Book Training</a>
+                        </div>
+                        `;
+
+                    data.push([
+                        sno,
+                        _studentDetail,
+                        _Email,
+                        _PhoneNumber,
+                        _status,
+                        _action
+                    ]);
+                }
+
+                $('#tblBusinessStudent').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    $('#addStudentModal').on('hidden.bs.modal', function () {
+        resetStudentModal();
+    });
+
+    function resetStudentModal() {
+        $(".error-class").html('');
+
+        $("#txtFirstName").val('');
+        $("#txtLastName").val('');
+        $("#txtEmail").val('');
+        $("#txtPassword").val('');
+        $("#txtConfirmPassword").val('');
+        $("#ddlGender").val(0);
+        $("#txtPhoneNumber").val('');
+
+        $('#chkMasterId').prop('checked', false).trigger('change');
+        $("#txtMasterId").val('');
+
+
+        $("#previewImageStudent").addClass('d-none');
+        $("#fileBusinessStudentProfileImage").val('');
+        $('#sectionUserDetail').html('');
+        $('#previewImageStudent').parents('.row').removeClass('d-none');
+        $('#btnSubmitStudentModal').removeAttr('disabled');
+    }
+
+    function btnAddStudent() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+
+        let _firstName = $("#txtFirstName").val().trim();
+        let _lastName = $("#txtLastName").val().trim();
+        let _email = $("#txtEmail").val().trim();
+        let _password = $("#txtPassword").val().trim();
+        let _confirmPassword = $("#txtConfirmPassword").val().trim();
+        let _selectedgender = $("#ddlGender").val();
+        let _phoneNumber = $("#txtPhoneNumber").val();
+        let _phoneNumberCountryCode = '+91';
+        let _masterId = $("#txtMasterId").val();
+        let _HasMasterId = ($('#chkMasterId').is(':checked')) ? 1 : 0;
+
+        let _error_firstName = $("#error_txtFirstName");
+        let _error_lastName = $("#error_txtLastName");
+        let _error_email = $("#error_txtEmail");
+        let _error_password = $("#error_txtPassword");
+        let _error_confirmPassword = $("#error_txtConfirmPassword");
+        let _error_selectedgender = $("#error_ddlGender");
+        let _error_phoneNumber = $("#error_txtPhoneNumber");
+        let _error_masterId = $("#error_txtMasterId");
+
+        // if has master Id then check for it.
+        if (_HasMasterId == 1) {
+            if (validate_IsEmptyStringInputFieldValue(_masterId)) {
+                is_valid = false;
+                _error_MasterId.html('@(Resources.VisitorPanel.MasterId_Required)');
+            }
+        }
+        else {
+            var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+            var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+            if (validate_IsEmptyStringInputFieldValue(_firstName)) {
+                is_valid = false;
+                _error_firstName.html('@(Resources.VisitorPanel.FirstNameRequired)');
+            }
+            if (validate_IsEmptyStringInputFieldValue(_lastName)) {
+                is_valid = false;
+                _error_lastName.html('@(Resources.VisitorPanel.LastNameRequired)');
+            }
+
+            if (validate_IsEmptyStringInputFieldValue(_password)) {
+                is_valid = false;
+                _error_password.html('@(Resources.VisitorPanel.PasswordRequired)');
+            }
+
+            if (validate_IsEmptyStringInputFieldValue(_phoneNumber)) {
+                is_valid = false;
+                _error_phoneNumber.html('@(Resources.VisitorPanel.PhoneNumberRequired)');
+            }
+
+            else if (validate_IsEmptyStringInputFieldValue(_confirmPassword)) {
+                is_valid = false;
+                _error_confirmPassword.html('@(Resources.VisitorPanel.ConfirmPasswordRequired)');
+            }
+            else if (_confirmPassword != _password) {
+                is_valid = false;
+                _error_confirmPassword.html("@(Resources.VisitorPanel.PasswordNotMatch_ErrorMessage)");
+            }
+
+
+            if (validate_IsEmptyStringInputFieldValue(_email)) {
+                is_valid = false;
+                _error_email.html('@(Resources.VisitorPanel.EmailRequired)');
+            }
+            else if (!TestEmail.test(_email)) {
+                is_valid = false;
+                _error_email.html('@(Resources.VisitorPanel.ValidEmailRequired)');
+            }
+
+                if (validate_IsEmptySelectInputFieldValue(_selectedgender)) {
+                is_valid = false;
+                _error_selectedgender.html('@(Resources.VisitorPanel.GenderRequired)');
+            }
+        }
+
+
+
+        if (is_valid) {
+            var data = new FormData();
+            //var countryPhoneCode = '+64';
+            data.append("Email", _email);
+            data.append("Password", _password);
+            data.append("FirstName", _firstName);
+            data.append("LastName", _lastName);
+            data.append("Gender", _selectedgender);
+            data.append("PhoneNumber", _phoneNumber);
+            data.append("PhoneNumberCountryCode", _phoneNumberCountryCode);
+            data.append("HasMasterId", _HasMasterId);
+            data.append("MasterId", _masterId);
+
+            var _BusinessStudentProfileImageFile = $("#fileBusinessStudentProfileImage").get(0);
+            var _BusinessStudentProfileImage = _BusinessStudentProfileImageFile.files;
+            data.append('BusinessStudentProfileImage', _BusinessStudentProfileImage[0]);
+
+            $.ajax({
+                url: '/api/Business/RegisterStudent',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        resetStudentModal();
+                        getAllActiveStudentsLists();
+                        $('#addStudentModal').modal('hide');
+                    }
+                    else {
+                        swal("Error!", dataResponse.message, "error");
+                        //$.iaoAlert({
+                        //    msg: dataResponse.message,
+                        //    type: "error",
+                        //    mode: "dark",
+                        //});
+
+                        StopLoading();
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+
+                    }
+                }
+            });
+        }
+
+    }
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+////------------------------------- FOR BOOKING -------------------------------------
+
+    function showBookClassModal(userLoginId) {
+        resetBookClassModal();
+        getAllClassesList();
+        StudentUserLoginId_Global = userLoginId;
+        $('#modalClassBooking').modal('show');
+    }
+
+    function resetBookClassModal() {
+        StudentUserLoginId_Global = 0;
+        $('#ddlClassList').val('0');
+    }
+
+    $('#modalClassBooking').on('hidden.bs.modal', function () {
+        resetBookClassModal();
+    });
+
+    function btnSubmitBookClass() {
+        var classId = $('#ddlClassList').val();
+        var isValid = true;
+
+        if (validate_IsEmptySelectInputFieldValue(classId)) {
+            isValid = false;
+            $('#error_ddlClassList').html('Please select class!');
+        }
+
+        if (isValid) {
+            window.location.href = `/Business/BookingCheckout?studentLoginId=${StudentUserLoginId_Global}&itemId=${classId}&itemType=class`;
+        }
+
+    }
+
+    function getAllClassesList() {
+        let _url = API_Base_URL + "/api/Class/GetAllActiveInactive";
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionsList = `<option value="0">Select</option>`;
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    optionsList += `<option value="${item.Id}">${item.Name} (${item.ClassMode})</option>`;
+                }
+                $('#ddlClassList').html(optionsList);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // -------------- Event -----------------
+    function showBookEventModal(userLoginId) {
+        resetBookEventModal();
+        getAllEventList();
+        StudentUserLoginId_Global = userLoginId;
+        $('#modalEventBooking').modal('show');
+    }
+
+    function resetBookEventModal() {
+        StudentUserLoginId_Global = 0;
+        $('#ddlEventList').val('0');
+    }
+
+    $('#modalEventBooking').on('hidden.bs.modal', function () {
+        resetBookEventModal();
+    });
+
+    function btnSubmitBookEvent() {
+        var classId = $('#ddlEventList').val();
+        var isValid = true;
+
+        if (validate_IsEmptySelectInputFieldValue(classId)) {
+            isValid = false;
+            $('#error_ddlEventList').html('Please select event!');
+        }
+
+        if (isValid) {
+            window.location.href = `/Business/BookingCheckout?studentLoginId=${StudentUserLoginId_Global}&itemId=${classId}&itemType=event`;
+        }
+
+    }
+
+    function getAllEventList() {
+        let _url = API_Base_URL + "/api/Event/GetAllByBusiness";
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionsList = `<option value="0">Select</option>`;
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    optionsList += `<option value="${item.Id}">${item.Title}</option>`;
+                }
+
+                $('#ddlEventList').html(optionsList);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    // -------------- Plan -----------------
+    function showBookPlanModal(userLoginId) {
+        resetBookPlanModal();
+        getAllPlanList();
+        StudentUserLoginId_Global = userLoginId;
+        $('#modalPlanBooking').modal('show');
+    }
+
+    function resetBookPlanModal() {
+        StudentUserLoginId_Global = 0;
+        $('#ddlPlanList').val('0');
+    }
+
+    $('#modalPlanBooking').on('hidden.bs.modal', function () {
+        resetBookPlanModal();
+    });
+
+    function btnSubmitBookPlan() {
+        var classId = $('#ddlPlanList').val();
+        var isValid = true;
+
+        if (validate_IsEmptySelectInputFieldValue(classId)) {
+            isValid = false;
+            $('#error_ddlPlanList').html('Please select plan!');
+        }
+
+        if (isValid) {
+            window.location.href = `/Business/BookingCheckout?studentLoginId=${StudentUserLoginId_Global}&itemId=${classId}&itemType=plan`;
+        }
+
+    }
+
+    function getAllPlanList() {
+        let _url = API_Base_URL + "/api/BusinessPlan/GetAll";
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionsList = `<option value="0">Select</option>`;
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    var _status = (item.Status == 1) ? 'Active' : 'Inactive';
+                    optionsList += `<option value="${item.Id}">${item.Name} (${_status})</option>`;
+                }
+                $('#ddlPlanList').html(optionsList);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // -------------- Training -----------------
+    function showBookTrainingModal(userLoginId) {
+        resetBookTrainingModal();
+        getAllTrainingList();
+        StudentUserLoginId_Global = userLoginId;
+        $('#modalTrainingBooking').modal('show');
+    }
+
+    function resetBookTrainingModal() {
+        StudentUserLoginId_Global = 0;
+        $('#ddlTrainingList').val('0');
+    }
+
+    $('#modalTrainingBooking').on('hidden.bs.modal', function () {
+        resetBookTrainingModal();
+    });
+
+    function btnSubmitBookTraining() {
+        var classId = $('#ddlTrainingList').val();
+        var isValid = true;
+
+        if (validate_IsEmptySelectInputFieldValue(classId)) {
+            isValid = false;
+            $('#error_ddlTrainingList').html('Please select training!');
+        }
+
+        if (isValid) {
+            window.location.href = `/Business/BookingCheckout?studentLoginId=${StudentUserLoginId_Global}&itemId=${classId}&itemType=training`;
+        }
+    }
+
+    function getAllTrainingList() {
+        let _url = API_Base_URL + "/api/Training/GetAllAvailableTrainingByBusiness";
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionsList = `<option value="0">Select</option>`;
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    optionsList += `<option value="${item.Id}">${item.TrainingName}</option>`;
+                }
+
+                $('#ddlTrainingList').html(optionsList);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+////------------------------------- FOR BOOKING -------------------------------------
+
+
+    function VerifyUserMasterId() {
+        var _masterId = $("#txtMasterId").val().trim();
+        var _url = "/api/Student/GetUserBasicDataByMasterId?masterId="+encodeURIComponent(_masterId);
+        $('#sectionUserDetail').html('');
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+
+
+                if (response.status < 1) {
+                    swal("Error!", response.message, "error");
+                    return;
+                }
+
+                $('#btnSubmitStudentModal').attr('disabled', true);
+
+                var _data = '';
+                if (response.data != null) {
+                    var item = response.data;
+                    _data = `
+                        <div class="d-flex flex-column">
+                            <div class="p-2"><img src="${item.BusinessStudentProfileImageWithPath}" class="img-small" /></div>
+                            <div class="p-2"><b>Master ID: </b> ${item.MasterId}</div>
+                            <div class="p-2"><b>Name: </b> ${item.FirstName} ${item.LastName}</div>
+                            <div class="p-2"><b>Email: </b> ${item.Email}</div>
+                            <div class="p-2"><b>Phone Number: </b> ${item.PhoneNumber}</div>
+                        </div>
+                    `;
+
+                    if (item.BusinessStudentProfileImage) {
+                        $('#previewImageStudent').parents('.row').addClass('d-none');
+                    }
+                    else {
+                        $('#previewImageStudent').parents('.row').removeClass('d-none');
+                    }
+
+                    $('#btnSubmitStudentModal').removeAttr('disabled');
+                }
+
+                $('#sectionUserDetail').html('<div class="row col-12" style="border:1px solid #cecece">' + _data + '</div>');
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+@*document.getElementById('fileBusinessStudentProfileImage').addEventListener('change', function (e) { handleImageUpload(e, '#previewImageStudent') });
+
+    function handleImageUpload(event, previewImageTagSelector = '#previewImage') {
+        
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 2 * 1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.SuperAdminPanel.ValidImageFile_ErrorMessage)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $(previewImageTagSelector).addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "2 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $(previewImageTagSelector).addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        //document.getElementById('previewImage').src = event.target.result;
+        $(previewImageTagSelector).attr('src', event.target.result);
+        $(previewImageTagSelector).removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}*@
+</script>

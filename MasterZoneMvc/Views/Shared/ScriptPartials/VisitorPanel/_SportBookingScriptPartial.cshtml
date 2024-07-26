@@ -1,0 +1,134 @@
+﻿
+<script>
+    var UserToken_Global = "";
+        $(document).ready(function () {
+           StartLoading();
+            $.get("/Home/GetStudentToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                    getAllSportBookingDetails();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    window.location.href = '/home/login';
+                    StopLoading();
+                }
+            });
+        });
+
+    function getAllSportBookingDetails()
+    {
+
+        let _url = "/api/Course/GetSportsBookingDetails";
+
+            $.ajax({
+                type: "GET",
+                url: _url,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+
+                contentType: 'application/json',
+                success: function (response) {
+
+
+                    if (response.status < 1) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                        return;
+
+                    }
+
+                    var _table = $('#tblSportBookingDetails').DataTable();
+                    _table.clear().destroy();
+
+                    var sno = 0;
+
+                    var data = [];
+
+
+                    for (var i = 0; i < response.data.length; i++) {
+                        sno++;
+                
+                        var _ImageName = '';
+                        _ImageName = `
+                        <div class="d-flex align-items-center">
+                            <div class="mr-2">
+                                <img src="${response.data[i].TennisImage}" class="img-size-sm" />
+                            </div>
+                            <div>${response.data[i].TennisTitle}</div>
+                        </div>`;
+                        var _playercount = `${response.data[i].PlayerCount}`;
+                        var _date = `${response.data[i].SelectDate}`;
+                        var _roomTime = `${response.data[i].RoomTime}`;
+                        var _fullTime = `${response.data[i].FullName}`;
+
+
+                        var _action = `<div class="edbt ">`;
+                        if (response.data[i].Request == 1 || response.data[i].Request == 0) {
+
+                            _action += ` <a class="btn btn-sm  ml-4 pendingbtn" >Pending</a>`;
+                        }
+                        else if (response.data[i].Request == 2) {
+                            _action += ` <a class="btn btn-sm  ml-4 acceptbtn" >Accepted</a>`;
+
+                        } else {
+                            _action += ` <a class="btn btn-sm  ml-4 rejectbtn" >Rejected</a>`;
+
+                        }
+                        _action += `</div>`;
+                        data.push([
+                            sno,
+                            _ImageName,
+                            _fullTime,
+                            _playercount,
+                            _date,
+                            _roomTime,
+                            _action
+                        ]);
+                }
+
+                    $('#tblSportBookingDetails').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+
+                StopLoading();
+            },
+
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+
+    }
+</script>

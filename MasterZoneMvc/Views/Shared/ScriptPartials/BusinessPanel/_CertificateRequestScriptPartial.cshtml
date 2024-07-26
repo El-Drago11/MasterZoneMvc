@@ -1,0 +1,469 @@
+﻿
+<script>
+    var CertificationRequestId_Global = 0;
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                //GetAllRequest();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        //GetAllRequest();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+        $('#btnAddRequest').click(function () {
+            $('#sectionAddRequest').show();
+            $('#btnAddRequest').hide();
+            $('#sectionViewRequest').hide();
+            document.getElementById("pageTextchange").innerHTML = "Add Request";
+            document.getElementById("pageStageChange").innerHTML = "Add Request";
+            $('#btnUpdateCredential').addClass('d-none');
+            getAllActiveBusinessCertifications();
+        });
+
+    });
+
+
+    function ShowingViewRequestList() {
+
+        $('#sectionViewRequest').show();
+    }
+
+
+function GetAllRequest() {
+    var _url = "/api/Request/GetAll";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var _table = $('#tblRequest_ManageRequest').DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _status = '';
+            var _action = '';
+            var _staffImage = '';
+
+            var data = [];
+            for (var i = 0; i < response.data.length; i++) {
+                sno++;
+                _staffImage = (response.data[i].ProfileImageWithPath == "") ? '' : '<img src="' + response.data[i].ProfileImageWithPath + '" class="image" />';
+                _action = '<div class="edbt">';
+
+                _action += '<a href="javascript:EditRequest(' + response.data[i].Id + ');"><i class="fas fa-edit"></i></a>';
+
+                _action += `<a href="javascript:confrimDelete_ManageRequest(${response.data[i].Id}, '${response.data[i].ParentBusinessCategoryId}', '${response.data[i].FirstName} ${response.data[i].LastName}');"><i class="fas fa-trash "></i></a>`;
+
+                _action += '</div>';
+
+                //---Check Request-Status
+                    if (response.data[i].Status == 1) {
+                        _status = '<button class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStatusRequest(' + response.data[i].Id + ');">Active</button>';
+                    }
+                    else {
+                        _status = '<button class="btn btn-danger text-white btn-sm" style="width:80px;" onclick="ConfirmChangeStatusRequest(' + response.data[i].Id + ');">Inactive</button>';
+                    }
+                    if (response.data[i].Status == 1) {
+                        _status = '<span class="badge badge-success opacity-75" style="width:80px;cursor: text">Active</span>';
+                    }
+                    else {
+                        _status = '<span class="badge badge-danger opacity-75" style="width:80px;cursor: text">Inactive</span>';
+                    }
+
+                data.push([
+                    sno,
+                    response.data[i].RequestCategoryName,
+                    _staffImage,
+                    response.data[i].FirstName + " " + response.data[i].LastName,
+                    _status,
+                    _action
+                ]);
+            }
+
+            $('#tblRequest_ManageRequest').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+            StopLoading();
+            GetAllActiveRequestCategories();
+        },
+        error: function (result) {
+            StopLoading();
+            GetAllActiveRequestCategories();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+function ShowingViewRequestList() {
+
+    $('#sectionViewRequest').show();
+}
+
+function ResetAddView() {
+    // Reset data
+    $("#ddlCertificationProfile").val('0');
+    $("#ddlLicense").val('0');
+    $("#txtLicenseQuantity").val('');
+
+    RequestId_Global = 0;
+
+    // show hide panel
+    $('#sectionViewRequest').show();
+    $('#sectionAddRequest').hide();
+    $('#btnAddRequest').show();
+    document.getElementById("pageTextchange").innerHTML = "View Request";
+    document.getElementById("pageStageChange").innerHTML = "View Request";
+    document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+    $(".error-class").html('');
+}
+
+function btnAddUpdateRequest() {
+    let is_valid = true;
+    $(".error-class").html('');
+
+    var _Mode = (RequestId_Global > 0) ? 2 : 1;
+
+    let _CertificationProfileId = $("#ddlCertificationProfile").val();
+    let _LicenseId = $("#ddlLicense").val();
+    let _quantity = $("#txtLicenseQuantity").val().trim();
+
+    let _error_CertificationProfileId = $("#error_ddlCertificationProfile");
+    let _error_LicenseId = $("#error_ddlLicense");
+    let _error_quantity = $("#error_txtLicenseQuantity");
+
+    if (validate_IsEmptySelectInputFieldValue(_CertificationProfileId) || parseInt(_CertificationProfileId) < 0) {
+        is_valid = false;
+        _error_CertificationProfileId.html('@(Resources.BusinessPanel.CertificateRequest_CertificationProfileRequired)');
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_LicenseId) || parseInt(_LicenseId) < 0) {
+        is_valid = false;
+        _error_LicenseId.html('@(Resources.BusinessPanel.CertificateRequest_LicenseRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_quantity)) {
+        is_valid = false;
+        _error_quantity.html('@(Resources.BusinessPanel.CertificateRequest_QuantityRequired)');
+    }
+    else if (_quantity <= 0) {
+        is_valid = false;
+        _error_quantity.html('@(Resources.BusinessPanel.CertificateRequest_QuantityGreaterThanZeroRequired)');
+    }
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        data.append("Id", RequestId_Global);
+        data.append("CertificateProfileId", _CertificationProfileId);
+        data.append("LicenseId", _LicenseId);
+        data.append("Quantity", _quantity);
+        data.append("Mode", _Mode);
+
+        $.ajax({
+            url: '/api/BookLicense/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+                ResetAddView();
+                StopLoading();
+                GetAllRequest();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+function confrimDelete_ManageRequest(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteCertificateRequestTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteCertificateRequestText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteRequest(sid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteRequest(sid) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Request/Delete/" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get Request List
+                    GetAllRequest();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    function getAllActiveBusinessCertifications() {
+        StartLoading();
+        let _url = "/api/Certificate/GetAllActiveBusinesCertificateList";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var res_options = '<option value="0">Select</option>';
+
+                if (response.data) {
+                    for (var i = 0; i < response.data.length; i++) {
+                            res_options += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+                    }
+                }
+
+                $("#ddlCertificationProfile").html('').append(res_options).select2();
+                
+            },
+            error: function (result) {
+                StopLoading();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function getAllActiveCertificateLicenses() {
+        var certificateId = $("#ddlCertificationProfile").val();
+
+        StartLoading();
+        let _url = "/api/License/GetAllActiveLicenseDetailByCertificateForBO?certificateId="+certificateId;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var res_options = '<option value="0">Select</option>';
+                if (response.data) {
+                    for (var i = 0; i < response.data.length; i++) {
+                        res_options += '<option value="' + response.data[i].Id + '">' + response.data[i].Title + '</option>';
+                    }
+                }
+                
+
+                $("#ddlLicense").html('').append(res_options).select2();
+                
+            },
+            error: function (result) {
+                StopLoading();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

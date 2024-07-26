@@ -1,0 +1,373 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var TrainingId_Global = "0";
+
+    function initializeDataTable_BookedTrainings() {
+        _queryTable = $("#tblBookedTrainings").DataTable();
+    }
+
+    $(document).ready(function () {
+        TrainingId_Global = $('#hidden_TrainingId').val();
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_BookedTrainings();
+                GetAllTrainingBookings();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_BookedTrainings();
+                        GetAllTrainingBookings();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+        $("#licenseBookingDetailModal").on('hide.bs.modal', function () {
+            $('#licenseBookingDetailModal .modal-body').html('');
+        });
+
+    });
+
+
+function GetAllTrainingBookings() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Training/GetAllTrainingBookingForBOByPagination?trainingId="+TrainingId_Global;
+    _queryTable.clear().destroy();
+    _queryTable = $("#tblBookedTrainings").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[5, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            }
+            ,{
+                "data": "OrderId", "name": "OrderId", "autoWidth": true
+            }
+            ,{
+                "data": "TrainingName", "name": "TrainingName", "autoWidth": true
+            }
+            , {
+                "data": "StudentName", "name": "StudentName", "autoWidth": true,
+                "render": function (data, type, row) {
+                    return `<a href="/Business/StudentDetail?studentLoginId=${row.StudentUserLoginId}">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-2">
+                            <img src="${row.BusinessStudentProfileImageWithPath}" class="img-small" />
+                        </div>
+                        <div>${row.StudentName}</div>
+                    </div></a>`;
+                }
+            }
+            , { "data": "Price", "name": "Price", "autoWidth": true }
+            , { "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true, 
+                "render": function(data, type, row) {
+                    return row.CreatedOn_FormatDate;
+                }        
+            }
+            , { "data": "IsCompleted", "name": "IsCompleted", "autoWidth": true
+                ,"render": function (data,type,row) {
+                    var data = (row.IsCompleted == 0) ? '<span class="badge badge-warning">No</span>' : '<span class="badge badge-success">Yes</span>';
+                    return data;
+                }
+            }
+            , {
+                "data": null, "name": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _view = `<a href="/Business/TrainingBookingDetail?trainingBookingId=${row.Id}"><i class="fas fa-eye" title="View"></i></a>`;
+
+                    var _action = `<div class="edbt">
+                     ${_view}
+                 </div>`;
+                    return _action;
+                }
+            }
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [0, 7], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblBookedTrainings_filter input').unbind();
+    $('#tblBookedTrainings_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _queryTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+    function bindLicenseDetailListItemHTML_Modal(key, value) {
+        return `
+            <div class="d-flex d-flex justify-content-between w-100">
+                <div><b>${key}: </b></div>
+                <div>${value}</div>
+            </div>
+            <hr class="mt-0 mb-0" />
+        `;
+    }
+
+    function getLicenseBookingDetailById(id) {
+        StartLoading();
+        let _url = "/api/License/GetLicenseBookingDetailForBOById?id=" + id;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+
+                if (response.data && response.data != null) {
+
+                    var _LicenseDetail = response.data;
+
+                    var _licenseBookingStatus = ``;
+                    var _badgeClass = ``;
+                    if (_LicenseDetail.Status == 1)
+                        _badgeClass = "badge-warning";
+                    else if (_LicenseDetail.Status == 2)
+                        _badgeClass = "badge-success";
+                    else if (_LicenseDetail.Status == 3)
+                        _badgeClass = "badge-danger";
+                    else
+                        _badgeClass = "badge-default";
+
+                    _licenseBookingStatus = `<span class="badge ${_badgeClass}">${_LicenseDetail.StatusText}</span>`;
+
+                    var licenseListItems = ``;
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Certification Profile", _LicenseDetail.CertificateName);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Title", _LicenseDetail.LicenseTitle);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Description", _LicenseDetail.LicenseDescription);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Achieving Order", _LicenseDetail.LicenseAchievingOrder);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Time Period", _LicenseDetail.LicenseTimePeriod);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Commission Type", _LicenseDetail.CommissionTypeName);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Commission Value", _LicenseDetail.LicenseCommissionValue);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Price", _LicenseDetail.LicensePrice);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Min. Selling Price", _LicenseDetail.LicenseMinSellingPrice);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Quantity", _LicenseDetail.Quantity);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Order Total Amount", _LicenseDetail.OrderTotalAmount);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("GST Percent", _LicenseDetail.LicenseGSTPercent);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("GST Description", _LicenseDetail.LicenseGSTDescription);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Payment Method", _LicenseDetail.OrderPaymentMethod);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Payment Approved", (_LicenseDetail.PaymentIsApproved) ? `<span class="badge badge-success">Approved</span>` : `<span class="badge badge-danger">Not Approved</span>`);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("License Booking Status", _licenseBookingStatus);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Booking Date", _LicenseDetail.CreatedOn_FormatDate);
+
+                    var modalBody = `
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <img src="${_LicenseDetail.LicenseLogoWithPath}" class="license-logo-img"/>
+                            </div>
+                            <div class="col-md-12">
+                                ${licenseListItems}
+                            </div>
+                        </div>
+                    `;
+
+                    //$('#licenseBookingDetailModal .modal-title').html(response.data.Title);
+                    $('#licenseBookingDetailModal .modal-body').html(modalBody);
+                    $('#licenseBookingDetailModal').modal('show');
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindLicenseDetailListItemHTML_Modal(key, value) {
+    return `
+        <div class="d-flex d-flex justify-content-between w-100">
+            <div><b>${key}: </b></div>
+            <div>${value}</div>
+        </div>
+        <hr class="mt-0 mb-0" />
+    `;
+}
+
+function getLicenseBookingDetailById(id) {
+    StartLoading();
+    let _url = "/api/License/GetLicenseBookingDetailForBOById?id=" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+
+            if (response.data && response.data != null) {
+
+                var _LicenseDetail = response.data;
+
+                var _licenseBookingStatus = ``;
+                var _badgeClass = ``;
+                if (_LicenseDetail.Status == 1)
+                    _badgeClass = "badge-warning";
+                else if (_LicenseDetail.Status == 2)
+                    _badgeClass = "badge-success";
+                else if (_LicenseDetail.Status == 3)
+                    _badgeClass = "badge-danger";
+                else
+                    _badgeClass = "badge-default";
+
+                _licenseBookingStatus = `<span class="badge ${_badgeClass}">${_LicenseDetail.StatusText}</span>`;
+
+                var licenseListItems = ``;
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Certification Profile", _LicenseDetail.CertificateName);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Title", _LicenseDetail.LicenseTitle);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Description", _LicenseDetail.LicenseDescription);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Achieving Order", _LicenseDetail.LicenseAchievingOrder);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Time Period", _LicenseDetail.LicenseTimePeriod);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Commission Type", _LicenseDetail.CommissionTypeName);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Commission Value", _LicenseDetail.LicenseCommissionValue);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Price", _LicenseDetail.LicensePrice);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Min. Selling Price", _LicenseDetail.LicenseMinSellingPrice);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Quantity", _LicenseDetail.Quantity);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Order Total Amount", _LicenseDetail.OrderTotalAmount);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("GST Percent", _LicenseDetail.LicenseGSTPercent);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("GST Description", _LicenseDetail.LicenseGSTDescription);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Payment Method", _LicenseDetail.OrderPaymentMethod);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Payment Approved", (_LicenseDetail.PaymentIsApproved) ? `<span class="badge badge-success">Approved</span>` : `<span class="badge badge-danger">Not Approved</span>`);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("License Booking Status", _licenseBookingStatus);
+                licenseListItems += bindLicenseDetailListItemHTML_Modal("Booking Date", _LicenseDetail.CreatedOn_FormatDate);
+
+                var modalBody = `
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <img src="${_LicenseDetail.LicenseLogoWithPath}" class="license-logo-img"/>
+                        </div>
+                        <div class="col-md-12">
+                            ${licenseListItems}
+                        </div>
+                    </div>
+                `;
+
+                //$('#licenseBookingDetailModal .modal-title').html(response.data.Title);
+                $('#licenseBookingDetailModal .modal-body').html(modalBody);
+                $('#licenseBookingDetailModal').modal('show');
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+</script>

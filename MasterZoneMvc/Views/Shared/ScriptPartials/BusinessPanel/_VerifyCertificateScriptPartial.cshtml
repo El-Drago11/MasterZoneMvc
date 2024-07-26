@@ -1,0 +1,137 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function btnSubmitVerifyCertifiate() {
+        $('#divViewCertificate').html('');
+
+        let is_valid = true;
+        $(".error-class").html('');
+
+        let _certificateNumber = $("#txtCertificateNumber").val().trim();
+
+        let _error_certificateNumber = $("#error_txtCertificateNumber");
+
+        if (validate_IsEmptyStringInputFieldValue(_certificateNumber)) {
+            is_valid = false;
+            swal({
+                title: 'Error!',
+                icon: 'error',
+                text: '@(Resources.BusinessPanel.CertificateNumberRequired)'
+            });
+        }
+
+        if (is_valid) {
+
+            $.ajax({
+                url: '/api/Certificate/VerifyUserCertificate?certificateNumber='+_certificateNumber,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                },
+                processData: false,
+                contentType: 'application/json',
+                type: 'GET',
+                success: function (dataResponse) {
+
+                    //--If successfully added/updated
+                    if (dataResponse.status == 1) {
+                        //swal("Success!", dataResponse.message, "success");
+                        var _certificateEmbed = `
+                        <div class="card">
+                            <div class="card-body">
+                                <object data="${dataResponse.data.CertificateFileWithPath}" width="100%" height="500px">
+                                    <p>Unable to display PDF file. <a href="${dataResponse.data.CertificateFileWithPath}">Download</a> instead.</p>
+                                </object>
+                            </div>
+                        </div>
+                        `;
+                        $('#divViewCertificate').html(_certificateEmbed);
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue <= 0)
+            return true;
+        return false;
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

@@ -1,0 +1,1621 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var TrainingId_Global = 0;
+    var CertificateId_Global = 0;
+    var LicenseBookingId_Global = 0;
+
+    var LocationChooseMap = 0;
+    var CountryTrainingLocation = 'Select';
+    var StateTrainingLocation = 'Select';
+    var CityTrainingLocation = 'Select';
+    var LandMarkTrainingLocation = '';
+
+    function initializeDataTable_Training() {
+        _trainingTable = $("#ViewForTraining").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+
+                getAllInstructorLists();
+                initializeDataTable_Training();
+
+                GetAllCreatedTraining();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        getAllInstructorLists();
+                        initializeDataTable_Training();
+
+                        GetAllCreatedTraining();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function GetAllCreatedTraining() {
+
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllTrainingByPagination";
+        _trainingTable.clear().destroy();
+        _trainingTable = $("#ViewForTraining").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+                    //,"render": function (data, type, row) {
+                    //    return '';
+                    //}
+                }
+                , {
+                    "data": "InstructorName", "name": "InstructorName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `
+                            <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.InstructorUserLoginId}">
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        <img src="${row.InstructorProfileImageWithPath}" class="img-size-sm" />
+                                    </div>
+                                <div>${row.InstructorName} </div>
+                            </div></a>
+                        `;
+                        return _data;
+                    }
+                }
+                , {
+                    "data": "TrainingName", "name": "TrainingName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `
+                            <div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        <img src="${row.TrainingImageWithPath}" class="img-size-sm" />
+                                    </div>
+                                <div>${row.TrainingName} </div>
+                            </div>
+                        `;
+                        return _data;
+                    }
+                }
+                , {
+                    "data": "StartDate",
+                    "name": "StartDate",
+                    "autoWidth": true,
+                    "render": function (data, type, row) {
+                        // Parse the TransferDate to a Date object
+                        var transferDate = new Date(data);
+
+                        // Get day, month, and year components
+                        var day = transferDate.getDate();
+                        var month = transferDate.getMonth() + 1; // January is 0
+                        var year = transferDate.getFullYear();
+
+                        // Add leading zero if day or month is a single digit
+                        day = (day < 10) ? '0' + day : day;
+                        month = (month < 10) ? '0' + month : month;
+
+                        // Format the date as dd/mm/yyyy
+                        var formattedDate = day + '/' + month + '/' + year;
+
+                        return formattedDate;
+                    }
+                }
+
+                , {
+                    "data": "EndDate",
+                    "name": "EndDate",
+                    "autoWidth": true,
+                    "render": function (data, type, row) {
+                        // Parse the TransferDate to a Date object
+                        var transferDate = new Date(data);
+
+                        // Get day, month, and year components
+                        var day = transferDate.getDate();
+                        var month = transferDate.getMonth() + 1; // January is 0
+                        var year = transferDate.getFullYear();
+
+                        // Add leading zero if day or month is a single digit
+                        day = (day < 10) ? '0' + day : day;
+                        month = (month < 10) ? '0' + month : month;
+
+                        // Format the date as dd/mm/yyyy
+                        var formattedDate = day + '/' + month + '/' + year;
+
+                        return formattedDate;
+                    }
+                }
+
+                , { "data": "Price", "name": "Price", "autoWidth": true }
+
+
+                , {
+                    "data": null, "": "action", "autowidth": true,
+                    "render": function (data, type, row) {
+
+                        var _edit = '';
+                        var _delete = '';
+                        var _bookings = '';
+                        _bookings = `<a href="/Business/ViewTrainingBookings?trainingId=${row.Id}"><i class="fas fa-money-check-alt" title="View Bookings"></i></a>`;
+
+                        @if (permissionKeys.Contains("ManageBusinessPlans_ViewTrainings_EditTrainings"))
+                        {
+                            <text>
+                        _edit = (row.BookingsCount > 0) ? '<i class="fas fa-edit text-muted cursor-not-allowed" title="Edit"></i>': `<a href="javascript:EditTraining(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                            </text>
+                        }
+
+                        @if (permissionKeys.Contains("ManageBusinessPlans_ViewTrainings_DeleteTrainings"))
+                        {
+                            <text>
+                                _delete = `<a href="javascript:ConfirmDeletedTraining(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                            </text>
+                        }
+
+                        var _action = `<div class="edbt">
+                                    ${_edit}
+                                    ${_delete}
+                                    ${_bookings}
+                                </div>`;
+                        return _action;
+                    }
+                }
+
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,6], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#ViewForTraining_filter input').unbind();
+        $('#ViewForTraining_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _trainingTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    $('#btnTrainingAdd').click(function () {
+        $('#sectionAddTraining').show();
+        $('#sectionViewTraining').hide();
+        $('#btnTrainingAdd').hide();
+        document.getElementById("pageTextchange").innerHTML = "Add Training";
+        document.getElementById("pageStageChange").innerHTML = "Add Training";
+        GetCountriesList();
+        GetBusinessAvailableBookedCertificationProfilesList();
+        initMap();
+    });
+
+    function ResetAddView() {
+        $('#btnTrainingAdd').show();
+        $('#sectionAddTraining').hide();
+        $('#sectionViewTraining').show();
+        $('#training_name').val('');
+        $('#instructor_email').val('');
+        $('#training_description').val('');
+        $('#instructor_number').val('');
+        $('#alternate_number').val('');
+        $('#center_name').val('');
+        $('#Landmark_name').val('');
+        $('#training_Address').val('');
+        $('#country').val('');
+        $('#state').val('');
+        $('#city_input').val('');
+        $('#email_input').val('');
+        $('#location').val('');
+        $('#txt_PinCode').val('');
+        $('#txt_City').val('');
+        $('#Additionalprice_Information').val('');
+        $('#free').prop('checked', false);
+        $('#Paid').prop('checked', true);
+        $('#price_number').val('');
+        $('#ddlSelectedInstructorId').val('0');
+        $('#Training_StartDate').val('');
+        $('#Training_EndDate').val('');
+        $('#Training_StartTime').val('');
+        $('#Training_EndTime').val('');
+        $('#About_Training .ql-editor').text('');
+        $('#txt_music').val('');
+        $('#txt_energy').val('');
+        $('#txt_dance').val('');
+        $(".error-class").html('');
+        $("#fileTrainingImage").val('');
+        $("#previewImage").attr('src', '');
+        $("#previewImage").addClass('d-none');
+        $("#txt_Duration").val('');
+        $('#training_exceptationdescription.ql-editor').text('');
+        $("#txt_Seats").val('');
+        $("#txt_Classes").val('');
+        $("#txt_Lectures").val('');
+        $('#training_InstructorBecomes.ql-editor').text('');
+        $("#ddlSelectedClassDays").val('').trigger('change');
+        $('#training_Rules.ql-editor').text('');
+        $('#training_Additionaldescription.ql-editor').text('');
+        $("#txt_Credits").val('');
+
+
+
+        TrainingId_Global = 0;
+        $("input#country").val('');
+        $("input#state").val('');
+        $("input#txt_City").val('');
+        $(".WithoutMapLocation").removeClass('d-none');
+        $(".MapLocation").addClass('d-none');
+        $("#txt_City").html('');
+        $("#txt_City").append('<option value="0">Select</option>');
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+        $("#country").html('');
+        $("#country").append('<option value="0">Select</option>');
+        CountryTrainingLocation = 'Select';
+        LandMarkTrainingLocation = '';
+        LocationChooseMap = 0;
+
+        CertificateId_Global = 0;
+        LicenseBookingId_Global = 0;
+        $("#ddlCertificationProfileId").val('0').trigger('change');
+        $("#ddlLicenseBookingId").val('0');
+
+        document.getElementById("pageTextchange").innerHTML = "View Training";
+        document.getElementById("pageStageChange").innerHTML = "View Training";
+    }
+
+    $(document).ready(function () {
+        // Add change event listener to the radio buttons
+        $('input[name="fav_language"]').change(function () {
+            if ($(this).val() === '0') {
+                $('#price_number').prop('disabled', true).val('0');
+                $('#Additionalprice_Information').prop('disabled', true).val('');
+
+
+            } else {
+                $('#price_number').prop('disabled', false).val('1');
+                $('#Additionalprice_Information').prop('disabled', false).val('');
+            }
+        });
+    });
+
+
+      function getAllInstructorLists() {
+
+          let _url =  "/api/Business/GetAllTrainingInstructorDetail";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var _selectList = '<option value="0">Select Instructor</option>';
+                $("#ddlSelectedInstructorId").html('');
+                for (var i = 0; i < response.data.length; i++) {
+                    var _InstructorName = response.data[i].InstructorName;
+                    _selectList += '<option value="' + response.data[i].InstructorUserLoginId + '">' + _InstructorName + '</option>';
+                }
+                $("#ddlSelectedInstructorId").html('').append(_selectList); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function btnSubmitToTrainingInfo() {
+
+        let is_valid = true;
+        $(".error-class").html('');
+         var _mode = (TrainingId_Global > 0) ? 2 : 1;
+        let _Country = '';
+        let _state = '';
+        let _cityinput = '';
+
+
+        let _trainingname = $("#training_name").val().trim();
+         let _instructoremail = $("#instructor_email").val().trim();
+         let _trainingdescription = $("#training_description").val().trim();
+        let _instructornumber = $("#instructor_number").val().trim();
+        let _instructorName = $("#ddlSelectedInstructorId").val();
+        let _alternatenumber = $("#alternate_number").val();
+        let _price = $("#price_number").val().trim();
+        let _additionalprice = $("#Additionalprice_Information").val().trim();
+         let _centername = $("#center_name").val().trim();
+         let _Landmarkname = $("#Landmark_name").val().trim();
+         let _trainingAddress = $("#training_Address").val().trim();
+
+        let _PinCode = $("#txt_PinCode").val().trim();
+         let _location = $("#location").val().trim();
+        let _trainingStartDate = $("#Training_StartDate").val().trim();
+        let _trainingEndDate = $("#Training_EndDate").val().trim();
+        let _trainingStartTime = $("#Training_StartTime").val().trim();
+        let _trainingEndTime = $("#Training_EndTime").val().trim();
+        let _AboutTraining = $("#About_Training .ql-editor").html();
+         let _musicinput = $("#txt_music").val().trim();
+        let _energyinput = $("#txt_energy").val().trim();
+        let _danceinput = $("#txt_dance").val().trim();
+        let _isPaid = $('input[name="fav_language"]:checked').val();
+        let _locationLatitude = $("#LocationLatitude").val();
+        let _locationLongitude = $("#LocationLongitude").val();
+        let _expectationdescription = $("#training_exceptationdescription .ql-editor").html();
+        let _totalseats = $("#txt_Seats").val();
+        let _totalclass = $("#txt_Classes").val();
+        let _totallecture = $("#txt_Lectures").val();
+        let _instructorbecome = $("#training_InstructorBecomes .ql-editor").html();
+        let _totalCredit = $("#txt_Credits").val();
+        let _Durationtime = $("#txt_Duration").val();
+        let _Classdays = $("#ddlSelectedClassDays").val();
+        let _trainingrules = $("#training_Rules .ql-editor").html();
+        let _additionInformation = $("#training_Additionaldescription .ql-editor").html();
+        let _licenseBookingId = $("#ddlLicenseBookingId").val();
+
+        if (LocationChooseMap == 1) {
+            _Country = $("input#country").val();
+            _state = $("input#state").val();
+            _cityinput = $("input#txt_City").val();
+        }
+        else {
+            _Country = $("#country").val();
+            _state = $("#state").val();
+            _cityinput = $("#txt_City").val();
+
+        }
+
+
+
+         let _error_trainingname = $("#error_training_Name");
+        let _error_instructoremail = $("#error_instructor_email");
+        let _error_instructorName = $("#error_ddlSelectedInstructorId");
+         let _error_trainingdescription = $("#error_training_description");
+         let _error_instructornumber = $("#error_instructor_number");
+        let _error_alternatenumber = $("#error_alternate_number");
+        let _error_price = $("#error_price_number");
+        let _error_additionalprice = $("#error_Additionalprice_Information");
+         let _error_centername = $("#error_center_name");
+         let _error_Landmarkname = $("#error_Landmark_name");
+         let _error_trainingAddress = $("#error_training_Address");
+        let _error_Country = $("#error_txtCountry");
+         let _error_state = $("#error_state");
+        let _error_cityinput = $("#error_txt_City");
+        let _error_PinCode = $("#error_txt_PinCode");
+         let _error_location = $("#error_location");
+        let _error_trainingStartDate = $("#error_Training_StartDate");
+        let _error_trainingEndDate = $("#error_Training_EndDate");
+        let _error_trainingStartTime = $("#error_Training_StartTime");
+        let _error_trainingEndTime = $("#error_Training_EndTime");
+        let _error_AboutTraining = $("#error_About_Training");
+        let _error_musicinput = $("#error_txt_music");
+        let _error_energyinput = $("#error_txt_energy");
+        let _error_danceinput = $("#error_txt_dance");
+        let _error_expectationdescription = $("#error_training_exceptationdescription");
+        let _error_totalseats = $("#error_txt_Seats");
+        let _error_totalclass = $("#error_txt_Classes");
+        let _error_totallecture = $("#error_txt_Lectures");
+        let _error_instructorbecome = $("#error_training_InstructorBecomes");
+        let _error_totalCredit = $("#error_txt_Credits");
+        let _error_Durationtime = $("#error_txt_Duration");
+        let _error_Classsdays = $("#error_txt_ClassDays");
+        let _error_trainingrules = $("#error_training_Rules");
+        let _error_additionalInformation = $("#error_training_Additionaldescription");
+        let _error_licenseBookingId = $("#error_ddlLicenseBookingId");
+
+        var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+        
+
+        if (validate_IsEmptySelectInputFieldValue(_licenseBookingId)) {
+            is_valid = false;
+            _error_licenseBookingId.html('@(Resources.BusinessPanel.Training_BusinessLicenseRequired)');
+        }
+
+        if (_isPaid == "1") {
+            if (_price <= 0) {
+                is_valid = false;
+                _error_price.html('@(Resources.BusinessPanel.TrainingPriceRequired)');
+
+            }
+
+            if (validate_IsEmptyStringInputFieldValue(_additionalprice)) {
+                is_valid = false;
+                _error_additionalprice.html('@(Resources.BusinessPanel.TrainingAdditionalPriceRequired)');
+
+            }
+        }
+        else {
+            _price = 0;
+        }
+
+         if (validate_IsEmptyStringInputFieldValue(_trainingname)) {
+            is_valid = false;
+             _error_trainingname.html('@(Resources.BusinessPanel.TrainingNameRequired)');
+        }
+         if (validate_IsEmptyStringInputFieldValue(_instructoremail)) {
+            is_valid = false;
+             _error_instructoremail.html('@(Resources.BusinessPanel.TrainingInstructorEmailRequired)');
+        }
+         else if (!TestEmail.test(_instructoremail)) {
+             is_valid = false;
+             _error_instructoremail.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_trainingdescription)) {
+            is_valid = false;
+             _error_trainingdescription.html('@(Resources.BusinessPanel.TrainingDescriptionRequired)');
+        }
+        if (validate_IsEmptySelectInputFieldValue(_instructorName)) {
+            is_valid = false;
+            _error_instructorName.html('@(Resources.BusinessPanel.InstructorNameRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_instructornumber)) {
+            is_valid = false;
+             _error_instructornumber.html('@(Resources.BusinessPanel.TrainingInstructorNumberRequired)');
+        }
+         if (validate_IsEmptyStringInputFieldValue(_alternatenumber)) {
+            is_valid = false;
+             _error_alternatenumber.html('@(Resources.BusinessPanel.TrainingAlternateNumberRequired)');
+        }
+
+
+         if (validate_IsEmptyStringInputFieldValue(_centername)) {
+            is_valid = false;
+             _error_centername.html('@(Resources.BusinessPanel.CenterNameRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_Landmarkname)) {
+            is_valid = false;
+             _error_Landmarkname.html('@(Resources.BusinessPanel.LandmarkNameRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_trainingAddress)) {
+            is_valid = false;
+             _error_trainingAddress.html('@(Resources.BusinessPanel.TrainingAddressRequired)');
+        }
+
+        @*if (LocationChooseMap == 1) {
+             if (validate_IsEmptyStringInputFieldValue(_Country)) {
+                is_valid = false;
+                _error_Country.html('@(Resources.BusinessPanel.CountryNameRequired)');
+            }
+
+            if (validate_IsEmptyStringInputFieldValue(_state)) {
+                is_valid = false;
+                _error_state.html('@(Resources.BusinessPanel.StateNameRequired)');
+            }
+            if (validate_IsEmptyStringInputFieldValue(_cityinput)) {
+                is_valid = false;
+                _error_cityinput.html('@(Resources.BusinessPanel.CityNameRequired)');
+            }
+        }
+        else {
+            if (validate_IsEmptySelectInputFieldValue(_Country)) {
+                is_valid = false;
+                _error_Country.html('@(Resources.BusinessPanel.CountryNameRequired)');
+            }
+
+            if (validate_IsEmptySelectInputFieldValue(_state)) {
+                is_valid = false;
+                _error_state.html('@(Resources.BusinessPanel.StateNameRequired)');
+            }
+            if (validate_IsEmptySelectInputFieldValue(_cityinput)) {
+                is_valid = false;
+                _error_cityinput.html('@(Resources.BusinessPanel.CityNameRequired)');
+            }
+        }*@
+
+        if (validate_IsEmptyStringInputFieldValue(_PinCode)) {
+            is_valid = false;
+            _error_PinCode.html('@(Resources.BusinessPanel.PinCodeRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_location)) {
+            is_valid = false;
+             _error_location.html('@(Resources.BusinessPanel.LocationRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_trainingStartDate)) {
+            is_valid = false;
+             _error_trainingStartDate.html('@(Resources.BusinessPanel.TrainingDateRequired)');
+        }
+         if (validate_IsEmptyStringInputFieldValue(_trainingEndDate)) {
+            is_valid = false;
+             _error_trainingEndDate.html('@(Resources.BusinessPanel.TrainingEndDateRequired)');
+        }
+         else if (_trainingEndDate < _trainingStartDate) {
+             is_valid = false;
+             _error_trainingEndDate.html('@(Resources.BusinessPanel.EndDateDoesNotLessThanStartDateRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_trainingStartTime)) {
+            is_valid = false;
+             _error_trainingStartTime.html('@(Resources.BusinessPanel.TrainingStartTimeRequired)');
+        }
+         if (validate_IsEmptyStringInputFieldValue(_trainingEndTime)) {
+            is_valid = false;
+             _error_trainingEndTime.html('@(Resources.BusinessPanel.TrainingEndTimeRequired)');
+        }
+         else if (_trainingEndTime <= _trainingStartTime) {
+             is_valid = false;
+             _error_trainingEndTime.html('@(Resources.BusinessPanel.EndTimeDoesNotLessThanStartTimeRequired)');
+         }
+        if (_AboutTraining == "") {
+            _error_AboutTraining.html('@(Resources.BusinessPanel.AboutTrainingRequired)');
+        }
+
+         if (validate_IsEmptyStringInputFieldValue(_musicinput)) {
+            is_valid = false;
+             _error_musicinput.html('@(Resources.BusinessPanel.MusicRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_energyinput)) {
+            is_valid = false;
+             _error_energyinput.html('@(Resources.BusinessPanel.EnergyRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_danceinput)) {
+            is_valid = false;
+             _error_danceinput.html('@(Resources.BusinessPanel.DanceRequired)');
+        }
+
+        if (_expectationdescription == "") {
+            _error_expectationdescription.html('@(Resources.BusinessPanel.ExpectationDescriptionRequired)');
+        }
+
+        if (_totalseats <= 0) {
+            is_valid = false;
+            _error_totalseats.html('@(Resources.BusinessPanel.ClassDaysRequired)');
+        }
+
+        if (_totalclass <= 0) {
+            is_valid = false;
+            _error_totalclass.html('@(Resources.BusinessPanel.ClassDaysRequired)');
+        }
+
+        if (_totallecture <= 0) {
+            is_valid = false;
+            _error_totallecture.html('@(Resources.BusinessPanel.ClassDaysRequired)');
+        }
+
+        if  (_instructorbecome == "")  {
+            is_valid = false;
+            _error_instructorbecome.html('@(Resources.BusinessPanel.InstructorBecomeDescriptionRequired)');
+        }
+
+
+        if (_totalCredit <= 0) {
+            is_valid = false;
+            _error_totalCredit.html('@(Resources.BusinessPanel.ClassDaysRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_Durationtime)) {
+            is_valid = false;
+            _error_Durationtime.html('@(Resources.BusinessPanel.DurationTimeRequired)');
+        }
+
+        if (_Classdays <= 0) {
+            is_valid = false;
+            _error_Classsdays.html('@(Resources.BusinessPanel.ClassDaysRequired)');
+            _Classdays = _Classdays.join(',');
+        }
+
+        if (_trainingrules == "") {
+            is_valid = false;
+            _error_trainingrules.html('@(Resources.BusinessPanel.TrainingRulesRequired)');
+        }
+
+        if (_additionInformation == "") {
+            is_valid = false;
+            _error_additionalInformation.html('@(Resources.BusinessPanel.AdditionalInformationRequired)');
+        }
+
+        var encodedadditionInformation = encodeURIComponent(_additionInformation);
+        var encodedExpectdescription = encodeURIComponent(_expectationdescription);
+        var encodedinstructorbecome = encodeURIComponent(_instructorbecome);
+        var encodedtrainingrules = encodeURIComponent(_trainingrules);
+
+
+        var encodedEventAbout = encodeURIComponent(_AboutTraining);
+
+         if (is_valid) {
+             var data = new FormData();
+
+             data.append("Id", TrainingId_Global);
+             data.append("TrainingName", _trainingname);
+             data.append("InstructorEmail", _instructoremail);
+             data.append("InstructorUserLoginId", _instructorName);
+             data.append("ShortDescription", _trainingdescription);
+             data.append("InstructorMobileNumber", _instructornumber);
+             data.append("InstructorAlternateNumber", _alternatenumber);
+             data.append("IsPaid", _isPaid);
+             data.append("Price",_price);
+             data.append("AdditionalPriceInformation", _additionalprice);
+             data.append("CenterName", _centername);
+             data.append("Location", _Landmarkname);
+             data.append("Address", _trainingAddress);
+             data.append("Country", _Country);
+             data.append("State", _state);
+             data.append("PinCode", _PinCode);
+             data.append("City", _cityinput);
+             data.append("LocationUrl", _location);
+             data.append("StartDate", _trainingStartDate);
+             data.append("EndDate", _trainingEndDate);
+             data.append("StartTime_24HF", _trainingStartTime);
+             data.append("EndTime_24HF", _trainingEndTime);
+             data.append("Description", encodedEventAbout);
+             data.append("MusicType", _musicinput);
+             data.append("EnergyLevel", _energyinput);
+             data.append("DanceStyle", _danceinput);
+             data.append("LocationLatitude", _locationLatitude);
+             data.append("LocationLongitude", _locationLongitude);
+             data.append("ExpectationDescription", encodedExpectdescription);
+             data.append("Duration", _Durationtime);
+             data.append("TrainingClassDays", _Classdays);
+             data.append("TotalLectures", _totallecture);
+             data.append("TotalClasses", _totalclass);
+             data.append("TotalSeats", _totalseats);
+             data.append("TotalCredits", _totalCredit);
+             data.append("AdditionalInformation", encodedadditionInformation);
+             data.append("TrainingRules", encodedtrainingrules);
+             data.append("BecomeInstructorDescription", encodedinstructorbecome);
+             data.append('Mode', _mode);
+             data.append('LicenseBookingId', _licenseBookingId);
+
+             var _trainingImageFile_MS = $("#fileTrainingImage").get(0);
+             var _trainingImageFiles = _trainingImageFile_MS.files;
+             data.append('TrainingImage', _trainingImageFiles[0]);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateTrainingInformation',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        ResetAddView();
+                        GetAllCreatedTraining();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    ResetAddView()
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    //StopLoading();
+
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+     function EditTraining(Id) {
+
+         initMap();
+
+         $('#sectionAddTraining').show();
+         $('#sectionViewTraining').hide();
+        document.getElementById("myText").innerHTML = "Edit Training";
+        document.getElementById("ChangeUpdateText").innerHTML = "Update";
+         document.getElementById("pageTextchange").innerHTML = "Edit Training";
+         document.getElementById("pageStageChange").innerHTML = "Edit Training";
+        $('#ChangeUpdateText').show();
+         $('#btnTrainingAdd').hide();
+        $(".error-class").html('');
+         $('#btnTrainingAdd').click(function () {
+             document.getElementById("myText").innerHTML = "Add Training";
+            document.getElementById("ChangeUpdateText").innerHTML = "Save";
+            $(".error-class").html('');
+         });
+
+        var _url = "/api/Business/TrainingDetailGetById/" + Id;
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                   /* getAllActiveStudentsLists();*/
+                }
+                TrainingId_Global = response.data.Id;
+                var _isPaid = response.data.IsPaid;
+                CountryTrainingLocation = response.data.Country;
+                StateTrainingLocation = response.data.State;
+                CityTrainingLocation = response.data.City;
+                LandMarkTrainingLocation = response.data.Location;
+                CertificateId_Global = response.data.CertificateId;
+                LicenseBookingId_Global = response.data.LicenseBookingId;
+
+                console.log(_isPaid);
+                $("#training_name").val(response.data.TrainingName);
+                $("#instructor_email").val(response.data.InstructorEmail);
+                $("#training_description").val(response.data.ShortDescription);
+                $("#instructor_number").val(response.data.InstructorMobileNumber);
+                $("#ddlSelectedInstructorId").val(response.data.InstructorUserLoginId);
+                $("#alternate_number").val(response.data.InstructorAlternateNumber);
+                if (_isPaid == 1) {
+                    console.log('paid!');
+                    $("#Paid").prop('checked', true).trigger('change');
+                }
+                else {
+                    console.log('free!');
+                    $("#free").prop('checked', true).trigger('change');
+                }
+                $("#price_number").val(response.data.Price);
+                $("#Additionalprice_Information").val(response.data.AdditionalPriceInformation);
+                $("#center_name").val(response.data.CenterName);
+                $("#Landmark_name").val(LandMarkTrainingLocation);
+                $("#training_Address").val(response.data.Address);
+                $("#country").val(CountryTrainingLocation);
+                $("#state").val(StateTrainingLocation);
+                $("#txt_City").val(CityTrainingLocation);
+                $("#txt_PinCode").val(response.data.PinCode);
+                $("#location").val(response.data.LocationUrl);
+                $("#Training_StartDate").val(response.data.StartDate);
+                $("#Training_EndDate").val(response.data.EndDate);
+                $("#Training_StartTime").val(response.data.StartTime_24HF);
+                $("#Training_EndTime").val(response.data.EndTime_24HF);
+                $("#About_Training .ql-editor").html(response.data.Description);
+                $("#txt_music").val(response.data.MusicType);
+                $("#txt_energy").val(response.data.EnergyLevel);
+                $("#txt_dance").val(response.data.DanceStyle);
+                $("#txt_Duration").val(response.data.Duration);
+                $("#training_exceptationdescription .ql-editor").html(response.data.ExpectationDescription);
+                $("#txt_Seats").val(response.data.TotalSeats);
+                $("#txt_Classes").val(response.data.TotalClasses);
+                $("#txt_Lectures").val(response.data.TotalLectures);
+                $("#training_InstructorBecomes .ql-editor").html(response.data.BecomeInstructorDescription);
+                $("#training_Rules .ql-editor").html(response.data.TrainingRules);
+                $("#training_Additionaldescription .ql-editor").html(response.data.AdditionalInformation);
+                $("#txt_Credits").val(response.data.TotalCredits);
+                var SelectedClassDayArray = (response.data.TrainingClassDays == null) ? [] : response.data.TrainingClassDays.split(',');
+                $("#ddlSelectedClassDays").val(SelectedClassDayArray).trigger('change');
+
+                $("#fileTrainingImage").val('');
+                if (response.data.TrainingImageWithPath != "") {
+                    $("#previewImage").attr('src', response.data.TrainingImageWithPath);
+                    $("#previewImage").removeClass('d-none');
+                }
+
+                StopLoading();
+                GetCountriesList();
+                GetBusinessAvailableBookedCertificationProfilesList();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+    function ConfirmDeletedTraining(id) {
+
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeletedTrainingTitleMessage)",
+            text: "@(Resources.BusinessPanel.ConfirmDeletedTrainingTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeletedTraining(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeletedTraining(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/TrainingDeleteById/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllCreatedTraining();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function GetCountriesList() {
+
+        $("#country").html('');
+        $("#country").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#country").append(res_country);
+                if (CountryTrainingLocation != undefined && CountryTrainingLocation != "" && CountryTrainingLocation != "Select" && CountryTrainingLocation != "0")
+                    $("#country").val(CountryTrainingLocation).trigger('change');
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeCountry() {
+
+        StartLoading();
+        //var _country_id = $("#ddl_ClassOfflineCountry").val();
+        var _country_id = $('#country').find('option:selected').attr('data-phonecode-val');
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+                var hasListItem = false;
+                for (var i = 0; i < dataState.data.length; i++) {
+                    if (StateTrainingLocation != undefined && StateTrainingLocation != "" && StateTrainingLocation.toLowerCase() == dataState.data[i].Name.toLowerCase()) {
+                        hasListItem = true;
+                    }
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+                if (TrainingId_Global != 0 && StateTrainingLocation != "" && StateTrainingLocation != undefined) {
+                    if (hasListItem) {
+                        $("#state").val(StateTrainingLocation).trigger('change');
+                    }
+                    else {
+                        $("#state").addClass('d-none');
+                        $("input#state").val(StateTrainingLocation);
+                        $("input#state").removeClass('d-none');
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#state").html('');
+        $("#state").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#state").append(res_state);
+                $("#state").val(StateTrainingLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#state').find('option:selected').attr('data-phonecode-val');;
+
+        $("#txt_City").html('');
+        $("#txt_City").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+                    var hasListItem = false;
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+                        if (CityTrainingLocation != undefined && CityTrainingLocation != "" && CityTrainingLocation.toLowerCase() == dataCity.data[i].Name.toLowerCase()) {
+                            hasListItem = true;
+                        }
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+
+                if (TrainingId_Global != 0 && CityTrainingLocation != undefined && CityTrainingLocation != "") {
+                    if (hasListItem) {
+                        $("#txt_City").val(CityTrainingLocation).trigger('change');
+                    }
+                    else {
+                        $("#txt_City").addClass('d-none');
+                        $("input#txt_City").val(CityTrainingLocation);
+                        $("input#txt_City").removeClass('d-none');
+                    }
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+       function GetCitiesList() {
+
+        StartLoading();
+           $("#txt_City").html('');
+           $("#txt_City").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#txt_City").append(res_city);
+                    $("#txt_City").val(CityTrainingLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetBusinessAvailableBookedCertificationProfilesList() {
+        StartLoading();
+        $("#ddlCertificationProfileId").html('<option value="0">Select</option>');
+
+        $.ajax({
+        type: "GET",
+        url: "/api/License/GetAllAvaliableBookedLicenseCertificationProfiles?trainingId="+TrainingId_Global,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            //--Check if cities exist related to the selected-state
+            if (response.data.length > 0) {
+                var options = '';
+                var hasCertificateId = 0;
+
+                for (var i = 0; i < response.data.length; i++) {
+                    if (CertificateId_Global == response.data[i].Id) {
+                        hasCertificateId = 1;
+                    }
+                    options += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+                }
+
+                $("#ddlCertificationProfileId").append(options);
+                if (hasCertificateId == 1) {
+                    $("#ddlCertificationProfileId").val(CertificateId_Global).trigger('change');
+                } else {
+                    $("#ddlCertificationProfileId").val(0).trigger('change');
+                }
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+        });
+    }
+
+    function GetBusinessAvailableBookedLicenseListByCertificate() {
+        var certificateId = $("#ddlCertificationProfileId").val();
+
+        $("#ddlLicenseBookingId").html('<option value="0">Select</option>');
+
+        if (certificateId <= 0) {
+            return;
+        }
+
+        StartLoading();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/License/GetAllAvaliableBookedLicenses?certificateId=" + certificateId + "&trainingId=" + TrainingId_Global,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            //--Check if cities exist related to the selected-state
+            if (response.data.length > 0) {
+                var options = '';
+                var hasOption = 0;
+
+                for (var i = 0; i < response.data.length; i++) {
+                    if (LicenseBookingId_Global == response.data[i].Id) {
+                        hasOption = 1;
+                    }
+                    options += '<option value="' + response.data[i].Id + '">' + response.data[i].LicenseTitle + '</option>';
+                }
+
+                $("#ddlLicenseBookingId").append(options);
+                if (hasOption == 1) {
+                    $("#ddlLicenseBookingId").val(LicenseBookingId_Global).trigger('change');
+                } else {
+                    $("#ddlLicenseBookingId").val(0).trigger('change');
+                }
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+        });
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+// Image File Preview -------------------------------------------------------------
+document.getElementById('fileTrainingImage').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("TrainingMap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#Landmark_name").val(LandMarkTrainingLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == "street_number" || results[0].address_components[i].types[0] == "premise") {
+                                var street = results[0].address_components[i].long_name;
+                                $("#mapstreetInput").val(street);
+                            }
+                            if (results[0].address_components[i].types[0] == 'sublocality_level_1' || results[0].address_components[i].types[1] == 'sublocality_level_1' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                var neighbourhood = results[0].address_components[i].long_name;
+                                if (pp == 1) {
+                                    $("#mapneighbourhoodInput").val();
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                } else {
+                                    $("#mapneighbourhoodInput").val(neighbourhood);
+                                    $("#mapneighbourhoodInput1").val(neighbourhood);
+                                }
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#txt_City").val(city);
+        $("#txt_PinCode").val(postal_code);
+        $("input#state").val(State);
+        $("input#country").val(Country);
+        $("#Landmark_name").val(LandMark);
+        $("#training_Address").val(FullAddress);
+        LocationChooseMap = 1;
+    })
+
+    //--------------------------------- MAP ------------------------------------
+
+
+
+</script>

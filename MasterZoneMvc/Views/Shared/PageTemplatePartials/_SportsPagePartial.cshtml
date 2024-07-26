@@ -1,0 +1,878 @@
+﻿
+<style>
+    div#addmoretimingdetail {
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: 400px;
+    }
+    .time_section{
+        width: 89%;
+    }
+    .imageAbout {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imageAboutServicePreview {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+
+
+    .imagePreview {
+        width: 75px;
+        height: 75px;
+    }
+
+    .previewImage {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+
+    .previewTennisImage {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imageTennisPreview {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+
+    .previewReviewImage {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imageReviewPreview {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+</style>
+
+<div class="container-fluid">
+
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4"> Banner  Section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseSportsBannerImage" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseSportsBannerImage">
+                    <div class="col-12 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="AddSportBannerDetailButton" onclick="AddSportsBannersImage();">Add Banner Section</a>
+                    </div>
+                    <div class="card-body">
+                        @*<p class="float-lg-right">
+                                <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" onclick="AddSportsBannersImage();">Add Other Section</a>
+                            </p>*@
+
+                        <div class="modal fade" id="collapseAddSportsBannerImages">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <!-- Modal Header -->
+                                    <div class="modal-header border-0">
+                                        <h5 id="Modal_Title" class="modal-title"> Add Banner Section</h5>
+                                        <button type="button" class="close" onclick="ResetBusinessBanner()" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body pt-0">
+                                        <form>
+                                            <div class="form-group">
+                                                <label for="Title">  Title</label>
+                                                <input type="text" id="txtTitle" class="form-control" />
+                                                <div class="error-class" id="error_txtTitle"></div>
+
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="SubTitle"> About SubTitle</label>
+                                                <input type="text" id="txtSubTitle" class="form-control" />
+                                                <div class="error-class" id="error_txtSubTitle"></div>
+
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ButtonText">Button-Text</label>
+                                                <input type="text" id="txtButtonText" class="form-control" />
+                                                <div class="error-class" id="error_txtButtonText"></div>
+
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ButtonLink">Button-Link</label>
+                                                <input type="text" id="txtButtonLink" class="form-control" />
+                                                <div class="error-class" id="error_txtButtonLink"></div>
+
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="description"> Description</label>
+                                                    <textarea name="description" class="form-control" rows="6" id="sports_description"></textarea>
+                                                    <div class="error-class" id="error_sports_description"></div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group d-flex flex-column">
+                                                <label> Banner Image</label>
+                                                <div class="imagePreview">
+                                                    <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                                </div>
+                                                <input type="file" id="fileProfileImage_ManageSportsImage" class="border form-control" accept="image/*">
+                                                <div class="error-class" id="error_fileProfileImage_ManageSportsImage"></div>
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitSportsBannerClick()">Save</button>
+                                        </form>
+                                    </div>
+                                    <!--<div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                                                data-dismiss="modal">
+                                            Close
+                                        </button>-->
+                                    @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                                    <!--</div>-->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="sectionViewSports">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblSportsBannerDetailView" class="data-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>SNo.</th>
+                                                        <th> Banner Image</th>
+                                                        <th> Title</th>
+                                                        <th>SubTitle Type</th>
+                                                        <th>Description</th>
+                                                        <th class="text-center">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  About Section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseAbout" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseAbout">
+
+                    <div class="card-body">
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <form>
+                            <div class="form-group">
+                                <label for="AboutTitle"> About Title</label>
+                                <input type="text" id="txtAboutTitle" class="form-control" />
+                                <div class="error-class" id="error_txtAboutTitle"></div>
+
+                            </div>
+                            <div class="form-group">
+                                <label for="SubTitle"> About SubTitle</label>
+                                <input type="text" id="txtAboutSubTitle" class="form-control" />
+                                <div class="error-class" id="error_txtAboutSubTitle"></div>
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="sports_Aboutdescription"></textarea>
+                                    <div class="error-class" id="error_sports_Aboutdescription"></div>
+                                </div>
+                            </div>
+                            <div class="form-group d-flex flex-column">
+                                <label> About Image</label>
+                                <div class="imagePreview">
+                                    <img id="previewAboutImage" class="d-none" style="width:100%; height:100%;">
+                                </div>
+                                <input type="file" id="fileProfileImage_ManageAboutImage" class="border form-control" accept="image/*">
+                                <div class="error-class" id="error_fileProfileImage_ManageAboutImage"></div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessContentAboutClick()">Save</button>
+                        </form>
+                        <h5> If You can Manage the About Then You can ProfileSetting.</h5>
+                        <a class="btn btn-primary" href="/Business/ProfileSettings">
+                            Business Profile  Session
+                        </a>
+
+                        <div class="col-12 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="AddSportBannerDetailButton" onclick="AddSportsAboutServiceDetail();">Add About Service Section</a>
+                        </div>
+
+                        <div class="modal fade" id="collapseAddSportsAboutService">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <!-- Modal Header -->
+                                    <div class="modal-header border-0">
+                                        <h5 id="Modal_Title" class="modal-title"> Add About Section</h5>
+                                        <button type="button" class="close" onclick="ResetBusinessAboutService()" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body pt-0">
+                                        <form>
+                                            <div class="form-group">
+                                                <label for="Title">  Title</label>
+                                                <input type="text" id="txtAboutServiceTitle" class="form-control" />
+                                                <div class="error-class" id="error_txtAboutServiceTitle"></div>
+
+                                            </div>
+
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="description"> Description</label>
+                                                    <textarea name="description" class="form-control" rows="6" id="sports_AboutServicedescription"></textarea>
+                                                    <div class="error-class" id="error_sports_AboutServicedescription"></div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group d-flex flex-column">
+                                                <label> About service Image</label>
+                                                <div class="imageAboutServicePreview">
+
+                                                    <img id="previewAboutServiceImage" class="d-none" style="width:100%; height:100%;">
+                                                </div>
+                                                <input type="file" id="fileProfileImage_ManageSportsAboutServiceImage" class="border form-control" accept="imageAbout/*">
+                                                <div class="error-class" id="error_fileProfileImage_ManageSportsAboutServiceImage"></div>
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessContentAboutServiceClick()">Save</button>
+                                        </form>
+                                    </div>
+                                    <!--<div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                                            data-dismiss="modal">
+                                        Close
+                                    </button>-->
+                                    @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                                    <!--</div>-->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="sectionViewSports">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblSportsAboutServiceDetailView" class="data-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>SNo.</th>
+                                                        <th> About Service Image</th>
+                                                        <th>About Service Title</th>>
+                                                        <th> About Service Description</th>
+                                                        <th class="text-center">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">Our Classes</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseClasses" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseClasses">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="Title">  Title</label>
+                                <input type="text" id="txtTitle_OurClassesSection" class="form-control" />
+
+
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="txt_description_OurClassesSection"></textarea>
+
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessContentClassClick()">Save</button>
+                        </form>
+                        <h5> You can manage the business Classes session in the ManageClasses</h5>
+                        <a class="btn btn-primary" href="/Business/ScheduleClass">
+                            Business Classes Session
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Package  section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseExamplePackage" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseExamplePackage">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="Title">  Title</label>
+                                <input type="text" id="txtYogaVideoPackageTitle" class="form-control" />
+                                <div class="error-class" id="error_txtYogaVideoPackageTitle"></div>
+
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="txt_VideoPackagedescription"></textarea>
+                                    <div class="error-class" id="error_txt_VideoPackagedescription"></div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessContentPackageVideoClick()">Save</button>
+                        </form>
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> You can manage Package Section in the Package Page.</h5>
+                        <a class="btn btn-primary" href="/Business/Package">
+                            Package Section
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Services  section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseExampleServices" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseExampleServices">
+                    <div class="card-body">
+                        @*<form>
+                                <div class="form-group">
+                                    <label for="Title">  Title</label>
+                                    <input type="text" id="txtTitle" class="form-control" />
+                                    <div class="error-class" id="error_txtTitle"></div>
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ButtonText">Button-Text</label>
+                                    <input type="text" id="txtButtonText" class="form-control" />
+                                    <div class="error-class" id="error_txtButtonText"></div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="ButtonLink">Button-Link</label>
+                                    <input type="text" id="txtButtonLink" class="form-control" />
+                                    <div class="error-class" id="error_txtButtonLink"></div>
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="description"> Description</label>
+                                        <textarea name="description" class="form-control" rows="6" id="sports_description"></textarea>
+                                        <div class="error-class" id="error_sports_description"></div>
+                                    </div>
+                                </div>
+
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitAdvertisementClick()">Save</button>
+                            </form>*@
+                        <form>
+                            <div class="form-group">
+                                <label for="Title">  Title</label>
+                                <input type="text" id="txtServiceTitle" class="form-control" />
+                                <div class="error-class" id="error_txtTitle"></div>
+
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="txt_description"></textarea>
+                                    <div class="error-class" id="error_txt_description"></div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessContentServicesClick()">Save</button>
+                        </form>
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> You can manage the business  Services  session in the ManageBusinessService</h5>
+                        <a class="btn btn-primary" href="/Business/ManageBusinessService">
+                            Business Service Session
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Event  section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseExampleEvent" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseExampleEvent">
+                    <div class="card-body">
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> You can manage the Event, Then go to  Event Page.</h5>
+                        <a class="btn btn-primary" href="/Business/Event">
+                            Event Section
+                        </a>
+
+                    </div>
+                    <form>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="description"> Description</label>
+                                <textarea name="description" class="form-control" rows="6" id="event_description"></textarea>
+                                <div class="error-class" id="error_event_description"></div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitBusinessEventDescriptionClick()">Save</button>
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4"> Tensis Ground  section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseTensis" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseTensis">
+                    <div class="card-body">
+                        <div class="col-12 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="AddSportBannerDetailButton" onclick="AddTensisInformation();">Add Tennis Section</a>
+                        </div>
+
+                        <div class="modal fade" id="collapseAddTennis">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <!-- Modal Header -->
+                                    <div class="modal-header border-0">
+                                        <h5 id="Modal_Title" class="modal-title"> Add Tennis Section</h5>
+                                        <button type="button" class="close" onclick="ResetTennisView()" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body pt-0">
+                                        <form>
+                                            <div class="form-group">
+                                                <label for="Title">  Title</label>
+                                                <input type="text" id="txtTennisTitle" class="form-control" />
+                                                <div class="error-class" id="error_txtTennisTitle"></div>
+
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="SubTitle">  SubTitle</label>
+                                                <input type="text" id="txtTennisSubTitle" class="form-control" />
+                                                <div class="error-class" id="error_txtTennisSubTitle"></div>
+
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="description"> Description</label>
+                                                    <textarea name="description" class="form-control" rows="6" id="sportsTennis_description"></textarea>
+                                                    <div class="error-class" id="error_sportsTennis_description"></div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="TennisPrice">Basic Price</label>
+                                                        <input type="number" id="Tennis_BasicPrice" class="form-control" required />
+                                                        <div class="error-class" id="error_txtTennis_BasicPricePaid"></div>
+
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="TennisPrice">Commercial Price</label>
+                                                        <input type="number" id="Tennis_CommercialPrice" class="form-control" required />
+                                                        <div class="error-class" id="error_txtTennis_CommercialPricePaid"></div>
+
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="TennisPrice">Other Price</label>
+                                                        <input type="number" id="Tennis_OtherPrice" class="form-control" required />
+                                                        <div class="error-class" id="error_txtTennis_OtherPricePaid"></div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group d-flex flex-column">
+                                                <label> Tennis Image</label>
+                                                <div class="imageTennisPreview">
+                                                    <img id="previewTennisImage" class="d-none" style="width:100%; height:100%;">
+                                                </div>
+                                                <input type="file" id="fileProfileImage_ManageTennisImage" class="border form-control" accept="image/*">
+                                                <div class="error-class" id="error_fileProfileImage_ManageTennisImage"></div>
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitSportsTennisClick()">Save</button>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div id="sectionViewSports">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblSportsTennisDetailView" class="data-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>SNo.</th>
+                                                        <th> Tennis Image</th>
+                                                        <th> Title</th>
+                                                        <th>SubTitle </th>
+                                                        <th>Price</th>
+                                                        <th>Description</th>
+                                                        <th class="text-center">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Business Professional  section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseExampleProfessional" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseExampleProfessional">
+                    <div class="card-body">
+
+                        <form>
+
+                            <div class="form-group">
+                                <label for="title"> Title</label>
+                                <textarea name="description" class="form-control" rows="6" id="Professionaltitle"></textarea>
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="Professionaldescription"></textarea>
+                                    <div class="error-class" id="error_description"></div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitSportsProfessionalClick()">Save</button>
+                        </form>
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> You can Manage the Business Professional Section in the Manage Staff Page.</h5>
+                        <a class="btn btn-primary" href="/Business/ManageStaff">
+                            Business Professional Section
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Business Review   section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseReview" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseReview">
+                    <div class="card-body">
+                        <form>
+
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description"> Description</label>
+                                    <textarea name="description" class="form-control" rows="6" id="description"></textarea>
+                                    <div class="error-class" id="error_description"></div>
+                                </div>
+                            </div>
+                            <div class="form-group d-flex flex-column">
+                                <label>  Review Image</label>
+                                <div class="imageReviewPreview">
+
+                                    <img id="previewReviewImage" class="d-none" style="width:100%; height:100%;">
+                                </div>
+                                <input type="file" id="fileProfileImage_ManageSportsReviewImage" class="border form-control" accept="imageReview/*">
+                                <div class="error-class" id="error_fileProfileImage_ManageSportsReviewImage"></div>
+                            </div>
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitSportsReviewClick()">Save</button>
+                        </form>
+
+
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> To Manage the Business Reviews then Go to  Business Review Section.</h5>
+                        <a class="btn btn-primary" href="/Business/ManageReviews">
+                            Business Reviews Section
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Our  Sponsors</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseSponsors" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseSponsors">
+                    <div class="card-body">
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5> You can manage the Sponsors, Then go to  Sponsors Page.</h5>
+                        <a class="btn btn-primary" href="/Business/Sponsors">
+                            Event Section
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Business Contact Us Section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseContactUs" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseContactUs">
+                    <div class="card-body">
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h5>  To Manage the Contact Us then go to the Manage Profile Setting</h5>
+                        <a class="btn btn-primary" href="/Business/ProfileSettings">
+                            Business ContactUs Section
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center p-3">
+                    <h3 class="card-title mb-4">  Business Timing Hour  section</h3>
+                    <p class="float-lg-right">
+                        <button data-toggle="collapse" href="#collapseExample11" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                            <i class="fas fa-minus"></i>
+                        </button>
+
+                    </p>
+
+                </div>
+                <div class="collapse" id="collapseExample11">
+                    <div class="card-body">
+                        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+                        <h2> Business Timing session</h2>
+                        <a class="btn btn-primary" href="/Business/TimeSlot">
+                            Business Timing Session
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    @*------------------------------------- Add Update Business Video Model ------------------------------------------------------ *@
+    <div class="modal fade" id="AddBusinessTimeSlot">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header border-0">
+                    <h5 id="Modal_Title" class="modal-title"> Add Timing</h5>
+                    <button type="button" class="close" data-dismiss="modal" onclick="ResetAddTimingDetail()">&times;</button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-12 text-lg-right">
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_EventSponsor" onclick="AddTimingDetail()">Add</button>
+                            </div>
+                        </div>
+                        <div id="addmoretimingdetail">
+
+                        </div>
+                        <button type="button" class="btn btn-primary mt-3" id="ChangeUpdateText_EventSponsor" onclick="btnSubmitTennisTimimgClick()">Save</button>
+                        <a href="javascript:;" class="btn btn-primary mt-3" data-dismiss="modal" onclick="ResetAddViewBusinessTiming()">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>

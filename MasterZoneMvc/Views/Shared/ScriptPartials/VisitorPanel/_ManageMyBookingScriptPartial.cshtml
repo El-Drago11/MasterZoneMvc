@@ -1,0 +1,830 @@
+﻿
+<script>
+    var UserToken_Global = "";
+
+
+
+        $(document).ready(function () {
+           StartLoading();
+            $.get("/Home/GetStudentToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                    getAllClassBookingDetails();
+                    getAllEventDetails();
+                    getAllTrainingDetails();
+                    getAllPlanBookingDetails();
+                    getAllCourseBookingDetails();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    window.location.href = '/home/login';
+                    StopLoading();
+                }
+            });
+        });
+
+    //-----get class booking details -------------------
+    function getAllClassBookingDetails(){
+        let _url = "/api/Class/GetClassesBookingDetail";
+
+      $.ajax({
+          type: "GET",
+          url: _url,
+          headers: {
+              "Authorization": "Bearer " + UserToken_Global,
+              "Content-Type": "application/json"
+          },
+
+          contentType: 'application/json',
+          success: function (response) {
+
+              if (response.status < 1) {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+                  return;
+
+              }
+              var _table = $('#tblClassBookingDetails').DataTable();
+              _table.clear().destroy();
+
+              var sno = 0;
+              var _purchasebtn = ``;
+              var data = [];
+              for (var i = 0; i < response.data.length; i++) {
+
+
+                  
+                  //--------------------Class status conditions---------------
+                  var dateString = response.data[i].Enddate_FormatDates;
+                  var newEndDate = new Date(dateString);
+                  var currentDate = new Date();
+                  var _status = ``;
+                  if (newEndDate > currentDate) {
+                      _status = `<p class="pendingbtn">on going</p>`;
+                  }
+                  else {
+                      _status = `<p class="expirebtn">Expired</p>`;
+                  }
+
+
+                  var parts = dateString.split('/');
+                  var formattedendDate = parts[1] + '/' + parts[0] + '/' + parts[2];
+
+                  var _ImageName = '';
+                  _ImageName = `
+                     <div class="d-flex align-items-center">
+                         <div class="mr-2">
+                             <img src="${response.data[i].ClassCategoryImageWithPath}" class="img-size-sm" />
+                         </div>
+                         <div>${response.data[i].Name} </div>
+                     </div>`;
+                  var _price = `${response.data[i].Price}/-`;
+                  var _orderId = response.data[i].OrderId
+
+                  var _date = `${response.data[i].CreatedOnString} <br> <span class="text-center">To</span></br>
+                        ${formattedendDate}`;
+
+
+
+                  if (newEndDate < currentDate && response.data[i].Repeat_Purchase == 0) {
+                      _purchasebtn = `<a class="btn btn-sm  ml-4 buyagainbtn" href="/Booking/Checkout?itemId=${response.data[i].ClassId}&&itemType=Class">Buy again</a>`;
+                  } else {
+                      _purchasebtn = ``;
+                  }
+
+
+                var  _action = `<div class="edbt ">`;
+                  _action += ` <a class="btn btn-sm  ml-4 ViewMoreDetail" href="/Home/MyClassPurchaseDetails?classid=${response.data[i].Id}">View</a>`;
+
+                  _action += `${_purchasebtn}</div>`;
+
+
+                  data.push([
+                      _orderId,
+                      _ImageName,
+                      _price,
+                      _date,
+                      _status,
+                      _action
+                  ]);
+
+              }
+
+              $('#tblClassBookingDetails').DataTable({
+                  "data": data,
+                  "paging": true,
+                  "lengthChange": true,
+                  "searching": true,
+                  "ordering": true,
+                  "info": true,
+                  "autoWidth": false,
+                  "responsive": false,
+              });
+
+              StopLoading();
+          },
+
+          error: function (result) {
+              StopLoading();
+
+              if (result["status"] == 401) {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+              }
+              else {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+              }
+          }
+      });
+
+    }
+
+
+
+    //-----get Event booking details -------------------
+
+    function getAllEventDetails() {
+
+
+       let _url = "/api/Event/GetEventDetails";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+
+            contentType: 'application/json',
+            success: function (response) {
+
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+
+                }
+
+                var _table = $('#tblEventBookingDetails').DataTable();
+                _table.clear().destroy();
+
+                var sno = 0;
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+
+                    
+                    //--------------------Event status conditions---------------
+                    var dateString = response.data[i].Enddate_FormatDates;
+                    var startdateString = response.data[i].CreatedOnString;
+                    var newEndDate = new Date(dateString);
+                    var newStartDate = new Date(startdateString);
+                    var currentDate = new Date();
+                    var _status = ``;
+
+
+                    //if (newEndDate > currentDate) {
+                    //    _status = `<p class="pendingbtn">On going</p>`;
+                    //}
+                    //else {
+                    //    _status = `<p class="successbtn">Completed</p>`;
+                    //}
+
+                    if (currentDate < newStartDate) {
+                        _status = `<p class="upcomingbtn">Up Coming</p>`;
+                    }
+                    else if (currentDate < newEndDate) {
+
+                        _status = `<p class="pendingbtn">On going</p>`;
+                    }
+                    else {
+                        _status = `<p class="successbtn">Completed</p>`;
+                    }
+
+
+
+
+
+
+
+
+                    var parts = dateString.split('/');
+                    var formattedendDate = parts[1] + '/' + parts[0] + '/' + parts[2];
+
+
+                    var _ImageName = `
+                            <div class="d-flex align-items-center">
+                                <div class="mr-2">
+                                    <img src="${response.data[i].EventImageWithPath}" class="img-size-sm" />
+                                </div>
+                                <div>${response.data[i].Title} </div>
+                            </div>`;
+                    var _price = `${response.data[i].Price}/-`;
+                   var _orderId = response.data[i].OrderId;
+                 //   var _date = response.data[i].CreatedOnString;
+                    var _date = `${response.data[i].CreatedOnString} <br> <span class="text-center">To</span></br>
+                  ${formattedendDate}`;
+                  var  _action = '<div class="edbt">';
+                    _action += ` <a class="btn btn-sm  ml-4 ViewMoreDetail" href="/Home/MyEventPurchaseDetails?eventId=${response.data[i].Id}">View</a>`;
+                    _action += '</div>';
+
+
+                    data.push([
+                        sno,
+                        _orderId,
+                        _ImageName,
+                        _price,
+                        _date,
+                        _status,
+                        _action
+                    ]);
+                }
+
+                $('#tblEventBookingDetails').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+
+                StopLoading();
+            },
+
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+
+    }
+
+
+    $(document).ready(function () {
+        $('#tblEventBookingDetails').DataTable({
+            "sScrollX": "100%",
+            "sScrollXInner": "110%"
+        });
+    });
+    //-----get Training booking details -------------------
+
+    function getAllTrainingDetails() {
+
+
+        let _url = "/api/Training/GetTrainingDetails"  ;
+
+   $.ajax({
+       type: "GET",
+       url: _url,
+       headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+           "Content-Type": "application/json"
+       },
+
+       contentType: 'application/json',
+       success: function (response)
+       {
+
+           if (response.status < 1)
+           {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+               return;
+
+           }
+
+           var _table = $('#tblTrainingBookingDetails').DataTable();
+           _table.clear().destroy();
+
+           var sno = 0;
+
+           var data = [];
+           for (var i = 0; i < response.data.length; i++) {
+               sno++;
+
+               //--------------------Training status conditions---------------
+               var dateString = response.data[i].Enddate_FormatDates;
+               var startdate = response.data[i].CreatedOnString;
+
+
+               var newEndDate = new Date(dateString);
+               var newstartDate = new Date(startdate);
+               var currentDate = new Date();
+
+
+               var _status = ``;
+               //if (newEndDate > currentDate) {
+               //    _status = `<p class="pendingbtn">On going</p>`;
+               //}
+               //else {
+               //    _status = `<p class="successbtn">Completed</p>`;
+               //}
+
+
+
+               if (currentDate < newstartDate) {
+                   _status = `<p class="upcomingbtn">Up Coming</p>`;
+               }
+               else if (currentDate < newEndDate) {
+
+                   _status = `<p class="pendingbtn">On going</p>`;
+               }
+               else {
+                   _status = `<p class="successbtn">Completed</p>`;
+               }
+
+
+               var parts = dateString.split('/');
+               var formattedendDate = parts[1] + '/' + parts[0] + '/' + parts[2];
+
+
+               var _ImageName = `
+                    <div class="d-flex align-items-center">
+                        <div class="mr-2">
+                            <img src="${response.data[i].TrainingImageWithPath}" class="img-size-sm" />
+                        </div>
+                        <div>${response.data[i].TrainingName} </div>
+                    </div>`;
+               var _price = `${response.data[i].Price}/-`;
+               var _orderId = response.data[i].OrderId;
+             //  var _date = response.data[i].CreatedOnString;
+               var _date = `${response.data[i].CreatedOnString} <br> <span class="text-center">To</span></br>
+                  ${formattedendDate}`;
+               var _action = '<div class="edbt">';
+               _action += ` <a class="btn btn-sm  ml-4 ViewMoreDetail"  href="/Home/MyTrainingPurchaseDetails?trainingId=${response.data[i].Id}">View</a>`;
+               _action += '</div>';
+
+
+               data.push([
+                   sno,
+                   _orderId,
+                   _ImageName,
+                   _price,
+                   _date,
+                   _status,
+                   _action
+               ]);
+           }
+
+           $('#tblTrainingBookingDetails').DataTable({
+               "data": data,
+               "paging": true,
+               "lengthChange": true,
+               "searching": true,
+               "ordering": true,
+               "info": true,
+               "autoWidth": false,
+               "responsive": true,
+           });
+
+           StopLoading();
+       },
+
+       error: function (result) {
+           StopLoading();
+
+           if (result["status"] == 401) {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+           else {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+       }
+   });
+
+ }
+
+    //-----get Plan  booking details -------------------
+
+
+     function getAllPlanBookingDetails() {
+
+
+         let _url = "/api/BusinessPlan/GetPlanBookingDetails"  ;
+
+   $.ajax({
+       type: "GET",
+       url: _url,
+       headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+           "Content-Type": "application/json"
+       },
+
+       contentType: 'application/json',
+       success: function (response)
+       {
+
+           if (response.status < 1)
+           {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+               return;
+
+           }
+
+           var _table = $('#tblPlanBookingDetails').DataTable();
+           _table.clear().destroy();
+
+           var sno = 0;
+           var data = [];
+           var _purchasebtn = ``;
+           var plantype = ``;
+           var _status = ``;
+
+           for (var i = 0; i < response.data.length; i++) {
+               sno++;
+
+             
+
+             
+
+               //--------start date format dd/mm/yyyy------------------
+
+               var startdate = response.data[i].CreatedOnString;
+               var parts = startdate.split('/');
+               var formattedStartDate = parts[1] + '/' + parts[0] + '/' + parts[2];
+
+               //--------end date format dd/mm/yyyy------------------
+               var dateString = response.data[i].Enddate_FormatDates;
+               var parts = dateString.split('/');
+               var formattedendDate = parts[1] + '/' + parts[0] + '/' + parts[2];
+
+               var newEndDate = new Date(dateString);
+               var newstartDate = new Date(formattedStartDate);
+               var currentDate = new Date();
+
+
+               //if (newEndDate > currentDate) {
+               //    _status = `<p class="pendingbtn">On going</p>`;
+               //}
+               //else {
+               //    _status = `<p class="expirebtn">Expired</p>`;
+               //}
+
+               if (currentDate < newstartDate) {
+                   _status = `<p class="upcomingbtn">Up Coming</p>`;
+               }
+               else if (currentDate < newEndDate) {
+
+                   _status = `<p class="pendingbtn">On going</p>`;
+               }
+               else {
+                   _status = `<p class="successbtn">Completed</p>`;
+               }
+
+
+             
+                var _plantypeId = response.data[i].PlanType;
+               var _ImageName =``;
+               if (_plantypeId == 1) {
+
+                   _ImageName = `
+                     <div class="d-flex align-items-center">
+                         <div class="mr-2">
+                             <img src="${response.data[i].PlanImageWithPath}" class="img-size-sm" />
+                         </div>
+                         <div>${response.data[i].PlanName} </div>
+                     </div>`;
+
+               }
+               else {
+                   _ImageName = `
+                       <div class="d-flex align-items-center">
+                           <div class="mr-2">
+                               <img src="${response.data[i].MainPlanImageWithPath}" class="img-size-sm" />
+                           </div>
+                           <div>${response.data[i].PlanName} </div>
+                   </div>`;
+               }
+               
+
+              
+
+               var _price = `${response.data[i].PlanPrice}/-` ;
+               var _orderId = response.data[i].OrderId;
+               var _date = `${formattedStartDate} <br> <span class="text-center">To</span></br>
+                ${formattedendDate}`;
+
+               var _plantype = response.data[i].PlanBookingType;
+               var _plantypetext;
+               if (_plantype == 1) {
+                   _plantypetext = `<p>Business</p>`;
+               }
+               else {
+                   _plantypetext = `<p>Masterzone</p>`;
+
+               }
+               var _plantype = response.data[i].PlanBookingType;
+
+               if (_plantype == 1) {
+                   plantype = `plan`;
+               }
+               else if (_plantype == 2) {
+                   plantype = `userplan`;
+               }
+               else {
+                   plantype = ``;
+
+               }
+           
+
+
+               if (newEndDate < currentDate && response.data[i].Repeat_Purchase == 0) {
+                   _purchasebtn = `<a class="btn btn-sm  ml-4 buyagainbtn" href="/Booking/Checkout?itemId=${response.data[i].PlanId}&&itemType=${plantype}">Buy again</a>`;
+               } else {
+                   _purchasebtn = ``;
+               }
+
+
+               var _action = '<div class="edbt">';
+               _action += `<a class="btn btn-sm  ml-4 ViewMoreDetail" href="/Home/MyPlanPurchaseDetails?planId=${response.data[i].Id}&&planbookingtype=${response.data[i].PlanBookingType}">View</a>`;
+               _action += `${_purchasebtn}`;
+               _action += '</div>';
+
+
+               data.push([
+                 
+                   _orderId,
+                   _ImageName,
+                   _plantypetext,
+                   _price,
+                   _date,
+                   _status,
+                   _action
+               ]);
+           }
+
+           $('#tblPlanBookingDetails').DataTable({
+               "data": data,
+               "paging": true,
+               "lengthChange": true,
+               "searching": true,
+               "ordering": true,
+               "info": true,
+               "autoWidth": false,
+               "responsive": true,
+           });
+
+           StopLoading();
+       },
+
+       error: function (result) {
+           StopLoading();
+
+           if (result["status"] == 401) {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+           else {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+       }
+   });
+
+ }
+
+    // Get Course Booking Detail
+
+  function getAllCourseBookingDetails() {
+
+            let _url = "/api/Course/GetCourseBookingDetails";
+
+      $.ajax({
+          type: "GET",
+          url: _url,
+          headers: {
+              "Authorization": "Bearer " + UserToken_Global,
+              "Content-Type": "application/json"
+          },
+
+          contentType: 'application/json',
+          success: function (response) {
+
+
+              if (response.status < 1) {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+                  return;
+
+              }
+
+              var _table = $('#tblCourseBookingDetails').DataTable();
+              _table.clear().destroy();
+
+              var sno = 0;
+
+              var data = [];
+
+
+              for (var i = 0; i < response.data.length; i++) {
+                  sno++;
+                  var _orderId = response.data[i].OrderId;
+
+                  var durationValue = response.data[i].Duration;
+
+                  var _durationtype = ``;
+
+                  if (response.data[i].DurationType == 'Monthly' && response.data[i].Duration > 1) {
+                      _durationtype = `Months`;
+
+                  } else if (response.data[i].DurationType == 'Monthly' && response.data[i].Duration <= 1) {
+                      _durationtype = `Month`;
+                  }
+
+                  if (response.data[i].DurationType == 'Yearly' && response.data[i].Duration > 1) {
+                      _durationtype = `Years`;
+
+                  } else if (response.data[i].DurationType == 'Yearly' && response.data[i].Duration <= 1) {
+                      _durationtype = `Year`;
+                  }
+
+                  if (response.data[i].DurationType == 'Day' && response.data[i].Duration > 1) {
+                      _durationtype = `Days`;
+
+                  } else if (response.data[i].DurationType == 'Day' && response.data[i].Duration <= 1) {
+                      _durationtype = `Day`;
+                  }
+
+                  if (response.data[i].DurationType == 'Weekly' && response.data[i].Duration > 1) {
+                      _durationtype = `Weeks`;
+
+                  } else if (response.data[i].DurationType == 'Weekly' && response.data[i].Duration <= 1) {
+                      _durationtype = `Week`;
+                  }
+
+                 
+              
+                  var startDate = new Date(response.data[i].CreatedOnString);
+
+                  if (_durationtype == 'Months' || _durationtype == 'Month') {
+                      startDate.setDate(startDate.getDate() + 30 * durationValue);
+                  }
+                  else if (_durationtype == 'Weeks' || _durationtype == 'Week') {
+                      startDate.setDate(startDate.getDate() + 7 * durationValue);
+
+                  }
+                  else if (_durationtype == 'Years' || _durationtype == 'Year') {
+                      startDate.setDate(startDate.getDate() + 365 * durationValue);
+
+                  }
+                  else if (_durationtype == 'Days' || _durationtype == 'Day') {
+                      startDate.setDate(startDate.getDate() + 1 * durationValue);
+
+                  }
+
+                  var newEndDateFormatted = startDate.toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                  });
+                 //-----------------start date dd/mm/yyyy format ---------------------
+                  var dateString = response.data[i].CreatedOnString;
+                  var parts = dateString.split('/');
+                  var formattedstartDate = parts[1] + '/' + parts[0] + '/' + parts[2];
+
+                  //--------------------course status conditions---------------
+                  var newEndDate = new Date(startDate);
+                  var newStartDate = new Date(dateString);
+                  var currentDate = new Date();
+
+                
+                  var _status = ``;
+
+
+                  if (currentDate < newStartDate) {
+                      _status = `<p class="upcomingbtn">Up Coming</p>`;
+                  }
+                  else if (currentDate < newEndDate) {
+
+                      _status = `<p class="pendingbtn">On going</p>`;
+                  }
+                  else {
+                      _status = `<p class="successbtn">Completed</p>`;
+                  }
+
+
+
+                  _ImageName = `
+                    <div class="d-flex align-items-center">
+                        <div class="mr-2">
+                            <img src="${response.data[i].CourseImageWithPath}" class="img-size-sm" />
+                        </div>
+                        <div>${response.data[i].Name} </div>
+                    </div>`;
+                  var _price = `${response.data[i].Price}/-`;
+                  var _buydate = `${formattedstartDate} <br> <span class="text-center">To</span></br>
+                                  ${newEndDateFormatted}`;
+
+              var  _action = '<div class="edbt">';
+                _action += ` <a class="btn btn-sm  ml-4 ViewMoreDetail" href="/Home/MyCoursePurchaseDetails?courseId=${response.data[i].Id}">View</a>`;
+                _action += '</div>';
+
+
+                data.push([
+                    sno,
+                    _orderId,
+                    _ImageName,
+                    _price,
+                    _buydate,
+                    _status,
+                    _action
+                ]);
+            }
+
+            $('#tblCourseBookingDetails').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+
+            StopLoading();
+        },
+
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+
+}
+</script>

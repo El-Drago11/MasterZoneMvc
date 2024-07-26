@@ -1,0 +1,451 @@
+﻿<script>
+    var UserToken_Global = "";
+    var LicenceId_Global = 0;
+   var BusinessLoginId_Global = 0;
+  /*  var BusinessLoginId_Global = $("#hiddenBusinessOwnerLoginId_Globaly").val();*/
+
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+               // GetStudentTrainingDetail();
+                getBusinessTrainingLists();
+
+            }
+            else {
+                StopLoading();
+            }
+        });
+    });
+
+     function getBusinessTrainingLists() {
+
+         let _url =  "/api/Student/GetBusinessTrainingDetail";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var StudentBusinessTrainingDetail = '';
+                $("#ddlSelectedInstructorId").html('');
+                if (response.data.length === 0) {
+                    StudentBusinessTrainingDetail = $('#BindBusinessHeaderDetail').hide();
+                    StudentBusinessTrainingDetail = `<div class="w-100 font-italic text-center text-black-50 py-2">No Training License Record Detail.</div>`;
+                    $('#LicenceStudentTrainingDetail').html(StudentBusinessTrainingDetail);
+                }
+                else {
+                    for (var i = 0; i < response.data.length; i++) {
+                        var businessData = response.data[i];
+
+                        var trainingImage = businessData.TrainingImageWithPath;
+                        var businessLogoImage = businessData.BusinessLogoImageWithPath;
+                        var businessName = businessData.BusinessName;
+
+
+                        StudentBusinessTrainingDetail += `<option value="${businessData.UserLoginId}">
+
+                                                        <span>${businessName} </span>
+
+                                                    </option>`;
+                    }
+
+                    $("#ddlSelectedInstructorId").html(StudentBusinessTrainingDetail);
+
+                    changeBusinessprofile();
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {ss
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function changeBusinessprofile() {
+        $("#StudentTrainingDetailRandomlyShow").html('');
+        $("#LicenceStudentTrainingDetail").html('');
+        var BusinessLoginId_Global = $("#ddlSelectedInstructorId").val();
+        //console.log(businessId);
+        var _url = "/api/Student/GetBusinessTrainingDetailById?id=" + BusinessLoginId_Global;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+               // $("#TrainingImage").attr('src', response.data.details.TrainingImageWithPath);
+                $("#BusinessLogoLicense").attr('src', response.data.details.BusinessLogoImageWithPath);
+                $("#BusinessNameLicense").html(response.data.details.BusinessName);
+
+                var randomlystudenttrainingdetail = '';
+
+
+                    if (response.data.RandomlyStudentTrainingDetail == null) {
+                       // randomlystudenttrainingdetail = `<div class="w-100 font-italic text-center text-black-50 py-2">No Tennis Detail.</div>`;
+                        randomlystudenttrainingdetail = ``;
+                    }
+                    else {
+                        randomlystudenttrainingdetail += `<div class="license-rt-div">
+                                    <div class="license-heading">
+                                        <h5>unlocked license </h5>
+                                    </div>
+                                    <div class="logo-iner">
+                                        <img src="${response.data.RandomlyStudentTrainingDetail.LicenseLogoImageWithPath}" loading="lazy">
+                                        <div class="license-text">
+                                            <h6><a href="/Home/Certification?id=${response.data.RandomlyStudentTrainingDetail.Id}">${response.data.RandomlyStudentTrainingDetail.TrainingName}</a></h6>
+                                            <p>certificate: <span>${response.data.RandomlyStudentTrainingDetail.Title}</span></p>
+                                            <p>price: <span>${response.data.RandomlyStudentTrainingDetail.Price}</span> </p>
+                                        </div>
+                                    </div>
+                                </div>`;
+
+                    }
+                $("#StudentTrainingDetailRandomlyShow").append(randomlystudenttrainingdetail);
+
+
+                var StudentTrainingDetails = '';
+                if (response.data.StudentTrainingDetails.length === 0) {
+                    StudentTrainingDetails = ` <div class="w-100 font-italic text-center text-black-50 py-2">No Training Detail.</div>`;
+                }
+                else {
+                }
+                for (var i = 0; i < response.data.StudentTrainingDetails.length; i++) {
+                    var Downloadrecord = '';
+
+                    //if (response.data.StudentTrainingDetails[i].IsCompleted === 1) {
+                    //    Downloadrecord = `<div class="cta">
+                    //         <a class="cta-link" href="#">Download</a>
+                    //      </div>`;
+                    //}
+
+                    StudentTrainingDetails += `<div class="license-main-div">
+                                    <div class="license-iner">
+                                        <div class="license-img">
+                                            <img src="${response.data.StudentTrainingDetails[i].LicenseLogoImageWithPath}" alt="img" loading="lazy">
+                                        </div>
+                                        <div class="bolly-content">
+                                            <h5>${response.data.StudentTrainingDetails[i].Title}</h5>
+                                            <ul>
+                                                <li>Subscribe Date: <span>${response.data.StudentTrainingDetails[i].StartDate}</span></li>
+                                                <li>Expiry Date: <span>${response.data.StudentTrainingDetails[i].EndDate}</span></li>
+                                                <li>Price: <span>${response.data.StudentTrainingDetails[i].Price}</span></li>
+
+                                            </ul>
+                                        </div>
+                                        <div class="right-iner">
+                                        <div class="license-img">
+                                            <img src="${response.data.StudentTrainingDetails[i].CertificateIconWithPath}" alt="img" loading="lazy">
+                                        </div>
+                                          <div class="cta mt-3">
+                             <button class="cta-link" id="printpdf">Download</button>
+                          </div>
+                                            <div class="arrow-down mt-3">
+                                                <i class="fa-solid fa-angle-down"></i>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                    <div class="expand-div">
+                                        <div class="expand-flex ">
+                                            <div class="expand-lt">
+                                                <div class="list">
+                                                    <ul style="display: flow;">
+                                                        <li>Start: ${response.data.StudentTrainingDetails[i].StartDate}</li>
+                                                        <li>Seat Available: ${response.data.StudentTrainingDetails[i].TotalSeats} </li>
+                                                        <li>Classes ${response.data.StudentTrainingDetails[i].TrainingClassDays} </li>
+                                                        <li>Course Duration: ${response.data.StudentTrainingDetails[i].Duration} </li>
+                                                        <li>Total Classes: ${response.data.StudentTrainingDetails[i].TotalClasses} </li>
+                                                        <li>Lectures:${response.data.StudentTrainingDetails[i].TotalLectures} </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="expand-rt">
+                                                <div class="expand-text">
+                                                    <p>
+                                                       ${response.data.StudentTrainingDetails[i].ShortDescription}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>`;
+                                }
+
+
+                        if (response.data.StudentTrainingDetails.length <= 0) {
+                            StudentTrainingDetails += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Record in this Licence Detail.</div>`;
+                        }
+
+
+                $('#LicenceStudentTrainingDetail').append(StudentTrainingDetails);
+
+                $("#printpdf").click(function (e) {
+                    e.preventDefault();
+                    window.location.href = "/Content/Uploads/Certificates/PtPAPIClinet.pdf";
+                });
+
+//                $("#printpdf").click(function (e) {
+//    e.preventDefault();
+//    var filename = "sample1.pdf";
+//    var folderPath = "LicensePDFDownload";
+//    var url = folderPath + "/" + encodeURIComponent(filename);
+//    window.location.href = url;
+//});
+
+
+                $('.license-section .arrow-down>*').click(function (j) {
+
+                    var dropDown = $(this).closest('.license-main-div').find('.expand-div');
+                    $(this).closest('.license-main-div').find('.license-section .expand-div').not(dropDown).slideUp();
+
+                    if ($(this).hasClass('active')) {
+                        $(this).removeClass('active');
+                    } else {
+                        $(this).closest('.license-main-div').find(' .expand-div.active').removeClass('active');
+                        $(this).addClass('active');
+                    }
+                    dropDown.stop(false, true).slideToggle();
+                    j.preventDefault();
+                });
+
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+   
+
+@*function GetStudentTrainingDetail() {
+
+          var _url = "/api/Student/GetAllTrainingDetail";
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var RandomlyStudentTrainingDetail = '';
+                if (response.data.RandomlyStudentTrainingDetail) {
+                    RandomlyStudentTrainingDetail += `<div class="license-rt-div">
+                                    <div class="license-heading">
+                                        <h5>Unlocked License </h5>
+                                    </div>
+                                    <div class="logo-iner">
+                                        <img src="${response.data.RandomlyStudentTrainingDetail.TrainingImageWithPath}" loading="lazy">
+                                        <div class="license-text">
+                                            <h6>${response.data.RandomlyStudentTrainingDetail.TrainingName}</h6>
+                                            <p>Certificate: <span>Learning L1</span></p>
+                                            <p>Price: <span>${response.data.RandomlyStudentTrainingDetail.Price}</span> </p>
+                                        </div>
+                                    </div>
+                                </div>`;
+                    $("#StudentTrainingDetailRandomlyShow").append(RandomlyStudentTrainingDetail);
+                }
+
+                var StudentTrainingDetails = '';
+                for (var i = 0; i < response.data.StudentTrainingDetails.length; i++) {
+                    StudentTrainingDetails += `<div class="license-main-div">
+                                    <div class="license-iner">
+                                        <div class="license-img">
+                                            <img src="${response.data.StudentTrainingDetails[i].TrainingImageWithPath}" alt="img" loading="lazy">
+                                        </div>
+                                        <div class="bolly-content">
+                                            <h5>${response.data.StudentTrainingDetails[i].TrainingName}</h5>
+                                            <ul>
+                                                <li>Subscribe Date: <span>${response.data.StudentTrainingDetails[i].StartDate}</span></li>
+                                                <li>Expiry Date: <span>${response.data.StudentTrainingDetails[i].EndDate}</span></li>
+                                                <li>Status: <span>Activate</span></li>
+                                                <li>Price: <span>${response.data.StudentTrainingDetails[i].Price}</span></li>
+
+                                            </ul>
+                                        </div>
+                                        <div class="right-iner">
+                                            <div class="cta">
+                                                <a class="cta-link" href="#">Download</a>
+                                            </div>
+                                            <div class="arrow-down">
+                                                <i class="fa-solid fa-angle-down"></i>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                    <div class="expand-div">
+                                        <div class="expand-flex ">
+                                            <div class="expand-lt">
+                                                <div class="list">
+                                                    <ul>
+                                                        <li>Start: ${response.data.StudentTrainingDetails[i].StartDate}</li>
+                                                        <li>Seat Available: ${response.data.StudentTrainingDetails[i].TotalSeats} </li>
+                                                        <li>Classes ${response.data.StudentTrainingDetails[i].TrainingClassDays} </li>
+                                                        <li>Course Duration: ${response.data.StudentTrainingDetails[i].Duration} </li>
+                                                        <li>Total Classes: ${response.data.StudentTrainingDetails[i].TotalClasses} </li>
+                                                        <li>Lectures:${response.data.StudentTrainingDetails[i].TotalLectures} </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="expand-rt">
+                                                <div class="expand-text">
+                                                    <p>
+                                                       ${response.data.StudentTrainingDetails[i].ShortDescription}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>`;
+                }
+                if (response.data.StudentTrainingDetails.length <= 0) {
+                    StudentTrainingDetails += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Record in this Licence Detail.</div>`;
+                }
+
+
+                $('#LicenceStudentTrainingDetail').append(StudentTrainingDetails);
+
+                $('.license-section .arrow-down>*').click(function (j) {
+
+                    var dropDown = $(this).closest('.license-main-div').find('.expand-div');
+                    $(this).closest('.license-main-div').find('.license-section .expand-div').not(dropDown).slideUp();
+
+                    if ($(this).hasClass('active')) {
+                        $(this).removeClass('active');
+                    } else {
+                        $(this).closest('.license-main-div').find(' .expand-div.active').removeClass('active');
+                        $(this).addClass('active');
+                    }
+                    dropDown.stop(false, true).slideToggle();
+                    j.preventDefault();
+                });
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }*@
+
+
+    //$('.cta-link').click(function () {
+    //    var element1 = document.getElementById('LicenceStudentTrainingDetail');
+    //    var element2 = document.getElementById('StudentTrainingDetailRandomlyShow');
+
+    //    if (element1 || element2) {
+    //        html2pdf().from(element1 || element2)
+    //            .set({
+    //                html2canvas: { scale: 2 },
+    //                jsPDF: { orientation: 'portrait', unit: 'in', format: 'letter', compressPDF: true }
+    //            })
+    //            .toPdf()
+    //            .get('pdf')
+    //            .then(function (pdf) {
+    //                var totalPages = pdf.internal.pages.length;
+    //                for (var i = 1; i <= totalPages; i++) {
+    //                    pdf.setPage(i);
+    //                    pdf.setFontSize(12);
+    //                    pdf.setTextColor(0, 0, 0);
+    //                    pdf.text('Centered Text', pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() / 2, { align: 'center' });
+    //                }
+    //            })
+    //            .save('myDesign.pdf');
+    //    } else {
+    //        console.error('Element with ID "LicenceStudentTrainingDetail" or "StudentTrainingDetailRandomlyShow" not found.');
+    //    }
+    //});
+
+
+</script>

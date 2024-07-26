@@ -1,0 +1,159 @@
+﻿
+@{
+    ViewBag.Title = "UpgradePackagePlan";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    long itemId = ViewBag.ItemId;
+    int IsItemAlreadyPurchased = ViewBag.IsItemAlreadyPurchased;
+    string alreadyPurchasedMessage = ViewBag.AlreadyPurchasedMessage;
+
+}
+
+@section Styles {
+    <style>
+        .image {
+            width: 100%;
+            
+        }
+        .error-class {
+            color: red;
+        }
+
+        #txtCouponCode:valid {
+            text-transform: uppercase;
+        }
+
+        .image-small {
+            width: 50px;
+            height: 50px;
+        }
+        @@media (min-width: 576px) {
+            .col-sm-6 {
+                -webkit-box-flex: 0;
+                -ms-flex: 0 0 50%;
+                flex: 0 0 50%;
+                max-width: 100%;
+            }
+        }
+
+        .duration_sec {
+            font-weight: 900;
+            font-size: medium;
+        }
+        .price_sec{
+            padding-left: 16px;
+        }
+        
+    </style>
+}
+
+
+
+<input type="hidden" id="hiddenCheckoutId" value="@ViewBag.ItemId" />
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Upgrade Plan </h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Student">Manage Upgrade Plan</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Booking Checkout</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-4 text-right">
+                        <a href="/Business/UpgradePackage" class="btn btn-primary btn-lg top-right-button mr-1">Back</a>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        
+
+        <div id="sectionCheckout">
+            <div class="row">
+                <div class="col-12 col-lg-5 col-xl-4 col-left" id="divItemDetail">
+                 
+                </div>
+
+
+                <div class="col-12 col-lg-7 col-xl-8 col-right">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h4 class="mb-4"> PERMISSIONS </h4>
+                            <div id="staffPermissionDetail_Card">
+                                @* Permissions List will be binded here *@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+
+            </div>
+            <div class="row">
+                <div class="col-12 mt-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                   
+
+                                    <p>Select Payment Method</p>
+                                    <fieldset class="form-group" style="float: inline-start">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode1" value="1" checked>
+                                            <label class="form-check-label" for="paymentMode1">
+                                                Cash
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode2" value="2">
+                                            <label class="form-check-label" for="paymentMode2">
+                                                Card
+                                            </label>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            <div class="col-sm-6 text-center">
+                                <div class="text-center h6" id="divOrderBillingDetail">
+                                    @* Append by JS *@
+                                    </div>
+                                    @if (IsItemAlreadyPurchased == 1)
+                                    {
+                                        <div class="w-100 text-center text-success">@alreadyPurchasedMessage</div>
+                                    }
+                                    else
+                                    {
+                                <div>
+                                    <button type="button" class="btn btn-primary w-50" onclick="verifyPlanCanBeBookedAjax();">Pay Now</button>
+                              
+                                    </div>
+                           
+                           
+                           
+                           
+                            }
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+    </div>
+    </div>    
+        </div>
+</main>
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_UpgradePlanCheckoutScriptsPartial.cshtml")
+}
+

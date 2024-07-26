@@ -1,0 +1,977 @@
+﻿
+<script>
+
+    var UserToken_Global = "";
+    var MessageId_Global = 0;
+    var GroupMessage = 0;
+    var GroupUserId = 0;
+    var previousStudentMessageList = 0;
+    var previousGroupMessageList = 0;
+    var GroupMessageCount = 0;
+    var groupUnreadMessage = {};
+    var studentUnreadMessage = {};
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, async function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                StartLoadingMessage();
+                await setFirstStudentDetail();
+                if (GroupMessage == 0) {
+                    GetAllMessagesById();
+                } else {
+                   GetAllMessagesOfGroup(GroupUserId);
+                }
+
+                GetStudentDetail();
+                GetAllBusinessGroups();
+                $('#searchvaluegroupnme').addClass('d-none')
+                
+                setInterval(() => {
+                    if (GroupMessage == 0) {
+                        GetAllMessagesById();
+                    }
+                    else {
+                        GetAllMessagesOfGroup(GroupUserId);
+                    }
+                }, 1000);
+                setInterval(() => {
+                    GetStudentDetail()
+                    GetAllBusinessGroups();
+                }, 1000)
+            }
+            else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+                window.location.href = '/home/login';
+                StopLoadingMessage();
+            }
+
+            $('#second-tab').click(function () {
+                $('#searchvaluegroupnme').removeClass('d-none');
+                $("#searchvalueListnme").addClass('d-none')
+            });
+            $('#first-tab').click(function () {
+                $('#searchvalueListnme').removeClass('d-none');
+                $("#searchvaluegroupnme").addClass('d-none')
+            });
+            StopLoadingMessage();
+        });
+
+    });
+
+    function ResetBtn() {
+        $('#MessageBodyText').val('');
+        MessageId_Global = 0;
+    }
+
+
+    // Event listener for Enter key press
+    document.addEventListener('keydown', function (event) {
+        let _Messagebodytext = $("#MessageBodyText").val().trim();
+
+        if (event.key === 'Enter' && _Messagebodytext.length > 0) {
+            console.log("Enter is clicked", _Messagebodytext);
+            btnSubmitMessage();
+        }
+    });
+
+
+
+    function btnSubmitMessage() {
+        var id = $('#hdnUserloginId').val();
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = (MessageId_Global > 0) ? 2 : 1;
+
+        let _Messagebodytext = $("#MessageBodyText").val().trim();
+
+        //let _error_Messagebodytext = $("#error_MessageBodyText");
+
+        if (validate_IsEmptyStringInputFieldValue(_Messagebodytext)) {
+            is_valid = false;
+            //_error_Messagebodytext.html('@(Resources.BusinessPanel.MessageTextRequired)');
+        }
+        var url_Link = '/api/Message/AddUpdate?toUserLoginId=' + id;
+        if (GroupMessage == 1) {
+            url_Link = '/api/Message/AddUpdateGroupMessge?toUserLoginId=' + id;
+            _mode = 2;
+        }
+
+         if (is_valid) {
+             var data = new FormData();
+
+             data.append("Messagebody", _Messagebodytext);
+             data.append('Mode', _mode);
+               $.ajax({
+                url: url_Link,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json odataResponsef response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        $.iaoAlert({
+                            msg: dataResponse.message,
+                            type: "success",
+                            mode: "dark",
+                        });
+                        ResetBtn();
+                        if (GroupMessage != 1) {
+                            GetAllMessagesById();
+                        }
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+                        ResetBtn();
+                        return;
+                    }
+
+                    StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    async function GetAllMessagesById() {
+        var id = $("#hdnUserloginId").val();
+        $('#btnAddMessage').val('');
+        $('#ShowChatList').show();
+        $('#UserViewListForChat').hide();
+        $('#btnAddMessage').show();
+
+        var _url = "/api/Message/MessageChatGetById?id=" + id ;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlData4 = '';
+                if (response.data.RecevierUserLoginDetail);
+                {
+                    htmlData4 += `<div class="chat-input-container d-flex justify-content-between align-items-center">
+                <input class="form-control flex-grow-1" type="text" id="MessageBodyText" placeholder="Say something...">
+
+                <div class="error-class" id="error_MessageBodyText"></div>
+                <button type="button" class="btn btn-secondary icon-button large" style="margin-right: -185px;" onclick=" btnSubmitMessage(${response.data.RecevierUserLoginDetail?.UserLoginId});">
+                    <i class="simple-icon-arrow-right"></i>
+                </button>
+            </div>`;
+                }
+                /*$('#Arrow').html(htmlData4);*/
+
+                var htmlData3 = '';
+
+                if (response.data.RecevierUserLoginDetail) {
+                    htmlData3 += `<div class="d-flex flex-row justify-content-start mb-3 chat-heading-container"><div class="d-flex flex-row chat-heading">
+                            <a class="d-flex"  href="/Business/StudentDetail?studentLoginId=${response.data.RecevierUserLoginDetail.UserLoginId}">
+                                <img alt="Profile Picture" src="${response.data.RecevierUserLoginDetail.ProfileImageWithPath}"
+                                     class="img-thumbnail border-0 rounded-circle ml-0 mr-4 list-thumbnail align-self-center xsmall profile-img">
+                            </a>
+                            <div class=" d-flex min-width-zero">
+                                <div class="pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                    <div class="min-width-zero">
+                                        <a href="#">
+                                            <p class="list-item-heading mb-1 truncate ">${response.data.RecevierUserLoginDetail.FirstName}  ${response.data.RecevierUserLoginDetail.LastName} </p>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                           </div>
+                        `;
+
+                }
+
+                $('#chatUserInfo').html(htmlData3);
+
+                var htmlData1 = '';
+
+                for (var i = 0; i < response.data.MessageList.length; i++) {
+
+                    var UserInfo1 = response.data.RecevierUserLoginDetail;
+                    if (response.data.MessageList[i].SenderUserLoginId == id) {
+                        htmlData1 += `<div class="card  col-md-8 d-inline-block mb-3 mr-2" style="float: left;">
+                                    <div class="position-absolute pt-1 pr-2 r-0">
+                                        <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}    ${response.data.MessageList[i].Time}</span>
+                                    </div>
+                                    <div class="pt-2">
+                                        <div class="d-flex flex-row pb-2">
+                                            <a class="d-flex" href="#">
+                                                <img alt="Profile Picture" src="${UserInfo1.ProfileImageWithPath}"
+                                                     class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall profile-img">
+                                            </a>
+                                            <div class=" d-flex flex-grow-1 min-width-zero">
+                                                <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                                    <div class="min-width-zero">
+                                                        <p class="mb-0 list-item-heading">   ${response.data.MessageList[i].Messagebody}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="chat-text-left">
+                                            <p class="mb-0 text-semi-muted">
+
+                                            </p>
+
+                                        </div>
+                                    </div>
+                                </div>`;
+                    }
+
+                    else {
+                        //var UserInfo = response.data.SenderUserLoginDetail;
+
+                        htmlData1 += `<div class="card  col-md-8 d-inline-block mb-3 mr-2" style="float: right;">
+                                    <div class="position-absolute pt-1 pr-2 r-0">
+                                        <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}   ${response.data.MessageList[i].Time}</span>
+                                    </div>
+                                    <div class="p-2">
+                                        <div class="d-flex flex-row pb-2">
+                                            <a class="d-flex" href="#">
+
+                                            </a>
+                                            <div class=" d-flex flex-grow-1 min-width-zero">
+                                                <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                                    <div class="min-width-zero">
+                                                        <p class="mb-0 list-item-heading"> ${response.data.MessageList[i].Messagebody}</p>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="chat-text-left">
+                                            <p class="mb-0 text-semi-muted">
+
+                                            </p>
+
+                                        </div>
+                                    </div>
+                                </div>`;
+
+                    }
+                    htmlData1 += `<div class="clearfix"></div>`;
+                }
+
+                if (response.data.MessageList.length <= 0) {
+                    htmlData1 = `<div class="w-100 text-center font-italic mt-4"><span class="w-auto py-2 px-5 bg-primary text-white rounded">@(Resources.VisitorPanel.Message_StartANewConversation)</span></div>`;
+                }
+
+                $('#MessageView').html(htmlData1);
+
+                if (response.data.MessageList.length > previousStudentMessageList) {
+                    previousStudentMessageList = response.data.MessageList.length
+                    $(".chat-app > .scroll").animate({
+                        scrollTop: $('.chat-app > .scroll').get(0).scrollHeight
+                            }, 100);
+
+                     //$('#StudentViewMessage').append(htmlData2);
+                }
+                btnMarkAsReadOrUnread(id);
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function btnMarkAsReadOrUnread(id) {
+
+        var _Params = {
+            "Id": id,
+            "SenderStatus": 1,
+
+        };
+        $.ajax({
+            url: '/api/Message/MarkAsReadUnread',
+            data: JSON.stringify(_Params),
+            processData: false,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+
+            contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+
+                }
+                else {
+                    swal({
+                        title: '',
+                        imageUrl: '/Content/svg/error.svg',
+                        text: dataResponse.message
+                    });
+
+
+                }
+
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+
+    // UserList
+    function GetStudentDetail() {
+
+        var _url = "/api/Message/StudentListGetById";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('#UserSideViewListForChat').html('');
+                var htmlData = '';
+
+                for (var i = 0; i < response.data.StudentDetail.length; i++) {
+                    var newMessageCount = response.data.StudentDetail[i].ReceiverStatusCount;
+
+
+                    if (newMessageCount == 0) {
+                        var element = "";
+                        delete studentUnreadMessage[response.data.StudentDetail[i].UserLoginId];
+                        if (Object.keys(studentUnreadMessage).length == 0) {
+                            $('#TotalUnreadMessage').addClass('d-none')
+                        }
+                    }
+                    else {
+                        var element = `<span class="CountMessage"> ${newMessageCount}</span>`;
+                        studentUnreadMessage[response.data.StudentDetail[i].UserLoginId] = 1;
+                        $('#TotalUnreadMessage').removeClass('d-none')
+                    }
+
+                    htmlData += `
+                            <div class="UserDataTile d-flex flex-row mb-1 border-bottom pb-3 mb-3">
+                                <div class="d-flex userProfileImage" >
+                                    <a href="/Business/StudentDetail?studentLoginId=${response.data.StudentDetail[i].UserLoginId}">
+                                        <img alt="Profile Picture" src="${response.data.StudentDetail[i].ProfileImage}" class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall">
+                                    </a>
+                                </div>
+                                    <div class="UserDetailMainDiv pl-0 d-flex flex-column flex-lg-row justify-content-between min-width-zero" onclick="GetAllMessagesOfUser('${encodeURIComponent(response.data.StudentDetail[i].UserLoginId)}')">
+                                        <div class="min-width-zero UserSidebarDetails">
+                                            <div class="UserData d-flex">
+                                                <span class="UserName">${response.data.StudentDetail[i].StudentName}</span>
+                                                <span class="UnreadMessage">${element}</span>
+                                            </div>
+                                            <div class="UserMasterId mb-1 text-muted"> ${response.data.StudentDetail[i].MasterId}</div>
+                                            <div class="UserLastSeen mb-1 text-muted"> ${response.data.StudentDetail[i].LastMessageDateTime == null ? "" : response.data.StudentDetail[i].LastMessageDateTime }</div>
+                                        </div>
+                                    </div>
+                            </div>
+            `;
+
+                }
+
+                $('#UserSideViewListForChat').append(htmlData);
+                console.log("Size of myMap: " + Object.keys(studentUnreadMessage).length);
+                var totalStudentUnread = Object.keys(studentUnreadMessage).length;
+                let link = document.getElementById('TotalUnreadMessage');
+                link.innerHTML = totalStudentUnread;
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetAllMessagesOfUser(userId) {
+        GroupMessage = 0;
+        $('#hdnUserloginId').val(userId);
+        GetAllMessagesById();
+    }
+
+    //Get all Groups
+    function GetAllBusinessGroups() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Group/ByBusiness/GetAllByPagination";
+            $.ajax({
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                url: _url_val,
+                type: "POST",
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.status < 1) {
+                        $.iaoAlert({
+                            msg: response.message,
+                            type: "error",
+                            mode: "dark",
+                        });
+                        return;
+                    }
+
+                    $('#UserSideViewGroupListForChat').html('');
+                    var htmlData = '';
+
+                    for (var i = 0; i < response.data.length; i++) {
+                        var newMessageCount = response.data[i].CountUnreadMessage;
+
+
+                        if (newMessageCount == 0) {
+                            var element = "";
+                            // Removing an element from the object
+                            delete groupUnreadMessage[response.data[i].Id];
+                            if (Object.keys(groupUnreadMessage).length == 0) {
+                                $('#TotalUnreadGroupMessage').addClass('d-none')
+                            }
+
+                        }
+                        else {
+                            var element = `<span class="CountMessage"> ${newMessageCount}</span>`;
+                            //Adding the group to the object contaning UneadMessage
+                            groupUnreadMessage[response.data[i].Id] = 1;
+                            $('#TotalUnreadGroupMessage').removeClass('d-none')
+                        }
+
+                        htmlData += `
+                            <div class="GroupDataTile d-flex flex-row mb-1 border-bottom pb-3 mb-3 " >
+                                <div class="d-flex GroupImage">
+                                   <a href="/Business/Group"> <img alt="Profile Picture" src="${response.data[i].GroupImageWithPath}" class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall"></a>
+                                </div>
+                                <div class="GroupMainDiv pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero" onclick="GetAllMessagesOfGroup('${response.data[i].Id}')">
+                                   <div class="min-width-zero GroupDetails">
+                                       <div class="mb-0 truncate GroupName">${response.data[i].Name}</div>
+                                       <div class="mb-1 text-muted text-small GroupType"> ${response.data[i].GroupType}</div>
+                                   </div>
+                                </div>
+                                <div class="notificationBar">
+                                    <span class="UnreadMessage">${element}</span>
+                                </div>
+                            </div>
+            `;
+
+                    }
+
+                    $('#UserSideViewGroupListForChat').append(htmlData);
+                    console.log("Size of myMap: " + Object.keys(groupUnreadMessage).length);
+                    var totalGroupUnread = Object.keys(groupUnreadMessage).length;
+                    let link = document.getElementById('TotalUnreadGroupMessage');
+                    link.innerHTML = totalGroupUnread;
+
+                },
+                error: function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            })
+    }
+    
+
+
+    function GetAllMessagesOfGroup(groupId) {
+
+        id = BigInt(groupId);
+        $('#hdnUserloginId').val(id);
+        var id = $("#hdnUserloginId").val();
+        GroupUserId = id;
+        GroupMessage = 1;
+        $('#btnAddMessage').val('');
+        $('#ShowChatList').show();
+        $('#UserViewListForChat').hide();
+        $('#btnAddMessage').show();
+
+        var _url = "/api/Message/GetBusinessGroupDetailsById?id=" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            var htmlData1 = '';
+            var htmlData4 = '';
+            if (response.data.RecevierUserLoginDetail);
+            {
+                        htmlData4 += `<div class="chat-input-container d-flex justify-content-between align-items-center">
+                    <input class="form-control flex-grow-1" type="text" id="MessageBodyText" placeholder="Say something...">
+
+                    <div class="error-class" id="error_MessageBodyText"></div>
+                    <button type="button" class="btn btn-secondary icon-button large" style="margin-right: -185px;" onclick=" btnSubmitGroupMessage();">
+                        <i class="simple-icon-arrow-right"></i>
+                    </button>
+                </div>`;
+            }
+            //$('#Arrow').html(htmlData4);
+
+            var htmlData3 = '';
+
+            if (response.data.RecevierUserLoginDetail) {
+
+                htmlData3 += `
+
+                     <div class="col-4"><div class="col-md-12">
+                        <div class="d-flex flex-row justify-content-start mb-3">
+                            <div class="d-flex flex-row">
+                                <img alt="Profile Picture" src="${response.data.RecevierUserLoginDetail.GroupProfileImageWithPath}"
+                                     class="img-thumbnail border-0 rounded-circle ml-0 mr-4 list-thumbnail align-self-center small" style="height:50px;width:50px">
+                                <div class=" d-flex min-width-zero">
+                                    <div class=" pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                        <div class="min-width-zero">
+                                            <p class="time-gruop">${response.data.RecevierUserLoginDetail.GroupName}</p
+                                            <p>${response.data.RecevierUserLoginDetail.batchStartTime} to ${response.data.RecevierUserLoginDetail.batchEndTime}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                     <div class="col-4 d-flex align-items-center">
+                         <div class="gruop-msg-iner">
+                             <p class="student-in">Student ${response.data.CountStudentGroup.CountStudent}/${response.data.RecevierUserLoginDetail.TotalCountSeat !== null ? response.data.RecevierUserLoginDetail.TotalCountSeat : 0}</p>
+                             <p>Instructor  ${response.data.RecevierUserLoginDetail.InstructorName || response.data.SenderUserLoginDetail.InstructorName}  ${response.data.RecevierUserLoginDetail.InstructorMasterId || response.data.SenderUserLoginDetail.CreatedOn.InstructorMasterId}</p>
+                         </div>
+                     </div>
+                      <div class="col-4 d-flex align-items-center">
+                         <div class="gruop-msg-iner">
+                             <p class="student-in">Created On ${response.data.RecevierUserLoginDetail.CreatedOn || response.data.SenderUserLoginDetail.CreatedOn} <br> By ${response.data.RecevierUserLoginDetail.CreatedByMasterId || response.data.SenderUserLoginDetail.CreatedByMasterId}</p>
+                         </div>
+                     </div>
+                    `;
+
+            }
+
+            $('#chatUserInfo').html(htmlData3);
+            $('#MessageView').html('');
+
+            for (var i = 0; i < response.data.MessageList.length; i++) {
+
+                var UserInfo1 = response.data.RecevierUserLoginDetail;
+                if (response.data.MessageList[i].CreatedByLoginId == response.data.MessageList[i].SenderUserloginId) {
+                    htmlData1 += `<div class="card  col-md-8 d-inline-block mb-3 mr-2" style="float: right;">
+                                <div class="position-absolute pt-1 pr-2 r-0">
+                                    <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}    ${response.data.MessageList[i].Time}</span>
+                                </div>
+                                <div class="pt-2">
+                                    <div class="d-flex flex-row pb-2">
+                                        <a class="d-flex" href="#">
+
+                                        </a>
+                                        <div class=" d-flex flex-grow-1 min-width-zero">
+                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                                <div class="min-width-zero">
+                                                    <p class="mb-0 list-item-heading">   ${response.data.MessageList[i].Messagebody}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-text-left">
+                                        <p class="mb-0 text-semi-muted">
+
+                                        </p>
+
+                                    </div>
+                                </div>
+                            </div>`;
+                }
+
+                else {
+                    //var UserInfo = response.data.SenderUserLoginDetail;
+
+                    htmlData1 += `<div class="card  col-md-8 d-inline-block mb-3 mr-2" style="float: left;">
+                                <div class="position-absolute pt-1 pr-2 r-0">
+                                    <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}   ${response.data.MessageList[i].Time}</span>
+                                </div>
+                                <div class="p-2">
+                                    <div class="d-flex flex-row pb-2">
+                                       <a class="d-flex" href="#">
+                                         <img alt="Profile Picture" src="${response.data.MessageList[i].StudentProfileImageWithPath}" class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall profile-img">
+                                       </a>
+                                        <div class=" d-flex flex-grow-1 min-width-zero">
+                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                                <div class="min-width-zero">
+                                                    <p class="mb-0 list-item-heading"> ${response.data.MessageList[i].Messagebody}</p>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-text-left">
+                                        <p class="mb-0 text-semi-muted">
+
+                                        </p>
+
+                                    </div>
+                                </div>
+                            </div>`;
+
+                }
+                htmlData1 += `<div class="clearfix"></div>`;
+            }
+
+            if (response.data.MessageList.length <= 0) {
+                htmlData1 = `<div class="w-100 text-center font-italic mt-4"><span class="w-auto py-2 px-5 bg-primary text-white rounded">@(Resources.VisitorPanel.Message_StartANewConversation)</span></div>`;
+            }
+
+            $('#MessageView').html(htmlData1);
+                // scroll to bottom
+
+            if (response.data.MessageList.length > previousGroupMessageList) {
+                previousGroupMessageList = response.data.MessageList.length;
+                $(".chat-app > .scroll").animate({
+                    scrollTop: $('.chat-app > .scroll').get(0).scrollHeight
+                }, 100);
+            }
+                // $('#StudentViewMessage').append(htmlData2);
+                btnMarkAsReadOrUnread(id);
+        },
+
+        error: function(result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+
+        function btnSubmitGroupMessage() {
+
+            var id = $('#hdnUserloginId').val();
+            let is_valid = true;
+            $(".error-class").html('');
+            var _mode = (MessageId_Global > 0) ? 2 : 1;
+
+            let _Messagebodytext = $("#MessageBodyText").val().trim();
+
+            //let _error_Messagebodytext = $("#error_MessageBodyText");
+
+            if (validate_IsEmptyStringInputFieldValue(_Messagebodytext)) {
+                is_valid = false;
+                //_error_Messagebodytext.html('@(Resources.BusinessPanel.MessageTextRequired)');
+            }
+
+
+             if (is_valid) {
+                 var data = new FormData();
+
+                 data.append("Messagebody", _Messagebodytext);
+                 data.append('Mode', _mode);
+
+                $.ajax({
+                    url: '/api/Message/AddUpdateGroupMessge?toUserLoginId='+id,
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global,
+                    },
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json odataResponsef response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            $.iaoAlert({
+                                msg: dataResponse.message,
+                                type: "success",
+                                mode: "dark",
+                            });
+                            ResetBtn();
+                            GetAllMessagesById(id);
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+                            ResetBtn();
+                            return;
+                        }
+
+                        StopLoading();
+
+                    },
+                    error: function (result) {
+                        StopLoading();
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+            }
+
+    }
+
+    function filterUserSideViewList() {
+
+        var input, filter, container, items, name;
+        input = document.getElementById("searchvalueListnme");
+        filter = input.value.toUpperCase().trim();
+        container = document.getElementById("UserSideViewListForChat");
+        items = container.getElementsByClassName("UserDataTile");
+
+        for (var i = 0; i < items.length; i++) {
+            name = items[i].querySelector(".UserDetailMainDiv > .UserSidebarDetails > .UserData > .UserName").innerText.toUpperCase();
+            if (name.trim().indexOf(filter) > -1) {
+                items[i].style.display = "";
+            } else {
+                items[i].style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+
+    function filterUserSideViewGroups() {
+
+    var input, filter, container, items, name;
+    input = document.getElementById("searchvaluegroupnme");
+    filter = input.value.toUpperCase().trim();
+    container = document.getElementById("UserSideViewGroupListForChat");
+    items = container.getElementsByClassName("GroupDataTile");
+
+    for (var i = 0; i < items.length; i++) {
+        name = items[i].querySelector(".GroupDataTile > .GroupMainDiv > .GroupDetails > .GroupName")?.innerText?.toUpperCase();
+        if (name.trim().indexOf(filter) > -1) {
+            console.log(true);
+            items[i].style.display = "";
+        } else {
+            items[i].style.setProperty('display', 'none', 'important');
+        }
+    }
+}
+
+    
+
+
+    // Rendering Message of the first user on the list
+    async function setFirstStudentDetail() {
+        StartLoadingMessage();
+        var _url = "/api/Message/StudentListGetById";
+
+        await $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                if (response.data.StudentDetail.length > 0) {
+                    $('#hdnUserloginId').val(response.data.StudentDetail[0].UserLoginId);
+                    //console.log($("#hdnUserloginId").val());
+                }
+               
+            }
+        });
+        await GetAllMessagesById();
+        StopLoadingMessage();
+    }
+
+    function StartLoadingMessage() {
+        $('#LoaderDivMessage').fadeTo('slow', 1);
+        $('#LoaderDivMessage').append('<div style="background-color: #ffffff;position: fixed;top: 0;left: 0;width: 100%;height: 300%;z-index: 999999999999999;-moz-opacity: 0.4;opacity: 0.4;"><img src="/Content/images/Preloader_grey.gif" style="background-color: #ffffff;position: fixed;top: 40%;width: 5%;left: 46%;"/></div>');
+    }
+
+    function StopLoadingMessage() {
+        $('#LoaderDivMessage').fadeOut(5000);
+    }
+
+
+    
+
+    
+
+</script>

@@ -1,0 +1,545 @@
+﻿
+<script>
+    var UserToken_Global = "";
+
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getAllClassBookingDetails();
+                getAllEventDetails();
+                getAllTrainingDetails();
+                getAllPlanBookingDetails();
+                getAllCourseBookingDetails();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        getAllClassBookingDetails();
+                        getAllEventDetails();
+                        getAllTrainingDetails();
+                        getAllPlanBookingDetails();
+                        getAllCourseBookingDetails();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    //-----get class booking details -------------------
+    function getAllClassBookingDetails(){
+        let _url = "/api/Class/GetBusinessClassesBookingDetail";
+
+      $.ajax({
+          type: "GET",
+          url: _url,
+          headers: {
+              "Authorization": "Bearer " + UserToken_Global,
+              "Content-Type": "application/json"
+          },
+
+          contentType: 'application/json',
+          success: function (response) {
+
+              if (response.status < 1) {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+                  return;
+
+              }
+              var _table = $('#tblClassBookingDetails').DataTable();
+              _table.clear().destroy();
+
+              var sno = 0;
+
+              var data = [];
+              for (var i = 0; i < response.data.length; i++) {
+                  sno++;
+                var  _name = response.data[i].Name;
+                var  _price = response.data[i].Price;
+                  var _orderId = response.data[i].OrderId;
+                  var _studentName = response.data[i].StudentName;
+                  var _date = response.data[i].CreatedOnString;
+                  var _classImage = '';
+                  _classImage = (response.data[i].ClassImageWithPath === "")
+                      ? ''
+                      : `<a href="javascript:;">
+                        <img src="${response.data[i].ClassImageWithPath}" class="Image" />
+                        </a>`;
+                var  _action = `<div class="edbt ">`;
+                  _action += ` <a class="btn btn-sm btn-primary  ml-4 " href="/Business/MyPurchaseClassBookingDetail?classId=${response.data[i].Id}">View</a>`;
+
+                  _action += `</div>`;
+                  var _nameWithImage = _name + _classImage;
+
+
+                  data.push([
+                      sno,
+                      _orderId,
+                      _nameWithImage,
+                      _price,
+                      _studentName,
+                      _date,
+                      _action
+                  ]);
+
+              }
+
+              $('#tblClassBookingDetails').DataTable({
+                  "data": data,
+                  "paging": true,
+                  "lengthChange": true,
+                  "searching": true,
+                  "ordering": true,
+                  "info": true,
+                  "autoWidth": false,
+                  "responsive": false,
+              });
+
+              StopLoading();
+          },
+
+          error: function (result) {
+              StopLoading();
+
+              if (result["status"] == 401) {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+              }
+              else {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+              }
+          }
+      });
+
+    }
+
+
+
+    //-----get Event booking details -------------------
+
+    function getAllEventDetails() {
+
+
+        let _url = "/api/Event/GetBusinessEventBookingDetails";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+
+            contentType: 'application/json',
+            success: function (response) {
+
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+
+                }
+
+                var _table = $('#tblEventBookingDetails').DataTable();
+                _table.clear().destroy();
+
+                var sno = 0;
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+                    var _name = response.data[i].Title;
+                    var _price = response.data[i].Price;
+                    var _orderId = response.data[i].OrderId;
+                    var _studentName = response.data[i].StudentName;
+                    var _date = response.data[i].CreatedOnString;
+                    var _eventImage = '';
+                    _eventImage = (response.data[i].EventImageWithPath === "")
+                        ? ''
+                        : `<a href="javascript:;">
+                        <img src="${response.data[i].EventImageWithPath}" class="Image" />
+                        </a>`;
+                    var _nameWithImage = _name + _eventImage;
+                  var  _action = '<div class="edbt">';
+                    _action += ` <a class="btn btn-sm btn-primary ml-4 " href="/Business/MyEventPurchaseDetails?eventId=${response.data[i].Id}">View</a>`;
+                    _action += '</div>';
+
+
+                    data.push([
+                        sno,
+                        _orderId,
+                        _nameWithImage,
+                        _price,
+                        _studentName,
+                        _date,
+                        _action
+                    ]);
+                }
+
+                $('#tblEventBookingDetails').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+
+                StopLoading();
+            },
+
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+
+    }
+
+
+    $(document).ready(function () {
+        $('#tblEventBookingDetails').DataTable({
+            "sScrollX": "100%",
+            "sScrollXInner": "110%"
+        });
+    });
+    //-----get Training booking details -------------------
+
+    function getAllTrainingDetails() {
+
+
+        let _url = "/api/Training/GetBusinessBookingTrainingDetails"  ;
+
+   $.ajax({
+       type: "GET",
+       url: _url,
+       headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+           "Content-Type": "application/json"
+       },
+
+       contentType: 'application/json',
+       success: function (response)
+       {
+
+           if (response.status < 1)
+           {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+               return;
+
+           }
+
+           var _table = $('#tblTrainingTrainingBookingDetail').DataTable();
+           _table.clear().destroy();
+
+           var sno = 0;
+
+           var data = [];
+           for (var i = 0; i < response.data.length; i++) {
+               sno++;
+               var _name = response.data[i].TrainingName;
+               var _price = response.data[i].Price;
+               var _orderId = response.data[i].OrderId;
+               var _date = response.data[i].CreatedOnString;
+               var _studentName = response.data[i].StudentName;
+               var _trainingImage = '';
+               _trainingImage = (response.data[i].TrainingImageWithPath === "")
+                   ? ''
+                   : `<a href="javascript:;">
+                        <img src="${response.data[i].TrainingImageWithPath}" class="Image" />
+                        </a>`;
+               var _action = '<div class="edbt">';
+               _action += ` <a class="btn btn-sm btn-primary ml-4 "  href="/Business/MyTrainingPurchaseDetails?trainingId=${response.data[i].Id}">View</a>`;
+               _action += '</div>';
+               var _nameWithImage = _name + _trainingImage;
+
+
+               data.push([
+                   sno,
+                   _orderId,
+                   _nameWithImage,
+                   _price,
+                   _studentName,
+                   _date,
+                   _action
+               ]);
+           }
+
+           $('#tblTrainingTrainingBookingDetail').DataTable({
+               "data": data,
+               "paging": true,
+               "lengthChange": true,
+               "searching": true,
+               "ordering": true,
+               "info": true,
+               "autoWidth": false,
+               "responsive": true,
+           });
+
+           StopLoading();
+       },
+
+       error: function (result) {
+           StopLoading();
+
+           if (result["status"] == 401) {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+           else {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+       }
+   });
+
+ }
+
+    //-----get Plan  booking details -------------------
+
+
+     function getAllPlanBookingDetails() {
+
+
+         let _url = "/api/BusinessPlan/GetBusinessPlanBookingDetails"  ;
+
+   $.ajax({
+       type: "GET",
+       url: _url,
+       headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+           "Content-Type": "application/json"
+       },
+
+       contentType: 'application/json',
+       success: function (response)
+       {
+
+           if (response.status < 1)
+           {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+               return;
+
+           }
+
+           var _table = $('#tblPlanBookingDetails').DataTable();
+           _table.clear().destroy();
+
+           var sno = 0;
+
+           var data = [];
+           for (var i = 0; i < response.data.length; i++) {
+               sno++;
+               var _name = response.data[i].PlanName;
+               var _price = response.data[i].PlanPrice;
+               var _orderId = response.data[i].OrderId;
+               var _studentName = response.data[i].StudentName;
+               var _date = response.data[i].CreatedOnString;
+               _planImage = (response.data[i].PlanImageWithPath === "")
+                   ? ''
+                   : `<a href="javascript:;">
+                        <img src="${response.data[i].PlanImageWithPath}" class="Image" />
+                        </a>`;
+               var _action = '<div class="edbt">';
+               _action += `<a class="btn btn-sm btn-primary ml-4 " href="/Business/MyPlanPurchaseDetails?planId=${response.data[i].Id}">View</a>`;
+               _action += '</div>';
+               var _nameWithImage = _name + _planImage;
+
+               data.push([
+                   sno,
+                   _orderId,
+                   _nameWithImage,
+                   _price,
+                   _studentName,
+                   _date,
+                   _action
+               ]);
+           }
+
+           $('#tblPlanBookingDetails').DataTable({
+               "data": data,
+               "paging": true,
+               "lengthChange": true,
+               "searching": true,
+               "ordering": true,
+               "info": true,
+               "autoWidth": false,
+               "responsive": true,
+           });
+
+           StopLoading();
+       },
+
+       error: function (result) {
+           StopLoading();
+
+           if (result["status"] == 401) {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+           else {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+       }
+   });
+
+ }
+
+      function getAllCourseBookingDetails() {
+
+
+          let _url = "/api/Course/GetBusinessCourseBookingDetails"  ;
+
+   $.ajax({
+       type: "GET",
+       url: _url,
+       headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+           "Content-Type": "application/json"
+       },
+
+       contentType: 'application/json',
+       success: function (response)
+       {
+
+           if (response.status < 1)
+           {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+               return;
+
+           }
+
+           var _table = $('#tblCourseBookingDetails').DataTable();
+           _table.clear().destroy();
+
+           var sno = 0;
+
+           var data = [];
+           for (var i = 0; i < response.data.length; i++) {
+               sno++;
+               var _name = response.data[i].Name;
+               var _price = response.data[i].Price;
+               var _orderId = response.data[i].OrderId;
+               var _studentName = response.data[i].StudentName;
+               var _date = response.data[i].CreatedOnString;
+               var _courseImage = '';
+               _courseImage = (response.data[i].CourseImageWithPath === "")
+                   ? ''
+                   : `<a href="javascript:;">
+                        <img src="${response.data[i].CourseImageWithPath}" class="Image" />
+                        </a>`;
+               var _action = '<div class="">';
+               _action += `<a class="btn btn-sm btn-primary ml-4" href="/Business/MyCoursePurchaseDetails?courseId=${response.data[i].Id}">View</a>`;
+               _action += '</div>';
+               var _nameWithImage = _name + _courseImage;
+
+               data.push([
+                   sno,
+                   _orderId,
+                   _nameWithImage,
+                   _price,
+                   _studentName,
+                   _date,
+                   _action
+               ]);
+           }
+
+           $('#tblCourseBookingDetails').DataTable({
+               "data": data,
+               "paging": true,
+               "lengthChange": true,
+               "searching": true,
+               "ordering": true,
+               "info": true,
+               "autoWidth": false,
+               "responsive": true,
+           });
+
+           StopLoading();
+       },
+
+       error: function (result) {
+           StopLoading();
+
+           if (result["status"] == 401) {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+           else {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+       }
+   });
+
+ }
+</script>

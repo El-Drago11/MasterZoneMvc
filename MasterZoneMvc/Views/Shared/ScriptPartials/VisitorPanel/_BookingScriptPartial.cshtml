@@ -1,0 +1,801 @@
+﻿<script>
+    var UserToken_Global = 0;
+    var SportsId_Global = 0;
+    var SportBookingId_Global = 0;
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+    var UserToken_Globaly = "";
+    var slotId = 0;
+    var time = 0;
+    let PlayerCount = 0;
+    let RoomTime = '';
+    let selectedDate = '';
+    let TennisImage_globaly = '';
+    let TennisTitle_globaly = '';
+    let PlayerValue = 1;
+    let SlotId_globaly = 0;
+    let basicPriceGlobaly = 0;
+    let commercialPriceGlobaly = 0;
+    let OtherPriceGlobaly = 0;
+    var ServiceName_global = ``;
+    var Serviceprice_global = 0;
+
+    $(document).ready(function () {
+        var encodedReturnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        $('#loginButton').attr('href', '/Home/Login?returnUrl=' + encodedReturnUrl);
+        GetAllTennisDetail();
+        GetContactInformationDetail();
+        GetBusinessAboutDetail();
+        GetRoomBookDetail();
+
+    });
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Globaly = dataToken;
+                GetMasterIdForForm();
+
+            }
+            else {
+
+                StopLoading();
+            }
+        });
+
+    });
+    function ShowloginPopup() {
+        if (UserToken_Globaly == "") {
+            $("#btnUserLoginPoup").click();
+        }
+        else {
+            $("#submitbtn").removeClass('d-none');
+            $("#loginpopup").addClass('d-none');
+            btnSubmitUser();
+
+        }
+    }
+    // Bind Tennis Detail View
+   function GetAllTennisDetail() {
+    $.ajax({
+        type: "GET",
+        url: '/api/Business/GetBusinessContentTennis?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            // Update the initial image
+            TennisTitle_globaly = response.data.BusinessContentTennisList[0].Title;
+            TennisImage_globaly = response.data.BusinessContentTennisList[0].TennisImageWithPath;
+            SlotId_globaly = response.data.BusinessContentTennisList[0].Id;
+            basicPriceGlobaly = response.data.BusinessContentTennisList[0].BasicPrice;
+            commercialPriceGlobaly = response.data.BusinessContentTennisList[0].CommercialPrice;
+            OtherPriceGlobaly = response.data.BusinessContentTennisList[0].OtherPrice;
+            $("#BindRoomImage").attr('src', response.data.BusinessContentTennisList[0].TennisImageWithPath);
+            $("#selectedImageBG").css('background-image',`url(${response.data.BusinessContentTennisList[0].TennisImageWithPath})`);
+            GetPriceForDropDown();
+            var BusinessContentTennisDetaillst = '';
+            for (var i = 0; i < response.data.BusinessContentTennisList.length; i++) {
+                var data = response.data.BusinessContentTennisList[i];
+                    
+                BusinessContentTennisDetaillst += `
+                <div class="review-item">
+                    <div class="item-img">
+                        <img src="${data.TennisImageWithPath}" alt="img" loading="lazy">
+                    </div>
+                    <div class="item-text">
+                        <h6>${data.Title}</h6>
+                    </div>
+                    <input type="checkbox" id="checktennis_id_${i}" class="tennis-checkbox" name="tennis_sec" value="${data.Id}" data-image="${data.TennisImageWithPath}" data-title="${data.Title}" data-basic="${data.BasicPrice}" data-commercial="${data.CommercialPrice}" data-other="${data.OtherPrice}">
+                </div>`;
+            }
+            $("#BindBusinessTennisDetailList").append(BusinessContentTennisDetaillst);
+
+            $("#checktennis_id_0").prop('checked', true).trigger('change');
+            // Handle checkbox change events
+            $(".tennis-checkbox").on('change', function () {
+                if ($(this).is(':checked')) {
+                    $(".tennis-checkbox").not(this).prop('checked', false);
+                    let tennisImage = $(this).data('image');
+                    let tennistitle = $(this).data('title');
+                     SlotId_globaly = $(this).val();
+                    $("#BindRoomImage").attr('src', tennisImage);
+                    $("#selectedImageBG").css('background-image', `url(${tennisImage})`);
+                    TennisImage_globaly = tennisImage;
+                    TennisTitle_globaly = tennistitle;
+                    let basicPrice = $(this).data('basic');
+                    let commercialPrice = $(this).data('commercial');
+                    let OtherPrice = $(this).data('other');
+                    basicPriceGlobaly = basicPrice;
+                    commercialPriceGlobaly = commercialPrice;
+                    OtherPriceGlobaly = OtherPrice;
+                    GetPriceForDropDown();
+                    GetRoomBookDetail();
+
+                } else {
+
+                    $("#BindRoomImage").attr('src',response.data.BusinessContentTennisList[0].TennisImageWithPath);
+                    $("#selectedImageBG").css('background-image', `url(${response.data.BusinessContentTennisList[0].TennisImageWithPath})`);
+                    TennisImage_globaly = response.data.BusinessContentTennisList[0].TennisImageWithPath;
+                    TennisTitle_globaly = response.data.BusinessContentTennisList[0].Title;
+                    SlotId_globaly = response.data.BusinessContentTennisList[0].Id;
+                    GetRoomBookDetail();
+                }
+                let tennisId = $(this).is(':checked') ? $(this).val() : 0;
+                GetAllTennisTimingDetail(tennisId);
+            });
+            GetAllTennisTimingDetail(response.data.BusinessContentTennisList[0].Id);
+        },
+
+        error: function(result) {
+            StopLoading();
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    function GetPriceForDropDown() {
+        var basic=  basicPriceGlobaly;
+        var commercial = commercialPriceGlobaly;
+        var other = OtherPriceGlobaly;
+        var dropdownhtml = `
+        <label class="title-label" for="service">Service </label>
+        <select id="service_text" onchange="getpriceByDropdown()">
+            <option value=""  data-price="" selected>Select Service</option>
+            <option value="Hourly basis" data-price="${basic}">Hourly basis</option>
+            <option value="Commercial purpose" data-price="${commercial}">Commercial purpose</option>
+            <option value="Others" data-price="${other}">Others</option>
+        </select>`;
+
+        $("#servicedropdown").html(dropdownhtml);
+    }
+ 
+    function getpriceByDropdown() {
+        var selectedOption = $('#service_text').find(':selected');
+        ServiceName_global = selectedOption.val();
+         Serviceprice_global = selectedOption.data('price');
+
+        GetRoomBookDetail();
+    }
+
+
+
+    //To Add The Contact Detail
+    function btnSubmitUser() {
+        debugger
+         let is_valid = true;
+         $(".error-class").html('');
+        var _mode = 1;
+        let _roomTime = RoomTime;
+        let _roomServiceName = ServiceName_global;
+        let _roomServicePrice = Serviceprice_global;
+        let _selectedDate = selectedDate;
+        let _Tennistitle = TennisTitle_globaly;
+        let _TennisImage = TennisImage_globaly;
+        let _PlayerCount = PlayerValue;
+        let _slotId_globaly = SlotId_globaly;
+        let _Requestvalue = 1;
+         let _name = $("#textName").val().trim();
+         let _surname = $("#textSurName").val().trim();
+         let _email = $("#textEmail").val();
+         let _phoneNumber = $("#textPhoneNumber").val();
+         let _bookedId = $("#textBookedId").val();
+         let _department = $("#textDepartment").val();
+         let _apartment = $("#textApartment").val();
+         let _housenumber = $("#textHouse").val();
+         let _messages = $("#textMessage").val();
+
+        let _error_name = $("#error_txtName");
+         let _error_surname = $("#error_txtSurName");
+         let _error_email = $("#error_txtEmail");
+         let _error_messages = $("#error_txtMessage");
+         let _error_phoneNumber = $("#error_txtPhoneNumber");
+         let _error_bookedId = $("#error_txtBookedId");
+         let _error_department = $("#error_txtDepartment");
+         let _error_apartment = $("#error_txtApartment");
+         let _error_housenumber = $("#error_txtHouse");
+        let _error_time = $("#errormessage");
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+
+        if (validate_IsEmptyStringInputFieldValue(_roomTime)) {
+           is_valid = false;
+          _error_time.html('*Please Select the Time*');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_name)) {
+        is_valid = false;
+        _error_name.html('@(Resources.VisitorPanel.NameRequired)');
+        }
+         if (validate_IsEmptyStringInputFieldValue(_surname)) {
+           is_valid = false;
+             _error_surname.html('@(Resources.VisitorPanel.SurNameRequired)');
+         }
+
+         if (validate_IsEmptyStringInputFieldValue(_email)) {
+           is_valid = false;
+             _error_email.html('@(Resources.VisitorPanel.EmailRequired)');
+         }
+         else if (!TestEmail.test(_email)) {
+          is_valid = false;
+             _error_email.html('@(Resources.VisitorPanel.ValidEmailRequired)');
+         }
+
+         if (validate_IsEmptyStringInputFieldValue(_phoneNumber)) {
+            is_valid = false;
+             _error_phoneNumber.html('@(Resources.VisitorPanel.PhoneNumberRequired)');
+         }
+         else if (_phoneNumber.indexOf(' ') >= 0) {
+            is_valid = false;
+             _error_phoneNumber.html('@(Resources.VisitorPanel.PhoneNumberNotEmptySpaceRequired)');
+         }
+         else if (!phone_test.test(_phoneNumber)) {
+            is_valid = false;
+             _error_phoneNumber.html('@(Resources.VisitorPanel.ValidPhoneNumberRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_messages)) {
+           is_valid = false;
+             _error_messages.html('@(Resources.VisitorPanel.MessageRequired)');
+         }
+
+
+         if (validate_IsEmptyStringInputFieldValue(_bookedId)) {
+           is_valid = false;
+             _error_bookedId.html('@(Resources.VisitorPanel.BookedIdRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_department)) {
+            is_valid = false;
+             _error_department.html('@(Resources.VisitorPanel.DepartmentRequired)');
+         }
+
+         if (validate_IsEmptyStringInputFieldValue(_apartment)) {
+            is_valid = false;
+             _error_apartment.html('@(Resources.VisitorPanel.ApartmentRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_housenumber)) {
+           is_valid = false;
+             _error_housenumber.html('@(Resources.VisitorPanel.HouseNumberRequired)');
+         }
+
+         if (is_valid) {
+
+                  var data = new FormData();
+                  data.append("Id", 0);
+                 data.append("Name", _name),
+                 data.append("SurName", _surname),
+                 data.append("Email", _email),
+                 data.append("PhoneNumber", _phoneNumber),
+                // data.append("BookedId", _bookedId),
+                 data.append("BookedId", 2),
+                 data.append("Department", _department),
+                 data.append("Price", _roomServicePrice),
+                 data.append("Apartment", _apartment),
+                 data.append("HouseNumber", _housenumber),
+                 data.append("Message", _messages),
+                 data.append("RoomTme", _roomTime),
+                 data.append("RoomService", _roomService),
+                 data.append("SelectDate", _selectedDate),
+                 data.append("TennisTitle", _Tennistitle),
+                 data.append("TennisImage", _TennisImage),
+                 data.append("PlayerCount", _PlayerCount),
+                 data.append("Request", _Requestvalue),
+                 data.append("SlotId", _slotId_globaly),
+                 data.append("Mode", _mode),
+
+        $.ajax({
+            url: '/api/Booking/AddUpdateSportsBookingDetail_PPCMeta?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Globaly
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        //  GetAllAdvertisementsForBusinessPagination();
+                        resetform();
+                    }
+                else {
+                    swal({
+                        title: dataResponse.message,
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                }
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    }
+
+    function resetform() {
+
+        $("#textName").val('');
+        $("#textSurName").val('');
+        $("#textEmail").val('');
+        $("#textPhoneNumber").val('');
+        $("#textBookedId").val('');
+        $("#textDepartment").val('');
+        $("#textApartment").val('');
+        $("#textHouse").val('');
+        $("#textMessage").val('');
+    }
+    //Bind  Footer Business Contact Detail
+    function GetContactInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessSocial = ''; // Declare BusinessSocial variable
+
+
+                if (response.data.BusinessTimingDetail.FacebookProfileLink && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+                         <a href="${response.data.BusinessTimingDetail.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+                     </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.TwitterProfileLink && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+                 <a href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+             </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+                     <a href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+                 </div>`;
+                }
+                $("#BusinessSocialDetail_Footer").append(BusinessSocial);
+
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data === null) {
+
+                    $("#BindContactDetailInformation").addClass('d-none');
+                }
+                else {
+                    htmlBusinessContactDetail = `<h5>Contact Us</h5>
+             <p>
+                  ${response.data.BusinessTimingDetail.Address}
+             </p>
+             <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}"> ${response.data.BusinessTimingDetail.PhoneNumber}</a>
+             <a href="${response.data.BusinessTimingDetail.Email}">${response.data.BusinessTimingDetail.Email}</a>`;
+
+
+                    $("#BindContactDetailInformation").append(htmlBusinessContactDetail);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind Business About Detail
+    function GetBusinessAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentAboutDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessLogoDetail = '';
+                if (response.data === null) {
+                    $("#BindBusinessLogoDetail").addClass('d-none');
+
+                }
+                else {
+                    BusinessLogoDetail = ` <a href="/Home/BusinessProfile?businessOWnerLoginId= ${BusinessOwnerLoginId_Global}">
+                  <img src="${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 32px;">
+                  <span class="logo-name">${response.data.BusinessName}</span>
+              </a>`;
+                    $("#BindBusinessLogoDetail").append(BusinessLogoDetail);
+
+                }
+
+                var htmlBusinessAboutDetail = '';
+                if (response.data === null) {
+                    $(".footer").addClass('d-none');
+                } else {
+
+                    htmlBusinessAboutDetail = `<h4 class="uppercase">${response.data.BusinessName} </h4>
+              <p class="small">
+                 ${response.data.About}
+                 <a href="#about-section">Read More..</a>
+              </p>`;
+
+                    $("#BindBusinessAboutDetail").append(htmlBusinessAboutDetail);
+                }
+
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    var  timeslot =``;
+    function GetAllTennisTimingDetail(slotId) {
+        $("#timinglist").empty();
+    $.ajax({
+        type: "GET",
+        url: '/api/Business/GetBusinessTennisTimingDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global + '&slotId=' + slotId,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            //-------------------------for timing section---------------------------
+
+            TennisTimingDetaillst = `<li class="select-value">${response.data.BusinessTennisTimingList[0].Time}</li>`;
+
+            var TennisTimingDetaillst = '';
+            var tennistimeArray = response.data.Tennistimelist.map(item => item.Time);
+            var businessTennisTimeArray = response.data.BusinessTennisTimingList.map(item => item.Time);
+
+            if (tennistimeArray == null || tennistimeArray == '') {
+                for (var i = 0; i < response.data.BusinessTennisTimingList.length; i++) {
+                    var data = response.data.BusinessTennisTimingList[i];
+
+                    TennisTimingDetaillst += `<li>${data.Time}</li>`;
+                }
+
+                $("#timinglist").append(TennisTimingDetaillst);
+            } else {
+               
+                for (var i = 0; i < businessTennisTimeArray.length; i++) {
+                    var time = businessTennisTimeArray[i];
+
+                    if (tennistimeArray.includes(time)) {
+                        TennisTimingDetaillst += `<div style="background-color: red;" disabled>${time}</div>`;
+                    } else {
+                        TennisTimingDetaillst += `<li>${time}</li>`;
+                    }
+                }
+                $("#timinglist").append(TennisTimingDetaillst);
+            }
+           
+
+            $("#timinglist li").click(function () {
+                $("#timinglist li").removeClass("select-value");
+                $(this).addClass("select-value");
+                RoomTime = $(this).text();
+                GetRoomBookDetail();
+            });
+            GetRoomBookDetail();
+        },
+
+        error: function(result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function getDateMonthYear() {
+        // Find the selected date cell
+        var selectedDateCell = document.querySelector('.date-picker.selected');
+        if (selectedDateCell) {
+            // Retrieve data attributes from the selected cell
+            var date = selectedDateCell.getAttribute('data-date');
+            var month = selectedDateCell.getAttribute('data-month');
+            var year = selectedDateCell.getAttribute('data-year');
+            var monthName = selectedDateCell.getAttribute('data-month_name');
+
+            // Capitalize the first letter of the month name
+            monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+            // Return the formatted date string
+            return `${date}-${monthName}-${year}`;
+        } else {
+            // If no date is selected, return null or an appropriate message
+            return null;
+        }
+    }
+
+    function GetRoomBookDetail() {
+        //Service = $('#service_text').val();
+        selectedDate = getDateMonthYear();
+        var PlayerCount = PlayerValue;
+        var _serviceprice_global = Serviceprice_global;
+        var _serviceName_global = ServiceName_global;
+        var _service = ``;
+        if (_serviceName_global == null || _serviceName_global == '') {
+            _service = `No Service Selected`;
+        } else {
+
+            _service = `${_serviceName_global}`;
+        }
+        var _price = ``;
+        if (_serviceprice_global == null || _serviceprice_global == '') {
+            _price = `Not selected`;
+        } else {
+
+            _price = `${_serviceprice_global}`;
+        }
+
+        var _roomtime = ``;
+        if (RoomTime == null || RoomTime == '') {
+            _roomtime = `No Time Selected`;
+        } else {
+            _roomtime = RoomTime;
+        }
+        var RoomDetails = `<div class="player-service">
+                 <div class="player-num">
+                     <p class="title">players :</p>
+                     <p class="player-value">${PlayerCount}</p>
+                 </div>
+                 <div class="service">
+                     <p class="title">Service :</p>
+                     <p class="service-value">${_service}</p>
+                 </div>
+             </div>
+             <div class="date-time">
+                 <div class="time-select">
+                     <span class="time">Time:</span>
+                     <span>${_roomtime}</span>
+                 </div>
+                 <div class="time-select">
+                     <span class="date">Date:</span>`
+                        if (selectedDate) {
+                            RoomDetails += `<span>${selectedDate}</span>`
+                        }
+                        else {
+                            RoomDetails += `<span> No Date Selected</span>`
+                        }
+        RoomDetails += `</div>
+                </div><div class="price">
+            <div class="time-select">
+                <span class="time">Price:</span>
+                <span>${_price}</span>
+            </div>`;
+        $("#BindroomDetails").html(RoomDetails);
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+
+
+    function GetBusinessSportsBookingCheaqueDetail() {
+        $("#textName").html("");
+        $("#textSurName").html("");
+        $("#textEmail").html("");
+        $("#textPhoneNumber").html("");
+       // $("#textBookedId").html("");
+        $("#textDepartment").html("");
+        $("#textApartment").html("");
+        $("#textHouse").html("");
+        $("#textMessage").html("");
+        $.ajax({
+            type: "GET",
+            url: '/api/Booking/GetBusinessSportsBookingDetail_PPCMeta?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.data != null) {
+                    $("#textName").val(response.data.Name);
+                    $("#textSurName").val(response.data.SurName);
+                    $("#textEmail").val(response.data.Email);
+                    $("#textPhoneNumber").val(response.data.PhoneNumber);
+                   // $("#textBookedId").val(response.data.BookedId);
+                    $("#textDepartment").val(response.data.Department);
+                    $("#textApartment").html(response.data.Apartment);
+                    $("#textHouse").val(response.data.HouseNumber);
+                    $("#textMessage").html(response.data.Message);
+
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function GetMasterIdForForm() {
+
+        
+      $.ajax({
+        type: "GET",
+          url: '/api/Student/GetMasterIdForSportBooking',
+          headers: {
+              "Authorization": "Bearer " + UserToken_Globaly,
+              "Content-Type": "application/json"
+          },
+          success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            $("#textBookedId").val(response.data.MasterId);
+        },
+        error: function(result) {
+            StopLoading();
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+      });
+    }
+
+
+
+</script>
+

@@ -1,0 +1,154 @@
+﻿<script>
+    var UserToken_Global = "";
+    var _managePaymentsTable;
+    function initializeDataTable_ManagePayment() {
+        _managePaymentsTable = $("#tblManagePaymentViewForSuperAdmin").DataTable();
+    }
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+                initializeDataTable_ManagePayment();
+                GetAllManagePaymentsPagination();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+
+                        UserToken_Global = dataAdminToken;
+                        initializeDataTable_ManagePayment();
+                        GetAllManagePaymentsPagination();
+                    }
+                    else {
+
+
+                    }
+                });
+            
+            }
+
+            StopLoading();
+        });
+    });
+
+    function GetAllManagePaymentsPagination() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/TransactionDetails/GetAllByPagination";
+        _managePaymentsTable.clear().destroy();
+        _managePaymentsTable = $("#tblManagePaymentViewForSuperAdmin").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "searching": true,
+            "dom": 'lBfrtip',
+            "buttons": [
+                {
+                    extend: 'pdf',
+                    text: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible',
+                        rows: ':visible'
+                    }
+                }
+            ],
+             "order": [[1, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+
+                }
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `<span>${moment(row.CreatedOn).format('DD-MM-YYYY')}</span>`;
+                    }
+                }
+                , {
+                    "data": "Name", "name": "Name", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _link = '#';
+                        _link = (row.UserRoleId == 3) ? `/SuperAdmin/StudentDetail?userLoginId=${row.UserLoginId}` : _link;
+                        _link = (row.UserRoleId == 4) ? `/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.UserLoginId}` : _link;
+                        
+                        return `<a target="_blank" href="${_link}">
+                                <div class="d-flex flex-column">
+                                    <img class="image-small" src="${row.UserImage}" />
+                                    <div class="py-2">(${row.UserMasterId})</div>
+                                    <div class="py-2">${row.Name}</div>
+                                </div>
+                            </a>`;
+                    }
+                }
+            , { "data": "TransactionID", "name": "TransactionID", "autoWidth": true }
+            , {
+                "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    var _businessName = (row.BusinessName == null || row.BusinessName == '') ? '----' : row.BusinessName;
+                    return `<a target="_blank" href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.BusinessOwnerLoginId}">
+                        <div class="d-flex flex-column">
+                            <img class="image-small" src="${row.BusinessLogoWithPath}" />
+                            <div class="py-2">(${row.BusinessMasterId})</div>
+                            <div class="py-2">${_businessName}</div>
+                        </div>
+                    </a>`;
+                }
+            }
+            , { "data": "Method", "name": "Method", "autoWidth": true }
+            , { "data": "Amount", "name": "Amount", "autoWidth": true }
+            , { "data": "ItemType", "name":"ItemType","autoWidth":true}
+            , { "data": "TotalDiscount", "name": "TotalDiscount", "autoWidth": true }
+            
+        ],
+       
+        "responsive": true,
+        "autoWidth": false,
+       
+        "columnDefs": [{
+            "targets": [0,7], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+        $('#tblManagePaymentViewForSuperAdmin_filter input').unbind();
+        $('#tblManagePaymentViewForSuperAdmin_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _managePaymentsTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+    }
+    
+</script>

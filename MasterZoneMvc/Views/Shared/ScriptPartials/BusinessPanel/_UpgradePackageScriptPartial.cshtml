@@ -1,0 +1,144 @@
+﻿<script>
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetAllMainPlans();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+    function GetAllMainPlans() {
+        var _url = "/api/Business/GetAllListMainPlan";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $('#MainPlanCardList_BusinessPanel').html('');
+            var cardsData = "";
+            for (var i = 0; i < response.data.length; i++) {
+                cardsData += bindPlanDataToCard(response.data[i]);
+            }
+
+            if (response.data.length <= 0) {
+                cardsData += `<div class="w-100 text-center"><i> No Plan/Packages </i><div>`;
+            }
+
+            $('#MainPlanCardList_BusinessPanel').append(cardsData);
+            GetAllBusinessPanelPermissions();
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function bindPlanDataToCard(mainPlan) {
+        var compareAtPriceHTML = (mainPlan.CompareAtPrice <= 0) ? '' : `<p class="h5 mb-2 text-danger"><strike>Rs. ${mainPlan.CompareAtPrice}</strike></p>`;
+        var PlanDurationTypename = '';
+        var PlanImage = "";
+
+        if (mainPlan.PlanDurationTypeKey == "per_monthly") {
+            PlanDurationTypename = `<p class="text-muted text-small">Per Month</p>`;
+        }
+        else {
+            PlanDurationTypename = `<p class="text-muted text-small">Per Year</p>`;
+        }
+        var discount = '';
+        if (mainPlan.Discount <= 0) {
+            discount = '';
+
+        }
+        else {
+            discount = ` <div class="float-lg-right font-weight-bold"><span class="package-offer">${mainPlan.Discount}% 0ff</span></div>`;
+        }
+
+        if (mainPlan.PlanImageWithPath != "") {
+            PlanImage = `<img src="${mainPlan.PlanImageWithPath}" class="packageIcon">`;
+        }
+
+        var cardData = `
+        <div class="col-md-12 col-lg-4 mb-4 col-item">
+                <div class="card">
+                    <div class="card-body  pb-5 d-flex flex-lg-column flex-md-row flex-sm-row flex-column">
+                                ${discount}
+                        <div class="price-top-part text-center">
+                            <!--<i class="iconsminds-male large-icon"></i>-->
+                             ${PlanImage}
+
+                            <h5 class="mb-0 font-weight-semibold color-theme-1 mb-4">${mainPlan.Name}</h5>
+                            ${compareAtPriceHTML}
+                            <p class="text-large mb-2 text-default">Rs. ${mainPlan.Price}</p>
+                            ${PlanDurationTypename}
+                        </div>
+                        <div class="pl-0 pr-3 pt-3 pb-0 d-flex price-feature-list flex-column flex-grow-1">
+                            <ul class="list-unstyled">
+                                <li>
+                                    <p class="mb-0 float-lg-left">
+                                        ${mainPlan.Description}
+                                    </p>
+                                </li>
+                            </ul>
+                            <div class="d-flex justify-content-around">
+                                <a  class="btn btn-md btn-outline-info" href="/Business/UpgradePackagePlan?itemId=${mainPlan.Id}">
+                                   Buy Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    `;
+        return cardData;
+    }
+
+
+
+
+
+</script>

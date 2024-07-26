@@ -1,0 +1,129 @@
+﻿
+@{
+    ViewBag.Title = "EnquiryFollowsup";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+@section Styles {
+    <style>
+        .previousComments {
+            background: #f1f1f1f1;
+            width: auto;
+        }
+        .manageComments {
+            
+            height: 200px;
+            overflow-y: auto;
+        }
+       
+    </style>
+    } 
+
+<h2>EnquiryFollowsup</h2>
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Follows Up</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Follows Up</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-4 text-right">
+                        @*<a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEnquiry">Add Enquiry</a>*@
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="sectionViewFollowup">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblFollowUp" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Business Name</th>
+                                        <th>StaffName</th>
+                                        <th>Enquiry Date</th>
+                                        <th>Follow Up</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+@*------------------------------------- Modal ------------------------------------------------------ *@
+<div class="modal fade" id="enquiryfollowsupDetailModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Enquiry Detail</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div id="EditBusinessEnquiryfollowsupModal"></div><br />
+                @* Data will be appended *@
+            <div class="row">
+                <strong>Previous Comments</strong> <br />
+                <div class="col-md-12 manageComments">
+
+                    <div id="CommentsList"></div>
+                </div>
+
+            </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="textComment" style="font-size: 20px;">Comments </label>
+                            <textarea name="description" class="form-control" rows="6" id="text_Comment"></textarea>
+                            <div class="error-class" id="error_text_Comment"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                        onclick="btnSubmitFormCommentClick();">
+                    Update
+                </button>
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal" onclick="ResetTextView();">Close</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+
+@*------------------------------------- Modal ------------------------------------------------------ *@
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_EnquiryFollowsUpScriptPartial.cshtml")
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+}
+
+

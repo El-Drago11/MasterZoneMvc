@@ -1,0 +1,690 @@
+﻿<script>
+
+var UserToken_Global = "";
+    var ContactImageType = 1;
+
+$(document).ready(function () {
+    StartLoading();
+    $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+        if (dataAdminToken != "" && dataAdminToken != null) {
+
+            UserToken_Global = dataAdminToken;
+            EditContactUs();
+            EditContactNumberDetail();
+        }
+        else {
+
+            //$.get("/SubAdmin/GetSubAdminCookieDetail", null, function (dataSubAdminToken) {
+            //    if (dataSubAdminToken != "" && dataSubAdminToken != null) {
+
+            //        UserToken_Global = dataSubAdminToken;
+
+            //    }
+            //    else {
+
+            //    }
+            //});
+        }
+
+        StopLoading();
+    });
+});
+
+    function AddUpdate_ContactUs() {
+    let is_valid = true;
+    $(".error-class").html('');
+    var _mode = 1;
+    // var _Mode = (StaffId_Global > 0) ? 2 : 1;
+
+    let _email = $("#textEmailContactUser").val().trim();
+    let _contactNumber = $("#textContactNumber").val().trim();
+    let _phoneNumber = $("#textPhoneNumber").val().trim();
+    let _address = $("#textAddress").val().trim();
+    let _title = $("#textTitle").val();
+    let _description = $("#textDescription").val();
+    let _contactTitle = $("#textContactTitle").val();
+    let _contactDescription = $("#textContactDescription").val();
+
+
+    let _error_email = $("#error_textEmailContactUser");
+    let _error_contactNumber = $("#error_textContactNumber");
+    let _error_address = $("#error_textAddress");
+    let _error_title = $("#error_textTitle");
+    let _error_description = $("#error_textDescription");
+    let _error_contactTitle = $("#error_textContactTitle");
+    let _error_contactdescription = $("#error_textContactDescription");
+    let _error_managecontactImage = $("#error_fileSuperdmin_ManageContactBannerImage");
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+    if (validate_IsEmptyStringInputFieldValue(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.SuperAdminPanel.EmailRequired)');
+    }
+    else if (!TestEmail.test(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.SuperAdminPanel.ValidEmailRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_contactNumber)) {
+        is_valid = true;
+        _error_contactNumber.html('@(Resources.SuperAdminPanel.ContactNumberRequired)');
+    }
+    else if (_contactNumber.indexOf(' ') >= 0) {
+        is_valid = true;
+        _error_contactNumber.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+    }
+
+    else if (!phone_test.test(_contactNumber)) {
+        is_valid = true;
+        _error_contactNumber.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_address)) {
+        is_valid = false;
+        _error_address.html('@(Resources.SuperAdminPanel.AddressRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_title)) {
+        is_valid = true;
+        _error_title.html('@(Resources.SuperAdminPanel.TitleRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_description)) {
+        is_valid = true;
+        _error_description.html('@(Resources.SuperAdminPanel.DescriptionRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_contactTitle)) {
+        is_valid = true;
+        _error_contactTitle.html('@(Resources.SuperAdminPanel.ContactTitleRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_contactDescription)) {
+        is_valid = true;
+        _error_contactdescription.html('@(Resources.SuperAdminPanel.ContactDescriptionRequired)');
+    }
+
+    var _contactImageFile_MS = $("#fileSuperdmin_ManageContactBannerImage").get(0);
+       var _contactImageFiles = _contactImageFile_MS.files;
+       if (ContactImageType == 1 && _contactImageFiles.length <= 0) {
+           _error_managecontactImage.html('@(Resources.BusinessPanel.BusinessBannerImageRequired)');
+            return;
+        }
+
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        //data.append("Id", superadminId_Global);
+        data.append("Email", _email);
+        data.append("ContactNumber1", _contactNumber);
+        data.append("ContactNumber2", _phoneNumber);
+        data.append("Address", _address);
+        data.append("Title", _title);
+        data.append("Description", _description);
+        data.append("ContactTitle", _contactTitle);
+        data.append("ContactDescription", _contactDescription);
+        data.append("Image", _contactImageFiles[0]);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/ContactDetail/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+
+                //ResetAddView();
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+
+    function EditContactUs() {
+    var _url = "/api/ContactDetail/GetContactDetail";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            if (response.data != null) {
+                $("#textEmailContactUser").val(response.data.Email);
+                $("#textContactNumber").val(response.data.ContactNumber1);
+                $("#textPhoneNumber").val(response.data.ContactNumber2);
+                $("#textAddress").val(response.data.Address);
+                $("#textTitle").val(response.data.Title);
+                $("#textDescription").val(response.data.Description);
+                $("#textContactTitle").val(response.data.ContactTitle);
+                $("#textContactDescription").val(response.data.ContactDescription);
+                $("#fileSuperdmin_ManageContactBannerImage").val('');
+                if (response.data.AboutImageWithPath != "") {
+                    $("#imagePreview").attr('src', response.data.ContactImageWithPath);
+                    $("#imagePreview").removeClass('d-none');
+                    ContactImageType = 2;
+                }
+
+
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+  ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileSuperdmin_ManageContactBannerImage').addEventListener('change', handleImageUpload);
+
+   function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#imagePreview').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#imagePreview').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('imagePreview').src = event.target.result;
+        $('#imagePreview').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+    }
+
+
+   function AddUpdate_ContactNumber() {
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = 1;
+        // var _Mode = (StaffId_Global > 0) ? 2 : 1;
+
+        let _title1 = $("#textLocation1").val().trim();
+        let _contactNumber1 = $("#textContactNumber1").val().trim();
+        let _title2 = $("#textLocation2").val().trim();
+        let _contactNumber2 = $("#textContactNumber2").val().trim();
+        let _title3 = $("#textLocation3").val().trim();
+        let _contactNumber3 = $("#textContactNumber3").val().trim();
+        let _title4 = $("#textLocation4").val().trim();
+        let _contactNumber4 = $("#textContactNumber4").val().trim();
+        let _title5 = $("#textLocation5").val().trim();
+        let _contactNumber5 = $("#textContactNumber5").val().trim();
+        let _title6 = $("#textLocation6").val().trim();
+        let _contactNumber6 = $("#textContactNumber6").val().trim();
+        let _title7 = $("#textLocation7").val().trim();
+        let _contactNumber7 = $("#textContactNumber7").val().trim();
+        let _title8 = $("#textLocation8").val().trim();
+        let _contactNumber8 = $("#textContactNumber8").val().trim();
+
+        //let _error_title1 = $("#error_textLocation1");
+        let _error_contactNumber1 = $("#error_textContactNumber1");
+        let _error_title2 = $("#error_textLocation2");
+        let _error_contactNumber2 = $("#error_textContactNumber2");
+        let _error_title3 = $("#error_textLocation3");
+        let _error_contactNumber3 = $("#error_textContactNumber3");
+        let _error_title4 = $("#error_textLocation4");
+        let _error_contactNumber4 = $("#error_textContactNumber4");
+        let _error_title5 = $("#error_textLocation5");
+        let _error_contactNumber5 = $("#error_textContactNumber5");
+        let _error_title6 = $("#error_textLocation6");
+        let _error_contactNumber6 = $("#error_textContactNumber6");
+        let _error_title7 = $("#error_textLocation7");
+        let _error_contactNumber7 = $("#error_textContactNumber7");
+        let _error_title8 = $("#error_textLocation8");
+        let _error_contactNumber8 = $("#error_textContactNumber8");
+
+        var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+        var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+        @*if (validate_IsEmptyStringInputFieldValue(_title1)) {
+        is_valid = false;
+            _error_title1.html('@(Resources.SuperAdminPanel.Location1Required)');
+        }*@
+        @*if (validate_IsEmptyStringInputFieldValue(_title2)) {
+            is_valid = false;
+            _error_title2.html('@(Resources.SuperAdminPanel.Location2Required)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_title3)) {
+            is_valid = false;
+            _error_title3.html('@(Resources.SuperAdminPanel.Location3Required)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_title4)) {
+            is_valid = false;
+            _error_title4.html('@(Resources.SuperAdminPanel.Location4Required)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_title5)) {
+            is_valid = false;
+            _error_title5.html('@(Resources.SuperAdminPanel.Location5Required)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_title6)) {
+            is_valid = false;
+            _error_title6.html('@(Resources.SuperAdminPanel.Location6Required)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_title7)) {
+            is_valid = false;
+            _error_title7.html('@(Resources.SuperAdminPanel.Location7Required)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_title8)) {
+            is_valid = false;
+            _error_title8.html('@(Resources.SuperAdminPanel.Location8Required)');
+        }*@
+
+        if (_title1 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title1 != "") {
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber1)) {
+                is_valid = true;
+                _error_contactNumber1.html('@(Resources.SuperAdminPanel.ContactNumber1Required)');
+            } else if (_contactNumber1.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber1.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            } else if (!phone_test.test(_contactNumber1)) {
+                is_valid = true;
+                _error_contactNumber1.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+        }
+
+        if (_title2 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title2 != "") {
+
+        if (validate_IsEmptyStringInputFieldValue(_contactNumber2)) {
+            is_valid = true;
+            _error_contactNumber2.html('@(Resources.SuperAdminPanel.ContactNumber2Required)');
+        }
+        else if (_contactNumber2.indexOf(' ') >= 0) {
+            is_valid = true;
+            _error_contactNumber2.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+        }
+
+        else if (!phone_test.test(_contactNumber2)) {
+            is_valid = true;
+            _error_contactNumber2.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+        }
+
+        }
+
+        if (_title3 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title3 != "") {
+
+
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber3)) {
+                is_valid = true;
+                _error_contactNumber3.html('@(Resources.SuperAdminPanel.ContactNumber3Required)');
+            }
+            else if (_contactNumber3.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber3.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            }
+
+            else if (!phone_test.test(_contactNumber3)) {
+                is_valid = true;
+                _error_contactNumber3.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+        }
+
+
+        if (_title4 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title4 != "") {
+
+
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber4)) {
+                is_valid = true;
+                _error_contactNumber4.html('@(Resources.SuperAdminPanel.ContactNumber4Required)');
+            }
+            else if (_contactNumber4.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber4.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            }
+
+            else if (!phone_test.test(_contactNumber4)) {
+                is_valid = true;
+                _error_contactNumber4.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+        }
+
+        if (_title5 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title5 != "") {
+
+
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber5)) {
+                is_valid = true;
+                _error_contactNumber5.html('@(Resources.SuperAdminPanel.ContactNumber5Required)');
+            }
+            else if (_contactNumber5.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber5.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            }
+
+            else if (!phone_test.test(_contactNumber5)) {
+                is_valid = true;
+                _error_contactNumber5.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+
+        }
+
+        if (_title6 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title6 != "") {
+
+
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber6)) {
+                is_valid = true;
+                _error_contactNumber6.html('@(Resources.SuperAdminPanel.ContactNumber6Required)');
+            }
+            else if (_contactNumber6.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber6.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            }
+
+            else if (!phone_test.test(_contactNumber6)) {
+                is_valid = true;
+                _error_contactNumber6.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+        }
+
+        if (_title7 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title7 != "") {
+
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber7)) {
+                is_valid = true;
+                _error_contactNumber7.html('@(Resources.SuperAdminPanel.ContactNumber7Required)');
+            }
+            else if (_contactNumber7.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber7.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            }
+
+            else if (!phone_test.test(_contactNumber7)) {
+                is_valid = true;
+                _error_contactNumber7.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+        }
+
+        if (_title8 === "") {
+            // No validation needed if _title1 is empty
+        } if (_title8 != "") {
+
+            if (validate_IsEmptyStringInputFieldValue(_contactNumber8)) {
+                is_valid = true;
+                _error_contactNumber8.html('@(Resources.SuperAdminPanel.ContactNumber8Required)');
+            }
+            else if (_contactNumber8.indexOf(' ') >= 0) {
+                is_valid = true;
+                _error_contactNumber8.html('@(Resources.SuperAdminPanel.ContactNumberNotEmptySpaceRequired)');
+            }
+
+            else if (!phone_test.test(_contactNumber8)) {
+                is_valid = true;
+                _error_contactNumber8.html('@(Resources.SuperAdminPanel.ValidContactNumberRequired)');
+            }
+        }
+    if (is_valid) {
+        StartLoading();
+
+        var data = new FormData();
+        //data.append("Id", ContactNumberGlobal);
+        data.append("Location1", _title1);
+        data.append("ContactNumber1", _contactNumber1);
+        data.append("Location2", _title2);
+        data.append("ContactNumber2", _contactNumber2);
+        data.append("Location3", _title3);
+        data.append("ContactNumber3", _contactNumber3);
+        data.append("Location4", _title4);
+        data.append("ContactNumber4", _contactNumber4);
+        data.append("Location5", _title5);
+        data.append("ContactNumber5", _contactNumber5);
+        data.append("Location6", _title6);
+        data.append("ContactNumber6", _contactNumber6);
+        data.append("Location7", _title7);
+        data.append("ContactNumber7", _contactNumber7);
+        data.append("Location8", _title8);
+        data.append("ContactNumber8", _contactNumber8);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/ContactDetail/AddUpdateContactNumber',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+
+                //ResetAddView();
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+
+    function EditContactNumberDetail() {
+       
+         var _url = "/api/ContactDetail/GetContactNumberDetail";
+
+       StartLoading();
+      
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+
+            if (response.data != null) {
+                $("#textLocation1").val(response.data.Location1);
+                $("#textContactNumber1").val(response.data.ContactNumber1);
+                $("#textLocation2").val(response.data.Location2);
+                $("#textContactNumber2").val(response.data.ContactNumber2);
+                $("#textLocation3").val(response.data.Location3);
+                $("#textContactNumber3").val(response.data.ContactNumber3);
+                $("#textLocation4").val(response.data.Location4);
+                $("#textContactNumber4").val(response.data.ContactNumber4);
+                $("#textLocation5").val(response.data.Location5);
+                $("#textContactNumber5").val(response.data.ContactNumber5);
+                $("#textLocation6").val(response.data.Location6);
+                $("#textContactNumber6").val(response.data.ContactNumber6);
+                $("#textLocation7").val(response.data.Location7);
+                $("#textContactNumber7").val(response.data.ContactNumber7);
+                $("#textLocation8").val(response.data.Location8);
+                $("#textContactNumber8").val(response.data.ContactNumber8);
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+</script>

@@ -1,0 +1,231 @@
+﻿<script>
+
+    var UserToken_Global = "";
+    var PlanId_Global = 0;
+    var CouponId_Global = 0;
+
+    var objOrderBilling = {
+        itemAmount: 0,
+        couponDiscount: 0,
+        totalDiscount: 0,
+        subTotalAmount: 0,
+        totalAmount: 0
+    };
+
+    $(document).ready(function () {
+        PlanId_Global = $("#hiddenPackageId").val();
+
+        StartLoading();
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getPlanDetails();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.VisitorPanel.LoginBookClass_ErrrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                getPlanDetails();
+                StopLoading();
+            }
+        });
+    });
+
+    function getPlanDetails() {
+        let _url = "/api/BusinessPlan/DetialForUser?planId=" + PlanId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    $('#sectionError').removeClass('d-none');
+                    $('#sectionCheckout').addClass('d-none');
+
+                    StopLoading();
+
+                    return;
+                }
+
+                if (response.data) {
+                    var item = response.data;
+
+                    var itemDetail_HTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex flex-column w-100">
+                                    <div class="d-flex w-100 align-items-center">
+                                        <h2 class="flex-grow-1">${item.Name}</h2>
+                                        <span class="float-right h4">Rs. ${item.Price}</span>
+                                    </div>
+                                    <div class="text-black-50">${item.PlanDurationTypeKey}</div>
+                                    <p class="">${item.Description}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    $('#divItemDetail').html(itemDetail_HTML);
+
+                    objOrderBilling.itemAmount = parseFloat(item.Price).toFixed(2);
+                    objOrderBilling.subTotalAmount = parseFloat(item.Price).toFixed(2);
+                    objOrderBilling.totalAmount = parseFloat(item.Price).toFixed(2);
+
+                    refreshOrderBillingDetail();
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: "@(Resources.ErrorMessage.TechincalErrorMessage)",
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ApplyCoupon() {
+        var _isValid = true;
+        var _couponCode = $('#txtCouponCode').val();
+
+        var _error_couponCode = $('#error_txtCouponCode');
+        var _success_couponCode = $('#success_txtCouponCode');
+        _error_couponCode.html('');
+        _success_couponCode.html('');
+
+
+        if (_couponCode == '') {
+            _isValid = false;
+            _error_couponCode.html('@(Resources.VisitorPanel.CouponCodeRequired)');
+        }
+
+        if (!_isValid) {
+            return;
+        }
+
+        let _url = `/api/Coupon/Verify?couponCode=${_couponCode}&itemId=${PlanId_Global}&itemType=plan`;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    _error_couponCode.html(response.message);
+                    removeCouponDiscount();
+                    return;
+                }
+
+                if (response.data) {
+                    var coupon = response.data;
+                    CouponId_Global = coupon.Id;
+                    _success_couponCode.html('@(Resources.VisitorPanel.CouponApplied_SuccessMessage)');
+                    // apply coupon discount and refresh detials
+                    applyCouponDiscount(coupon);
+                }
+
+                //StopLoading();
+            },
+            error: function (result) {
+                //StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: "@(Resources.ErrorMessage.TechincalErrorMessage)",
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bookPackage() {
+        var _isValid = true;
+        var _paymentMode = $('input[name="paymentMode"]:checked').val();
+
+        if (_isValid) {
+            window.location.href = `/Booking/BookPackage?itemId=${PlanId_Global}&paymentMode=${_paymentMode}&couponId=${CouponId_Global}&totalAmountPaid=${objOrderBilling.totalAmount}`;
+        }
+    }
+
+    function applyCouponDiscount(couponDetail) {
+        var couponDiscountAmount = 0;
+
+        if (couponDetail.IsFixedAmount == 1) {
+            couponDiscountAmount = couponDetail.DiscountValue;
+        }
+        else {
+            couponDiscountAmount = parseFloat(objOrderBilling.subTotalAmount * (parseFloat(couponDetail.DiscountValue) / 100));
+        }
+
+        CouponId_Global = couponDetail.Id;
+        objOrderBilling.couponDiscount = couponDiscountAmount;
+        objOrderBilling.totalDiscount = couponDiscountAmount;
+        objOrderBilling.totalAmount = objOrderBilling.subTotalAmount - objOrderBilling.totalDiscount;
+
+        refreshOrderBillingDetail();
+    }
+
+    function removeCouponDiscount() {
+
+        objOrderBilling.couponDiscount = 0;
+        objOrderBilling.totalDiscount = 0;
+        objOrderBilling.totalAmount = objOrderBilling.itemAmount;
+
+        CouponId_Global = 0;
+
+        refreshOrderBillingDetail();
+    }
+
+    function refreshOrderBillingDetail() {
+        var orderBillingHTML = `
+            <div class="d-flex justify-content-between">
+                <div class="font-weight-bold">Sub Total</div>
+                <div>Rs. ${objOrderBilling.subTotalAmount}</div>
+            </div>
+             <div class="d-flex justify-content-between mt-3">
+                <div class="font-weight-bold">Discount</div>
+                <div>Rs. ${objOrderBilling.totalDiscount}</div>
+            </div>
+            <hr />
+            <div class="d-flex justify-content-between mt-1">
+                <div class="font-weight-bold">Total</div>
+                <div>Rs. ${objOrderBilling.totalAmount}</div>
+            </div>
+        `;
+        $('#divOrderBillingDetail').html(orderBillingHTML);
+    }
+</script>

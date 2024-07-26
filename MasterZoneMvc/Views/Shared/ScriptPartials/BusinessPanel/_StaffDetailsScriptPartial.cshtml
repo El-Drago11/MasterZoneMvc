@@ -1,0 +1,857 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+<script>
+
+    var _enquiryTable;
+    var UserToken_Global = "";
+    var StaffLoginId_Global = 0;
+    var _StaffBatchTable;
+    var _StaffEnquiryDetailsTable;
+    var _StaffTrainingsTable;
+    var _StaffEventsTable;
+    var _AttendanceTable;
+
+    function initializeDataTable_StaffBatch() {
+        _StaffBatchTable = $("#tblBatchDetails").DataTable();
+    }
+    function initializeDataTable_StaffEnquiryDetails() {
+        _enquiryTable = $("#tblEnquiryDetails").DataTable();
+    }
+    function initializeDataTable_StaffAttendanceDetails() {
+        _AttendanceTable = $("#tblStaffattendance").DataTable();
+    }
+
+
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                onPageLoad();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        onPageLoad();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function onPageLoad() {
+        var staffLoginId = $('#hiddenStaffLoginId').val();
+        StaffLoginId_Global = staffLoginId;
+        GetStaffProfile();
+        initializeDataTable_StaffBatch();
+        initializeDataTable_StaffEnquiryDetails();
+        initializeDataTable_StaffAttendanceDetails();
+    }
+
+    $(document).on('click', '#profile-tab', function () {
+       // StartLoading();
+        GetStaffProfile();
+    });
+    $(document).on('click', '#Batch-tab', function () {
+        GetAllBatchDetails();
+    });
+    $(document).on('click', '#Follow-tab', function () {
+        GetAllEnquiriesDetails();
+    });
+    $(document).on('click', '#attendance-tab', function () {
+        GetAllStaffAttendance(0);
+        GetAllStaffAttendanceOfCurrentMonth();
+
+    });
+
+
+
+    function GetStaffProfile() {
+
+        var _url = "/api/Staff/GetStaffDetailsById?id=" + StaffLoginId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response)
+            {
+
+                if (response.status == 1) {
+                    if (response.data) {
+                       // var item = response.data;
+                        var cardBodyHTML = ``;
+                        $('#imgStaffProfile').attr('src', response.data.ProfileImageWithPath);
+                    }
+                        cardBodyHTML += `
+
+                            <p class="text-muted text-small mb-2">  Master ID</p>
+                            <p class="mb-3">${response.data.UserLoginMasterId}</p>
+                              <p class="text-muted text-small mb-2"> Linked Master ID</p>
+                             <p class="mb-3">${response.data.MasterId}</p>
+
+                            <p class="text-muted text-small mb-2">Staff Category</p>
+                            <p class="mb-3">${response.data.StaffCategoryName}</p>
+
+                            <p class="text-muted text-small mb-2">Name</p>
+                            <p class="mb-3">${response.data.FirstName} ${response.data.LastName}</p>
+
+                             <p class="text-muted text-small mb-2">Designation</p>
+                             <p class="mb-3">${response.data.Designation}</p>
+
+                             <p class="text-muted text-small mb-2">Email</p>
+                             <p class="mb-3">${response.data.Email}</p>
+
+                              <p class="text-muted text-small mb-2">Joining Date</p>
+                              <p class="mb-3">${response.data.CreatedOnString}</p>
+                        `;
+
+                    $('#staffDetail_Card').html(cardBodyHTML);
+
+                    $('#staffPermissionDetail_Card').html('');
+                    var _permissions = '';
+                    var _permissions2 = '';
+
+
+
+                    for (var i = 0; i < response.data.Permissions.length; i++) {
+                        _permissions += ``;
+                    }
+                    if (response.data.Permissions.length <= 0) {
+                        //_permissions = `<h6 class="text-muted">No Permissions</h6>`;
+                        _permissions2 = `<h6 class="text-muted">No Permissions</h6>`;
+                    }
+                    else {
+                        var _parentPermissions = response.data.Permissions.filter((x) => x.ParentPermissionId == 0);
+
+                        for (var pp = 0; pp < _parentPermissions.length; pp++) {
+                            //_permissions += `<div class="font-weight-bold mt-2"><i class="fa fa-check text-success"></i> ${_parentPermissions[pp].TextValue}</div>`;
+                            //var _subPermissions = response.data.Permissions.filter((x) => x.ParentPermissionId == _parentPermissions[pp].Id);
+                            //for (var sp = 0; sp < _subPermissions.length; sp++) {
+                            //    _permissions += `<div class="ml-3"><i class="fa fa-check text-success"></i> ${_subPermissions[sp].TextValue}</div>`;
+                            //}
+                            _permissions2 += bindPermissions(response.data.Permissions, '', _parentPermissions[pp], 0);
+                        }
+                    }
+
+                    //$('#staffPermissionDetail_Card').html(_permissions);
+                    //$('#staffPermissionDetail_Card').append("---------------------------------------");
+                    $('#staffPermissionDetail_Card').append(_permissions2);
+                    //<p><button class="btn btn-sm btn-primary" onclick="MessageStudent();"><i class="fas fa-envelope"></i> Message</button></p>
+                    //bindPermissions(response.data.Permissions, '',)
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindPermissions(allPermissions, html, currentPermission, level = 0) {
+        if (allPermissions.length <= 0) {
+            return '';
+        }
+
+        if (currentPermission == null || currentPermission.length <= 0) {
+            return '';
+        }
+
+        _marginLeft = 40 * level;
+        html += `<div class="font-weight-bold mt-2" style="margin-left:${_marginLeft}px;"><i class="fa fa-check text-success"></i> ${currentPermission.TextValue}</div>`;
+
+        var _subPermissions = allPermissions.filter((x) => x.ParentPermissionId == currentPermission.Id);
+        for (var sp = 0; sp < _subPermissions.length; sp++) {
+            html += bindPermissions(allPermissions, '', _subPermissions[sp], level + 1);
+        }
+
+        return html;
+
+    }
+
+    function GetAllEnquiriesDetails() {
+
+        var _url_val = "/api/Enquiry/GetEnquiryInfoById?id=" + StaffLoginId_Global; // Corrected URL
+        $.ajax({
+            headers: {
+                Authorization: "Bearer " + UserToken_Global,
+            },
+            url: _url_val,
+            type: "GET",
+            contentType: 'application/json',
+            success: function (response) {
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblEnquiryDetails').DataTable();
+
+                // Destroy the existing DataTable instance
+                _table.clear().destroy();
+
+                var sno = 0;
+                var data = [];
+
+                for (var i = 0; i < response.data.EnquiryDetail.length; i++) {
+                    sno++;
+                    var staffName = `<span>${response.data.EnquiryDetail[i].Name}</span>`;
+                    var staffNotes = `<span>${response.data.EnquiryDetail[i].Notes}</span>`;
+                    var staffEmail = `<span>${response.data.EnquiryDetail[i].Email}</span>`;
+                    var stafffollowupdate = `<span>${response.data.EnquiryDetail[i].FollowUpDate}</span>`;
+
+                    var _status = '';
+                    var _enquiryStatus = response.data.EnquiryDetail[i].EnquiryStatus;
+
+                    if (_enquiryStatus == 0) {
+                        _status = '<span class="badge badge-warning text-white px-1 py-1">Pending</span>';
+                    }
+                    else if (_enquiryStatus == 1) {
+                        _status = '<span class="badge badge-success text-white px-1 py-1">Open</span>';
+                    }
+                    else if (_enquiryStatus == 2) {
+                        _status = '<span class="badge badge-danger text-white px-1 py-1">Close</span>';
+                    }
+
+                    data.push([
+                        sno,
+                        staffName,
+                        staffEmail,
+                        staffNotes,
+                        stafffollowupdate,
+                        _status,
+                    ]);
+                }
+
+                // Initialize DataTable with the new data
+                $("#tblEnquiryDetails").DataTable({
+                    data: data,
+                    paging: true,
+                    lengthChange: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                });
+
+                StopLoading();
+            },
+            error: function (result) {
+                if (result.status == 401) {
+                    $.iaoAlert({
+                        msg: 'UnAuthorized Error Message', // Replace with your actual error message
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: 'Technical Error Message', // Replace with your actual error message
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+        });
+    }
+
+    function GetAllBatchDetails() {
+
+        var _url_val = "/api/Enquiry/GetBatchDetailsById?id=" + StaffLoginId_Global + "&searchtext=" + ""; // Corrected URL
+        $.ajax({
+            headers: {
+                Authorization: "Bearer " + UserToken_Global,
+            },
+            url: _url_val,
+            type: "GET",
+            contentType: 'application/json',
+            success: function (response) {
+
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblBatchDetails').DataTable();
+
+                // Destroy the existing DataTable instance
+                _table.clear().destroy();
+
+                var sno = 0;
+                var data = [];
+                if (response.data.BatchDetails != null) {
+
+                for (var i = 0; i < response.data.BatchDetails.length; i++) {
+                    sno++;
+                    var BatchName = `<span>${response.data.BatchDetails[i].BatchName}</span>`;
+                    var BatchStartTime = `<span>${response.data.BatchDetails[i].ScheduledStartOnTime_24HF}</span>`;
+                    var BatchEndTiime = `<span>${response.data.BatchDetails[i].ScheduledEndOnTime_24HF}</span>`;
+                    var BatchGroupName = `<span>${response.data.BatchDetails[i].GroupName}</span>`;
+                    var BatchMaxStudent = `<span>${response.data.BatchDetails[i].StudentMaxStrength}</span>`;
+
+                    var _status = response.data.BatchDetails[i].Status == 1
+                        ? '<span class="badge badge-success btn-sm">Active</span>'
+                        : '<span class="badge badge-danger text-white btn-sm" >Inactive</span>';
+
+                    data.push([
+                        sno,
+                        BatchName,
+                        BatchStartTime,
+                        BatchEndTiime,
+                        BatchGroupName,
+                        BatchMaxStudent,
+                        _status,
+                    ]);
+                }
+                }
+
+                // Initialize DataTable with the new data
+                $("#tblBatchDetails").DataTable({
+                    data: data,
+                    paging: true,
+                    lengthChange: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                });
+
+                StopLoading();
+            },
+            error: function (result) {
+                if (result.status == 401) {
+                    $.iaoAlert({
+                        msg: 'UnAuthorized Error Message', // Replace with your actual error message
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: 'Technical Error Message', // Replace with your actual error message
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+        });
+    }
+
+    @*function initializeFullCalendar(events) {
+
+        console.log(events);
+        $(".attendance_calendar").fullCalendar({
+            themeSystem: "bootstrap4",
+            height: "auto",
+            buttonText: {
+                today: "Today",
+                month: "Month",
+                week: "Week",
+                day: "Day",
+                list: "List"
+            },
+            bootstrapFontAwesome: {
+                prev: " simple-icon-arrow-left",
+                next: " simple-icon-arrow-right",
+                prevYear: " simple-icon-control-start",
+                nextYear: " simple-icon-control-end"
+            },
+            events: events
+        });
+
+    }
+
+function GetAllStaffAttendance() {
+    var _url = "/api/Staff/GetAll/GetAllSatffAttendanceById?id=" + StaffLoginId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            //var today = new Date();
+            //var day = today.getDate();
+            //var month = today.getMonth() + 1;
+            //var year = today.getFullYear();
+
+           // var formattedDate = month + '/' + day + '/' + year;
+           // $("#SatffAttendanceTodayDate").html(formattedDate);
+            var _table = $("#tblStaffAttendance").DataTable();
+            _table.destroy();
+
+            var _status = '';
+
+            var data = []
+            //    {
+            //        title: "Present",
+            //        start: "2024-01-18",
+            //        end: "2024-01-18"
+            //    },
+            //    {
+            //        title: "Present",
+            //        start: "2024-01-19",
+            //        end: "2024-01-19"
+            //    },
+            //    {
+            //        title: "Present",
+            //        start: "2024-01-20",
+            //        end: "2024-01-20"
+            //    },
+            //    {
+            //        title: "Absent",
+            //        start: "2024-01-21",
+            //        end: "2024-01-21"
+            //    },
+            //    {
+            //        title: "On Leave",
+            //        start: "2024-01-22",
+            //        end: "2024-01-22"
+            //    }
+            //];
+
+
+                var jsondata = '';
+            for (var i = 0; i < response.data.length; i++) {
+                if (response.data[i].AttendanceStatus == 1) {
+                    _status = 'Present';
+                } else if (response.data[i].AttendanceStatus == 2) {
+                    _status = 'Absent';
+                } else if (response.data[i].AttendanceStatus == 3) {
+                    _status = 'On Leave';
+                }
+                jsondata += '{ "title":"' + _status + '", "start":"' + response.data[i].FormattedAttendanceDate + '", "end":"' + response.data[i].FormattedAttendanceDate + '"},'
+
+                //console.log(_status);
+                //console.log(response.data[i].FormattedAttendanceDate);
+
+            }
+
+            jsondata = jsondata.replace(/,\s*$/, "");
+            data.push(JSON.parse(jsondata));
+           // console.log(data);
+            // Initialize fullCalendar with the obtained events
+            //var calendarEvents = response.data.map(function (item) {
+            //    return {
+            //        title: item.StaffName,
+            //        start: item.AttendanceDate, // Adjust this according to your data
+            //        // Add other properties as needed
+            //    };
+            //});
+
+            initializeFullCalendar(data);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}*@
+
+
+
+
+
+
+    function initializeFullCalendar(events) {
+
+        $(".attendance_calendar").fullCalendar({
+
+
+            themeSystem: "bootstrap4",
+            height: "auto",
+            buttonText: {
+                today: "Today",
+                month: "Month",
+                week: "Week",
+                day: "Day",
+                list: "List"
+            },
+            bootstrapFontAwesome: {
+                prev: " simple-icon-arrow-left",
+                next: " simple-icon-arrow-right",
+                prevYear: " simple-icon-control-start",
+                nextYear: " simple-icon-control-end"
+            },
+            events: events
+        });
+        $('span.fc-title:contains("On Leave")').parent().parent().addClass('color-leave');
+        $('span.fc-title:contains("Absent")').parent().parent().addClass('color-Absent');
+        $('span.fc-title:contains("Present")').parent().parent().addClass('color-Present');
+
+    }
+
+    function GetAllStaffAttendance() {
+        var currentYear = $("#currentyear").val();
+        var currentMonth = $("#currentmonth").val();
+        var _url = "/api/Staff/GetAll/GetAllSatffAttendanceById?id=" + StaffLoginId_Global + "&currentYear=" + currentYear + "&currentMonth=" + currentMonth;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $("#tblStaffAttendance").DataTable();
+                _table.destroy();
+
+                // Initialize fullCalendar with the obtained events
+                var calendarEvents = response.data.map(function (item) {
+                    if (item.AttendanceStatus == 1) {
+                        _status = 'Present ' + item.StaffAttendanceInTime_24HF + '-' + item.StaffAttendnaceOutTime_24HF;
+                    } else if (item.AttendanceStatus == 2) {
+                        _status = 'Absent';
+                    } else if (item.AttendanceStatus == 3) {
+                        _status = 'On Leave';
+
+                    }
+                    return {
+                        title: _status,
+                        start: item.FormattedAttendanceDate,
+                        end: item.FormattedAttendanceDate,
+                    };
+                });
+                console.log(calendarEvents);
+                initializeFullCalendar(calendarEvents);
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+        //$(document).on("click", ".fc-prev-button", function () {
+        //    var currentMonth = $("#currentmonth").val();
+        //    var currentYear = $("#currentyear").val();
+        //    if (currentMonth == 1) {
+        //        $("#currentyear").val(parseInt(currentYear) - 1);
+        //        $("#currentmonth").val(12);
+        //    } else {
+        //        $("#currentmonth").val(parseInt(currentMonth) - 1);
+        //    }
+        //    GetAllStaffAttendance(1);
+        //});
+
+        //$(document).on("click", ".fc-next-button", function () {
+        //    var currentMonth = $("#currentmonth").val();
+        //    var currentYear = $("#currentyear").val();
+        //    if (currentMonth == 12) {
+        //        $("#currentyear").val(parseInt(currentYear) + 1);
+        //        $("#currentmonth").val(1);
+        //    } else {
+        //        $("#currentmonth").val(parseInt(currentMonth) + 1);
+        //    }
+
+        //    GetAllStaffAttendance(2);
+    //});
+
+    //if ($().fullCalendar) {
+    //    var testEvent = new Date(new Date().setHours(new Date().getHours()));
+    //    var day = testEvent.getDate();
+    //    var month = testEvent.getMonth() + 1;
+    //    $(".attendance_calendar").fullCalendar({
+    //        themeSystem: "bootstrap4",
+    //        height: "auto",
+    //       // isRTL: isRtl,
+    //        buttonText: {
+    //            today: "Today",
+    //            month: "Month",
+    //            week: "Week",
+    //            day: "Day",
+    //            list: "List"
+    //        },
+    //        bootstrapFontAwesome: {
+    //            prev: " simple-icon-arrow-left",
+    //            next: " simple-icon-arrow-right",
+    //            prevYear: " simple-icon-control-start",
+    //            nextYear: " simple-icon-control-end"
+    //        },
+    //        events: [
+    //            {
+    //                title: "Account",
+    //                start: "2020-06-18"
+    //            },
+    //            {
+    //                title: "Delivery",
+    //                start: "2020-06-22",
+    //                end: "2019-07-24"
+    //            },
+    //            {
+    //                title: "Conference",
+    //                start: "2020-07-14",
+    //                end: "2019-07-09"
+    //            },
+    //            {
+    //                title: "Delivery",
+    //                start: "2020-06-03",
+    //                end: "2020-06-06"
+    //            },
+    //            {
+    //                title: "Meeting",
+    //                start: "2020-07-17",
+    //                end: "2020-07-18"
+    //            },
+    //            {
+    //                title: "Taxes",
+    //                start: "2020-06-07",
+    //                end: "2020-06-09"
+    //            }
+    //        ]
+    //    });
+    //}
+
+
+
+
+    // Initialize fullCalendar function
+//function initializeFullCalendar(events) {
+//    if ($().fullCalendar) {
+//        var testEvent = new Date(new Date().setHours(new Date().getHours()));
+//        var day = testEvent.getDate();
+//        var month = testEvent.getMonth() + 1;
+
+//        $(".attendance_calendar").fullCalendar({
+//            themeSystem: "bootstrap4",
+//            height: "auto",
+//            buttonText: {
+//                today: "Today",
+//                month: "Month",
+//                week: "Week",
+//                day: "Day",
+//                list: "List"
+//            },
+//            bootstrapFontAwesome: {
+//                prev: " simple-icon-arrow-left",
+//                next: " simple-icon-arrow-right",
+//                prevYear: " simple-icon-control-start",
+//                nextYear: " simple-icon-control-end"
+//            },
+//            events: events
+//        });
+//    }
+//}
+
+// Modified GetAllStaffAttendance function
+
+    // for enabling search box only send requet on pressing enter
+
+    $('#tblEnquiry_filter input').unbind();
+    $('#tblEnquiry_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            $("#tblEnquiryDetails").DataTable.search(this.value).draw();
+        }
+    });
+
+
+    $('#tblEnquiry_filter input').unbind();
+    $('#tblEnquiry_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _StaffBatchTable.search(this.value).draw();
+        }
+    });
+
+
+    function GetAllStaffAttendanceOfCurrentMonth() {
+        var currentYear = $("#currentyear").val();
+        var currentMonth = $("#currentmonth").val();
+        var _url = "/api/Staff/GetAll/GetAllSatffAttendanceById?id=" + StaffLoginId_Global + "&currentYear=" + currentYear + "&currentMonth=" + currentMonth;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblAttendenceDetails').DataTable();
+
+                // Destroy the existing DataTable instance
+                _table.clear().destroy();
+
+                var sno = 0;
+                var data = [];
+                if (response.data != null) {
+
+                    for (var i = 0; i < response.data.length; i++) {
+                        sno++;
+                      
+                       
+                        var AttendanceStatus = "Not-set";
+                        if (response.data[i].AttendanceStatus == 1) {
+                            AttendanceStatus = '<p  style="color: green;font-weight: 600;text-align: center" class="mb-2">Present</p>'
+                                + `<span style="text-align:center" class="mb-2">In : ${response.data[i].StaffAttendanceInTime_24HF}</span><br>` + `<span style="text-align:center">Out : ${response.data[i].StaffAttendnaceOutTime_24HF}</span>`;
+                        }
+                        else if (response.data[i].AttendanceStatus == 2) {
+                            AttendanceStatus = '<p  style="color: red;font-weight: 600;text-align: center">Absent</p>';
+                        }
+                        else {
+                            AttendanceStatus = '<p  style="color: red;font-weight: 600;text-align: center">On Leave</p>';
+                        }
+
+                        var formattedDate = response.data[i].FormattedAttendanceDate; 
+                        var dateObj = new Date(formattedDate);
+                        var day = dateObj.getDate();
+                        var month = dateObj.getMonth() + 1;
+                        var year = dateObj.getFullYear();
+
+                        var AttendanceDate = `<p style="text-align:center">${day}-${month}-${year}</p>`;
+                        var LeaveReason = `<p style="text-align:center">${response.data[i].LeaveReason}</p>`;
+
+                        data.push([
+                            sno,
+                            AttendanceDate,
+                            AttendanceStatus,
+                            LeaveReason,
+                        ]);
+                    }
+                }
+
+                // Initialize DataTable with the new data
+                $("#tblAttendenceDetails").DataTable({
+                    data: data,
+                    paging: true,
+                    lengthChange: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                });
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

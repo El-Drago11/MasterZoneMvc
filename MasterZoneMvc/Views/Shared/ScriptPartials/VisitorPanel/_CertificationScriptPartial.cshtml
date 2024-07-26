@@ -1,0 +1,413 @@
+﻿<script>
+    var UserToken_Global = "";
+    var CertificateId_Global = 0;
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetCertificationDetail();
+            }
+            else {
+                GetCertificationDetail();
+                StopLoading();
+            }
+        });
+    });
+
+    function GetCertificationDetail() {
+          var Id = $("#hiddenTrainingId").val();
+          var _url = "/api/Training/TrainingCertificationDetailGet?id=" + Id;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                //"Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var Iscertified = '';
+
+                if (response.data.TrainingInstructorList.IsCertified == 1) {
+               Iscertified = ` 
+                                <div class="certified-iner">
+                                    <img src="/Content/visitor-panel/image/quality.png" alt="img" loading="lazy">
+                                    <h6>Certified</h6>
+                                </div>
+                            `;
+                    $("#CertificationVerified").append(Iscertified);
+                } else {
+                    Iscertified = '';
+                }
+
+               
+
+                var certificateIconDetail = '';
+                if (response.data.TrainingInstructorList.IsCertified == 1) {
+                    for (var i = 0; i < response.data.TrainingInstructorList.certificateIconDetail.length; i++) {
+                        certificateIconDetail += `
+                      
+                        <div class="logo-img">
+                            <img src="${response.data.TrainingInstructorList.certificateIconDetail[i].CertificateImageWithPath}" alt="logo-img" loading="lazy">
+                        </div>
+                    `;
+                       }
+                    $("#CertificateIcon").append(certificateIconDetail);
+                } else if (response.data.TrainingInstructorList.IsCertified == 0) {
+                    certificateIconDetail += `<div class="w-100 font-italic text-center text-black-50 py-2">No Certificate Icon Detail.</div>`;
+                    $("#CertificateIcon").append(certificateIconDetail);
+                }
+
+
+                var htmlDataContact = '';
+                if (response.data.TrainingInstructorList) {
+                    if (response.data.TrainingInstructorList.length <= null) {
+                        htmlData1 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Detail in this Training Detail.</div>`;
+                    }
+
+                    else {
+
+                     htmlDataContact += `
+                            <div class="title">
+                                <p class="title-heading">
+                                    CONTACT
+                                </p>
+                                <p>${response.data.TrainingInstructorList.InstructorMobileNumber}</p>
+                            </div>
+                            <div class="title">
+                                <p class="title-heading">Address</p>
+                                <p>
+                                   ${response.data.TrainingInstructorList.Address}
+                                </p>
+                            </div>
+                           
+                            </div>
+                        
+                            `;
+                    }
+                    $('#ContactDetail').append(htmlDataContact);
+                     
+                }
+              
+                
+                
+            
+
+
+                var TrainingRating = '';
+                for (var i = 0; i < response.data.TrainingReviewDetail.length; i++) {
+                    var starIcons = '';
+                    var rating = response.data.TrainingReviewDetail[i].Rating;
+
+                    for (var j = 1; j <= 5; j++) {
+                        if (j <= rating) {
+                            starIcons += '<i class="fas fa-star"></i>';
+                        } else {
+                            starIcons += '';
+                        }
+                    }
+
+                    TrainingRating = `
+                        <div class="review-items">
+                        <div class="star-day">
+                            <div class="star-section">
+                                ${starIcons}
+                            </div>
+                            <div class="review-day">
+                                ${response.data.TrainingReviewDetail[i].DaysDifference} day ago
+                            </div>
+                        </div>
+                        <div class="des-inr">
+                            <p>
+                                ${response.data.TrainingReviewDetail[i].ReviewBody}
+                            </p>
+                        </div>
+                        <a href="#">more</a>
+                        <div class="name">
+                            <p>${response.data.TrainingReviewDetail[i].StudentName}</p>
+                            <p>Students</p>
+                        </div></div>
+                    `;
+                    $('#RatingReviewForTraining').append(TrainingRating);
+                }
+              
+                $('#RatingReviewForTraining').slick({
+                    dots: true,
+                    infinite: true,
+                    arrows: false,
+                    slidesToShow: 3,
+                    slidesToScroll: 3,
+                    autoplay: true,
+                    autoplaySpeed: 3000,
+                    responsive: [
+                        {
+                            breakpoint: 1024,
+                            settings: {
+                                arrows: false,
+                                slidesToShow: 2,
+                                slidesToScroll: 2,
+                                infinite: true,
+                                autoplay: true,
+                                autoplaySpeed: 3000,
+
+                            }
+                        },
+                        {
+                            breakpoint: 767,
+                            settings: {
+                                arrows: false,
+                                slidesToShow: 1,
+                                slidesToScroll: 1,
+                                infinite: true,
+                                dots: true,
+                                autoplay: true,
+                                autoplaySpeed: 3000,
+                            }
+                        }
+
+                    ]
+                });
+
+
+               
+
+                var TrainingDetails = ``;
+                if (response.data.TrainingDetails) {
+                    TrainingDetails = `<div class="date-time-section">
+                            <div class="wpv-event-row style-dark layout-vertical">
+                                <div class="date-cell-inr">
+                                    <div class="date cell">
+                                        <div class="day">${response.data.TrainingDetails.StartMonth} ${response.data.TrainingDetails.StartDay}</div>
+                                        <div class="month">${response.data.TrainingDetails.StartYear}, ${response.data.TrainingDetails.Weeks}</div>
+                                    </div>
+                                    <h5 class="title cell">
+                                       ${response.data.TrainingDetails.FormattedStartTime} - ${response.data.TrainingDetails.FormattedEndTime}
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="wpv-event-row time style-dark layout-vertical time">
+                                <div class="date-cell-inr">
+                                    <div class="date cell">
+                                        Location
+                                    </div>
+                                    <h5 class="title cell">
+                                        ${response.data.TrainingDetails.Location}
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>`;
+                    $('#DateTimeFormat').append(TrainingDetails);
+                }
+                var TrainingSessionDetail = ``;
+                if (response.data.TrainingDetails) {
+                    TrainingSessionDetail += `
+                                    <li>Start: ${response.data.TrainingDetails.StartDay} ${response.data.TrainingDetails.StartMonth}, ${response.data.TrainingDetails.StartYear}</li >
+                                    <li>Seat Available: ${response.data.TrainingDetails.TotalSeats} </li>
+                                    <li>Classes ${response.data.TrainingDetails.TrainingClassDays} </li >
+                                    <li>Course Duration: ${response.data.TrainingDetails.Duration} </li>
+                                    <li>Total Classes: ${response.data.TrainingDetails.TotalClasses} </li>
+                                    <li>Lectures: ${response.data.TrainingDetails.TotalLectures} </li>
+                                    <li>Total Credits: ${response.data.TrainingDetails.TotalCredits} </li>
+                                    <li>Time: ${response.data.TrainingDetails.FormattedStartTime} - ${response.data.TrainingDetails.FormattedEndTime}</li>
+                                `;
+                    $('#TrainingSession').append(TrainingSessionDetail);
+                }
+              
+
+
+                var ExpectationDescription = ``;
+                if (response.data.TrainingDescriptionList) {
+
+                    if (response.data.TrainingDescriptionList == null) {
+                        ExpectationDescription += `<div class="w-100 font-italic text-center text-black-50 py-2">No Expectation Detail. </div>`;
+                    }
+                    else {
+
+                        ExpectationDescription = `<ul>
+                        <li>${response.data.TrainingDescriptionList.ExpectationDescription}</li>
+                    </ul>`;
+                    }
+
+                   
+
+                    $('#TrainingDescriptionDetails').append(ExpectationDescription);
+                }
+
+                var BecomeInstructorDescription = ``;
+                if (response.data.TrainingDescriptionList) {
+                    if (response.data.TrainingDescriptionList == null) {
+                        BecomeInstructorDescription += `<div class="w-100 font-italic text-center text-black-50 py-2">No Become Instructor Detail.</div>`;
+                    }
+                    else {
+                        BecomeInstructorDescription += `
+                           <p>
+                              ${response.data.TrainingDescriptionList.BecomeInstructorDescription}
+                                </p>`;
+                    }
+                   
+                    $('#tabdescriptionone').html(BecomeInstructorDescription);
+                }
+                var TrainingRules = ``;
+                if (response.data.TrainingDescriptionList) {
+                    if (response.data.TrainingDescriptionList == null) {
+                        TrainingRules += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Rules.</div>`;
+                    }
+                    else {
+
+                        TrainingRules += `<p>
+                                        ${response.data.TrainingDescriptionList.TrainingRules}
+                                    </p>`;
+                    }
+                    $('#tabdescriptiontwo').html(TrainingRules);
+                }
+
+                var AdditionalInformation = ``;
+                if (response.data.TrainingDescriptionList == null) {
+                    AdditionalInformation += `<div class="w-100 font-italic text-center text-black-50 py-2">No Additional Information Detail.</div>`;
+                }
+                else {
+
+                    AdditionalInformation += ` <p>
+                            ${response.data.TrainingDescriptionList.AdditionalInformation}
+                        </p>
+                       `;
+                }
+                $('#bodyContentDescription').append(AdditionalInformation);
+        
+               
+                
+
+                var TrainingInstructorList = '';
+                if (response.data.TrainingInstructorList) {
+                    if (response.data.TrainingInstructorList == null) {
+                        TrainingInstructorList += `<div class="w-100 font-italic text-center text-black-50 py-2">No Instructor Detail.</div>`;
+                    }
+                    else {
+
+                        TrainingInstructorList += ` 
+                        <h6>About ${response.data.TrainingInstructorList.TrainingName} Master</h6>
+                        <div class="img-profile">
+                            <img src="${response.data.TrainingInstructorList.ProfileImageWithPath}" alt="image" loading="lazy">
+                        </div>
+                        <div class="profile-info">
+                            <h6>${response.data.TrainingInstructorList.InstructorName} </h6>
+                            <h6>${response.data.TrainingInstructorList.Address}</h6>
+                        </div>
+                        <!-- certification logo -->
+                            
+                    `;
+                    }
+                    
+
+                    $("#InstructorTrainingDetail").append(TrainingInstructorList);
+                }
+
+                var ReviewDetail = '';
+                if (response.data.BusinessReviewDetail) {
+                    var starIcons = '';
+                    var rating = response.data.BusinessReviewDetail.AverageRating;
+
+                    for (var j = 1; j <= 5; j++) {
+                        if (j <= rating) {
+                            starIcons += '<i class="fas fa-star" style="color: #f3a762";></i>';
+                        } else {
+                            starIcons += '<i class="fas fa-star"></i>';
+                        }
+                    }
+
+                    if (response.data.BusinessReviewDetail.TotalReviewsEntered <= 0) {
+                        htmlData1 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Reviews Detail.</div>`;
+                    } else {
+                        ReviewDetail += `
+            <h6>${response.data.BusinessReviewDetail.BusinessName}</h6>
+            <div class="review-star">
+                ${starIcons}
+            </div>
+            <div class="reviews__summary-tp_total_reviews">
+                TrustScore ${response.data.BusinessReviewDetail.AverageRating.toFixed(1) } | <a href="/Home/Review?UserLoginId= ${response.data.BusinessReviewDetail.UserLoginId}">${response.data.BusinessReviewDetail.TotalReviewsEntered} reviews</a>
+            </div>
+        `;
+                    }
+
+                   // $("#BusinessReviewRating").empty().append(ReviewDetail);
+                    $("#BusinessReviewRating").append(ReviewDetail);
+                } else {
+                    ReviewDetail += `<div class="w-100 font-italic text-center text-black-50 py-2">No Reviews Detail.</div>`;
+                   // $("#BusinessReviewRating").empty().append(ReviewDetail);
+                }
+
+
+
+                var TrainingDetails = '';
+                if (response.data.TrainingDetails) {
+                    if (response.data.TrainingDetails.length <= 0) {
+                        TrainingDetails += `<div class="w-100 font-italic text-center text-black-50 py-2">No Training Detail in this Training Detail.</div>`;
+                    }
+                    else {
+
+                        TrainingDetails += `<div class="content-inr">
+
+                            <h2>${response.data.TrainingDetails.TrainingName}</h2>
+                            <p>
+                                ${response.data.TrainingDetails.ShortDescription}
+                            </p>
+                        </div> <div class="offer-sec">
+                            <div class="payment">
+                                <span class="bai-inner__msrp ">
+                                    ₹26,938
+                                </span>
+                                <span class="bai-inner__current ">
+                                    ${response.data.TrainingDetails.Price}
+                                </span>
+                                <span class="off-text">60% OFF</span>
+                            </div>
+                            <div class="payment-cta">
+                                <a href="/Booking/Checkout?itemId=${response.data.TrainingDetails.Id}&itemType=training">Register Now </a>
+                            </div>
+                        </div>
+                         
+                            `;
+                        $('#TrainingDetail').append(TrainingDetails);
+                    }
+
+                }
+
+
+
+               
+            
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

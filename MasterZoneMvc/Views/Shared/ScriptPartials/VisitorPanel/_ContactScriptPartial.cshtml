@@ -1,0 +1,395 @@
+﻿<script>
+    $(document).ready(function () {
+    StartLoading();
+        GetContactDetail();
+        GetContactNumberDetail();
+    StopLoading();
+});
+
+ function GetContactDetail() {
+     let _url = "/api/ContactDetail/GetContactDetailForVisitorPanel";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data != null) {
+                var _htmlDataContacDetails = `
+                    <div class="d-flex">
+                        <div><i class="fa fa-home" aria-hidden="true"></i></div>
+                        <div>
+                            <p>Location</p>
+                            <p>
+                                ${response.data.Address.replace(/\n/g, "<br/>")}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex">
+                        <div><i class="fa fa-envelope-o" aria-hidden="true"></i></div>
+                        <div>
+                            <p>Email</p>
+                            <p>${response.data.Email}</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex">
+                        <div><i class="fa fa-phone" aria-hidden="true"></i></div>
+                        <div>
+                            <p>Phone</p>
+                            <p>${response.data.ContactNumber1}</p>
+                            <p>${response.data.ContactNumber2}</p>
+                        </div>
+                    </div>
+                `;
+                //$('#AddressContact_Details_Info').append('<div><i class="fa fa-home" aria-hidden="true"></i></div><div><p>Location</p><div><p>' + response.data.Address.replace(/\n/g, "<br/>") + '</p></div></div><div class="d-flex"><div><i class="fa fa-envelope-o" aria-hidden="true"></i></div><div><p>Email</p><p>' + response.data.Email + '</p></div></div><div class="d-flex"><div><i class="fa fa-phone" aria-hidden="true"></i></div><div> <p>Phone</p><p>' + response.data.ContactNumber1 + '</p><p>' + response.data.ContactNumber2 + '</p></div></div>');
+
+                $('#AddressContact_Details_Info').append(_htmlDataContacDetails);
+            }
+
+            var ContactBannerImage = '';
+            if (response.data === null) {
+                ContactBannerImage = `<div class="banner-sec" style="background: url(/Content/visitor-panel/image/taj2.jpg) no-repeat top center/cover;">
+                <h2 class="text-center text-white pj-hd-text">Contact Us</h2>
+            </div>`;
+                $("#BindBusinessContactBannerImage").append(ContactBannerImage);
+            }
+
+            else {
+                ContactBannerImage = `<div class="banner-sec" style="background: url(${response.data.ContactImageWithPath}) no-repeat top center/cover;">
+                <h2 class="text-center text-white pj-hd-text">Contact Us</h2>
+            </div>`;
+                $("#BindBusinessContactBannerImage").append(ContactBannerImage);
+
+            }
+
+
+            var ContactCustomerDetail = '';
+            ContactCustomerDetail = ``;
+            if (response.data === null) {
+                $("#BindCustomerInformation").addClass('d-none');
+            }
+            else {
+                ContactCustomerDetail = `<h2 class="text-center sc-hd">${response.data.Title}</h2>
+                    <p class="text-justify sc-txt">
+                       ${response.data.Description}
+                    </p>`;
+                $("#BindCustomerInformation").append(ContactCustomerDetail);
+            }
+
+            var ContactInformation = '';
+            if (response.data === null) {
+                $("#BindContactInformation").addClass('d-none');
+            }
+            else {
+                ContactInformation = `  <h2 class="text-left sc-sb-hd">${response.data.ContactTitle}</h2>
+                    <p>
+                       ${response.data.ContactDescription}
+                    </p>`;
+                $("#BindContactInformation").append(ContactInformation);
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+function btnSubmitUser() {
+    let is_valid = true;
+
+    // var _Mode = (StaffId_Global > 0) ? 2 : 1;
+    //var _Mode = 1;
+    $('.error-class').html('');
+    let _name = $("#text_Contact_Name").val().trim();
+    let _contact_email_address = $("#text_Email_Address").val().trim();
+    let _contact_phone_detail = $("#text_phone").val();
+    let _contact_messages = $("#text_Messages").val();
+
+
+    let _error_name = $("#error_text_Contact_Name");
+    let _error_contact_email_address = $("#error_text_Email_Address");
+    let _error_contact_phone_detail = $("#error_text_phone");
+    let _error_contact_messages = $("#error_text_Messages");
+
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+    if (validate_IsEmptyStringInputFieldValue(_name)) {
+        is_valid = false;
+        _error_name.html('@(Resources.VisitorPanel.NameRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_contact_email_address)) {
+        is_valid = false;
+        _error_contact_email_address.html('@(Resources.VisitorPanel.EmailRequired)');
+    }
+    else if (!TestEmail.test(_contact_email_address)) {
+        is_valid = false;
+        _error_contact_email_address.html('@(Resources.VisitorPanel.ValidEmailRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_contact_phone_detail)) {
+        is_valid = false;
+        _error_contact_phone_detail.html('@(Resources.VisitorPanel.PhoneNumberRequired)');
+    }
+    else if (_contact_phone_detail.indexOf(' ') >= 0) {
+        is_valid = false;
+        _error_contact_phone_detail.html('@(Resources.VisitorPanel.PhoneNumberNotEmptySpaceRequired)');
+    }
+    else if (!phone_test.test(_contact_phone_detail)) {
+        is_valid = false;
+        _error_contact_phone_detail.html('@(Resources.VisitorPanel.ValidPhoneNumberRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_contact_messages)) {
+        is_valid = false;
+        _error_contact_messages.html('@(Resources.VisitorPanel.MessageRequired)');
+    }
+
+    if (is_valid) {
+        StartLoading();
+
+        var _Params = {
+            "Name": _name,
+            "EmailAddress": _contact_email_address,
+            "PhoneNumber": _contact_phone_detail,
+            "Message": _contact_messages,
+        };
+        $.ajax({
+            url: '/api/ContactDetail/SendContactDetailMessage',
+            data: JSON.stringify(_Params),
+            processData: false,
+            // mimeType: 'multipart/form-data',
+            // contentType: false,
+            contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--If successfully sent
+                if (dataResponse.status == 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.VisitorPanel.Contact_SuccessMessage)',
+                        type: "success",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    swal({
+                        title: dataResponse.message,
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                }
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+function GetContactNumberDetail() {
+    let _url = "/api/ContactDetail/GetContactNumberDetailForVisitorPanel";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+           
+                var ContactNumberDetail = '';
+
+                if (response.data.Location1 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                                 <div class="col-md-6">
+                                     <p>${response.data.Location1}</p>
+                                 </div>
+                                 <div class="col-md-6">
+                                     <p>${response.data.ContactNumber1}</p>
+                                 </div>
+                             </div>`;
+                }
+
+
+                if (response.data.Location2 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                                    <div class="col-md-6">
+                                        <p>${response.data.Location2}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p>${response.data.ContactNumber2}</p>
+                                    </div>
+                                </div>`;
+                }
+
+                if (response.data.Location3 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                    <div class="col-md-6">
+                        <p>${response.data.Location3}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p>${response.data.ContactNumber3}</p>
+                    </div>
+                </div>`;
+                }
+
+
+                if (response.data.Location4 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                            <div class="col-md-6">
+                                <p>${response.data.Location4}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>${response.data.ContactNumber4}</p>
+                            </div>
+                        </div>`;
+
+                }
+
+                if (response.data.Location5 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                                <div class="col-md-6">
+                                    <p>${response.data.Location5}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>${response.data.ContactNumber5}</p>
+                                </div>
+                            </div>`;
+                }
+
+                if (response.data.Location6 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                                <div class="col-md-6">
+                                    <p>${response.data.Location6}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>${response.data.ContactNumber6}</p>
+                                </div>
+                            </div>`;
+                }
+
+                if (response.data.Location7 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                                    <div class="col-md-6">
+                                        <p>${response.data.Location7}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p>${response.data.ContactNumber7}</p>
+                                    </div>
+                                </div>`;
+                }
+
+                if (response.data.Location8 !== "") {
+                    ContactNumberDetail += `<div class="row">
+                                <div class="col-md-6">
+                                    <p>${response.data.Location8}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>${response.data.ContactNumber8}</p>
+                                </div>
+                            </div>`;
+                }
+                $("#BindContactNumber").append(ContactNumberDetail);
+
+            
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+</script>

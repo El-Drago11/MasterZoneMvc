@@ -1,0 +1,436 @@
+﻿
+@{
+    ViewBag.Title = "Manage Home Page";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+@section Styles{
+    <style>
+        .categoryIcon {
+            width: 75px;
+            height: 75px;
+        }
+
+        .categoryIconPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+    <link href="~/Content/assets/Common_Popuphover.css" rel="stylesheet" />
+
+}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Manage Home Page</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Manage Home Page</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+
+    <!-- View content -->
+    <section class="content" id="sectionManageHomePageBanner">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Home Page Banner</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    Manage the multiple Banner Items List.
+                                </div>
+                                <div class="col-sm-12">
+                                    <a href="/SuperAdmin/ManageHomePageBannerItem" class="btn btn-primary btn-sm">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- View content -->
+    <section class="content" id="sectionManageClassCategorySection">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Class Category Section</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 ">
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Class Category<span class="text-danger">*</span></label>
+                                        <select id="ddlParentClassCategory_ManageClassCategory" class="form-control">
+                                            <option value="0">Select</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlParentClassCategory_ManageClassCategory"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group d-flex flex-column">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="chkIsActive_ManageClassCategory" checked>
+                                            <label class="form-check-label" for="chkIsActive_ManageClassCategory" style="cursor:pointer;">Is Active</label>
+                                        </div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="AddUpdate_ManageClassCategory()">Save</button>
+                                        @*<button type="button" id="btnCancel_ManageCategories" class="btn btn-danger" onclick="btnClickCancel_ManageCardImage()">Cancel</button>*@
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- View content -->
+    <section class="content" id="sectionManageImageCard">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Featured Card - Image</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 ">
+
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Title<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtTitle_ManageCardImage" class="border form-control">
+                                        <div class="error-class" id="error_txtTitle_ManageCardImage"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Description<span class="text-danger">*</span></label>
+                                        <textarea type="text" id="txtDescription_ManageCardImage" rows="4" class="border form-control"></textarea>
+                                        <div class="error-class" id="error_txtDescription_ManageCardImage"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Thumbnail<span class="text-danger">*</span></label>
+                                        <div class="categoryIconPreview">
+                                            <img id="thumbnail_ManageCardImage" class="d-none" style="width:100%; height:100%;">
+                                        </div>
+                                        <input type="file" id="fileThumbnail_ManageCardImage" class="border form-control" accept="image/*">
+                                        <div class="error-class" id="error_fileThumbnail_ManageCardImage"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Button Text<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtButtonText_ManageCardImage" class="border form-control">
+                                        <div class="error-class" id="error_txtButtonText_ManageCardImage"></div>
+                                    </div>
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Button Link<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtButtonLink_ManageCardImage" class="border form-control">
+                                        <div class="error-class" id="error_txtButtonLink_ManageCardImage"></div>
+                                    </div>
+                                </div>
+                                <!-- /.col -->
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group d-flex flex-column">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="chkIsActive_ManageCardImage" checked>
+                                            <label class="form-check-label" for="chkIsActive_ManageCardImage" style="cursor:pointer;">Is Active</label>
+                                        </div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="AddUpdate_ManageCardImage()">Save</button>
+                                        @*<button type="button" id="btnCancel_ManageCategories" class="btn btn-danger" onclick="btnClickCancel_ManageCardImage()">Cancel</button>*@
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- View content -->
+    <section class="content" id="sectionManageVideoCard">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Featured Card - Video</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 ">
+
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Title<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtTitle_ManageCardVideo" class="border form-control">
+                                        <div class="error-class" id="error_txtTitle_ManageCardVideo"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Description<span class="text-danger">*</span></label>
+                                        <textarea type="text" id="txtDescription_ManageCardVideo" rows="4" class="border form-control"></textarea>
+                                        <div class="error-class" id="error_txtDescription_ManageCardVideo"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    <div class="form-group d-flex flex-column">
+                                        <label>
+                                            Video Unique Identifier<span class="text-danger">* </span>
+                                            <button class="tooltip">
+                                                i
+                                                <span class="tooltiptext" style="border: 1.5px solid  #ced4da"> For Example, This is the youtube link, from this link you just need to copy the video name (S-8druBYi3o) and paste it in below input field.  https://www.youtube.com/watch?v=S-8druBYi3o</span>
+                                            </button>
+                                        </label>
+                                        <input type="text" id="txtVideo_ManageCardVideo" class="border form-control">
+                                        <div class="error-class" id="error_txtVideo_ManageCardVideo"></div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                    @*<div class="form-group d-flex flex-column">
+                                            <label>Thumbnail<span class="text-danger">*</span></label>
+                                            <div class="categoryIconPreview">
+                                                <img id="thumbnail_ManageCardVideo" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileThumbnail_ManageCardVideo" class="border form-control" accept="image/*">
+                                            <div class="error-class" id="error_fileThumbnail_ManageCardVideo"></div>
+                                        </div>*@
+                                    <!-- /.form-group -->
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Button Text<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtButtonText_ManageCardVideo" class="border form-control">
+                                        <div class="error-class" id="error_txtButtonText_ManageCardVideo"></div>
+                                    </div>
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Button Link<span class="text-danger">*</span></label>
+                                        <input type="text" id="txtButtonLink_ManageCardVideo" class="border form-control">
+                                        <div class="error-class" id="error_txtButtonLink_ManageCardVideo"></div>
+                                    </div>
+                                </div>
+                                <!-- /.col -->
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group d-flex flex-column">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="chkIsActive_ManageCardVideo" checked>
+                                            <label class="form-check-label" for="chkIsActive_ManageCardVideo" style="cursor:pointer;">Is Active</label>
+                                        </div>
+                                    </div>
+                                    <!-- /.form-group -->
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="AddUpdate_ManageCardVideo()">Save</button>
+                                        @*<button type="button" id="btnCancel_ManageCategories" class="btn btn-danger" onclick="btnClickCancel_ManageCardVideo()">Cancel</button>*@
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- View content -->
+    <section class="content" id="sectionManageFeaturedVideos">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Featured Videos</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- View content -->
+    <section class="content" id="sectionManageMultipleVideoItems">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Multiple Video Items</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    Manage the multiple Video Items List.
+                                </div>
+                                <div class="col-sm-12">
+                                    <a href="/SuperAdmin/ManageMultipleVideoSection" class="btn btn-primary btn-sm">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- View content -->
+    <section class="content" id="sectionManageMultipleImageItems">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card collapsed-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Manage Multiple Image Items</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    Manage the multiple Image Items List.
+                                </div>
+                                <div class="col-sm-12">
+                                    <a href="/SuperAdmin/ManageMultipleImageSection" class="btn btn-primary btn-sm">Manage</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /. View content -->
+    <!-- Main content -->
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+@section Scripts {
+    <script src="~/Scripts/js/Validation.js"></script>
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageHomePageScriptPartial.cshtml")
+}
+

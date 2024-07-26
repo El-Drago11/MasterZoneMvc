@@ -1,0 +1,386 @@
+﻿<script>
+
+    var UserToken_Global = "";
+    var CustomFormId_Global = $("#hiddenCustomFormId").val();
+    var BusinessOwnerLoginId = $("#hiddenBusinessLoginId").val();
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                ViewCustomFormDetail();
+            }
+            else {
+                /* UserToken_Global = "";*/
+                StopLoading();
+            }
+        });
+
+    });
+
+      function ViewCustomFormDetail() {
+          var _url = "/api/CustomForm/GetCustomFormDetailById?id=" + CustomFormId_Global;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $("#CustomFormViewDetailModal").html('');
+            $("#CustomformName").html('');
+            var FormName = '';
+            if (response.data.CustomFormName == null) {
+                FormName = '<div class="w-100 font-italic text-center text-black-50 py-2">No Custom Form Name </div>';
+                $("#CustomformName").html(FormName);
+            }
+            else {
+                FormName = `<h6>Title: ${response.data.CustomFormName.CustomFormName}</h6>`;
+                $("#CustomformName").append(FormName);
+            }
+
+
+
+            $("#CustomformName").val(response.data.CustomFormName.CustomFormName);
+
+            var CustomformDetail = '';
+            if (response.data.CustomFormDetailList.length === 0) {
+                CustomformDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Custom Detail. </div>';
+                $("#CustomFormDetailModal").html(CustomformDetail);
+            } else {
+                for (var i = 0; i < response.data.CustomFormDetailList.length; i++) {
+                    var CustomFormDetailList = '';
+
+                    if (response.data.CustomFormDetailList[i].CustomFormElementOptions == null) {
+                        CustomFormDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No  Custom Detail.</div>';
+                    } else {
+                        if (response.data.CustomFormDetailList[i].CustomFormElementType == "select") {
+                            if (typeof response.data.CustomFormDetailList[i].CustomFormElementOptions === 'string') {
+                                var optionsArray = response.data.CustomFormDetailList[i].CustomFormElementOptions.split(',');
+
+                                for (var j = 0; j < optionsArray.length; j++) {
+                                    CustomFormDetailList += `<option value="${optionsArray[j]}">${optionsArray[j]}</option>`;
+                                }
+                            } else {
+                                CustomFormDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Course Detail.</div>';
+                            }
+
+                        }
+
+                        if (response.data.CustomFormDetailList[i].CustomFormElementType == "radio") {
+                            if (typeof response.data.CustomFormDetailList[i].CustomFormElementOptions === 'string') {
+                                var optionsArray = response.data.CustomFormDetailList[i].CustomFormElementOptions.split(',');
+
+                                CustomFormDetailList += '<div class="row">';
+                                var radioGroup = "radioGroup_" + i;
+
+                                for (var j = 0; j < optionsArray.length; j++) {
+                                    var trimmedOption = optionsArray[j].replace(/(^"|"$)/g, '').trim();
+                                    var radioId = "radio_" + i + "_" + j; // Generate a unique ID for each radio button
+
+                                    CustomFormDetailList += `
+                                    <div class="col-md-4" style="text-align: center;">
+                                        <span>${trimmedOption}</span>
+                                    </div>
+                                    <div class="col-md-8" style="margin-left: -240px;">
+                                        <input type="radio" id="${radioId}" name="${radioGroup}" value="${trimmedOption}">
+                                    </div>`;
+                                }
+
+                                CustomFormDetailList += '</div>'; // Close the row
+                            } else {
+                                CustomFormDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Course Detail.</div>';
+                            }
+                        }
+
+
+                        else if ( response.data.CustomFormDetailList[i].CustomFormElementType == "checkbox") {
+                            if (typeof response.data.CustomFormDetailList[i].CustomFormElementOptions === 'string') {
+                                var optionsArrays = response.data.CustomFormDetailList[i].CustomFormElementOptions.split(',');
+
+
+
+
+                        CustomFormDetailList += '<div class="row">';
+
+                        for (var k = 0; k < optionsArrays.length; k++) {
+                            var trimmedOption = optionsArrays[k].replace(/(^"|"$)/g, '').trim();
+
+                            CustomFormDetailList += `
+                <div class="col-md-4" style="text-align: center;">
+
+                        <span>${trimmedOption}</span>
+
+                </div>
+                <div class="col-md-8" style="margin-left: -240px;">
+                    <input type="checkbox" id="texttypecheckbox" value="${trimmedOption}">
+                </div>`;
+                        }
+
+                        CustomFormDetailList += '</div>'; // Close the row
+                    } else {
+                        CustomFormDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Course Detail.</div>';
+                    }
+                        }
+
+
+                    }
+
+                    if (response.data.CustomFormDetailList[i].CustomFormElementType == "text") {
+                        CustomformDetail += `<label id="textcustomformname">${response.data.CustomFormDetailList[i].CustomFormElementName}</label><input  type="${response.data.CustomFormDetailList[i].CustomFormElementType}" placeholder="${response.data.CustomFormDetailList[i].CustomFormElementPlaceholder}" fdprocessedid="dm2oce"  id="txtName"><br/>`;
+                    } else if (response.data.CustomFormDetailList[i].CustomFormElementType == "number") {
+                        CustomformDetail += `<label  id="textcustomformnumber">${response.data.CustomFormDetailList[i].CustomFormElementName}</label><input  type="${response.data.CustomFormDetailList[i].CustomFormElementType}" placeholder="${response.data.CustomFormDetailList[i].CustomFormElementPlaceholder}" fdprocessedid="dm2oce"  id="txtNumber"><br>`;
+                    }
+                    else if (response.data.CustomFormDetailList[i].CustomFormElementType == "email") {
+                        CustomformDetail += `<label  id="textcustomformemail">${response.data.CustomFormDetailList[i].CustomFormElementName}</label><input  type="${response.data.CustomFormDetailList[i].CustomFormElementType}" placeholder="${response.data.CustomFormDetailList[i].CustomFormElementPlaceholder}" fdprocessedid="dm2oce"  id="txtEmail">`;
+                    }
+                    else if (response.data.CustomFormDetailList[i].CustomFormElementType == "select") {
+                        CustomformDetail += `<label  id="textcustomformselect">${response.data.CustomFormDetailList[i].CustomFormElementName}</label><select fdprocessedid="9fv5hf"  id="txtSelect" >${CustomFormDetailList}</select>`;
+                    } else if (response.data.CustomFormDetailList[i].CustomFormElementType == "textarea") {
+                        CustomformDetail += `<label  id="textcustomformtextarea">${response.data.CustomFormDetailList[i].CustomFormElementName}</label><textarea placeholder="${response.data.CustomFormDetailList[i].CustomFormElementPlaceholder}"  id="txtArea"></textarea>`;
+                    } else if (response.data.CustomFormDetailList[i].CustomFormElementType == "radio") {
+                        CustomformDetail += `<label  id="textcustomformradio">${response.data.CustomFormDetailList[i].CustomFormElementName}</label>${CustomFormDetailList}`;
+                    } else if (response.data.CustomFormDetailList[i].CustomFormElementType == "checkbox") {
+                        CustomformDetail += `<label  id="textcustomformcheck">${response.data.CustomFormDetailList[i].CustomFormElementName}</label>${CustomFormDetailList}`;
+                    }
+                    //else if (response.data.CustomFormDetailList[i].CustomFormElementType == "submit") {
+                    //    CustomformDetail += `<button type="button" class="btn btn-primary mb-0" fdprocessedid="i2c93c">${response.data.CustomFormDetailList[i].CustomFormElementName}</button>`;
+                    //}
+
+                }
+            }
+
+            $("#CustomFormViewDetail").append(CustomformDetail);
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+     function saveFormData() {
+         const formNameInput = document.getElementById('formNameInput').value;
+         const formData = [];
+
+         formData.push({
+             label: 'Form Name',
+             type: 'text',
+             value: formNameInput,
+         });
+
+         const formContainer = document.getElementById('CustomFormDetailModal');
+         const currentCardIds = Array.from(formContainer.querySelectorAll('.question-card')).map(card => card.id.replace('card-', ''));
+         //const addedCardIds = currentCardIds.filter(id => !originalCardIds.includes(id));
+         //const deletedCardIds = originalCardIds.filter(id => !currentCardIds.includes(id));
+
+
+
+
+        // Iterate over each question card in the form container
+        formContainer.querySelectorAll('.question-card').forEach(questionCard => {
+            const labelElement = questionCard.querySelector('label');
+
+            // Skip if the question card does not contain a label
+            if (!labelElement) {
+                return;
+            }
+
+            const questionData = {};
+            questionData.label = labelElement.textContent;
+
+
+
+            if (questionCard.querySelector('select')) {
+                questionData.type = 'select';
+
+                const selectElement = questionCard.querySelector('select');
+
+                // Get options for the select dropdown
+                const selectOptions = Array.from(selectElement.options).map(option => ({
+                    value: option.value,
+                    label: option.text
+                }));
+
+                questionData.options = selectOptions;
+
+                // Get the selected options for the select dropdown
+                const selectedOptions = Array.from(selectElement.selectedOptions).map(option => ({
+                    value: option.value,
+                    label: option.text
+                }));
+
+                if (selectedOptions.length > 0) {
+                    questionData.selectedOptions = selectedOptions;
+                }
+            }
+            else if (questionCard.querySelector('input[type="radio"]')) {
+                questionData.type = 'radio';
+
+                // Get options for radio buttons
+                const radioOptions = Array.from(questionCard.querySelectorAll('input[type="radio"]')).map(radio => ({
+                    value: radio.value,
+                    label: radio.nextSibling.textContent.trim()
+                }));
+
+                questionData.options = radioOptions;
+
+                // Get the selected options for radio buttons
+                const selectedRadios = Array.from(questionCard.querySelectorAll('input[type="radio"]:checked')).map(radio => ({
+                    value: radio.value,
+                    label: radio.nextSibling.textContent.trim()
+                }));
+
+                if (selectedRadios.length > 0) {
+                    questionData.selectedOptions = selectedRadios;
+                }
+            }
+            /// To add the submit button
+            else if (questionCard.querySelector('.submit-button')) {
+                questionData.type = 'submit';
+
+                // Check if the submit button has been modified (changed label, etc.)
+                const submitButtonLabel = questionCard.querySelector('.submit-button').textContent;
+                const originalLabel = getOriginalSubmitButtonLabel(); // Implement this function to get the original label from where it is stored
+
+                if (submitButtonLabel !== originalLabel) {
+                    questionData.label = submitButtonLabel;
+                }
+            }
+
+            else if (questionCard.querySelector('input[type="checkbox"]')) {
+                questionData.type = 'checkbox';
+
+                // Get options for checkboxes
+                const checkboxOptions = Array.from(questionCard.querySelectorAll('input[type="checkbox"]')).map(checkbox => ({
+                    value: checkbox.value,
+                    label: checkbox.nextSibling.textContent.trim()
+                }));
+
+                questionData.options = checkboxOptions;
+
+                // Get the selected options for checkboxes
+                const selectedCheckboxes = Array.from(questionCard.querySelectorAll('input[type="checkbox"]:checked')).map(input => ({
+                    value: input.value,
+                    label: input.nextSibling.textContent.trim()
+                }));
+
+                if (selectedCheckboxes.length > 0) {
+                    questionData.selectedOptions = selectedCheckboxes;
+                }
+            }
+            //else if (questionCard.querySelector('input[type="text"]')) {
+            //    questionData.type = 'text';
+            //    questionData.placeholder = questionCard.querySelector('input').placeholder;
+            //}
+
+
+            else if (questionCard.querySelector('input[type="text"]') || questionCard.querySelector('input[type="email"]') || questionCard.querySelector('input[type="number"]')) {
+                const inputElement = questionCard.querySelector('input');
+                questionData.type = inputElement.getAttribute('type'); // Use the actual input type
+
+                if (questionData.type === 'text' || questionData.type === 'email' || questionData.type === 'number') {
+                    questionData.value = inputElement.value; // Include the value for text, email, and number types
+                }
+
+                questionData.placeholder = inputElement.placeholder;
+            }
+
+
+            else if (questionCard.querySelector('textarea')) {
+                questionData.type = 'textarea';
+                questionData.placeholder = questionCard.querySelector('textarea').placeholder;
+            } else if (questionCard.querySelector('img')) {
+                questionData.type = 'image';
+                questionData.src = questionCard.querySelector('img').getAttribute('src');
+            }
+
+            // Include placeholder in the questionData object
+            const placeholderElement = questionCard.querySelector('[placeholder]');
+            questionData.placeholder = placeholderElement ? placeholderElement.getAttribute('placeholder') : '';
+
+            // Check if label is non-empty before pushing to formData
+            if (questionData.label.trim() !== '' || questionData.placeholder.trim() !== '') {
+                // Push a new instance of the question data to the form data array
+                formData.push({ ...questionData });
+
+                console.log(formData);
+            }
+        });
+         $.ajax({
+             url: '/api/CustomForm/UpdateCustomFormDetail?id=' + CustomFormId_Global '&businessOwnerLoginId=' +BusinessOwnerLoginId,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+             data: JSON.stringify(formData),
+
+        contentType: 'application/json',
+        type: "POST",
+        success: function (dataResponse) {
+            // If successfully added/updated
+            if (dataResponse.status === 1) {
+                swal("Success!", dataResponse.message, "success");
+            } else {
+                swal({
+                    title: 'Error!',
+                    icon: 'error',
+                    text: dataResponse.message
+                });
+                StopLoading();
+                return;
+            }
+
+            ResetAddView();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+</script>

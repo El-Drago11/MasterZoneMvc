@@ -1,0 +1,157 @@
+﻿<script>
+    $(document).ready(function () {
+        GetSuperAdminDashboardDetail();
+    });
+        // To Get   Business Detail In Dashboard SuperAdmin
+
+      function GetSuperAdminDashboardDetail() {
+
+          var _url = "/api/SuperAdmin/DashboardDetailGet";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        //headers: {
+        //    "Authorization": "Bearer " + UserToken_Global,
+        //    "Content-Type": "application/json"
+        //},
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var DashoardDetail = '';
+            if (response.data === null) {
+                res_dashobard_detail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Busines Academy Detail.</div>';
+                $("#BindSuperAdminDashobardCardDetail").append(res_dashobard_detail);
+            }
+            else {
+                DashoardDetail = ` <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3>${response.data.TotalBusiness}</h3>
+
+                            <p>Businesses</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fa fa-building"></i>
+                        </div>
+                        <a href="/SuperAdmin/ManageBusiness" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                        <!-- ./col -->
+                         <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3>${response.data.TotalSubAdmin}</h3>
+
+                            <p>Sub Admins</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-person"></i>
+                        </div>
+                        <a href="/SuperAdmin/ManageSubAdmin" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>  
+                 <!-- ./col -->
+                    <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-primary">
+                        <div class="inner">
+                            <h3>${response.data.TotalStudent}</h3>
+
+                            <p>Students</p>
+                        </div>
+                        <div class="icon">
+                         <i class="ion ion-person"></i>
+                            
+                        </div>
+                        <a href="/SuperAdmin/UserAccount" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3>${response.data.TotalCertificates}<sup style="font-size: 20px"></sup></h3>
+
+                            <p>Certificates</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fa fa-certificate"></i>
+                        </div>
+                        <a href="/SuperAdmin/ManageCertificate" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>${response.data.TotalAdvertisements}</h3>
+
+                            <p>Advertisements</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-image"></i>
+                           
+                        </div>
+                        <a href="/SuperAdmin/ManageAdvertisement" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-secondary">
+                        <div class="inner">
+                            <h3>${response.data.TotalPlans}</h3>
+
+                            <p>Plans</p>
+                        </div>
+                        <div class="icon">
+                           <i class="ion ion-bag"></i>
+
+                        </div>
+                        <a href="/SuperAdmin/ManagePackage" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                 `;
+                $("#BindSuperAdminDashobardCardDetail").append(DashoardDetail);
+            }
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+</script>

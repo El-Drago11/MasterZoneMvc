@@ -1,0 +1,1181 @@
+﻿<script>
+    var UserToken_Global = "";
+    var SubAdminId_Global = 0;
+    var _subAdminTable;
+    function initializeDataTable_SubAdmin() {
+        _subAdminTable = $("#tblSubAdmin").DataTable();
+    }
+    var SelectedPermissionArr_Global = [];
+    var LocationChooseMap = 0;
+    var CountrySubAdminLocation = '0';
+    var StateSubAdminLocation = '0';
+    var CitySubAdminLocation = '0';
+    var LandMarkSubAdminLocation = '';
+
+    $(document).ready(function () {
+
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+                initializeDataTable_SubAdmin();
+                GetAllSubAdmin();
+                GetAllSubAdminPermissions();
+                GetCountriesList();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+
+                        UserToken_Global = dataAdminToken;
+                        initializeDataTable_SubAdmin();
+                        GetAllSubAdmin();
+                        GetAllSubAdminPermissions();
+                        GetCountriesList();
+                    }
+                });
+            }
+        });
+    });
+
+
+    $('#EditSubAdminUser').click(function () {
+        $('#AddNewSub').show();
+        $('#AllSubAdmin').hide();
+        $('#AllSubAdmin').hide();
+        $('#AddNewSub').hide();
+        document.getElementById("ChangeText").innerHTML = "Edit SubAdmin";
+        document.getElementById("ChangeText_header").innerHTML = "Edit SubAdmin";
+        initMap();
+
+        EditSubAdminById();
+    });
+
+    $('#AddSubAdminUser').click(function () {
+        $('#AddNewSub').show();
+        $('#AllSubAdmin').hide();
+        initMap();
+
+    });
+
+
+    function ResetAddView() {
+        $('#AddNewSub').hide();
+        $('#AllSubAdmin').show();
+        $('#txtSubAdminName').val('');
+        $('#txtSubAdminLastName').val('');
+        $('#AddSubAdminUser').show();
+        $('#txtEmail_ManageSubAdmin').val('');
+        $('#txtPassword_ManageSubAdmin').val('');
+        $('#txtConfirmPassword_ManageSubAdmin').val('');
+        $('#SubAdminOfflineAddress').val('');
+        $('#SubAdminOfflineLandMark').val('');
+        $('#SubAdminOfflinePinCode').val('');
+        $(".error-class").html('');
+        $("input#ddl_SubAdminOfflineCountry").val('');
+        $("input#ddl_SubAdminOfflineState").val('');
+        $("input#ddl_SubAdminOfflineCity").val('');
+        $(".WithoutMapLocation").removeClass('d-none');
+        $(".MapLocation").addClass('d-none');
+        $("#ddl_SubAdminOfflineCity").html('');
+        $("#ddl_SubAdminOfflineCity").append('<option value="0" selected>Select</option>');
+        $("#ddl_SubAdminOfflineCity").html('');
+        $("#ddl_SubAdminOfflineCity").append('<option value="0" selected>Select</option>');
+        $("#ddl_SubAdminOfflineCountry").html('');
+        $("#ddl_SubAdminOfflineCountry").append('<option value="0" selected>Select</option>');
+        CountrySubAdminLocation = 'Select';
+        LandMarkSubAdminLocation = '';
+        SubAdminId_Global = 0;
+        document.getElementById("Changetext").innerHTML = "Add SubAdmin";
+        document.getElementById("ChangeText_header").innerHTML = "Add SubAdmin";
+        clearPermissionCheckboxes();
+        $("#fileSubAdminImage_ManageSubAdmin").val('');
+        $("#previewImage").attr('src', '');
+        $("#previewImage").addClass('d-none');
+    }
+
+
+     function btnSubmitSubAdmin() {
+
+    let is_valid = true;
+        $(".error-class").html('');
+         let _subAdminLocationCountry = '';
+         let _subAdminLocationState = '';
+         let _subAdminLocationCity = '';
+         var _mode = (SubAdminId_Global <= 0) ? 1 : 2;
+         let _subAdminName = $("#txtSubAdminName").val().trim();
+         let _subAdminLastName = $("#txtSubAdminLastName").val().trim();
+         let _subAdminEmail = $("#txtEmail_ManageSubAdmin").val().trim();
+         let _subAdminPassword = $("#txtPassword_ManageSubAdmin").val().trim();
+         let _subAdminConfirmPassword = $("#txtConfirmPassword_ManageSubAdmin").val().trim();
+
+         let _subAdminLoctionAddress = $("#SubAdminOfflineAddress").val();
+         let _subAdminLocationLandMark = $("#SubAdminOfflineLandMark").val();
+
+
+         let _error_subAdminName = $("#error_txtSubAdminName");
+         let _error_subAdminLastName = $("#error_txtSubAdminLastName");
+         let _error_subAdminEmail = $("#error_txtEmail_ManageSubAdmin");
+         let _error_subAdminPassword = $("#error_txtPassword_ManageSubAdmin");
+         let _error_subAdminConfirmPassword = $("#error_txtConfirmPassword_ManageSubAdmin");
+         var _error_subadminImage = $("#error_fileSubAdminImage_ManageSubAdmin");
+
+         var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+
+         if (validate_IsEmptyStringInputFieldValue(_subAdminName)) {
+        is_valid = false;
+             _error_subAdminName.html('@(Resources.SuperAdminPanel.SubAdmin_FirstNameRequired)');
+         }
+          if (validate_IsEmptyStringInputFieldValue(_subAdminLastName)) {
+        is_valid = false;
+              _error_subAdminLastName.html('@(Resources.SuperAdminPanel.SubAdmin_LastNameRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_subAdminPassword)) {
+        is_valid = false;
+             _error_subAdminPassword.html('@(Resources.SuperAdminPanel.PasswordRequired)');
+    }
+         else if (validate_IsEmptyStringInputFieldValue(_subAdminConfirmPassword)) {
+        is_valid = false;
+             _error_subAdminConfirmPassword.html('@(Resources.SuperAdminPanel.ConfirmPasswordRequired)');
+    }
+         else if (_subAdminConfirmPassword != _subAdminPassword) {
+        is_valid = false;
+             _error_subAdminConfirmPassword.html("@(Resources.BusinessPanel.PasswordNotMatch_ErrorMessage)");
+    }
+         if (validate_IsEmptyStringInputFieldValue(_subAdminEmail)) {
+        is_valid = false;
+             _error_subAdminEmail.html('@(Resources.SuperAdminPanel.EmailRequired)');
+    }
+         else if (!TestEmail.test(_subAdminEmail)) {
+        is_valid = false;
+             _error_subAdminEmail.html('@(Resources.SuperAdminPanel.ValidEmailRequired)');
+         }
+
+    if (_mode == 1) {
+        if ($("#fileSubAdminImage_ManageSubAdmin").val() == '') {
+            is_valid = false;
+            _error_subadminImage.html('@(Resources.SuperAdminPanel.SubAdminIconRequired))');
+        }
+    }
+
+
+        if (LocationChooseMap == 1) {
+            _subAdminLocationCountry = $("input#ddl_SubAdminOfflineCountry").val();
+           _subAdminLocationState = $("input#ddl_SubAdminOfflineState").val();
+           _subAdminLocationCity = $("input#ddl_SubAdminOfflineCity").val();
+        }
+        else {
+            _subAdminLocationCountry = $("#ddl_SubAdminOfflineCountry").val();
+           _subAdminLocationState = $("#ddl_SubAdminOfflineState").val();
+           _subAdminLocationCity = $("#ddl_SubAdminOfflineCity").val();
+        }
+
+         let _subAdminLocationPinCode = $("#SubAdminOfflinePinCode").val();
+         let _subAdminLocationLatitude = $("#LocationLatitude").val();
+         let _subAdminLocationLongitude = $("#LocationLongitude").val();
+
+
+            if (_subAdminLoctionAddress == "") {
+                is_valid = false;
+                $("#error_SubAdminOfflineAddress").html('@(Resources.SuperAdminPanel.SubAdmin_LocationRequired)');
+            }
+            if (_subAdminLocationLandMark == "") {
+                is_valid = false;
+                $("#error_SubAdminOfflineLandMark").html('@(Resources.SuperAdminPanel.SubAdmin_LandmarkRequired)');
+            }
+         if (_subAdminLocationCountry == "" || _subAdminLocationCountry <= 0) {
+                is_vaild = false;
+                $("#error_ddl_SubAdminOfflineCountry").html('@(Resources.SuperAdminPanel.SubAdmin_CountryRequired)');
+            }
+         if (_subAdminLocationState <= 0 || _subAdminLocationState == "") {
+                is_vaild = false;
+                $("#error_ddl_SubAdminOfflineState").html('@(Resources.SuperAdminPanel.SubAdmin_StateRequired)');
+            }
+         if (_subAdminLocationCity <= 0 || _subAdminLocationCity == "") {
+                is_vaild = false;
+                $("#error_ddl_SubAdminOfflineCity").html('@(Resources.SuperAdminPanel.SubAdmin_CityRequired)');
+            }
+            if (_subAdminLocationPinCode == "") {
+                is_valid = false;
+                $("#error_SubAdminOfflinePinCode").html('@(Resources.SuperAdminPanel.SubAdmin_PincodeRequired)');
+            }
+
+        if (SelectedPermissionArr_Global.length === 0) {
+             is_valid = false;
+             $("#error_SubAdminPermissions_ManageSubAdmin").html('@(Resources.SuperAdminPanel.SubAdmin_PermisionsRequired)');
+         }
+
+
+
+    if (is_valid) {
+        var data = new FormData();
+        data.append("Id", SubAdminId_Global);
+        data.append("FirstName", _subAdminName);
+        data.append("LastName", _subAdminLastName);
+        data.append("Email", _subAdminEmail);
+        data.append("Password", _subAdminPassword);
+        data.append("Address", _subAdminLoctionAddress);
+        data.append("Country", _subAdminLocationCountry);
+        data.append("LandMark", _subAdminLocationLandMark);
+        data.append("State",_subAdminLocationState);
+        data.append("City", _subAdminLocationCity);
+        data.append("Pincode", _subAdminLocationPinCode);
+        data.append("Latitude",_subAdminLocationLatitude);
+        data.append("Longitude", _subAdminLocationLongitude);
+        data.append("PermissionIds", SelectedPermissionArr_Global.join(","));
+        data.append("Mode", _mode);
+
+        var _subadminImageFile_MC = $("#fileSubAdminImage_ManageSubAdmin").get(0);
+        var _subadminImageFiles = _subadminImageFile_MC.files;
+        data.append('ProfileImage', _subadminImageFiles[0]);
+
+
+        $.ajax({
+            url: "/api/SubAdmin/AddUpdate",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: "multipart/form-data",
+            contentType: false,
+            //contentType: 'application/json',
+            type: "POST",
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    ResetAddView();
+                    GetAllSubAdmin();
+                }
+                else {
+                    swal({
+                        title: '',
+                        imageUrl: '/Content/svg/error.svg',
+                        text: dataResponse.message
+                    });
+
+                    //StopLoading();
+
+                }
+
+            },
+            error: function (result) {
+                //StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    }
+
+    function GetAllSubAdmin() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/SubAdmin/GetAllByPagination";
+        _subAdminTable.clear().destroy();
+        _subAdminTable = $("#tblSubAdmin").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: 'Unauthorized! Invalid Token!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+
+                }
+                , {
+                    "data": null, "": "ProfileImage", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _Image = (row.ProfileImageWithPath == '') ? '' : '<img src="' + row.ProfileImageWithPath + '" class="subadminIcon" />';
+                        return _Image;
+                    }
+                }
+
+                , { "data": "Name", "name": "Name", "autoWidth": true }
+                , { "data": "Email", "name": "Email", "autoWidth": true }
+                , { "data": "Address", "name": "Address", "autowidth": true }
+
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autowidth": true
+                    , "render": function (data, type, row) {
+                        return row.CreatedOn_FormatDate; `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('yyyy-mm-dd')}</span> ${row.CreatedOn_FormatDate}`;
+                    }
+                }
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+
+
+                        var _edit = `<a href="javascript:EditSubAdminById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                        var _delete = `<a href="javascript:ConfirmDeletedSubAdmin(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                        var _action = `<div class="edbt">
+
+                                        ${_edit}
+                                        ${_delete}
+                                    </div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0, 6], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblSubAdmin_filter input').unbind();
+        $('#tblSubAdmin_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _eventTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+
+    function EditSubAdminById(Id) {
+        GetCountriesList();
+        GetStatesLists();
+        GetCitiesList();
+
+        $('#AddNewSub').show();
+        $('#AllSubAdmin').hide();
+        initMap();
+        document.getElementById("Changetext").innerHTML = "Edit SubAdmin";
+        document.getElementById("ChangeText_header").innerHTML = "Edit SubAdmin";
+        document.getElementById("TitleChange").innerHTML = "Edit SubAdmin";
+        document.getElementById("ChangeUpdateText").innerHTML = "Update";
+        $('#AddSubAdminUser').hide();
+        $('#changeupdatetext').show();
+        $(".error-class").html('');
+        $('#AddSubAdminUser').click(function () {
+            document.getElementById("Changetext").innerHTML = "add subadmin";
+            document.getElementById("ChangeUpdateText").innerHTML = "save";
+            $(".error-class").html('');
+        });
+
+        var _url = "/api/SubAdmin/GetById?id=" + Id;
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('.error-class').html('');
+
+                var item = response.data;
+
+                $("#txtSubAdminName").val(item.FirstName);
+                $("#txtSubAdminLastName").val(item.LastName);
+                $("#txtEmail_ManageSubAdmin").val(item.Email);
+                $("#txtPassword_ManageSubAdmin").val(item.Password);
+                $("#txtConfirmPassword_ManageSubAdmin").val(item.Password);
+                $("#SubAdminMapLocation").show();
+                $("#SubAdminOfflineAddress").val(item.Address);
+                CountrySubAdminLocation = item.Country;
+                StateSubAdminLocation = item.State;
+                CitySubAdminLocation = item.City;
+                LandMarkSubAdminLocation = item.LandMark;
+                $("#SubAdminOfflineLandMark").val(LandMarkSubAdminLocation);
+                $("#ddl_SubAdminOfflineCountry").val(CountrySubAdminLocation);
+                $("#ddl_SubAdminOfflineState").val(StateSubAdminLocation);
+                $("#ddl_SubAdminOfflineCity").val(CitySubAdminLocation);
+                $("#SubAdminOfflinePinCode").val(item.Pincode);
+                $("#previewImage").attr('src', item.ProfileImageWithPath);
+                $("#previewImage").removeClass('d-none');
+
+
+
+                SubAdminId_Global = item.Id;
+                resetPermissionSelectionsFromObj(item.Permissions);
+                updateCheckboxes();
+
+                GetAllSubAdmin();
+
+                initMap();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+   function ConfirmDeletedSubAdmin(id) {
+
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmDeletedSubAdminTitleMessage)",
+            text: "@(Resources.SuperAdminPanel.ConfirmDeletedSubAdminTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeletedSubAdmin(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeletedSubAdmin(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/SubAdmin/SubAdminDeleteById/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllSubAdmin();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    document.getElementById('fileSubAdminImage_ManageSubAdmin').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.SuperAdminPanel.ValidImageFile_ErrorMessage)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.SuperAdminPanel.ValidFileSize_ErrorMessage, "1 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+///////////////////////////////////////////////
+    function GetCountriesList() {
+
+        $("#ddl_SubAdminOfflineCountry").html('');
+        $("#ddl_SubAdminOfflineCountry").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#ddl_SubAdminOfflineCountry").append(res_country);
+
+                $("#ddl_SubAdminOfflineCountry").val(CountrySubAdminLocation);
+
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeCountry() {
+
+        StartLoading();
+        //var _country_id = $("#ddl_ClassOfflineCountry").val();
+        var _country_id = $('#ddl_SubAdminOfflineCountry').find('option:selected').attr('data-phonecode-val');
+        $("#ddl_SubAdminOfflineState").html('');
+        $("#ddl_SubAdminOfflineState").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#ddl_SubAdminOfflineState").append(res_state);
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#ddl_SubAdminOfflineState").html('');
+        $("#ddl_SubAdminOfflineState").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#ddl_SubAdminOfflineState").append(res_state);
+                $("#ddl_SubAdminOfflineState").val(StateSubAdminLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#ddl_SubAdminOfflineState').find('option:selected').attr('data-phonecode-val');;
+
+        $("#ddl_SubAdminOfflineCity").html('');
+        $("#ddl_SubAdminOfflineCity").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#ddl_SubAdminOfflineCity").append(res_city);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+       function GetCitiesList() {
+
+        StartLoading();
+           $("#ddl_SubAdminOfflineCity").html('');
+           $("#ddl_SubAdminOfflineCity").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#ddl_SubAdminOfflineCity").append(res_city);
+                    $("#ddl_SubAdminOfflineCity").val(CitySubAdminLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+    /////////////////////////////////////////////
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("SubAdminmap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#SubAdminOfflineLandMark").val(LandMarkSubAdminLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_2' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+
+
+
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#ddl_SubAdminOfflineCity").val(city);
+        $("#SubAdminOfflinePinCode").val(postal_code);
+        $("input#ddl_SubAdminOfflineState").val(State);
+        $("input#ddl_SubAdminOfflineCountry").val(Country);
+        $("#SubAdminOfflineLandMark").val(LandMark);
+        $("#SubAdminOfflineAddress").val(FullAddress);
+        LocationChooseMap = 1;
+    })
+
+
+
+
+
+
+
+    // ------------- PERMISSIONS FUNCTIONALITY --------------------
+    function GetAllSubAdminPermissions() {
+        var _url = "/api/Permisssions/GetAll/SuperAdminPanel";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                //console.log(response.data);
+
+                $("#SubAdminPermissions_ManageSubAdmin").html('');
+                var checkboxesData = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var permission = response.data[i];
+
+                    // print parent Permission
+                    checkboxesData += `
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input chk_permission" data-id="${permission.Id}" data-parent-id="0" id="chk_permission_${permission.Id}">
+                            <label class="form-check-label" for="chk_permission_${permission.Id}" style="cursor:pointer;">${permission.TextValue}</label>
+                        </div>
+                    `;
+
+                    if (permission.SubPermissions != null && permission.SubPermissions.length > 0) {
+                        for (var spi = 0; spi < permission.SubPermissions.length; spi++) {
+                            var subPermission = permission.SubPermissions[spi];
+                            checkboxesData += `
+                                <div class="ml-4 form-check">
+                                    <input type="checkbox" class="form-check-input chk_permission" data-id="${subPermission.Id}" data-parent-id="${permission.Id}" id="chk_permission_${subPermission.Id}">
+                                    <label class="form-check-label" for="chk_permission_${subPermission.Id}" style="cursor:pointer;">${subPermission.TextValue}</label>
+                                </div>
+                            `;
+                        }
+                    }
+
+                }
+
+                $("#SubAdminPermissions_ManageSubAdmin").html('').append(checkboxesData); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function clearPermissionsArray() {
+        SelectedPermissionArr_Global = [];
+    }
+
+    function onPermissionSelectionChange() {
+        clearPermissionsArray();
+        // readd all checked permissions
+        $(".chk_permission").each(function () {
+            var self = $(this);
+            if (self.is(':checked')) {
+                SelectedPermissionArr_Global.push(self.attr("data-id"));
+            }
+        });
+    }
+
+
+    function resetPermissionSelectionsFromObj(Permissions) {
+        clearPermissionsArray();
+        for (var i = 0; i < Permissions.length; i++) {
+            SelectedPermissionArr_Global.push(Permissions[i].Id);
+        }
+    }
+
+    function updateCheckboxes() {
+        clearPermissionCheckboxes();
+        for (var i = 0; i < SelectedPermissionArr_Global.length; i++) {
+            $('.chk_permission[data-id="' + SelectedPermissionArr_Global[i] + '"]').prop('checked', true);
+        }
+    }
+
+    function clearPermissionCheckboxes() {
+        $('.chk_permission').prop('checked', false);
+    }
+
+    function getAllSubPermissionCheckboxes(parentId) {
+        return $('.chk_permission[data-parent-id="' + parentId + '"]');
+    }
+    function getAllCheckedSubPermissionCheckboxes(parentId) {
+        return $('.chk_permission[data-parent-id="' + parentId + '"]:checked');
+    }
+    ////Permissions Checked
+    $(document).on('change', '.chk_permission', function () {
+        var $checkbox = $(this);
+        var _checkboxProp = false;
+        if ($checkbox.is(':checked')) {
+            //console.log('checked!');
+            _checkboxProp = true;
+        }
+        else {
+            //console.log('unchecked!');
+            _checkboxProp = false;
+        }
+        var _parentCheckboxId = $checkbox.attr('data-parent-id');
+        var _id = $checkbox.attr('data-id');
+
+        // if this checkbox is parent checkbox then check/uncheck all sub checkboxes
+        if (_parentCheckboxId == 0) {
+            var subPermissionCheckboxes = getAllSubPermissionCheckboxes(_id);
+            if (subPermissionCheckboxes.length > 0) {
+                subPermissionCheckboxes.prop('checked', _checkboxProp);
+            }
+        }
+        // else it is a sub-checkbox then check the parent if atleaset one is selected and uncheck if all are unselected
+        else {
+            var subPermissionCheckboxes = getAllSubPermissionCheckboxes(_parentCheckboxId);
+            var subPermissionCheckboxes_Checked = getAllCheckedSubPermissionCheckboxes(_parentCheckboxId);
+            var flag_check_parent = false;
+            if (subPermissionCheckboxes_Checked.length > 0) {
+                flag_check_parent = true;
+            }
+            else {
+                flag_check_parent = false;
+            }
+            $('#chk_permission_' + _parentCheckboxId).prop('checked', flag_check_parent);
+        }
+
+        // update global array of selections
+        onPermissionSelectionChange();
+    });
+
+////Closed Permission checked
+
+
+
+</script>

@@ -1,0 +1,157 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+
+}
+ 
+<script>
+    var UserToken_Global = "";
+    var _managePaymentsTable;
+    var BusinessBranchLoginId_Global = $("#hiddenBusinessbranchLoginId").val();
+
+    function initializeDataTable_ManagePaymentsBusiness() {
+        _managePaymentsTable = $("#tblPaymentsView_Business").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_ManagePaymentsBusiness();
+                GetAllManagePaymentsBusinessPagination();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_ManagePaymentsBusiness();
+                        GetAllManagePaymentsBusinessPagination();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+    });
+
+    function GetAllManagePaymentsBusinessPagination() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllBranchPaymentsForBusinessByPagination?branchBusinessLoginId=" + BusinessBranchLoginId_Global;
+        _managePaymentsTable.clear().destroy();
+        _managePaymentsTable = $("#tblPaymentsView_Business").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            @if (permissionKeys.Contains("ManagePayments_ExportPayments"))
+            {
+                <text>
+            "dom": 'lBfrtip',
+            "buttons": [
+                {
+                    extend: 'pdf',
+                    text: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible'
+
+                    },
+                    init: function (api, node, config) {
+                        $(node).css('background-color', '#00365a'); // Set the background color here
+                    }
+                }
+            ],
+                </text>
+            }
+             "order": [[1, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+
+                }
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true, "render": function (data, type, row) {
+                        return `<span>${moment(row.CreatedOn).format('YYYY-MM-DD')}</span>`;
+                    }
+                }
+
+                , {
+                    "data": null, "name": "Name", "autoWidth": true, "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                             ${row.Name}
+                                        </div>
+                                        <div class="mb-2">
+                                             ${row.MasterId}   
+                                        </div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+            , { "data": "TransactionID", "name": "TransactionID", "autoWidth": true }
+            , { "data": "Method", "name": "Method", "autoWidth": true }
+            , { "data": "Amount", "name": "Amount", "autoWidth": true }
+            , { "data": "ItemType", "name":"ItemType","autoWidth":true}
+            , { "data": "TotalDiscount", "name": "TotalDiscount", "autoWidth": true }
+
+        ],
+
+        "responsive": true,
+        "autoWidth": false,
+
+        "columnDefs": [{
+            "targets": [0,7], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+        $('#tblPaymentsView_Business_filter input').unbind();
+        $('#tblPaymentsView_Business_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _managePaymentsTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+    }
+
+</script>

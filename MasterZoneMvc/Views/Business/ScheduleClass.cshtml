@@ -1,0 +1,469 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Schedule Classes";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+@section Styles{
+
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2-bootstrap.min.css" />
+    @Html.Partial("/Views/Shared/ScriptPartials/_GoogleMapsScriptPartial.cshtml");
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .ClassCountryState {
+            cursor: no-drop;
+        }
+    </style>
+}
+
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">My Schedule/Classes</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ScheduleClass">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">  My Schedule/Classes</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageScheduleClass_AddScheduleClass"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddClass">Add Schedule/Classes</a>
+                        </div>
+
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+
+        <div id="sectionViewClass">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblClass" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Price</th>
+                                        <th>Batch Name</th>
+                                        <th>Instructor</th>
+                                        <th>Class Mode</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddClass" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Schedule/Classes</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="ClassName">Class Name</label>
+                                        <input type="text" id="ClassName" class="form-control" />
+                                        <div class="error-class" id="error_txtClassName"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="ClassDescription">Description</label>
+                                        <input type="text" id="ClassDescription" class="form-control" />
+                                        <div class="error-class" id="error_txtClassDescription"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="Class_Price">Class Price</label>
+                                        <div class="row" style="padding: 0px 0px 0px 15px;">
+                                            <div class="col-6 px-0">
+                                                <div class="custom-control custom-radio col-12">
+                                                    <input type="radio" id="ClassPriceFree" name="Class_Price" class="custom-control-input" value="0" checked>
+                                                    <label class="custom-control-label" for="ClassPriceFree">Free</label>
+                                                </div>
+
+                                                <div id="ClassPriceFree_DemoClass_Section" class="custom-control custom-radio col-12">
+                                                    <hr />
+                                                    <input type="radio" id="ClassPriceFree_DemoClass" name="Class_Paid" class="custom-control-input" value="demo" checked>
+                                                    <label class="custom-control-label" for="ClassPriceFree_DemoClass">Demo(Single Class)</label>
+                                                    <hr />
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="custom-control custom-radio col-12">
+                                                    <input type="radio" id="ClassPricePaid" name="Class_Price" class="custom-control-input" value="1">
+                                                    <label class="custom-control-label" for="ClassPricePaid">Paid</label>
+                                                </div>
+
+                                                <div id="ClassPrice_PaidSection" class="form-group col-12" style="display:none;max-width:100%;padding:0px;">
+                                                    <hr />
+                                                    <div class="row" style="padding: 0px 0px 0px 15px;">
+                                                        <div class="custom-control custom-radio col-6">
+                                                            <input type="radio" id="ClassPricePaid_PerClass" name="Class_Paid" class="custom-control-input" value="per_class">
+                                                            <label class="custom-control-label" for="ClassPricePaid_PerClass">Per Class</label>
+                                                        </div>
+                                                        <div class="custom-control custom-radio col-6">
+                                                            <input type="radio" id="ClassPricePaid_PerMonth" name="Class_Paid" class="custom-control-input" value="per_month">
+                                                            <label class="custom-control-label" for="ClassPricePaid_PerMonth">Per Month</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="ClassPrice">Price</label>
+                                                        <input type="number" id="ClassPrice" class="form-control" required />
+                                                        <div class="error-class" id="error_txtClassPricePaid"></div>
+                                                    </div>
+                                                    <hr />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+
+                                    @*<div class="form-group col-6">
+            <label for="LimitOfStudentForClass">Limit Of Student</label>
+            <input type="number" id="LimitOfStudentForClass" class="form-control" required />
+            <div class="error-class" id="error_LimitOfStudentForClass"></div>
+        </div>*@
+                                   
+
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="ddlParentClassCategoryType">Class Category</label>
+                                        <select id="ddlParentClassCategoryType" class="form-control" data-width="100%">
+                                            <option value="0">Select Class Category</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlParentClassCategory"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="ddlClassCategoryType">Class Category Type</label>
+                                        <select id="ddlClassCategoryType" class="form-control" data-width="100%">
+                                            <option value="0">Select Class Category Type</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlClassCategoryType"></div>
+                                    </div>
+                                </div>
+                                @*<div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="ClassStartTime">Start Time</label>
+                                        <input type="time" id="ClassStartTime" class="form-control" min="09:00" max="18:00" required />
+                                        <div class="error-class" id="error_ClassStartTime"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="ClassEndTime">End Time</label>
+                                        <input type="time" id="ClassEndTime" class="form-control" min="09:00" max="18:00" required />
+                                        <div class="error-class" id="error_ClassEndTime"></div>
+                                    </div>
+                                </div>*@
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="ClassMode">Class Mode</label>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="ClassOnlineMode" name="ClassMode" class="custom-control-input" value="1" checked>
+                                            <label class="custom-control-label" for="ClassOnlineMode">Online</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="ClassOfflineMode" name="ClassMode" class="custom-control-input" value="0">
+                                            <label class="custom-control-label" for="ClassOfflineMode">Offline</label>
+                                        </div>
+                                        <div class="error-class" id="error_ClassMode"></div>
+
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    @* show fields according to the class Mode ------------------ *@
+                                    <div id="ClassURL_Link" class="col-12">
+                                        <div class="row">
+                                            <div class="form-group col-6">
+                                                <label for="ClassOnlineURL_Link">Class Link</label>
+                                                <input type="text" id="ClassOnlineURL_Link" class="form-control" />
+                                                <div class="error-class" id="error_ClassOnlineURL_Link"></div>
+                                            </div>
+                                            <div class="form-group col-6">
+                                                <label for="ClassOnlineURL_Link_Password">Class Link Password</label>
+                                                <input type="text" id="ClassOnlineURL_Link_Password" class="form-control" />
+                                                <div class="error-class" id="error_ClassOnlineURL_Link_Password"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="ClassMapLocation" class="col-12" style="display:none;padding-bottom:15px;">
+                                        <div class="row">
+                                            <div id="Classmap" style="width: 100%; height: 400px;"></div>
+                                            <input type="hidden" id="LocationLatitude" value="" />
+                                            <input type="hidden" id="LocationLongitude" value="" />
+
+                                            <div class="col-12 from-group text-center mt-4 mb-4">
+                                                <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                            </div>
+                                            <div class="from-group col-6">
+                                                <label for="ClassOfflineAddress">Address Line 1</label>
+                                                <input type="text" id="ClassOfflineAddress" class="form-control" />
+                                                <div class="error-class" id="error_ClassOfflineAddress"></div>
+                                            </div>
+                                            <div class="from-group col-6">
+                                                <label for="ClassOfflineLandMark">Land Mark</label>
+                                                <input type="text" id="ClassOfflineLandMark" class="form-control" />
+                                                <div class="error-class" id="error_ClassOfflineLandMark"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ddl_ClassOfflineCountry">Country</label>
+                                                <select id="ddl_ClassOfflineCountry" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                                </select>
+                                                <input type="text" id="ddl_ClassOfflineCountry" class="form-control ClassCountryState MapLocation d-none" readonly />
+                                                <div class="error-class" id="error_ddl_ClassOfflineCountry"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ddl_ClassOfflineState">State</label>
+                                                <select id="ddl_ClassOfflineState" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();">
+                                                </select>
+                                                <input type="text" id="ddl_ClassOfflineState" class="form-control ClassCountryState  MapLocation d-none" readonly />
+                                                <div class="error-class" id="error_ddl_ClassOfflineState"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ddl_ClassOfflineCity">City</label>
+                                                <select id="ddl_ClassOfflineCity" class="form-control WithoutMapLocation" data-width="100%">
+                                                </select>
+                                                <input type="text" id="ddl_ClassOfflineCity" class="form-control MapLocation d-none" value="" />
+                                                <div class="error-class" id="error_ddl_ClassOfflineCity"></div>
+                                            </div>
+                                            <div class="from-group col-3 pt-3">
+                                                <label for="ClassOfflinePinCode">Pin Code</label>
+                                                <input type="text" id="ClassOfflinePinCode" class="form-control" />
+                                                <div class="error-class" id="error_ClassOfflinePinCode"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6 form-group">
+                                        <label for="ClassDays">Class Days</label>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="ClassAllDaysSelected" name="ClassDays" class="custom-control-input" value="1">
+                                            <label class="custom-control-label" for="ClassAllDaysSelected">All Days</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="ClassSelectionOfDays" name="ClassDays" class="custom-control-input" value="0" checked>
+                                            <label class="custom-control-label" for="ClassSelectionOfDays">Select Day</label>
+                                        </div>
+                                        <div class="error-class" id="error_ClassDays"></div>
+                                    </div>
+                                    <div id="SelectDaysOfClass" class="col-sm-6">
+                                        <label>Select Days</label>
+                                        <select id="SelectedDaysForClass" class="form-control select2-multiple" data-placeholder="Select Class Days" multiple="multiple" data-width="100%">
+                                            <optgroup label="Days Of Week">
+                                                <option value="Sunday">Sunday</option>
+                                                <option value="Monday">Monday</option>
+                                                <option value="Tuesday">Tuesday</option>
+                                                <option value="Wednesday">Wednesday</option>
+                                                <option value="Thursday">Thursday</option>
+                                                <option value="Friday">Friday</option>
+                                                <option value="Saturday">Saturday</option>
+                                            </optgroup>
+                                        </select>
+                                        <div class="error-class" id="error_SelectedClassDays"></div>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-bottom:10px;">
+                                    @*<div class="form-group col-6">
+                                        <label for="ClassDays">Select Instructor</label>
+                                        <select id="ddlSelectedInstructorUserLoginId" class="form-control" data-width="100%">
+                                        </select>
+                                        <div class="error-class" id="error_ddlSelectedInstructorUserLoginId"></div>
+                                    </div>*@
+                                    <div class="form-group col-6">
+                                        <label>Select Days</label>
+                                        <select id="ddlClassType" class="form-control select2" data-width="100%">
+                                            <option value="0">Select Class Type</option>
+                                            <option value="Weekly">Weekly</option>
+                                            <option value="Monthly">Monthly</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlClassType"></div>
+                                    </div>
+                                @*</div>
+
+                                <div class="row">*@
+                                    @*<div class="form-group col-6">
+                                        <label for="ddlClassGroup">Class Group</label>
+                                        <select id="ddlClassGroup" class="form-control" data-width="100%">
+                                            <option value="0">Select Class Group</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlClassGroup"></div>
+                                    </div>*@
+                                    <div class="from-group col-6">
+                                        <label for="txtHowToBookClass">How to Book Description</label>
+                                        <textarea type="text" id="txtHowToBookClass" class="form-control" rows="3"></textarea>
+                                        <div class="error-class" id="error_txtHowToBookClass"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label class="w-100">Select Batches <a href="/Business/ManageBatch" class="btn btn-xs btn-primary float-right" target="_blank">Manage Batch</a></label>
+                                            <select id="ddlSelectBatches" class="form-control select2-multiple" multiple="multiple" data-width="100%" placeholder="Select Class Batches">
+                                                <option label="&nbsp;">&nbsp;</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlSelectBatches"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group d-flex flex-column">
+                                            <label>Class Image</label>
+                                            <div class="imagePreview">
+                                                <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileClassImage_ManageClass" class="border form-control" accept="image/*">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitClass()">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetClasssAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        @*All Class Features List*@
+        <div id="sectionViewClassFeature" class="d-none">
+
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="mb-4">Class Features (Display on Class Details)</h5>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventSponsor" onclick="ShowAddUpdateClassFeature();">Add Class Feature</a>
+                                </div>
+                            </div>
+
+                            <table id="tblClassFeatures" class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Featur Title</th>
+                                        <th>Feature Description</th>
+                                        <th>Feature Iocn</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*------------------------------------- Add Update Class Feature Modal ------------------------------------------------------ *@
+        <div class="modal fade" id="AddUpdateClassFeatureModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="Modal_Title" class="modal-title"> Add Class Feature</h5>
+                        <button type="button" class="close" id="clsClassFeatureButton" data-dismiss="modal" onclick="ResetAddViewClassFeature()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="txtTitle_ClassFeature">Title</label>
+                                    <input type="text" id="txtTitle_ClassFeature" class="form-control" />
+                                    <div class="error-class" id="error_txtTtile_ClassFeature"></div>
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="txtClassFeatureDescription">Description</label>
+                                    <input type="text" id="txtClassFeatureDescription" class="form-control" />
+                                    <div class="error-class" id="error_txtClassFeatureDescription"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="Icon_ClassFeature">Icon</label>
+                                    <div class="imagePreview">
+                                        <img id="previewClassFeatureImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="Icon_ClassFeature" class="form-control" accept="image/*" />
+                                    <div class="error-class" id="error_Icon_ClassFeature"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_ClassFeature" onclick="AddUpdateClassFeature()">Save</button>
+                        <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewClassFeature()">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*------------------------------------- Add Update Class Feature Modal ------------------------------------------------------ *@
+
+
+    </div>
+</main>
+
+
+
+@section Scripts{
+    @*<script src="~/Scripts/js/business-panel/ScheduleClass.js"></script>*@
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ScheduleClassScriptPartial.cshtml")
+}

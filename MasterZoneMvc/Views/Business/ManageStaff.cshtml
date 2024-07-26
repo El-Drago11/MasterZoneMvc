@@ -1,0 +1,214 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "ManageStaff";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles{
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">View Staff</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageStaff">Manage Staff</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> ViewStaff</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageStaff_ViewStaff_AddStaff"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStaff">Add Staff</a>
+                        </div>
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewStaff">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblStaff_ManageStaff" class="data-table" @*class="data-table data-table-feature"*@>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Category</th>
+                                        <th>Staff MasterID</th>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddStaff" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Staff</h5>
+                            <form>
+                                <div class="form-group">
+                                    <label for="StaffMasterId">Have you MasterId </label>
+                                    <div class="custom-control custom-radio">
+                                        <input type="radio" id="Yes_MasterId" name="StaffMasterId" class="custom-control-input" value="1" checked>
+                                        <label class="custom-control-label" for="Yes_MasterId">Yes</label>
+                                    </div>
+                                    <div class="custom-control custom-radio">
+                                        <input type="radio" id="No_MasterId" name="StaffMasterId" class="custom-control-input" value="0">
+                                        <label class="custom-control-label" for="No_MasterId">No</label>
+                                    </div>
+                                    <div class="error-class" id="error_NotSelectMaterIdOption"></div>
+                                </div>
+                                <div id="MasterIdSection" class="form-group">
+                                    <label for="txt_StaffMasterId" class=" w-100">Master Id <button type="button" class="btn btn-xs btn-info float-right mb-1" onclick="VerifyUserMasterId();">Check</button></label>
+                                    <input type="text" id="txt_StaffMasterId" class="form-control" />
+                                    <div class="error-class" id="error_txt_StaffMasterId"></div>
+                                </div>
+                                <div id="userDetailByMasterId" class="col-sm-12">
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ddlStaffCategory_ManageStaff">Category</label>
+                                    <select name="ddlStaffCategory_ManageStaff" id="ddlStaffCategory_ManageStaff" form="carform" default="unslected" class="form-control">
+                                        <option value="0" selected disabled hidden>Select Category</option>
+                                    </select>
+
+                                    <div class="error-class" id="error_ddlStaffCategory"></div>
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="StaffFirstName">First Name</label>
+                                    <input type="text" id="txtStaffFirstName" class="form-control" />
+                                    <div class="error-class" id="error_txtStaffFirstName"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="StaffLastName">Last Name</label>
+                                    <input type="text" id="txtStaffLastName" class="form-control" />
+                                    <div class="error-class" id="error_txtStaffLastName"></div>
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="Email">Email</label><div class="float-right"><button type="button" id="btnUpdateCredential" class="btn btn-sm btn-danger py-0 d-none" onclick="btnClickUpdateCredentials()">Update Credentials</button></div>
+                                    <input type="text" id="txtEmail" class="form-control" />
+                                    <div class="error-class" id="error_txtEmail"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="Password">Password</label>
+                                    <input type="password" id="txtPassword" class="form-control" />
+                                    <div class="error-class" id="error_txtPassowrd"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ConfirmedPassword">Confirm Password</label>
+                                    <input type="password" id="txtConfirmPassword" class="form-control" />
+                                    <div class="error-class" id="error_txtConfirmPassword"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="Designation"> Designation</label>
+                                    <input type="text" id="txtDesignation" class="form-control" />
+                                    <div class="error-class" id="error_txtDesignation"></div>
+                                </div>
+
+                                <div class="form-group d-flex flex-column">
+                                    <label>Profile Image</label>
+                                    <div class="imagePreview">
+                                        <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="fileProfileImage_ManageStaff" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileProfileImage_ManageStaff"></div>
+                                </div>
+
+                                <!-- /.form-group -->
+
+                                <div class="form-group d-flex flex-column">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="chkIsActive_ManageStaff" checked>
+                                        <label class="form-check-label" for="chkIsActive_ManageStaff" style="cursor:pointer;">Is Active</label>
+                                    </div>
+                                </div>
+                                <div class="form-group d-flex flex-column">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="chkIsProfessional_ManageStaff" checked>
+                                        <label class="form-check-label" for="chkIsProfessional_ManageStaff" style="cursor:pointer;">Is Professional</label>
+                                    </div>
+                                </div>
+                                <!-- /.form-group -->
+
+                                <h1>Staff Permissions</h1>
+                                <div class="d-flex mb-3">
+                                    <button type="button" class="btn btn-xs btn-outline-primary mr-2" onclick="checkAllPermissions();">@*<i class="fas fa-check-square"></i>*@ Check all</button>
+                                    <button type="button" class="btn btn-xs btn-outline-danger" onclick="uncheckAllPermissions();">@*<i class="far fa-square"></i>*@ Uncheck all</button>
+                                </div>
+                                <div id="BusinessPanelPermissions_ManageStaff" class="mb-4">
+
+                                </div>
+                                <div class="error-class" id="error_BusinessPanelPermissions_ManageStaff"></div>
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateStaff()">Submit</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageStaffScriptPartial.cshtml")
+
+}

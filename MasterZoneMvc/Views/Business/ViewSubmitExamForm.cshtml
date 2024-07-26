@@ -1,0 +1,1093 @@
+﻿@using MasterZoneMvc.ViewModels;
+@model C_Business_A_SubmitExamForm_VM
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+    string[] titleParts = Model.ExamFromDetails.NameWithAddress.Split(new[] { "\r\n" }, StringSplitOptions.None);
+}
+@{
+    ViewBag.Title = "ViewSubmitExamForm";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+
+}
+
+<style>
+    @@media print {
+        sectionAdmitCard {
+            width: 100%;
+        }
+    }
+
+    .container-fluid li {
+        display: flex;
+        font-size: 15px;
+    }
+
+    .image {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imagePreview {
+        border: 1px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+
+    p {
+        margin-bottom: 4px;
+        font-weight: bold;
+    }
+
+    #Examform input {
+        margin-bottom: 10px;
+        border: 1px solid #f3a762;
+        border-radius: 5px;
+    }
+
+    .borderFillImg {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+    }
+
+    .Orange_White_Colour {
+        /* background: #f3a762;
+        color: #fff;*/
+    }
+
+    .profile-image-section {
+        width: 224px;
+        height: 254px;
+        border: 1px solid #f3a762;
+        margin-top: 30px;
+        margin-left: 30px;
+    }
+
+    img#profileImage {
+        width: 100%
+    }
+
+    .signature-image-section {
+        width: 260px;
+        height: 110px;
+        border: 1px solid #f3a762;
+    }
+
+    img {
+        width: 100%
+    }
+
+    .form-control:disabled, .form-control[readonly] {
+        background-color: unset;
+    }
+
+    .colourchange:disabled, .colourchange[readonly] {
+        background-color: unset;
+    }
+
+    .AdminCard-profile-image {
+        width: 174px;
+        height: 204px;
+        border: 1px solid #f3a762;
+        margin-top: 30px;
+    }
+
+
+    #sectionAdmitCard .card-body p {
+        font-size: large;
+        /*margin-bottom: 16px;*/
+    }
+
+    .AdmitCardCenterName {
+        width: 82.5%;
+        height: 121%;
+        border: 1px solid #f3a762;
+        border-radius: 5px;
+        padding: 5px;
+    }
+</style>
+
+<script src="~/Scripts/JsPdf/jspdf.jsumd.min.js"></script>
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="pageHeadingText" id="pageTextchange">Exam Registration</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a id="breadcrumbLink" href="/Business/Exam">Exam</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> All Candidates Table</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+
+
+        <div id="sectionViewSubmitExamFrom">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblSubmitExamForms" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="Orange_White_Colour">S.No</th>
+                                        <th class="Orange_White_Colour">Profile Image</th>
+                                        <th class="Orange_White_Colour">Name</th>
+                                        <th class="Orange_White_Colour">Father Name</th>
+                                        <th class="Orange_White_Colour">Mother Name</th>
+                                        <th class="Orange_White_Colour">Roll Number</th>
+                                        <th class="text-center Orange_White_Colour">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="ViewSubmitExamFromTable_Back" class="Orange_White_Colour btn btn-primary">Back</button>
+        </div>
+
+        <div id="sectionViewCandidateDetails" class="d-none">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row mt-5">
+                                <div class="col-sm-2 pl-5">
+                                    <p>ESTD. @Model.ExamFromDetails.EstablishedYear</p>
+                                    <img src="@Model.ExamFromDetails.ExamFormLogoWithPath" class="ls-p-lg mblg-ls  mr-2" style="width: 86px;">
+                                </div>
+                                <div class="col-sm-6 text-center pl-5">
+                                    <h4 class="mb-2">Valid for @Model.ExamFromDetails.Title session</h4>
+                                    @for (int n = 1; n <= titleParts.Length; n++)
+                                    {
+                                        <h@(n+1)>@Html.Raw(HttpUtility.HtmlDecode(titleParts[n - 1]))</h@(n+1)>
+                                    }
+                                </div>
+                                <div class="col-sm-4 text-right">
+                                    <p class="m-0">New Telephone Nos.</p>
+                                    <p class="m-0">
+                                        Secretary Chamber: <span id="exampage-top-Secretary-number">@Model.ExamFromDetails.SecretaryNumber</span>
+                                    </p>
+                                    <p class="m-0">
+                                        Registrar Office: <span id="exampage-top-Registrar-number">@Model.ExamFromDetails.RegistrarOfficeNumber</span>
+                                    </p>
+                                    <p class="m-0">Website: <span id="exampage-top-website">@Model.ExamFromDetails.WebsiteLink</span></p>
+                                    <p class="m-0">E-mail: <span id="exampage-top-email">@Model.ExamFromDetails.Email</span></p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="profile-image-section">
+                                        <img src="" class="borderFillImg" id="profileImage">
+                                    </div>
+                                </div>
+                                <div class="col-sm-8">
+                                    <h5 class="text-center">IMPORTANT INSTRUCTION</h5>
+                                    <ol id="important-instruction-outer">
+                                        @{
+                                            List<string> instructions = null;
+                                            if (Model.ExamFromDetails.ImportantInstruction != null)
+                                            {
+                                                instructions = Model.ExamFromDetails.ImportantInstruction
+.Split(new[] { "<li>", "<ol>", "</li>", "</ol>" }, StringSplitOptions.RemoveEmptyEntries)
+.Select(instruction => instruction.Replace("</li>", "").Replace("</ol>", "").Replace("<ol>", "").Replace("<li>", ""))
+.ToList();
+                                            }
+                                            foreach (var instruction in instructions)
+                                            {
+                                                <li>@Html.Raw(HttpUtility.HtmlDecode(instruction))</li>
+                                            }
+                                        }
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body pt-0">
+                            <div class="row">
+                                <div class="col-sm-12 m-0 p-0" id="Examform">
+                                    <h4 class="text-center mt-3">Note : Form will not be accepted without Image.</h4>
+                                    <p class="text-center mt-2">
+                                        Examination Application Form for @Model.ExamFromDetails.Title
+                                    </p>
+
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="row mt-1">
+                                                <div class="col-sm-1"><p>Category<span class="text-danger">*</span></p></div>
+                                                <div class="col-sm-5">
+                                                    <label class="pr-sm-3" for="General">
+                                                        <input type="radio" name="category" id="General"
+                                                               value="General" disabled>
+                                                        General
+                                                    </label>
+
+                                                    <label class="pr-sm-3" for="Teacher">
+                                                        <input type="radio" name="category" id="Teacher"
+                                                               value="Teacher" disabled>
+                                                        Teacher
+                                                    </label>
+
+                                                    <label class="pr-sm-3" for="ImprovementDiv">
+                                                        <input type="radio" name="category" id="ImprovementDiv" value="Improvement for Division" disabled>
+                                                        Improvement for Division.
+                                                    </label>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <p class="ml-sm-1">User Master-Id<span class="text-danger">*</span></p>
+                                                    <input id="UserMasterId" class="form-control" type="text" disabled>
+                                                </div>
+
+                                            </div>
+                                            <ol>
+
+                                                <li class="mt-1">
+                                                    <p> Name of the Candidate in English(Block Letters)<span class="text-danger">*</span></p>
+                                                    <input id="CandidateName" type="text" class="form-control" disabled>
+                                                </li>
+                                                <li>
+                                                    <p> Father's Name in English (Block Letters)<span class="text-danger">*</span></p>
+                                                    <input id="CandidateFather" type="text" class="form-control" disabled>
+                                                </li>
+                                                <li class="mt-1">
+                                                    <p>Mother's Name in English (Block Letters)<span class="text-danger">*</span></p>
+                                                    <input id="CandidateMother" type="text" class="form-control" disabled>
+                                                </li>
+                                                <li class="mt-1">
+                                                    <p>Permanent Address (Block Letters)<span class="text-danger">*</span></p>
+                                                    <input id="PermanentAddress" type="text" class="form-control m-3" disabled>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <p>Pin Code<span class="text-danger">*</span></p>
+                                                            <input id="PermanentPin" type="text" class="form-control" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>Phone/Mob. No<span class="text-danger">*</span></p>
+                                                            <input id="PermanentMobNo" type="text" class="form-control" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li class="mt-1">
+                                                    <p>Present Address (Block Letters)<span class="text-danger">*</span></p>
+                                                    <input id="PresentAddress" type="text" class="form-control m-3" disabled>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <p>Pin Code<span class="text-danger">*</span></p>
+                                                            <input id="PresentPin" type="text" class="form-control" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>Phone/Mob. No<span class="text-danger">*</span></p>
+                                                            <input id="PresentMobNo" type="text" class="form-control" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <p>(I.) Nationality<span class="text-danger">*</span></p>
+                                                            <input id="Nationality" class="form-control" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>(II.) AadharCard No<span class="text-danger">*</span></p>
+                                                            <input id="AadharCardNo" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="row">
+                                                        <div class="col-sm-6 pr-0">
+                                                            <p>(I.) DOB (DD/MM/YYYY)<span class="text-danger">*</span></p>
+                                                            <input id="DOB" class="form-control" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>(II.) Email<span class="text-danger">*</span></p>
+                                                            <input id="Email" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <p>Educational qualification<span class="text-danger">*</span></p>
+                                                    <input id="EduQualification" class="form-control" type="text" disabled>
+                                                </li>
+                                                <li>
+                                                    <p>Details of Examination in which the candidate wants to appear-</p>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <p>(I.) Class<span class="text-danger">*</span></p>
+                                                            <input id="CurrentClass" class="form-control" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>(II.) Subject<span class="text-danger">*</span></p>
+                                                            <input id="CurrentSubject" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <p>(III.) Center Name<span class="text-danger">*</span></p>
+                                                            <input id="CurrentCenterName" class="form-control ml-3" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>(IV.) City<span class="text-danger">*</span></p>
+                                                            <input id="CurrentCenterCity" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <p>
+                                                        For eligibility to appear in the examination aforementioned, attach X-rox
+                                                        copies of previous examination marksheer/certificates duly attested.
+                                                        Details of last music examination passed.
+                                                    </p>
+                                                    <div class="row">
+                                                        <div class="col-sm-4">
+                                                            <p>(I.) Class<span class="text-danger">*</span></p>
+                                                            <input id="PreviousClass" class="form-control" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-4">
+                                                            <p>(II.) Subject<span class="text-danger">*</span></p>
+                                                            <input id="PreviousSubject" class="form-control" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-4">
+                                                            <p>(III.) Year<span class="text-danger">*</span></p>
+                                                            <input id="PreviousYear" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <p>(IV.) Roll No<span class="text-danger">*</span></p>
+                                                            <input id="PreviousRollNo" class="form-control ml-3" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <p>(V.) Result<span class="text-danger">*</span></p>
+                                                            <input id="PreviousResult" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12">
+                                                            <p>(VI.) Center<span class="text-danger">*</span></p>
+                                                            <input id="PreviousCenterName" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <p>Amount of fee paid to the Centre Superintendent.</p>
+                                                    <div class="row">
+                                                        <div class="col-sm-5">
+                                                            <p>Amount<span class="text-danger">*</span></p>
+                                                            <input id="Amount" class="form-control" type="text" disabled>
+                                                        </div>
+                                                        <div class="col-sm-7">
+                                                            <p>(In Word.)<span class="text-danger">*</span></p>
+                                                            <input id="AmountInWord" class="form-control" type="text" disabled>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <p>Number of enclosures attached<span class="text-danger">*</span></p>
+                                                    <input id="NoOfAttached" class="form-control" type="text" disabled>
+                                                </li>
+                                                <li>
+                                                    <p>
+                                                        Mark-sheet and Certificate required at home address or through Centre
+                                                        Superintendent
+                                                    </p>
+                                                    <input id="CertificateCollectFrom" class="form-control" type="text" disabled>
+                                                </li>
+                                                <li>
+                                                    <p>Signature of Candidate<span class="text-danger">*</span></p>
+                                                    <div class="signature-image-section">
+                                                        <img src="" class="borderFillImg" id="signature">
+                                                    </div>
+                                                </li>
+
+                                            </ol>
+                                        </div>
+                                    </div>
+
+                                    @*Term and conditions*@
+                                    <div class="row colourchange">
+                                        @*Term and condtion points*@
+                                        <div class="col-sm-12">
+                                            <ol type="i">
+                                                <li>I have carefully read the rules, regulations and the syllabus concerning the examination and I assure that I will abide by them in word and spirit.</li>
+                                                <li>I enclose with this form the prescribed examination fee by Bank Draft / Postal Order or have deposited the fee in cash with the Centre Superintendent.</li>
+                                                <li>I agree to appear in the examination at a place other than the centre mentioned in this form which should be Registrar so decide.</li>
+                                                <li>I agree to the condition that subject matter of any dispute concerning Prayag Sangit Samiti and myself will be subject to jurisdiction of courts only in Prayagraj (Allahabad).</li>
+                                                <li>Entries from 1 to 11 are correct to the best of my knowledge.</li>
+                                            </ol>
+                                        </div>
+
+                                        @*Current date*@
+                                        <div class="col-sm-6 text-left mt-5">
+                                            <p>Current Date<span class="text-danger">*</span></p>
+                                            <input id="termAndConditionsDate" class="form-control w-50" type="text" value="" disabled>
+                                        </div>
+
+
+                                        @*signature*@
+                                        <div class="col-sm-6" style="display: flex; align-items: flex-end; flex-direction: column;">
+                                            <div style="width: 260px; height: 90px; border: 2px solid #f3a762; display: flex; justify-content: center;">
+                                                <img src="" id="signatureAtTermAndConditions">
+                                            </div>
+                                            <p>Full Signature of the Candidate<span class="text-danger">*</span></p>
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    @*Decleration by father / Guardian(If Candiate is minor)*@
+                                    <div class="row m-0 p-0 mt-4">
+                                        @*Title*@
+                                        <div class="col-sm-12 m-0 p-0 text-center">
+                                            <h3 class="text-danger">DECLERATION BY FATHER/GUARDIAN(IF CANDIDATE IS MINOR)</h3>
+                                        </div>
+                                        @*Declareation*@
+                                        <div class="col-sm-12 m-0 p-0" id="declerationByGuardian">
+                                            I hereby declare that I have carefully read the rules, regulations and syllabus concerning the examination and assure that my ward is fit and eligible to appear in the examination. I take full responsibility of following the prescribed rules, regulations and directions/orders of the Registrar concerning the examination by my ward. The Provision (iv) above regarding jurisdiction of Courts at Prayagraj (Allahabad) is acceptable to me.
+                                        </div>
+
+                                        @*Current Date*@
+                                        <div class="col-sm-6 m-0 p-0 text-left mt-5">
+                                            <p>Current Date<span class="text-danger">*</span></p>
+                                            <input id="declerationByGuardianDate" class="form-control w-50" type="text" style="background-color:unset" value="12/12/2023" disabled>
+                                        </div>
+
+                                        @*Signature*@
+                                        <div class="col-sm-6 m-0 p-0" style="display: flex; align-items: flex-end; flex-direction: column;">
+                                            <div style="width: 260px; height: 90px; border: 2px solid #f3a762; display: flex; justify-content: center;">
+                                                <img src="" id="signatureOfGuradianImg">
+                                            </div>
+                                            <p>Signature of Father/Guradian<span class="text-danger">*</span></p>
+                                            <div class="d-flex mt-3">
+                                                <p style="margin-right:10px">Full Name<span class="text-danger">*</span></p>
+                                                <input id="CandidateGuradianName" class="form-control w-auto m-0 p-0" type="text" disabled>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    @*Decleration by Superintendent*@
+                                    <div class="row m-0 p-0 mt-4">
+                                        @*Title*@
+                                        <div class="col-sm-12 m-0 p-0 text-center">
+                                            <h3 class="text-danger">SIGNATURE BY CENTRE SUPERINTENDENT</h3>
+                                        </div>
+
+                                        @*Declareation*@
+                                        <div class="col-sm-12 m-0 p-0" id="declerationBySuperintendent">
+                                            I hereby declare
+                                            <div class="pl-4">
+                                                (i) That the application of Sri/Smt./Km<input class="colourchange m-0 w-25" id="DeclerationCandidateName" type="text" disabled />is fit and eligible to appear in the examination and that there is nothing against him/her to disqualify him/her from appearing in the examination.<br />
+                                                (ii) That I have thoroughly checked this Examination Application Form filled in by the candidate and that the particulars given by the candidate in this form are complete, true and in accordance with the examination rules of the Prayag Sangit Samiti, Prayagraj (Allahabad).<br />
+                                                (iii) That the candidate has paid the requisite amount of examination fee Rs.<input class=" colourchange w-25" id="DeclerationAmount" type="text" disabled />vide Bank Draft No<input class=" colourchange w-25" type="text" id="BankDraftNo" disabled /> dated<input class="colourchange w-25" type="text" id="BankDraftDate" disabled />Postal Order No./Nos<input class="colourchange w-25" type="text" id="PostalOrderNo" disabled />or cash to me.<br />
+                                                (iv) Centre Superintendent is advised to keep Photo copy of Marksheet and Certificate of candidate for future reference.
+                                            </div>
+                                            <p>Note:</p> The total examination fee of all the candidate must be sent alongwith the examination forms otherwise the examination result will be withheld.
+                                        </div>
+
+                                        @*Current Date*@
+                                        <div class="col-sm-4 m-0 p-0 text-left mt-5">
+                                            <p>Current Date<span class="text-danger">*</span></p>
+                                            <input id="declerationBySuperintendentDate" class="form-control w-50" type="text" disabled>
+                                        </div>
+
+                                        @*Center No*@
+                                        <div class="col-sm-4 m-0 p-0 text-left mt-5">
+                                            <p>Center No<span class="text-danger">*</span></p>
+                                            <input id="declerationBySuperintendentCenterNo" class="form-control w-50" type="text" disabled>
+                                        </div>
+
+                                        @*Signature*@
+                                        <div class="col-sm-4 m-0 p-0" style="display: flex; align-items: flex-end; flex-direction: column;">
+                                            <div style="width: 260px; height: 90px; border: 2px solid #f3a762; display: flex; justify-content: center;">
+                                                <img src="" id="signatureOfSuperintendentImg">
+                                            </div>
+                                            <p>Signature of Superintendent<span class="text-danger">*</span></p>
+                                            <div class="d-flex mt-3">
+                                                <p style="margin-right:10px">Full Name<span class="text-danger">*</span></p>
+                                                <input id="SuperintendentName" class="form-control w-auto m-0 p-0" type="text" value="" disabled>
+                                            </div>
+                                        </div>
+
+                                        @*Pin no , Phone No, Email*@
+                                        <div class="col-sm-6 text-left">
+                                            <div class="row">
+                                                <div class="col-sm-12">
+                                                    <p>Pin No:- </p>
+                                                    <input id="SuperintendentPinNo" class="form-control w-50" type="text" disabled>
+                                                </div>
+                                                <div class="col-sm-12">
+                                                    <p>Phone/Mob. No:- </p>
+                                                    <input id="SuperintendentPhoneNo" class="form-control w-50" type="text" disabled>
+                                                </div>
+                                                <div class="col-sm-12">
+                                                    <p>E-mail:-</p>
+                                                    <input id="SuperintendentEmail" class="form-control w-50" type="text" disabled>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr />
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-sm-6 text-left pt-5 m-0 p-0">
+                        <button onclick="BackViewSubmitExamForm()" type="button" class="Orange_White_Colour btn btn-primary">Back</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row d-none" id="sectionAdmitCard">
+
+            <div class="card col-12 mb-4">
+
+                <div class="card-header">
+                    <div class="row mt-5">
+                        <div class="col-sm-2 pl-5">
+                            <p>ESTD. @Model.ExamFromDetails.EstablishedYear</p>
+                            <img src="@Model.ExamFromDetails.ExamFormLogoWithPath" class="ls-p-lg mblg-ls  mr-2" style="width: 86px;">
+                        </div>
+                        <div class="col-sm-6 text-center pl-5">
+                            <h4 class="mb-2">Valid for @Model.ExamFromDetails.Title session</h4>
+                            @for (int n = 1; n <= titleParts.Length; n++)
+                            {
+                                <h@(n+1)>@Html.Raw(HttpUtility.HtmlDecode(titleParts[n - 1]))</h@(n+1)>
+                            }
+                            <p>(PROVISIONALLY ALLOWED)</p>
+                        </div>
+                        <div class="col-sm-4 text-right">
+                            <p class="m-0">New Telephone Nos.</p>
+                            <p class="m-0">
+                                Secretary Chamber: <span id="exampage-top-Secretary-number">@Model.ExamFromDetails.SecretaryNumber</span>
+                            </p>
+                            <p class="m-0">
+                                Registrar Office: <span id="exampage-top-Registrar-number">@Model.ExamFromDetails.RegistrarOfficeNumber</span>
+                            </p>
+                            <p class="m-0">Website: <span id="exampage-top-website">@Model.ExamFromDetails.WebsiteLink</span></p>
+                            <p class="m-0">E-mail: <span id="exampage-top-email">@Model.ExamFromDetails.Email</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row">
+                        <div class="col-sm-2 mr-1">
+                            <div class="AdminCard-profile-image">
+                                <img src="" class="borderFillImg" id="AdmitCardprofileImage">
+                            </div>
+                        </div>
+                        <div class="col-sm-9 pt-4">
+                            <div class="row mt-3">
+                                <div class="col-sm-6">
+                                    <p>Examination Year:-&nbsp; @Model.ExamFromDetails.Title</p>
+                                </div>
+                                <div class="col-sm-6 text-right">
+                                    <p>Roll No <span id="AdmitCardRollNo"></span></p>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-sm-12">
+                                    <p>Name of Candidate: Sri/Smt./Km :-&nbsp;<span id="AdmitCardName"></span></p>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-sm-6">
+                                    <p>Class:-&nbsp;<span id="AdmitCardClass"></span></p>
+                                </div>
+                                <div class="col-sm-6 text-right">
+                                    <p>Subject:-&nbsp;<span class="AdminCard-input-box" id="AdmitCardSubject"></span></p>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-sm-6">
+                                    <p>Center No:-&nbsp;<span id="AdmitCardCenterNo">@Model.ExamFromDetails.CenterNo</span></p>
+                                </div>
+                                <div class="col-sm-6 text-right">
+                                    <p>Name of Center:-&nbsp;<span id="AdmitCardCenterName"></span></p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-12">
+                            <p>NOTE:-</p>
+                        </div>
+                        <div class="col-sm-12 text-danger">
+                            <ul><li>1. All entries to be filled by the candidate except the Roll Number which will be filled in by the Registrar Office.</li> <li>2. Before appearing in the examination the following documents may kindly be sent otherwise the examination form will be rejected.</li><li>(a) The marksheet of pervious Sangit examination.</li><li>(b) The attested copy of High School or equivalent exam passed certificate marksheet.</li><li>3. Candidate is advised to keep admit card safely for future reference.</li></ul>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-sm-6 text-left"><p>Signature of Practical Examiner & Date</p></div>
+                        <div class="col-sm-6 text-right"><p>Registrar Exam</p></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="row d-none" id="sectionAdmitCardClosing">
+            <div class="col-sm-6 text-left">
+                <button onclick="BackViewSubmitExamForm()" type="button" class="Orange_White_Colour btn btn-primary">Back</button>
+            </div>
+            <div class="col-sm-6 text-right">
+                <button id="printDiv" type="button" class="Orange_White_Colour btn btn-primary">Print</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+@*------------------------------------- View  Roll Number Detials Modal ------------------------------------------------------ *@
+<div class="modal fade" id="ViewRollNumberDetialsModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">Roll Number Detail</h2>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>Roll No.</label>
+                        <input type="Number" id="CurrentRollNo" class="form-control">
+                    </div>
+
+                    <button type="button" class="btn btn-primary mb-0 mt-3 ml-3" id="ChangeUpdateText" onclick="AddUpdateRollNumber()">Update</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@*------------------------------------- View Roll Number Details Modal ------------------------------------------------------ *@
+
+
+@section Scripts{
+
+    <script>
+        var ExamId_Global = 0;
+     $(document).ready(function () {
+         initializePage();
+         $('#ViewSubmitExamFromTable_Back').click(function () {
+             window.location.href = '/Business/Exam';
+         });
+     });
+
+
+
+        document.getElementById('printDiv').addEventListener('click', function () {
+            var content = document.getElementById('sectionAdmitCard');
+
+                if (typeof jsPDF !== 'undefined') {
+                    var pdf = new jsPDF();
+
+                    // Get the HTML content of #content
+                    const contentData = content.innerHTML;
+
+                    // Generate the PDF
+                    pdf.text(contentData, 10, 10);
+
+                    // Download the PDF
+                    pdf.save('div_content_as_pdf.pdf');
+                } else {
+                    alert('jsPDF library is not loaded or accessible');
+                }
+            });
+
+
+        function initializePage() {
+            
+            if ($('#sectionViewSubmitExamFrom').hasClass('d-none')) {
+                $('#sectionViewSubmitExamFrom').removeClass('d-none');
+                $('#sectionViewCandidateDetails, #sectionAdmitCard').addClass('d-none');
+                $('#sectionViewCandidateDetails, #sectionAdmitCardClosing').addClass('d-none');
+            }
+
+                var _table = $('#tblSubmitExamForms').DataTable();
+                _table.destroy()
+                var CandidateData = @Html.Raw(Json.Encode(Model.SomeDetailsOfCandidateList));
+                var permissions = @Html.Raw(Json.Encode(permissionKeys));
+                var data = [];
+                var sno = 0;
+            CandidateData.forEach(function (item) {
+                    sno++;
+                var _name = item.CandidateName;
+                var _fatherName = item.CandidateFather;
+                var _motherName = item.CandidateMother;
+                var _profileImage = (item.CandidateProfileImageWithPath === "") ? "" : "<img src='" + item.CandidateProfileImageWithPath + "' class='image' />";
+                var _RollNumber = `<span id="candidateRollNo_${item.Id}" data-rollno="${item.CurrentRollNo}">${item.CurrentRollNo}</span>`;
+
+                    var _action = '<div class="edbt">';
+
+                if (jQuery.inArray("ManageSubmitExamsForm_ViewDetailExamForm", permissions>-1)) {
+                    _action += `<a href="javascript:ViewDetailSubmitExamForm(${item.Id});"><i Title="View Candidate Details" class="fab fa-wpforms" style="font-size: 25px;"></i></a>`;
+                }
+
+                if (jQuery.inArray("ManageSubmitExamsForm_PrintAdmitCard", permissions) > -1) {
+                    _action += `<a href="javascript:ViewAdmitCard(${item.Id});"><i Title="Print Candidate Admit Card" class="fas fa-address-card" style="font-size: 25px;"></i></a>`;
+                }
+                if (jQuery.inArray("ManageSubmitExamsForm_PrintAdmitCard", permissions) > -1) {
+                    _action += `<a href="javascript:;" onClick="ViewRollNumber(${item.Id});"><i Title="Print Candidate Admit Card" class="fas fa-edit" style="font-size: 25px;"></i></a>`;
+                }
+
+                    _action += '</div>';
+
+                    data.push([
+                        sno,
+                        _profileImage,
+                        _name,
+                        _fatherName,
+                        _motherName,
+                        _RollNumber,
+                        _action
+                    ]);
+                });
+
+                $('#tblSubmitExamForms').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+
+                });
+        }
+
+
+        function ViewRollNumber(Id) {
+            
+             ExamId_Global = Id;
+            $("#ViewRollNumberDetialsModal").modal('show');
+            var rollNumber = $(`#candidateRollNo_${Id}`).attr('data-rollno');
+            console.log("Roll Number: ", rollNumber);
+            $("#CurrentRollNo").val(rollNumber);
+        };
+
+
+        ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+        const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+            if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+                return true;
+            return false;
+        }
+
+        const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+            if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+                return true;
+            return false;
+        }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+        function AddUpdateRollNumber() {
+            var is_valid = true;
+            $(".error-class").html('');
+            var _mode = 4;
+            let _currentrollno = $("#CurrentRollNo").val().trim();
+
+            if (validate_IsEmptyStringInputFieldValue(_currentrollno)) { $('#error_CurrentRollNo').html('@Resources.VisitorPanel.ExamForm_CurrentRollNo_RequiredMessage'); _is_valid = false; }
+
+
+            if (is_valid == true) {
+                StartLoading();
+                var data = new FormData();
+                data.append("Id", ExamId_Global);
+                data.append("CurrentRollNo", _currentrollno);
+                data.append("mode", _mode);
+                console.log(data);
+                $.ajax({
+                    url: '/api/Exam/SubmitRollNumberExamForm',
+                    data: data,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+
+                            StopLoading();
+
+                            return;
+                        }
+                        initializePage();
+                        StopLoading();
+                    },
+                    error: function (result) {
+                        StopLoading();
+
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: 'Unauthorized! Invalid Token!',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: 'There is some technical error, please try again!',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+
+            }
+        }
+        function ViewDetailSubmitExamForm(id) {
+
+            if ($('#sectionViewCandidateDetails').hasClass('d-none')) {
+            $('#sectionViewCandidateDetails').removeClass('d-none');
+                $('#sectionViewSubmitExamFrom, #sectionAdmitCard').addClass('d-none');
+                $('#sectionViewSubmitExamFrom, #sectionAdmitCardClosing').addClass('d-none');
+            }
+            $('#breadcrumbLink').html($('#pageStageChange').html());
+            $('#breadcrumbLink').prop('href', '/Business/ViewSubmitExamForm?examId=' + @Model.ExamFromDetails.Id);
+            $('#pageStageChange').html('Candidate Details');
+
+            var CandidateData = @Html.Raw(Json.Encode(Model.AllDetailsOfCandidateList));
+            var ExamFromDetails = @Html.Raw(Json.Encode(Model.ExamFromDetails));
+            console.log(CandidateData);
+            console.log(ExamFromDetails);
+
+            CandidateData.forEach(function (item) {
+                if (item.Id===id) {
+                    if (item.Category === 'Improvement for Division') {
+                        $("#ImprovementDiv").prop("checked", true);
+
+                    }
+                    else {
+                        $("#" + item.Category +"").prop("checked", true);
+
+                    }
+                    $('#SessionYear').val(item.SessionYear);
+                    $('#UserMasterId').val(item.UserMasterId);
+                    $('#CurrentRollNo').val(item.CurrentRollNo);
+                    $('#CandidateName').val(item.CandidateName);
+                    $('#DeclerationCandidateName').val(item.CandidateName);
+                    $('#CandidateFather').val(item.CandidateFather);
+                    $('#CandidateMother').val(item.CandidateMother);
+                    $('#PermanentAddress').val(item.PermanentAddress);
+                    $('#PermanentPin').val(item.PermanentPin);
+                    $('#PermanentMobNo').val(item.PermanentMobNo);
+                    $('#PresentAddress').val(item.PresentAddress);
+                    $('#PresentPin').val(item.PresentPin);
+                    $('#PresentMobNo').val(item.PresentMobNo);
+                    $('#Nationality').val(item.Nationality);
+                    $('#AadharCardNo').val(item.AadharCardNo);
+                    $('#DOB').val(item.DOB_FormatDate);
+                    $('#Email').val(item.Email);
+                    $('#EduQualification').val(item.EduQualification);
+                    $('#CurrentClass').val(item.CurrentClass);
+                    $('#CurrentSubject').val(item.CurrentSubject);
+                    $('#CurrentCenterName').val(item.CurrentCenterName);
+                    $('#CurrentCenterCity').val(item.CurrentCenterCity);
+                    $('#PreviousClass').val(item.PreviousClass);
+                    $('#PreviousSubject').val(item.PreviousSubject);
+                    $('#PreviousYear').val(item.PreviousYear);
+                    $('#PreviousRollNo').val(item.PreviousRollNo);
+                    $('#PreviousResult').val(item.PreviousResult);
+                    $('#PreviousCenterName').val(item.PreviousCenterName);
+                    $('#Amount').val(item.Amount);
+                    $('#DeclerationAmount').val(item.Amount);
+                    $('#AmountInWord').val(item.AmountInWord);
+                    $('#NoOfAttached').val(item.NoOfAttached);
+                    $('#CertificateCollectFrom').val(item.CertificateCollectFrom);
+                    $('#CandidateGuradianName').val(item.CandidateGuradianName);
+                    $('#BankDraftNo').val(item.BankDraftNo);
+                    $('#BankDraftDate').val(item.BankDraftDate);
+                    $('#PostalOrderNo').val(item.PostalOrderNo);
+                    $('#SuperintendentName').val(item.SuperintendentName);
+                    $('#SuperintendentPinNo').val(item.SuperintendentPinNo);
+                    $('#SuperintendentPhoneNo').val(item.SuperintendentPhoneNo);
+                    $('#SuperintendentEmail').val(item.SuperintendentEmail);
+
+                    $('#SuperintendentSignature').val(item.SuperintendentSignature);
+                    $('#CandidateGuradianSignature').val(item.CandidateGuradianSignature);
+                    $('#CandidateSignature').val(item.CandidateSignature);
+
+
+                    $("#profileImage").attr("src", item.CandidateProfileImageWithPath);
+                    $("#signature").attr("src", item.CandidateSignatureWithPath);
+                    $('#signatureAtTermAndConditions').attr('src', item.CandidateSignatureWithPath);
+                    $('#signatureOfGuradianImg').attr('src', item.GuradianSignatureWithPath);
+                    $('#signatureOfSuperintendentImg').attr('src', item.SuperintendentSignatureWithPath);
+
+                    $('#termAndConditionsDate').val(item.CreatedFormatDate);
+                    $('#declerationByGuardianDate').val(item.CreatedFormatDate);
+                    $('#declerationBySuperintendentDate').val(item.CreatedFormatDate);
+
+                    $('#CenterNo').val(ExamFromDetails.CenterNo);
+                    $('#declerationBySuperintendentCenterNo').val(ExamFromDetails.CenterNo);
+
+                    $('#BusinessId').val(ExamFromDetails.Id);
+
+
+
+
+
+
+                }
+            });
+
+        }
+
+        function ViewAdmitCard(id) {
+            if ($('#sectionAdmitCard').hasClass('d-none')) {
+                $('#sectionAdmitCard').removeClass('d-none');
+
+                $('#sectionViewCandidateDetails, #sectionViewSubmitExamFrom').addClass('d-none');
+            }
+            if ($('#sectionAdmitCardClosing').hasClass('d-none')) {
+                $('#sectionAdmitCardClosing').removeClass('d-none');
+
+                $('#sectionViewCandidateDetails, #sectionViewSubmitExamFrom').addClass('d-none');
+            }
+             $('#breadcrumbLink').html($('#pageStageChange').html());
+            $('#breadcrumbLink').prop('href', '/Business/ViewSubmitExamForm?examId=' + @Model.ExamFromDetails.Id);
+            $('#pageStageChange').html('Admit card of Candidate');
+             var CandidateData = @Html.Raw(Json.Encode(Model.AllDetailsOfCandidateList));
+            console.log(CandidateData);
+            CandidateData.forEach(function (item) {
+                if (item.Id===id) {
+                    if (item.Category === 'Improvement for Division') {
+                        $("#ImprovementDiv").prop("checked", true);
+
+                    }
+                    else {
+                        $("#" + item.Category +"").prop("checked", true);
+
+                    }
+                    $("#AdmitCardprofileImage").attr("src", item.CandidateProfileImageWithPath);
+                    $('#AdmitCardName').html(item.CandidateName);
+                    $('#AdmitCardClass').html(item.CurrentClass);
+                    $('#AdmitCardSubject').html(item.CurrentSubject);
+                    $('#AdmitCardCenterName').html(item.CurrentCenterName);
+                    $('#AdmitCardRollNo').html(item.CurrentRollNo);
+
+
+                }
+            });
+
+        }
+
+       function BackViewSubmitExamForm()
+        {
+           ResetCandidateDetailForm();
+           if ($('#sectionViewSubmitExamFrom').hasClass('d-none')) {
+               $('#sectionViewSubmitExamFrom').removeClass('d-none');
+               $('#sectionViewCandidateDetails, #sectionAdmitCard').addClass('d-none');
+               $('#sectionViewCandidateDetails, #sectionAdmitCardClosing').addClass('d-none');
+           }
+        }
+        function ResetCandidateDetailForm() {
+            // Reset input elements
+            $('#SessionYear').val('');
+            $('#CandidateProfileImage').val('');
+            $("input[name='category']").prop('checked', false);
+            $('#UserMasterId').val('');
+            $('#CurrentRollNo').val('');
+            $('#CandidateName').val('');
+            $('#CandidateFather').val('');
+            $('#CandidateMother').val('');
+            $('#PermanentAddress').val('');
+            $('#PermanentPin').val('');
+            $('#PermanentMobNo').val('');
+            $('#PresentAddress').val('');
+            $('#PresentPin').val('');
+            $('#PresentMobNo').val('');
+            $('#Nationality').val('');
+            $('#AadharCardNo').val('');
+            $('#DOB').val('');
+            $('#Email').val('');
+            $('#EduQualification').val('');
+            $('#CurrentClass').val('');
+            $('#CurrentSubject').val('');
+            $('#CurrentCenterName').val('');
+            $('#CurrentCenterCity').val('');
+            $('#PreviousClass').val('');
+            $('#PreviousSubject').val('');
+            $('#PreviousYear').val('');
+            $('#PreviousRollNo').val('');
+            $('#PreviousResult').val('');
+            $('#PreviousCenterName').val('');
+            $('#Amount').val('');
+            $('#AmountInWord').val('');
+            $('#NoOfAttached').val('');
+            $('#CertificateCollectFrom').val('');
+            $('#CandidateSignature').val('');
+            $('#CandidateGuradianSignature').val('');
+            $('#CandidateGuradianName').val('');
+            $('#BankDraftNo').val('');
+            $('#BankDraftDate').val('');
+            $('#PostalOrderNo').val('');
+            $('#SuperintendentSignature').val('');
+            $('#SuperintendentName').val('');
+            $('#SuperintendentPinNo').val('');
+            $('#SuperintendentPhoneNo').val('');
+            $('#SuperintendentEmail').val('');
+
+
+
+            $('#profileImg').attr('src', "");
+            $('#BusinessId').val('');
+            $('#CenterNo').val('');
+            $('#termAndConditionsDate').val('');
+            $('#signatureAtTermAndConditions').attr('src', "");
+            $('#declerationByGuardianDate').val('');
+            $('#signatureOfGuradianImg').attr('src', "");
+            $('#DeclerationCandidateName').val('');
+            $('#DeclerationAmount').val('');
+            $('#declerationBySuperintendentDate').val('');
+            $('#declerationBySuperintendentCenterNo').val('');
+            $('#signatureOfSuperintendentImg').attr('src', "");
+        }
+    </script>
+
+}

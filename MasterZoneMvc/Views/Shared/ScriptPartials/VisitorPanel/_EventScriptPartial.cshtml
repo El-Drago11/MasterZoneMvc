@@ -1,0 +1,223 @@
+﻿<script>
+    $(document).ready(function () {
+
+        GettAllRecordEventById();
+    });
+
+    function GettAllRecordEventById() {
+        var id = $("#hiddenEventId").val();
+        //StartLoading();
+        $.ajax({
+            type: "GET",
+            url: '/api/Event/GetAllDetailById?id=' + id,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                // $('.error-class').html('');
+
+                var item = response.data.EventData;
+                var formattedDate = moment(item.StartDate).format("dddd, MMMM D, YYYY");
+
+                var formattedStartTime = moment(response.data.EventData.StartTime_24HF, "HH:mm").format("h:mm A");
+                var formattedEndTime = moment(response.data.EventData.EndTime_24HF, "HH:mm").format("h:mm A");
+
+
+                $("#EventTitleName").html(item.Title);
+                $("#EventStartDate").html(formattedDate);
+                $("#EventStartToEndTime").html(formattedStartTime + ' - ' + formattedEndTime);
+                $("#EventShortDescription").html(item.ShortDescription);
+                if (item.Price > 0) {
+                    $("#EventPrice").html('Rs. ' + item.Price + '/-');
+                }
+                else {
+                    $("#EventPrice").html('Free');
+                }
+
+                $("#EndTime_Event").html(item.EndTime_24HF);
+                $("#EventGetDirections").attr('href', item.EventLocationURL);
+
+                if (item.EventImageWithPath != "") {
+                    $("#FeaturedImage_EventView").attr('src', item.EventImageWithPath);
+                }
+                $("#About_Event_ClientSide").html(item.AboutEvent);
+                $("#Additional_Inforamtion_ClientSide").html(item.AdditionalInformation);
+                $("#EventTicketInformation").html(item.TicketInformation);
+                if (item.Walkings == 1) {
+                    $("#EventWalking").html('Accepted');
+                }
+                else {
+                    $("#EventWalking").html('Not Accepted');
+                }
+                $("#EventCreatorName").html(response.data.EventCreatorName.EventCreatorName);
+                $("#EventCreatorImage").attr('src', response.data.EventCreatorName.CreatedImage);
+                $("#Event_TotalJoined").html(item.TotalJoined + ' Joined');
+
+                //Event Social Icon
+                var EventTitleForSocialIcon = encodeURIComponent(item.Title);
+                var eventURL = encodeURIComponent(document.location.href);
+
+                var whatsappMessage = EventTitleForSocialIcon + encodeURIComponent(" ") + eventURL;
+                var eventSocialIconHtml = '<a href="https://www.facebook.com/sharer/sharer.php?u=' + document.location + '&title=' + EventTitleForSocialIcon + '" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>' +
+                    '<a href="https://www.linkedin.com/sharing/share-offsite/?url=' + eventURL + '&title=' + EventTitleForSocialIcon +'" title="LinkedIn"  target="_blank"><i class="fab fa-linkedin"></i></a>' +
+                    '<a href="https://www.instagram.com/' + EventTitleForSocialIcon + '/" title="Instagram" target="_blank"><i class="fab fa-instagram"></i></a>' +
+                    '<a href="https://twitter.com/share?url=' + document.location.href + '&text=' + EventTitleForSocialIcon +'"  target="_blank"><i class="fab fa-twitter"></i></a>' +
+                    '<a href="https://wa.me/?text=' + whatsappMessage + '" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>';
+
+                $("#SocialIconForEventPage").append(eventSocialIconHtml);
+
+                for (var i = 0; i < response.data.OrganiserList.length; i++) {
+                    var organizer = response.data.OrganiserList[i];
+                    var organizerHtml = '<div class="col-sm-4">' +
+                        '<div class="card border-0 organizer-card-border-a" style="min-width: max-content;">' +
+                        '<img class="card-img-top" src="' + organizer.EventDetailsImageWithPath + '" alt="Card image cap" style="height:198px;width:198px;">' +
+                        '<div class="card-body text-center border-0">' +
+                        '<h5 class="card-title text-center organizer-title-text">' + organizer.Name + '</h5>' +
+                        '<a href="' + organizer.Link + '" class="custom-btn_1a text-center Outer-section-btn_a">View Profile</a>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+
+                    $("#EventOrganizerSection").append(organizerHtml);
+
+                }
+
+
+                for (var i = 0; i < response.data.HostList.length; i++) {
+                    var host = response.data.HostList[i];
+                    var hostHtml = '<div class="col-sm-4">' +
+                        '<div class="card border-0 organizer-card-border-a" style="min-width: max-content;">' +
+                        '<img class="card-img-top" src="' + host.EventDetailsImageWithPath + '" alt="Card image cap" style="height:198px;width:198px;">' +
+                        '<div class="card-body text-center border-0">' +
+                        '<h5 class="card-title text-center card-content-heading">' + host.Name + '</h5>' +
+                        '<p class="card-content-caption-txt">' + host.Designation + '</p>' +
+                        '<a href="' + host.Link + '" class="custom-btn_1a text-center Outer-section-btn_a">View Profile</a>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+                    $("#OurHostEventSection").append(hostHtml);
+
+                }
+
+
+                for (var i = 0; i < response.data.SpecialGuestList.length; i++) {
+                    var specialGuest = response.data.SpecialGuestList[i];
+                    var specialGuestHtml = '<div class="col-sm-4">' +
+                        '<div class="card border-0 organizer-card-border-a"  style="min-width: max-content;">' +
+                        '<img class="card-img-top" src="' + specialGuest.EventDetailsImageWithPath + '" alt="Card image cap" style="height:198px;width:198px;">' +
+                        '<div class="card-body text-center border-0">' +
+                        '<a href="' + specialGuest.Link + '" class="custom-btn_1a text-center Outer-section-btn_a">' + specialGuest.Name + '</a>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+
+                    $("#EventSpecialGuestSection").append(specialGuestHtml);
+
+                }
+
+                //Sponsor Data
+                for (var i = 0; i < response.data.EventSponsorList.length; i++) {
+                    var eventSponsor = response.data.EventSponsorList[i];
+                    var eventSponsorHtml = '<div class="sponsors-logo slide">' +
+                        '<a href="' + eventSponsor.SponsorLink + '"><img class="sponsors-logo-slides-z" src="' + eventSponsor.EventSponsorWithPath + '"></a>' +
+                        '</div>';
+                    $("#lg-slider").append(eventSponsorHtml);
+                }
+
+                if (response.data.UpComingEventList.length <= 0) {
+                    var UpComingEventHtml = '<div class="w-100 text-center mt-2"><i>No upcoming events!</i></div>';
+                    $("#NextThreeEventList").append(UpComingEventHtml);
+                }
+                else {
+
+
+                    for (var i = 0; i < response.data.UpComingEventList.length; i++) {
+
+                        var StartDate = response.data.UpComingEventList[i].StartDate;
+                        var dateParts = StartDate.split("-");
+                        var date = dateParts[2];
+                        var Month = new Date(StartDate);
+                        var monthName = Month.toLocaleString('en-US', { month: 'long' });
+
+                        var StartTime = moment(response.data.UpComingEventList[i].StartTime_24HF, "HH:mm").format("h:mm A");
+                        var EndTime = moment(response.data.UpComingEventList[i].EndTime_24HF, "HH:mm").format("h:mm A");
+
+                        var UpcomingEvent = response.data.UpComingEventList[i];
+                        var UpComingEventHtml = `
+            <div class="other-event-content-outer">
+                <img src="${UpcomingEvent.EventImageWithPath}" alt="" class="other-event-content-image">
+                <div class="other-event-content-date text-center">
+                    <h3>${date}</h3>
+                    <p class="other-event-date-time">${monthName}</p>
+                </div>
+                <div class="other-event-content-outer-mdl text-center">
+                    <h5 class="other-event-content-sub-heading">
+                        ${UpcomingEvent.Title}
+                    </h5>
+                    <p class="other-event-time-z">${StartTime} - ${EndTime}</p>
+                    <p class="other-event-speaker-name">
+                        Speaker: ${UpcomingEvent.HostName}
+                    </p>
+                </div>
+                <a href="/Home/Event?eventId=${UpcomingEvent.Id}" class="btn btn-outline-dark custom-btn_1a custom-default-btn">Read More</a>
+            </div>`;
+
+                        $("#NextThreeEventList").append(UpComingEventHtml);
+                    }
+                }
+
+
+                //var carouselElement = document.querySelector('our-sponsors-section-slider');
+
+                // Initialize the Slick carousel
+                $("#lg-slider").slick({
+                    slidesToShow: 5,
+                });
+                $('.content-row').slick({
+                    slidesToShow: 5,
+                });
+                $("#OurHostEventSection").slick({
+                    slidesToShow: 5,
+                });
+                $("#EventSpecialGuestSection").slick({
+                    slidesToShow: 5,
+                });
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+</script>

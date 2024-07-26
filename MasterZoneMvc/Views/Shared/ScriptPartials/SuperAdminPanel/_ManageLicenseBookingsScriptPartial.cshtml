@@ -1,0 +1,565 @@
+﻿
+<script>
+    var CertificateId_Global = 0;
+    var CertificateTypeKey_Global = "";
+    var UserToken_Global = "";
+    var LicenseId_Global = 0;
+    var SelectedPermissionArr_Global = [];
+    var SelectedFeaturePermissionArr_Global = [];
+    var _licenseTable;
+
+    function initializeDataTable_License() {
+        _licenseTable = $("#tblLicenseBookingRequests").DataTable();
+    }
+
+    $(document).ready(function () {
+
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+                initializeDataTable_License();
+                GetAllLicenseRequests();
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_License();
+                        GetAllLicenseRequests();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+
+            StopLoading();
+        });
+    });
+
+
+
+function GetAllLicenseRequests() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/License/GetAllLicenseBookingRequestForSAByPagination";
+    _licenseTable.clear().destroy();
+    _licenseTable = $("#tblLicenseBookingRequests").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[10, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            }
+            , {
+                "data": "BusinessName", "name": "BusinessName", "autoWidth": true,
+                "render": function (data, type, row) {
+                    return `<a href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.BusinessOwnerLoginId}">
+                        <div class="d-flex flex-column">
+                            <img class="license-logo-img" src="${row.BusinessLogoWithPath}" />
+                            <div class="py-2">${row.BusinessName}</div>
+                        </div>
+                    </a>`;
+                }
+            }
+            ,{
+                "data": "CertificateName", "name": "CertificateName", "autoWidth": true
+            }
+            , {
+                "data": "LicenseLogo", "name": "LicenseLogo", "autoWidth": true,
+                "render": function (data, type, row) {
+                    return `<img class="license-logo-img" src="${row.LicenseLogoWithPath}" />`;
+                }
+            }
+            , { "data": "LicenseTitle", "name": "LicenseTitle", "autoWidth": true }
+            //, {
+            //    "data": "LicenseDescription", "name": "LicenseDescription", "autoWidth": true,
+            //    "render": function (data, type, row) {
+            //        if (row.LicenseDescription.length > 100) { return row.LicenseDescription.substr(0, 100) + '...'; }
+            //        else { return row.LicenseDescription; }
+            //    }
+            //}
+            , { "data": "Quantity", "name": "Quantity", "autoWidth": true }
+            , { "data": "LicensePrice", "name": "LicensePrice", "autoWidth": true }
+            , { "data": "OrderTotalAmount", "name": "OrderTotalAmount", "autoWidth": true }
+            , {
+                "data": "OrderPaymentMethod", "name": "OrderPaymentMethod", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _paymentApprovedStatus = ``;
+                    if (row.PaymentIsApproved == 1)
+                        _paymentApprovedStatus = `<span class="badge badge-success">Approved</span>`;
+                    else
+                        _paymentApprovedStatus = `<span class="badge badge-danger">Not-Approved</span>`;
+
+                    return `<div class="d-flex flex-column"><span>${row.OrderPaymentMethod}</span>${_paymentApprovedStatus}</div>`;
+                }
+            }
+            , {
+                "data": "StatusText", "name": "StatusText", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _badgeClass = ``;
+                    if (row.Status == 1)
+                        _badgeClass = "badge-warning";
+                    else if (row.Status == 2)
+                        _badgeClass = "badge-success";
+                    else if (row.Status == 3)
+                        _badgeClass = "badge-danger";
+                    else
+                        _badgeClass = "badge-default";
+
+                    return `<span class="badge ${_badgeClass}">${row.StatusText}</span>`;
+                }
+            }
+            , {
+                "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                }
+            }
+            , {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _view = `<a href="javascript:getLicenseBookingDetailById(${row.Id});" class="btn btn-sm btn-info text-white mx-1"><i class="fas fa-eye" title="View"></i> View</a>`;
+                    var _approveAction = (row.Status == 1) ? `<a href="javascript:confrimApproveLicenseBooking(${row.Id});" class="btn btn-sm btn-success text-white mx-1">Approve Booking</a>`: '';
+                    var _declineAction = (row.Status == 1) ? `<a href="javascript:confrimDeclineLicenseBooking(${row.Id});" class="btn btn-sm btn-danger text-white mx-1">Decline Booking</a>` : '';
+                    var _approvePaymentAction = (row.PaymentIsApproved == 1) ? '' : `<a href="javascript:confrimApprovePayment(${row.PaymentResponseId});" class="btn btn-sm btn-success text-white mx-1">Approve Payment</a>`;
+
+                    var _action = `<div class="edbt">
+                                        ${_view}
+                                        ${_approvePaymentAction}
+                                        ${_approveAction}
+                                        ${_declineAction}
+                                    </div>`;
+                    return _action;
+                }
+            }
+        ],
+        //"fnRowCallback": function (nRow, aData, iDisplayIndex) {
+        //    var info = _expenditureTable.page.info();
+        //    $("td:first", nRow).html(info.start + iDisplayIndex + 1);
+        //    return nRow;
+        //},
+        "responsive": true,
+        "autoWidth": false,
+        //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "columnDefs": [{
+            "targets": [0, 3, 11], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblLicenseBookingRequests_filter input').unbind();
+    $('#tblLicenseBookingRequests_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _licenseTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+    function confrimApprovePayment(prid) {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmApprovePaymentRequestTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmApprovePaymentRequestText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willConfirm) => {
+        if (willConfirm) {
+            approveLicensePaymentById(prid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+    }
+
+    function confrimApproveLicenseBooking(id) {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmApproveLicenseBookingRequestTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmApproveLicenseBookingRequestText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willConfirm) => {
+        if (willConfirm) {
+            updateLicenseBookingStatusById(id, 2);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+    }
+
+    function confrimDeclineLicenseBooking(id) {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmDeclineLicenseBookingRequestTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmDeclineLicenseBookingRequestText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willConfirm) => {
+        if (willConfirm) {
+            updateLicenseBookingStatusById(id, 3);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+    function approveLicensePaymentById(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/License/ApproveLicenseBookingPaymentStatusById?paymentResponseId=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Request List
+                        GetAllLicenseRequests();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function updateLicenseBookingStatusById(id, status) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: `/api/License/UpdateLicenseBookingStatusById?id=${id}&status=${status}`,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Request List
+                        GetAllLicenseRequests();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function ConfirmChangeStatusLicense(id) {
+
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmChangeStatusLicenseTitle)",
+            text: "@(Resources.SuperAdminPanel.ConfirmChangeStatusLicenseText)",
+            type: "warning",
+            buttons: {
+                cancel: "@(Resources.ErrorMessage.No)",
+                confirm: "@(Resources.ErrorMessage.Yes)"
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusLicense(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function ChangeStatusLicense(id) {
+        StartLoading();
+
+        $.ajax({
+            type: "POST",
+            url: "/api/License/ChangeStatus/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff-status successfully updated
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllCreatedLicense();
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function bindLicenseDetailListItemHTML_Modal(key, value) {
+        return `
+            <div class="d-flex d-flex justify-content-between w-100">
+                <div><b>${key}: </b></div>
+                <div>${value}</div>
+            </div>
+            <hr class="mt-0 mb-0" />
+        `;
+    }
+
+    function getLicenseBookingDetailById(id) {
+        StartLoading();
+        let _url = "/api/License/GetLicenseBookingDetailForSAById?id=" + id;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+
+                if (response.data && response.data != null) {
+
+                    var _LicenseDetail = response.data;
+
+                    var _licenseBookingStatus = ``;
+                    var _badgeClass = ``;
+                    if (_LicenseDetail.Status == 1)
+                        _badgeClass = "badge-warning";
+                    else if (_LicenseDetail.Status == 2)
+                        _badgeClass = "badge-success";
+                    else if (_LicenseDetail.Status == 3)
+                        _badgeClass = "badge-danger";
+                    else
+                        _badgeClass = "badge-default";
+
+                    _licenseBookingStatus = `<span class="badge ${_badgeClass}">${_LicenseDetail.StatusText}</span>`;
+
+                    var _businessDetail = `<a href="https://localhost:44305/SuperAdmin/BusinessDetail?businessOwnerLoginId=${_LicenseDetail.BusinessOwnerLoginId}">
+                        <div class="d-flex align-items-center">
+                            <img class="license-logo-img" src="${_LicenseDetail.BusinessLogoWithPath}" />
+                            <div class="py-2">${_LicenseDetail.BusinessName}</div>
+                        </div>
+                        </a>
+                    `;
+
+
+                    var licenseListItems = ``;
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Business", _businessDetail);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Certification Profile", _LicenseDetail.CertificateName);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Title", _LicenseDetail.LicenseTitle);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Description", _LicenseDetail.LicenseDescription);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Achieving Order", _LicenseDetail.LicenseAchievingOrder);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Time Period", _LicenseDetail.LicenseTimePeriod);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Commission Type", _LicenseDetail.CommissionTypeName);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Commission Value", _LicenseDetail.LicenseCommissionValue);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Price", _LicenseDetail.LicensePrice);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Min. Selling Price", _LicenseDetail.LicenseMinSellingPrice);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Quantity", _LicenseDetail.Quantity);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Order Total Amount", _LicenseDetail.OrderTotalAmount);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("GST Percent", _LicenseDetail.LicenseGSTPercent);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("GST Description", _LicenseDetail.LicenseGSTDescription);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Payment Method", _LicenseDetail.OrderPaymentMethod);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Payment Approved", (_LicenseDetail.PaymentIsApproved) ? `<span class="badge badge-success">Approved</span>` : `<span class="badge badge-danger">Not Approved</span>`);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("License Booking Status", _licenseBookingStatus);
+                    licenseListItems += bindLicenseDetailListItemHTML_Modal("Booking Date", _LicenseDetail.CreatedOn_FormatDate);
+
+                    var modalBody = `
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <img src="${_LicenseDetail.LicenseLogoWithPath}" class="license-logo-img"/>
+                            </div>
+                            <div class="col-md-12">
+                                ${licenseListItems}
+                            </div>
+                        </div>
+                    `;
+
+                    //$('#licenseBookingDetailModal .modal-title').html(response.data.Title);
+                    $('#licenseBookingDetailModal .modal-body').html(modalBody);
+                    $('#licenseBookingDetailModal').modal('show');
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

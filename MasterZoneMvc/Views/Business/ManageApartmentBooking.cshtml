@@ -1,0 +1,295 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "Book Apartment";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles {
+    <style>
+        .user-img {
+            width:40px;
+            height:40px;
+            object-fit: contain;
+        }
+
+        .imagePreview {
+            width:75px;
+            height:75px;
+        }
+
+        .imagePreview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Book Apartment</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageApartment">Manage Apartment</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Book Apartment</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @*@if (permissionKeys.Contains("ManageStaff_ViewStaff_AddStaff"))
+                        {*@
+                    <div class="col-4 text-right">
+                        <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnBookApartment">Book Apartment</a>
+                    </div>
+                    @*}*@
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        <div id="sectionViewApartmentBooking">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblApartmentBooking" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Apartment</th>
+                                        <th>Block</th>
+                                        <th>Phase</th>
+                                        <th>Area/Ground/Room</th>
+                                        <th>Flat/Villa No.</th>
+                                        <th>Person</th>
+                                        <th>Course</th>
+                                        <th>Activity</th>
+                                        <th>Created On</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionBookApartment" style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Apartment</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="form-group col-4">
+                                        <label for="ddlApartment">Select Apartment</label>
+                                        <select id="ddlApartment" class="form-control" onchange="onChangeApartmentSelection();">
+                                            <option value="0">Select</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlApartment"></div>
+                                    </div>
+                                    <div class="form-group col-4">
+                                        <label for="ddlBlock">Select Block</label>
+                                        <select id="ddlBlock" class="form-control">
+                                            <option value="0">Select</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlBlock"></div>
+                                    </div>
+                                    <div class="form-group col-4">
+                                        <label for="txtFlatOrVillaNum">Flat/Villa No.</label>
+                                        <input type="text" id="txtFlatOrVillaNum" class="form-control" />
+                                        <div class="error-class" id="error_txtFlatOrVillaNum"></div>
+                                    </div>
+                                    <div class="form-group col-4">
+                                        <label for="txtPhase">Phase</label>
+                                        <input type="text" id="txtPhase" class="form-control" />
+                                        <div class="error-class" id="error_txtPhase"></div>
+                                    </div>
+                                    <div class="form-group col-4">
+                                        <label for="txtLane">Lane</label>
+                                        <input type="text" id="txtLane" class="form-control" />
+                                        <div class="error-class" id="error_txtLane"></div>
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label for="txtLicenseQuantity">Type</label>
+                                        <div class="">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="propertyManagementType" id="propertyManagementType1" value="1" checked>
+                                                <label class="form-check-label" for="propertyManagementType1">
+                                                    Owner
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="propertyManagementType" id="propertyManagementType2" value="2">
+                                                <label class="form-check-label" for="propertyManagementType2">
+                                                    Tenant
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="propertyManagementType" id="propertyManagementType3" value="3">
+                                                <label class="form-check-label" for="propertyManagementType3">
+                                                    Guest
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="propertyManagementType" id="propertyManagementType4" value="4">
+                                                <label class="form-check-label" for="propertyManagementType4">
+                                                    Other
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-12 d-none">
+                                        <label for="txtPropertyManagementTypeOtherName">Other</label>
+                                        <input type="text" id="txtPropertyManagementTypeOtherName" class="form-control" />
+                                        <div class="error-class" id="error_txtPropertyManagementTypeOtherName"></div>
+                                    </div>
+
+                                    @*<div class="row">*@
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="chkMasterId" checked>
+                                                    <label class="form-check-label" for="chkMasterId" style="cursor:pointer;">Do you have Master-Id?</label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-check-label w-100" for="txtMasterId" style="cursor:pointer;">Master User Id <button type="button" class="btn btn-xs btn-info float-right mb-1" onclick="VerifyMasterIdAndGetFamilyMembers();">Check</button></label>
+                                                <input type="text" class="form-control" id="txtMasterId">
+                                                <div class="error-class" id="error_txtMasterId"></div>
+                                            </div>
+
+                                        </div>
+                                    @*</div>*@
+
+                                    <div id="formSectionPersonalDetail" class="col-12 d-none">
+                                        <h4>Person Details</h4>
+                                        <div class="form-group d-flex flex-column">
+                                            <label>Profile Image</label>
+                                            <div class="imagePreview">
+                                                <img id="previewImagePerson" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="filePersonProfileImage" class="border form-control" accept="image/*">
+                                            <div class="error-class" id="error_filePersonProfileImage"></div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label for="txtFirstName">First Name</label>
+                                            <input type="text" id="txtFirstName" class="form-control" />
+                                            <div class="error-class" id="error_txtFirstName"></div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label for="txtLastName">Last Name</label>
+                                            <input type="text" id="txtLastName" class="form-control" />
+                                            <div class="error-class" id="error_txtLastName"></div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label for="txtEmail">Email</label>
+                                            <input type="text" id="txtEmail" class="form-control" />
+                                            <div class="error-class" id="error_txtEmail"></div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label for="txtPhoneNumber">Phone Number</label>
+                                            <input type="text" id="txtPhoneNumber" class="form-control" />
+                                            <div class="error-class" id="error_txtPhoneNumber"></div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label for="ddlGender">Gender</label>
+                                            <select id="ddlGender" class="form-control">
+                                                <option value="0">Select</option>
+                                                <option value="1">Male</option>
+                                                <option value="2">Female</option>
+                                                @*<option value="3">Other</option>*@
+                                            </select>
+                                            <div class="error-class" id="error_ddlGender"></div>
+                                        </div>
+                                    </div><!--  -->
+                                    <div class="col-12">
+                                        <div class="form-group col-12">
+                                            <h4 class="w-100">Family Members <a href="javascript:generateFamilyMemberInputGroup();" class="btn btn-sm btn-primary float-right">Add Members</a></h4>
+                                        </div>
+                                        <div id="sectionExistingFamilyMembers">
+                                            
+                                        </div>
+                                        <div id="formFamilyMemberSection">
+                                            @* Embedded inputs with jquery *@
+                                        </div>
+                                    </div>
+                                    <hr/>
+
+                                    <div class="form-group col-6">
+                                        <label for="ddlCourse">Select Course</label>
+                                        <select id="ddlCourse" class="form-control" onchange="GetAllClassBatchList();">
+                                            <option value="0">Select</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlCourse"></div>
+                                    </div>
+
+                                    <div class="form-group col-6">
+                                        <label for="ddlCourseBatch">Select Batch</label>
+                                        <select id="ddlCourseBatch" class="form-control">
+                                            <option value="0">Select</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlCourseBatch"></div>
+                                    </div>
+
+                                    <div class="form-group col-6">
+                                        <label for="ddlArea">Select Area/Room/Ground</label>
+                                        <select id="ddlArea" class="form-control">
+                                            <option value="0">Select</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlArea"></div>
+                                    </div>
+
+                                    <div class="form-group col-6">
+                                        <label for="txtActivity">Activity</label>
+                                        <input type="text" id="txtActivity" class="form-control" />
+                                        <div class="error-class" id="error_txtActivity"></div>
+                                    </div>
+
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateApartment()">Submit</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageApartmentBookingScriptPartial.cshtml")
+
+}

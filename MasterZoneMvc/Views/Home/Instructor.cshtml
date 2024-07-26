@@ -1,0 +1,596 @@
+﻿
+@{
+    Layout = null;
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+          integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
+          integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+            integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"
+            integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+          integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+          integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    @*//----------------for image popup slider start--------------------------*@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+    @*//----------------for image popup slider end--------------------------*@
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <link href="~/Content/assets/Instructor-page.css" rel="stylesheet" />
+    <title>Instructor</title>
+
+</head>
+
+<body>
+    <header class="header active-h">
+        <div class="container">
+            <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+            <nav class="navbar navbar-expand-lg w-100 navbar-dark hdnav pl-md-0">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03"
+                        aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    <span class="close"><img src="~Content/visitor-panel/image/cls.png"></span>
+                </button>
+
+                <a class="navbar-brand col-md-2 text-white d-none d-md-block ls01pj" href="/Home/Index">
+                    <img src="" id="BindBusinessLogoDetail" class="ls-p-lg mblg-ls  mr-2" style="height: 38px;">
+                    <p class="m-0" id="login_userName"></p>
+                </a>
+                <div class="col-md-10">
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+                        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="/Home/Register">Register as a Professional</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="#">Help</a>
+                            </li>
+                            <li class="nav-item" id="li_LoginSignUp">
+                                <a class="nav-link text-white" href="/Home/Login">Login / Sign Up</a>
+                            </li>
+                            <li id="loginUser_HomeLayout" class="nav-item d-none">
+                                <a class="nav-link text-white" href="/Home/MyClass"></a>
+                            </li>
+                        </ul>
+                        <form class="form-inline my-2 my-lg-0 d-none">
+                            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+
+    <section id="section-I1" class="setion border-bottom">
+        <div class="page-center sI-cn p-0">
+            <div class="row m-0 p-0 si2-rw">
+                <div class="col-sm-9 si1-cl">
+                    <div id="Instructorbannerimage"></div>
+                    <div class="cnt-outer-for-brdr">
+                        <div class="lstsc-outer">
+                            <div class="heading-jk text-center">
+                                <div class="row">
+                                    <div class="col-sm-6 fr-brdr0w">
+                                        <p id="InstructorAboutDetails" class="sc2-tsfjsdkfj text-justify">
+
+                                        </p>
+                                    </div>
+                                    <div class="col-sm-6" id="BindBusinessElseDetail">
+
+                                    </div>
+                                </div>
+                                <hr>
+                            </div>
+
+                        </div>
+                        <div class="lstsc-outer">
+                            <tabs>
+                                <div class="nav nav-tabs" id="nav-tab-dsdfslaskjdfkla" role="tablist">
+                                    <a class="nav-item nav-link active ml-0" id="nav-home-tab" data-toggle="tab"
+                                       href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">
+                                        My
+                                        Class
+                                    </a>
+                                    <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab"
+                                       href="#nav-profile" role="tab" aria-controls="nav-profile"
+                                       aria-selected="false">Photos</a>
+
+                                    <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab"
+                                       href="#nav-contact" role="tab" aria-controls="nav-contact"
+                                       aria-selected="false">Video</a>
+
+                                    <a class="nav-item nav-link" id="nav-home-tab" data-toggle="tab" href="#nav-home1"
+                                       role="tab" aria-controls="nav-home" aria-selected="false">Education</a>
+                                    <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab"
+                                       href="#nav-profile1" role="tab" aria-controls="nav-profile"
+                                       aria-selected="false">Events</a>
+
+                                </div>
+                            </tabs>
+                            <div class="tab-content" id="nav-tabContent">
+                                <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                                     aria-labelledby="nav-home-tab">
+                                    <div class="section-i2001">
+                                        <h4 class="inpclsjkj">IN-PERSON CLASSES</h4>  <hr>
+                                        <div class="msnry-img" id="BindBusinessPersonClassDetailList">
+
+                                        </div>
+                                    </div>
+                                    <div class="btn-outtrkjkd text-center view-all">
+                                        <a href="javascript:;" id="ViewMoreClassBtn"
+                                           class="text-center mt-5 btn btn-outline-dark csbttnm" onclick="ShowMoreClassList();">
+                                            Show
+                                            More
+                                        </a>
+                                        <a href="javascript:;" id="showlessClassBtn"
+                                           class="text-center mt-5 btn btn-outline-dark csbttnm d-none" onclick="GetBusinessInstructorOfflineClassesDetailList();">
+                                            Show
+                                            less
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="nav-profile" role="tabpanel"
+                                     aria-labelledby="nav-profile-tab">
+                                    <div class="section-i2001">
+                                        <h4 class="inpclsjkj">Photos</h4>
+                                        <hr>
+                                        <div class="img-sc-outer">
+                                            <div class="row">
+                                                <div class="card-columns msnry-img" id="BindInstructorImages">
+
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="nav-contact" role="tabpanel"
+                                     aria-labelledby="nav-contact-tab">
+                                    <div class="section-i2001">
+                                        <h4 class="inpclsjkj">Video</h4>
+                                        <hr>
+                                        <div class="img-sc-outer">
+                                            <div class="row">
+                                                <div class="card-columns msnry-img" id="BindInstructorVideosList">
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="nav-home1" role="tabpanel"
+                                     aria-labelledby="nav-home-tab">
+                                    <div class="section-i2001 section-i2001-edu">
+                                        <h4 class="inpclsjkj">Education</h4>
+                                        <hr>
+                                        <div class="img-sc-outer">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="edu-cnt-outer" id="BindBusinessContentInstructorDetailList">
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="nav-profile1" role="tabpanel"
+                                     aria-labelledby="nav-profile-tab">
+                                    <div id="event00ev" class="section-i2001 section-i2001-evt-vdjk">
+                                        <h4 class="inpclsjkj">Events</h4>
+                                        <hr>
+                                        <div class="msnry-img" id="UpcomingEventsList">
+
+                                        </div>
+                                    </div>
+                                    <div class="btn-outtrkjkd text-center">
+                                        <a href="javascript:;" id="BtnViewMoreUpcomingEvents"
+                                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm" onclick="ViewMoreUpcomingEvents();">
+                                            Show
+                                            More
+                                        </a>
+                                        <a href="javascript:;" id="showlessEventBtn"
+                                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm d-none" onclick="getAllEvents();">
+                                            Show
+                                            less
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="nav-contact1" role="tabpanel"
+                                     aria-labelledby="nav-contact-tab">
+                                    <div class="section-i2001">
+                                        <h4 class="inpclsjkj">Pinnade</h4>
+                                        <hr>
+                                        <div class="img-sc-outer">
+                                            <div class="row">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 m-0 p-0 sdb-rfdfjk border">
+                    <div class="usr-acc-i1-outer">
+                        <div class="usr-acc-i1">
+                            <div class="usr-img-outer-djfdk">
+                                <img id="InstructorProfileImage" src="" alt="" class="usrimg">
+
+                            </div>
+                            <div class="usr-dtl-dkljl">
+                                <div id="InstructorName" class="usr-nm-i-txt2d"></div>
+                                <div id="InstructorId_Section">
+                                    <h5 class="usr-dtl-id-kdfjdk"><span>ID</span> <span id="InstructorUniqueId"></span></h5>
+                                    <div class="usr-acdt-icn0ljk" id="InstrucctorLike">
+
+                                        <a class="pl-2 pr-2" href="mailto:" data-toggle="modal"
+                                           data-target=".bd-example-modal-lg1"><i class="fa-solid fa-envelope"></i></a>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="usr-acc-str-8i">
+                            <div class="sc-star-dkfj">
+                                <div class="str-str-0" id="InstructorStarDetail">
+
+                                </div>
+                                <a id="insp-add-rw" class="addrw-0a" data-toggle="modal"
+                                   data-target=".bd-example-modal-lg">Add Review</a>
+                            </div>
+
+                        </div>
+                        <div class="bio-social">
+                            <p class="m-0 p-0 shron">Share On :</p>
+                            <a rel="noreferrer" title="Facebook" target="_blank" class="author-social" id="InstructorFacebookProfileLink" href=""></a>
+                            <a rel="noreferrer" target="_blank" title="twitter" class="author-social" id="InstructorTwitterProfileLink" href=""></a>
+                            <a rel="noreferrer" target="_blank" class="author-social" title="instagram" id="InstructorInstagramProfileLink" href=""></a>
+                        </div>
+                    </div>
+
+                    <div class="usr-acc-pi-kjka">
+                        <h4 class="usr-head-kfjkdj d-none">Personal Information</h4>
+                        <div class="cnt-outer-001jkk">
+
+                            <div class="cnt-01-kljk2" id="Location_Section">
+                                <h5>Location</h5>
+                                <p id="InstructorFullLocation"></p>
+                            </div>
+                            <div class="cnt-01-kljk3" id="BusinessLicensedTeachDetail_Section">
+                                <h5>Licensed To Teach</h5>
+                                <div class="sc-for-licencesc-kdlsjfl" id="BindBusinessLicensedToTeachDetail">
+
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="logsc-i-001dd-outer" id="BusinessWorkingDetail_Section">
+                        <h4 class="usr-head-kfjkdj usr-head-kfjkdj12">
+                            <img class="cert-img-dfjk"
+                                 src="~/Content/visitor-panel/image/working (1).png"> Currently Working
+                        </h4>
+                        <!-- <hr> -->
+                        <div class="logsc-i-001dd d-flex" id="BindBusinessCurrentlyWorkingList">
+
+                        </div>
+                    </div>
+
+                    <div class="certsc-i-00ddkc" id="CertificateDetail_Section">
+                        <h4 class="usr-head-kfjkdj">
+                            <img class="cert-img-dfjk" src="~/Content/visitor-panel/image/award (1).png"> Certificate
+                        </h4>
+                        <!-- <hr> -->
+                        <div class="logs_certificate_sec" id="BindBusinessCertificateDetail">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="other-ins" class="other-ins0">
+        <div class="container">
+            <div class="otr-inssc text-center">
+                <h2>Other Instructors</h2>
+            </div>
+            <div class="row otr-ins-rw" id="OtherInstructorList">
+
+            </div>
+        </div>
+    </section>
+
+    <!-- modal -->
+    <div id="adrw-mdl01" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog"
+         aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content mdl-cnt-001m">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Review</h5>
+                    <button type="button" class="close close-mdl-jk" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="feedback" action="">
+
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-star"></i></span>
+                                <select class="form-control" id="rate">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                            <div class="error-class" id="error_Instructor_Ratingrate"></div>
+                        </div>
+                    </div>
+
+                    <div class="pinfo">Write your feedback</div>
+
+
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
+                                <textarea class="text form-control" id="review" rows="3"></textarea>
+
+                            </div>
+                            <div class="error-class" id="error_Instructor_RatingFeedback"></div>
+                        </div>
+                    </div>
+                    <div class="text-center"></div>
+                </form>
+
+                <div class="modal-footer border-0">
+
+                    <button type="button" class="btn btn-primary mb-0" onclick="AddUpdate_ManageInstructorRating()">Submit</button>
+                    <button type="button" class="btn btn-outline-dark" data-dismiss="modal" onclick="resetAddUpdateForm();">Close</button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    <div id="adrw-mdl01" class="modal fade bd-example-modal-lg1" tabindex="-1" role="dialog"
+         aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content mdl-cnt-001m">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="exampleModalLabel">Leave Message</h5>
+                    <button type="button" class="close close-mdl-jk" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="feedback" action="">
+
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <div></div>
+                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                                <!-- <label>Name</label> -->
+                                <input name="name" placeholder="Name" class="form-control" type="text">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                                <!-- <label>Email</label> -->
+                                <input name="email" type="email" class="form-control" placeholder="Email">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pinfo">Message</div>
+
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
+                                <textarea class="form-control msg-txt-ar" id="review" rows="3"></textarea>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center"></div>
+                </form>
+
+                <div class="modal-footer border-0">
+                    <button id="mdl-frm-bt" type="submit-btn-rw-001"
+                            class="btn btn-outline-dark frm-outsd">
+                        Submit
+                    </button>
+                    <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+    <div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup">
+        <div class="modal-dialog">
+            <div class="modal-content" style="align-items: center;">
+                <!-- Modal Header -->
+                <div class="modal-header w-100">
+                    <h4 class="modal-title">Please Login</h4>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body text-center pt-5 pb-5">
+                    <p>Please login to your account by click on below button</p>
+
+                    <!-- Modal footer -->
+
+                    <button id="submit" type="button" class="btn btn-outline-dark cstm-btn">
+                        <a href="/Home/Login" class="btn_section">
+                            Login
+                        </a>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="footer">
+        <div class="container">
+            <div class="row">
+                <!-- Single Widget-->
+                <div class="col-12 col-sm-6 col-lg-4 mb-4">
+                    <div class="single-footer-widget section_padding_0_130">
+                        <!-- Footer Logo-->
+                        <div class="footer-logo mb-3"></div>
+                        <p id="BindBusinessUser_AboutDetail"></p>
+
+                        <div class="footer_social_area" id="BusinessSocialDetail_Footer">
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Single Widget-->
+                <div class="col-12 col-sm-6 col-lg mb-4">
+                    <div class="single-footer-widget section_padding_0_130">
+                        <!-- Widget Title-->
+                        <h5 class="widget-title">About</h5>
+                        <!-- Footer Menu-->
+                        <div class="footer_menu">
+                            <ul>
+                                <li><a class="text-white" href="#InstructorAboutDetails">About Us</a></li>
+                                <li><a class="text-white" href="#BindContactDetailInformation">Contact Us</a></li>
+                                <li><a class="text-white" href="#InstructorProfileImage">Business Detail</a></li>
+                                <li>
+                                    <a class="text-white" href="#">Term &amp; Conditions</a>
+                                </li>
+                                <li><a class="text-white" href="#">Privacy Policy</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Single Widget-->
+                <div class="col-12 col-sm-6 col-lg mb-4">
+                    <div class="single-footer-widget section_padding_0_130">
+                        <!-- Widget Title-->
+                        <h5 class="widget-title">Support</h5>
+                        <!-- Footer Menu-->
+                        <div class="footer_menu">
+                            <ul>
+                                <li><a class="text-white" href="#">Help</a></li>
+                                <li><a class="text-white" href="#">Support</a></li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Single Widget-->
+                <div class="col-12 col-sm-6 col-lg mb-4">
+                    <div class="single-footer-widget section_padding_0_130">
+                        <!-- Widget Title-->
+                        <h5 class="widget-title">Contact</h5>
+                        <!-- Footer Menu-->
+                        <div class="footer_menu">
+                            <ul id="BindContactDetailInformation">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="copyrights border-top pt-3">
+            <div class="container ">
+                <div class="row">
+
+                    <div class="col-sm-12 col-md-6">
+                        <strong class="d-flex crptxt" style="white-space:pre-wrap ;">
+                            <p> Copyright © 2023</p> <a class="cpr mr-2 ml-2" href="index.html"> Master Zone.</a>
+                            <p>All rights reserved.</p>
+                        </strong>
+
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <div class="float-md-right d-sm-inline-block">
+                            <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                                <p class="text-white text-center" id="ftxt" style="color: #869099;
+              font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </footer>
+    <!-- footer -->
+    <!-- copy right -->
+    <!-- <div class="page-center">
+
+        </div> -->
+    <!-- csss -->
+
+    <script>
+     
+        $("div#cls-x01").click(function () { $("div#adrw-mdl01").hide(); $(".modal-backdrop.fade.show").hide(); });
+        $("#mdl-frm-bt").click(function (e) {
+            e.preventDefault()
+            $("form#feedback").submit();
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+            crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="~/Scripts/js/visitor-panel/CommonLogin.js"></script>
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_ManageInstructorScriptPartial.cshtml")
+</body>
+
+</html>

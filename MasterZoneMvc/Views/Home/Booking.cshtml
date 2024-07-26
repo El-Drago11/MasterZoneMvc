@@ -1,0 +1,865 @@
+﻿
+@{
+    Layout = null;
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking</title>
+
+    <!-- calander -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.3.3/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/js/bootstrap.min.js"></script>
+
+    <!-- jquery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"
+            integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"
+            integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+          integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+          integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- fontawesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- font link -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+          rel="stylesheet">
+
+    <!-- font link end -->
+    <link rel="stylesheet" href="~/Content/assets/sports-page.css">
+    <script src="~/Content/assets/sports-main.js"></script>
+    <style>
+        .price span.time {
+            color: #fff;
+        }
+        .price .time-select span {
+            color: #fff;
+        }
+        .calander-form .time-btn > ul > div {
+            background: var(--mainColor);
+            margin: 0 20px 20px;
+            padding: 8px 15px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 50%);
+        }
+        p.errormessage {
+            margin-top: 30px;
+            color: red;
+            font-weight: 700;
+        }
+        #service_text option {
+            background: #158a71;
+        }
+        .radio-custom {
+            height: 20px;
+        }
+
+        .calander-form .ground-img-inr input {
+            height: inherit;
+        }
+
+        .copyrights.border-top.pt-3 a.copyright-company-name.mr-2.ml-2 {
+            height: 29px !important;
+        }
+
+        header.header .container {
+            max-width: 95%;
+            margin: auto;
+        }
+        .date-picker.disabled {
+            background-color: #ffffff40;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+    <!-- header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-main">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="~/Content/visitor-panel/image/AdminLTELogo2.png" alt="logo" loading="lazy">
+                        <span class="logo-name">MASTER ZONE</span>
+                    </a>
+                </div>
+                <div class="navigation-section-wrap">
+                    <div class="menu">
+                        <ul>
+                            <li><a href="index.html">Home</a></li>
+                            <li><a href="#contact-us01">Contact Us </a></li>
+                        </ul>
+                    </div>
+                    <div class="mobile_menu navmain-opener"><span></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- simple banner start -->
+    <div class="simple-banner" style="background-image: url('/Content/visitor-panel/image/football02.jpg');">
+        <div class="container">
+            <div class="banner-content">
+                <h1>Reserve / Booking</h1>
+            </div>
+        </div>
+    </div>
+    <!-- simple banner end -->
+    <!-- booking section start -->
+    <div class="reserve-section">
+        <div class="container">
+            <div class="step-sec">
+                <div class="number-text">
+                    <span class="one circle">1</span>
+                    <span class="step-txt">Select</span>
+                </div>
+                <div class="number-text">
+                    <span class="two circle">2</span>
+                    <span class="step-txt">Details</span>
+                </div>
+                <div class="number-text">
+                    <span class="three circle">3</span>
+                    <span class="step-txt">Confirm</span>
+                </div>
+            </div>
+            <div class="review-flex" id="BindBusinessTennisDetailList">
+
+                @*<div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/tennisground.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Tennis ARIYA</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/gymnastics.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Gymnastics ROOM</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/aerobicesroom.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Aerobices ROOM</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/eventshall.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Event HALL</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/partyhall.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Party HALL</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/badmintion.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Badmintion Court</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/cricketground.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Cricket Ground</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/danceroom.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Dance ROOM</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/sports01jpg.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>OTHERS</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/tennisground.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Tennis ARIYA</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/gymnastics.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Gymnastics ROOM</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/aerobicesroom.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Aerobices ROOM</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/eventshall.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Event HALL</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/partyhall.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Party HALL</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/badmintion.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Badmintion Court</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/cricketground.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Cricket Ground</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/danceroom.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>Dance ROOM</h6>
+                </div>
+                <input type="checkbox">
+            </div>
+            <div class="review-item">
+                <div class="item-img">
+                    <img src="~/Content/visitor-panel/image/sports01jpg.jpg" alt="img" loading="lazy">
+                </div>
+                <div class="item-text">
+                    <h6>OTHERS</h6>
+                </div>
+                <input type="checkbox">
+            </div>*@
+
+            </div>
+        </div>
+    </div>
+    <!-- end booking section -->
+
+    <div class="calander-form">
+        <div class="container">
+            <div class="calander-flex">
+                <div class="calander-lt" id="selectedImageBG" style="background-image: url('');">
+                    <div class="ground-img-inr">
+                        @*<div class="courts">
+                            <select id="Clay" onchange="jump()">
+                                <option value="0">Clay Corts</option>
+                                <option value="1">Clay Corts 2</option>
+                            </select>
+
+                        </div>*@
+                        <div class="players-inr">
+                            <div class="player-text">
+                                <h6>Players</h6>
+                                <div class="number">
+                                    <span class="plus" >+</span>
+                                    <input type="text" id="player_vals" value="1">
+                                    <span class="minus" >-</span>
+                                </div>
+
+                            </div>
+                            <div class="player-lt">
+                                <div class="day-inr currnet">
+                                    <span></span>
+                                    <p>Currnet Day</p>
+                                </div>
+                                <div class="day-inr selected">
+                                    <span></span>
+                                    <p>Selected Day</p>
+                                </div>
+                                <div class="day-inr availabel">
+                                    <span></span>
+                                    <p>Not Availabel</p>
+                                </div>
+                                @*<div class="day-inr currnet">
+                                        <input type="radio" id="currentRadio" name="day" class="radio-custom">
+                                        <label for="currentRadio" class="radio-label">Currnet Day</label>
+                                    </div>
+
+                                    <div class="day-inr selected">
+                                        <input type="radio" id="selectedRadio" name="day" class="radio-custom">
+                                        <label for="selectedRadio" class="radio-label">Selected Day</label>
+                                    </div>
+
+                                    <div class="day-inr available">
+                                        <input type="radio" id="availableRadio" name="day" class="radio-custom">
+                                        <label for="availableRadio" class="radio-label">Not Available</label>
+                                    </div>*@
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="calander-rt">
+                    <div class="wrapper">
+
+                        <div class="container-calendar">
+
+                            <div class="button-container-calendar">
+                                <button id="previous" onclick="previous()">&#8249;</button>
+                                <h3 id="monthAndYear"></h3>
+                                <button id="next" onclick="next()">&#8250;</button>
+                            </div>
+
+                            <table class="table-calendar" id="calendar" data-lang="en">
+                                <thead id="thead-month"></thead>
+                                <tbody id="calendar-body"></tbody>
+                            </table>
+
+                            <div class="footer-container-calendar">
+                                <label for="month">Jump To: </label>
+                                <select id="month" onchange="jump()">
+                                    <option value=0>Jan</option>
+                                    <option value=1>Feb</option>
+                                    <option value=2>Mar</option>
+                                    <option value=3>Apr</option>
+                                    <option value=4>May</option>
+                                    <option value=5>Jun</option>
+                                    <option value=6>Jul</option>
+                                    <option value=7>Aug</option>
+                                    <option value=8>Sep</option>
+                                    <option value=9>Oct</option>
+                                    <option value=10>Nov</option>
+                                    <option value=11>Dec</option>
+                                </select>
+                                <select id="year" onchange="jump()"></select>
+                            </div>
+
+                            <div class="calander-bottom" id="servicedropdown">
+                                @*<label class="title-label" for="service">Service </label>
+                                <select id="service_text">
+                                    <option value="Hourly basis">Hourly basis</option>
+                                    <option value="Commercial purpose">Commercial purpose</option>
+                                    <option value="Others">Others</option>
+                                </select>*@
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="time-cta">
+                <h3>Time:</h3>
+                <div class="time-btn">
+                    <ul id="timinglist">
+                        @*<li class="select-value">9:00am</li>
+                        <li>10:00am</li>
+                        <li>11:00am</li>
+                        <li>12:00am</li>
+                        <li>01:00pm</li>
+                        <li>02:00pm</li>
+                        <li>03:00pm</li>
+                        <li>04:00pm</li>
+                        <li>05:00pm</li>
+                        <li>06:00pm</li>
+                        <li>07:00pm</li>
+                        <li>08:00pm</li>*@
+                    </ul>
+                </div>
+                @*<div class="book-now">
+                    <button type="button" class="primary-button" onclick="btnSubmitBookingDetail();">Book Now</button>
+                </div>*@
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- detailsform -->
+    <div class="form-events">
+        <div class="container">
+            <div class="from-main">
+                <div class="form-lt">
+                    <div class="booking-img">
+                        <img src="" alt="img" id="BindRoomImage">
+                        <div class="results-sec" id="BindroomDetails">
+                            @*<div class="player-service">
+                                <div class="player-num">
+                                    <p class="title">players :</p>
+                                    <p class="player-value">1</p>
+                                </div>
+                                <div class="service">
+                                    <p class="title">Service :</p>
+                                    <p class="service-value"> Hourly Basis </p>
+                                </div>
+                            </div>
+                            <div class="date-time">
+                                <div class="time-select">
+                                    <span class="time">Time:</span>
+                                    <span>9:00am</span>
+                                </div>
+                                <div class="time-select">
+                                    <span class="date">Date:</span>
+                                    <span>23 April,2023</span>
+                                </div>
+
+                            </div>*@
+                        </div>
+                    </div>
+                </div>
+                <div class="form-right">
+                    <h3 class="form-title">Your Datas:</h3>
+                    <form>
+                        <div class="form-inr">
+                            <div class="form-group">
+                                <label>Name<span>*</span></label>
+                                <input type="text" name="name" id="textName">
+                                <div class="error-class" id="error_txtName"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Surname<span>*</span></label>
+                                <input type="text" name="surname" id="textSurName">
+                                <div class="error-class" id="error_txtSurName"></div>
+                            </div>
+                        </div>
+                        <div class="form-inr">
+                            <div class="form-group">
+                                <label>Email<span>*</span></label>
+                                <input type="email" name="email" id="textEmail">
+                                <div class="error-class" id="error_txtEmail"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone<span>*</span></label>
+                                <input type="number" name="phonenumber" id="textPhoneNumber">
+                                <div class="error-class" id="error_txtPhoneNumber"></div>
+                            </div>
+                        </div>
+                        <div class="form-inr">
+                            <div class="form-group">
+                                <label>ID</label>
+                                <input type="text" name="bookedId" id="textBookedId" disabled>
+                                <div class="error-class" id="error_txtBookedId"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Department</label>
+                                <input type="text" name="department" id="textDepartment">
+                                <div class="error-class" id="error_txtDepartment"></div>
+                            </div>
+                        </div>
+                        <div class="form-inr">
+                            <div class="form-group">
+                                <label>Villa./Apartment</label>
+                                <textarea type="text" name="apartment" id="textApartment"></textarea>
+                                <div class="error-class" id="error_txtApartment"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>House No.</label>
+                                <input type="text" name="house_no" id="textHouse">
+                                <div class="error-class" id="error_txtHouse"></div>
+                            </div>
+                        </div>
+                        <div class="form-inr_full_width">
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea type="text" id="textMessage"></textarea>
+                                <div class="error-class" id="error_txtMessage"></div>
+                            </div>
+                        </div>
+                        <button type="button" class="primary-button d-none" id="submitbtn" value="Checkout" onclick="btnSubmitUser();">Checkout</button>
+                        <button type="button" class="primary-button" id="loginpopup" value="Checkout" onclick="ShowloginPopup();">Checkout</button>
+                        <p class="errormessage" id="errormessage"></p>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+    <div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup">
+        <div class="modal-dialog">
+            <div class="modal-content" style="align-items: center;">
+                <!-- Modal Header -->
+                <div class="modal-header w-100">
+                    <h4 class="modal-title">Please Login</h4>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body text-center pt-5 pb-5">
+                    <p>Please login to your account by click on below button</p>
+
+                    <div class="login_btn">
+                        <a id="loginButton" class="btn btn-outline-dark cstm-btn w-auto" href="/Home/Login">
+                            Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- footer -->
+     <footer class="footer">
+        <div class="container">
+            <div class="row-sec">
+                <div class="col-lg-one">
+                    <div id="BindBusinessAboutDetail">
+                        @*<h4 class="uppercase"> Sports Academy</h4>
+                            <p class="small">
+                                Vestibulum in ultrices justo. Praesent placerat justo metus, vitae malesuada lacus eleifend
+                                vel. Vivamus viverra volutpat leo, a gravida dolor posuere congue.
+                            </p>*@
+                    </div>
+                    <div class="footer-social" id="BusinessSocialDetail_Footer">
+                        @*<div class="social-icon">
+                                <a href=""><i class="fa-brands fa-facebook-f"></i> </a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-twitter"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-instagram"></i></a>
+                            </div>*@
+                    </div>
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">Quick Links</h5>
+                        <ul>
+                            <li>
+                                <a href="/Home/Sports?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Home</a>
+                            </li>
+                            <li>
+                                <a href="#about-section">About Us</a>
+                            </li>
+
+                            <li>
+                                <a href="#services-sectionid">Service</a>
+                            </li>
+                            <li>
+                                <a href="#contact-us01">Contact Us</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">
+                            Useful Links
+
+                        </h5>
+                        <ul>
+                            <li>
+                                <a href="#">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="#">Terms and Conditions</a>
+                            </li>
+
+                            <li>
+                                <a href="#">Support</a>
+                            </li>
+                            <li>
+                                <a href="#">Faq</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+                <div class="col-lg-two" id="BindContactDetailInformation">
+                    @*<h5>Contact Us</h5>
+                        <p>
+                            178 West 27th Street, Suite 527, New York NY 10012 United States
+                        </p>
+                        <a href="tel:1234567890">1234567890</a>
+                        <a href="mailto:company@yourname.com">company@yourname.com</a>*@
+                </div>
+
+            </div>
+        </div>
+    </footer>
+    <!-- copyright section -->
+    <div class="copyrights border-top pt-3">
+        <div class="container ">
+            <div class="row">
+
+                <div class="col-sm-12 col-md-6">
+                    <strong class="d-flex copyrights-text " style="white-space: nowrap;">
+                        <p class="text-white"> Copyright © 2023</p> <a class="copyright-company-name mr-2 ml-2" href="index.html">
+                            Master
+                            Zone.
+                        </a>
+                        <p class="text-white">All rights reserved.</p>
+                    </strong>
+
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="float-md-right d-sm-inline-block">
+                        <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                            <p class="text-white text-center" id="footer-text" style="color: #869099;
+    font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script>
+
+    function generate_year_range(start, end) {
+        var years = "";
+        for (var year = start; year <= end; year++) {
+            years += "<option value='" + year + "'>" + year + "</option>";
+        }
+        return years;
+    }
+
+    today = new Date();
+    currentMonth = today.getMonth();
+    currentYear = today.getFullYear();
+    selectYear = document.getElementById("year");
+    selectMonth = document.getElementById("month");
+
+    createYear = generate_year_range(1970, 2050);
+
+    document.getElementById("year").innerHTML = createYear;
+
+    var calendar = document.getElementById("calendar");
+    var lang = calendar.getAttribute('data-lang');
+
+    var months = "";
+    var days = "";
+
+    var monthDefault = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    var dayDefault = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    if (lang == "en") {
+        months = monthDefault;
+        days = dayDefault;
+    } else if (lang == "id") {
+        months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        days = ["Ming", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    } else if (lang == "fr") {
+        months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+        days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+    } else {
+        months = monthDefault;
+        days = dayDefault;
+    }
+
+    var $dataHead = "<tr>";
+    for (dhead in days) {
+        $dataHead += "<th data-days='" + days[dhead] + "'>" + days[dhead] + "</th>";
+    }
+    $dataHead += "</tr>";
+
+    document.getElementById("thead-month").innerHTML = $dataHead;
+
+    monthAndYear = document.getElementById("monthAndYear");
+    showCalendar(currentMonth, currentYear);
+
+   function showCalendar(month, year) {
+    var firstDay = (new Date(year, month)).getDay();
+    var tbl = document.getElementById("calendar-body");
+    tbl.innerHTML = "";
+    monthAndYear.innerHTML = months[month] + " " + year;
+    selectYear.value = year;
+    selectMonth.value = month;
+
+    var date = 1;
+    var today = new Date();
+    var currentDay = today.getDate();
+    var currentMonth = today.getMonth();
+    var currentYear = today.getFullYear();
+
+    for (var i = 0; i < 6; i++) {
+        var row = document.createElement("tr");
+
+        for (var j = 0; j < 7; j++) {
+            if (i === 0 && j < firstDay) {
+                var cell = document.createElement("td");
+                var cellText = document.createTextNode("");
+                cell.appendChild(cellText);
+                row.appendChild(cell);
+            } else if (date > daysInMonth(month, year)) {
+                break;
+            } else {
+                var cell = document.createElement("td");
+                cell.setAttribute("data-date", date);
+                cell.setAttribute("data-month", month + 1); // month is 0-indexed
+                cell.setAttribute("data-year", year);
+                cell.setAttribute("data-month_name", months[month]);
+                cell.className = "date-picker";
+                cell.innerHTML = "<span>" + date + "</span>";
+
+                // Disable dates before the current date
+                if (year < currentYear || (year === currentYear && month < currentMonth) || (year === currentYear && month === currentMonth && date < currentDay)) {
+                    cell.classList.add('disabled');
+                } else {
+                    if (date === currentDay && month === currentMonth && year === currentYear) {
+                        cell.classList.add('selected');
+                    }
+
+                    cell.addEventListener('click', function () {
+                        // Remove previously selected date
+                        document.querySelectorAll('.date-picker.selected').forEach(function (item) {
+                            item.classList.remove('selected');
+                        });
+                        // Set current cell as selected
+                        this.classList.add('selected');
+                        // Call GetRoomBookDetail function
+                        GetRoomBookDetail();
+                    });
+                }
+                row.appendChild(cell);
+                date++;
+            }
+        }
+        tbl.appendChild(row);
+    }
+}
+
+
+
+    function daysInMonth(iMonth, iYear) {
+        return 32 - new Date(iYear, iMonth, 32).getDate();
+    }
+
+
+
+
+    function next() {
+        currentYear = (currentMonth === 11) ? currentYear + 1 : currentYear;
+        currentMonth = (currentMonth + 1) % 12;
+        showCalendar(currentMonth, currentYear);
+    }
+
+    function previous() {
+        currentYear = (currentMonth === 0) ? currentYear - 1 : currentYear;
+        currentMonth = (currentMonth === 0) ? 11 : currentMonth - 1;
+        showCalendar(currentMonth, currentYear);
+    }
+
+    function jump() {
+        currentYear = parseInt(selectYear.value);
+        currentMonth = parseInt(selectMonth.value);
+        showCalendar(currentMonth, currentYear);
+    }
+
+   
+
+    // number
+    $(document).ready(function () {
+        $('.minus').click(function () {
+            var $input = $(this).parent().find('input');
+            var count = parseInt($input.val()) - 1;
+            count = count < 1 ? 1 : count;
+            $input.val(count);
+            $input.change();
+            PlayerValue = $input.val();
+            GetRoomBookDetail();
+            return false;
+        });
+        $('.plus').click(function () {
+            var $input = $(this).parent().find('input');
+            $input.val(parseInt($input.val()) + 1);
+            $input.change();
+            PlayerValue = $input.val();
+            GetRoomBookDetail();
+            return false;
+        });
+    });
+
+    $(".time-btn ul li").click(function () {
+        $(".time-btn ul li").removeClass('select-value');
+        $(this).addClass('select-value');
+    });
+</script>
+
+</html>
+<script src="/Scripts/js/loader.js"></script>
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+@Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_BookingScriptPartial.cshtml")
+
+
+

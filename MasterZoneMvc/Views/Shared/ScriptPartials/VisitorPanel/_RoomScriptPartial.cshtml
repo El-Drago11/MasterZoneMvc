@@ -1,0 +1,376 @@
+﻿<script>
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+
+    $(document).ready(function () {
+        GetAllRoomDetail();
+        GetAllBusinessImagesData();
+        GetBusinessAboutDetail();
+        GetContactInformationDetail();
+    });
+
+    function GetAllRoomDetail() {
+     $.ajax({
+         type: "GET",
+         url: '/api/Business/GetRoomdetailsForVisitorView?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+         contentType: 'application/json',
+         success: function (response) {
+             if (response.status < 1) {
+                 $.iaoAlert({
+                     msg: response.message,
+                     type: "error",
+                     mode: "dark",
+                 });
+                 return;
+             }
+
+             var BusinessRoomDetail = '';
+             if (response.data.length === 0) {
+                 BusinessRoomDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No MemberShip Plan Service Detail. </div>';
+             } else {
+                 for (var i = 0; i < response.data.length && i < 4; i++) {
+                     if (i % 2 == 0) {
+                         BusinessRoomDetail += `<div class="room-img-content">
+                                <div class="room-iner-img">
+                                    <div class="rooms-images">
+                                        <img src="${response.data[i].TennisImageWithPath}" alt="room" loading="lazy">
+                                        <div class="small-img">
+                                            <img src="${response.data[i].TennisImageWithPath}" alt="room" loading="lazy">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="content">
+                                    <h2>${response.data[i].Title}</h2>
+                                    <div class="title-line">
+                                        ${response.data[i].SubTitle}
+                                    </div>
+                                    <h6> ${response.data[i].Description}
+                                </div>
+                        </div>`;
+                     }
+                     else
+                     {
+                         BusinessRoomDetail += `<div class="room-img-content flex-direction">
+                            <div class="room-iner-img">
+                                <div class="rooms-images">
+                                    <img src="${response.data[i].TennisImageWithPath}" alt="room" loading="lazy">
+                                    <div class="small-img">
+                                        <img src="${response.data[i].TennisImageWithPath}" alt="room" loading="lazy">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="content">
+                                <h2>${response.data[i].Title}</h2>
+                                <div class="title-line">
+                                    ${response.data[i].SubTitle}
+                                </div>
+                                <h6> ${response.data[i].Description}
+                            </div>
+                        </div>`;
+                     }
+                 }
+                     $("#roomdetails").html(BusinessRoomDetail);
+             }
+             for (var i = 0; i < response.data.length; i++) {
+
+                 var roomdetailsbypricetable = `<div class="table-content">
+                        <h2>${response.data[0].Title}</h2>
+                        <p>
+                           ${response.data[0].Description}
+                        </p>
+                    </div>
+                    <div class="pricing-room-img">
+                        <div class="pricing-room-in "style="width: 570px;">
+                            <img src="${response.data[0].TennisImageWithPath}" alt="img" loading="lazy">
+                        </div>
+                        <div class="cta-iner">
+                        <a class="primary-button" onclick="ShowformPopup(' ${response.data[0].Title}','Rs.${response.data[0].Price}/-')">Inquiry Now!</a>
+                    </div>
+                    </div>`;
+
+
+                 $("#roomdetailsByPricetable").html(roomdetailsbypricetable);
+
+                 var encodedDescription = encodeURIComponent(response.data[i].Description);
+                 var pricingTable = `<tr id="rowid_${i}">
+                     <td>${response.data[i].Title}</td>
+                     <td style="text-align: center;">Rs.${response.data[i].Price}/-</td>
+                     <td style="text-align: center;"><a class="classLink" onclick="getRoomDetailsByClick('${response.data[i].Title}','${encodedDescription}','${response.data[i].TennisImageWithPath}','${i}','${response.data[i].Price}')">Read More <i class="fa-solid fa-arrow-right-long"></i></a></td>
+                 </tr>`;
+
+                 $("#pricingtableDetails").append(pricingTable);
+             }
+
+         },
+
+         error: function(result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+    }
+    function getRoomDetailsByClick(title, description, imagewithPath, rowid, price) {
+        var decodedDescription = decodeURIComponent(description);
+        var roomdetailsbypricetable = `<div class="table-content">
+                <h2>${title}</h2>
+                <p>
+                   ${decodedDescription}
+                </p>
+            </div>
+            <div class="pricing-room-img">
+                <div class="pricing-room-in "style="width: 570px;">
+                    <img src="${imagewithPath}" alt="img" loading="lazy">
+                </div>
+                   <div class="cta-iner">
+                        <a class="primary-button" onclick="ShowformPopup(' ${title}','Rs.${price}/-')">Inquiry Now!</a>
+                    </div>
+            </div>`;
+        $("#roomdetailsByPricetable").html(roomdetailsbypricetable);
+
+        $("#pricingtableDetails tr").removeClass("is_active");
+       // $("tr[id='rowid_'" + rowid + "']").addClass("is_active");
+        $("#rowid_" + rowid).addClass("is_active");
+    }
+    function ShowformPopup(title, price) {
+        $("#roomname").html(title);
+        $("#roomPrice").html(price);
+            $("#btnUserLoginPoup").click();
+    }
+
+    function GetAllBusinessImagesData() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/BusinessContent/GetBusinessImagesVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlBusinessImages = '';
+
+                if (!response.data.BusinessImagesResponse || response.data.BusinessImagesResponse.length === 0) {
+                    $("#section-yoga-5").addClass('d-none');
+                } else {
+                    for (var i = 0; i < response.data.BusinessImagesResponse.length; i++) {
+                        var image = response.data.BusinessImagesResponse[i];
+
+                        htmlBusinessImages = `<div class="img-items"> 
+                        <a href="${image.ImageWithPath}" data-lightbox="mygallery">
+                     <img src="${image.ImageWithPath}" loading="lazy" alt="kathak" class="img-responsive yg-sc-img989dsfjsd">
+                            </div></a>`;
+                         $("#Imagedetails").append(htmlBusinessImages);
+                    }
+                }
+
+
+            },
+            error: function (result) {
+                StopLoading();
+                if (result.status == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    //Bind MemberShip Footer About Detail
+    function GetBusinessAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentAboutDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessLogoDetail = '';
+                if (response.data === null) {
+                    BusinessLogoDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Logo   Detail. </div>';
+                }
+                else {
+                    BusinessLogoDetail = ` <a href="/Home/BusinessProfile?businessOWnerLoginId= ${BusinessOwnerLoginId_Global}">
+                    <img src="${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy">
+                </a>`;
+                    $("#BindBusinessLogoDetail").append(BusinessLogoDetail);
+
+                }
+
+                var htmlBusinessAboutDetail = '';
+                if (response.data === null) {
+                    htmlBusinessAboutDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No About  Detail. </div>';
+                } else {
+                    htmlBusinessAboutDetail += `<h3 class="dnc-cl-hd">${response.data.Title}</h3>
+                        <p class="dnc-cl-txt-01">
+                            ${response.data.About}
+                        </p>`;
+
+                    var fullAbout = response.data.About;
+                    var maxLength = 130;
+                    var truncatedAbout = ``;
+                    if (fullAbout.length > maxLength) {
+                        truncatedAbout = fullAbout.substr(0, maxLength) + '...';
+                    } else {
+                        truncatedAbout = fullAbout + '...';
+
+                    }
+                    htmlBusinessAboutDetail = ` <div class="footer-logo">
+                        <a href="/Home/BusinessProfile?businessOWnerLoginId= ${BusinessOwnerLoginId_Global}">
+                            <img src="  ${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 52px;
+                         width: auto;">
+                        </a>
+                        <div class="logo-title">
+                          <h6>${response.data.BusinessName}</h6>
+                        </div>
+                    </div>
+                    <p class="small">${truncatedAbout}<a href="/Home/MasterProfileAPI?businessOWnerLoginId=${BusinessOwnerLoginId_Global}#BindBusinessAboutDetail">Read More</a</p>`;
+
+                }
+
+                $("#BindBusinessAboutDetail").append(htmlBusinessAboutDetail);
+
+            },
+            error: function (result) {
+                StopLoading();
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetContactInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessSocial = ''; // Declare BusinessSocial variable
+
+
+                if (response.data.BusinessTimingDetail.FacebookProfileLink && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+      <a href="${response.data.BusinessTimingDetail.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+  </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.TwitterProfileLink && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+      <a href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+  </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+      <a href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+  </div>`;
+                }
+                $("#BusinessSocialDetail_Footer").append(BusinessSocial);
+
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data === null) {
+                    htmlBusinessContactDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Contact  Detail. </div>';
+                    $("#BindContactDetailInformation").html(htmlBusinessContactDetail);
+                }
+                else {
+                    htmlBusinessContactDetail = `<h5>Contact Us</h5>
+                  <p>
+                       ${response.data.BusinessTimingDetail.Address}
+                  </p>
+                  <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}"> ${response.data.BusinessTimingDetail.PhoneNumber}</a>
+                  <a href="${response.data.BusinessTimingDetail.Email}">${response.data.BusinessTimingDetail.Email}</a>`;
+
+
+                    $("#BindContactDetailInformation").append(htmlBusinessContactDetail);
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+</script>

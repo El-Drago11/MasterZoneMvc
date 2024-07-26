@@ -1,0 +1,497 @@
+﻿
+@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var SponsorId_Global = 0;
+    var UserToken_Global = "";
+    var _sponsorTable;
+
+    function initializeDataTable_Sponsor() {
+        _sponsorTable = $("#tblBusiness_ManageSponsor").DataTable();
+    }
+
+
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_Sponsor();
+                GetAllBusinessContentSponsorPagination();
+                //StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_Sponsor();
+                        GetAllBusinessContentSponsorPagination();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+     function GetAllBusinessContentSponsorPagination() {
+        // ---------------- Pagination Data Table --------------------
+         var _url_val = "/api/Business/GetAllBusinessSponsorByPagination";
+         _sponsorTable.clear().destroy();
+         _sponsorTable = $("#tblBusiness_ManageSponsor").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , {
+                    "data": null, "": "SponsorIcon", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _Image = (row.BusinessSponsorImageWithPath == '') ? '' : '<img src="' + row.BusinessSponsorImageWithPath + '" class="imagePreview" />';
+                        return _Image;
+                    }
+                }
+                , { "data": "SponsorTitle", "name": "SponsorTitle", "autoWidth": true }
+                , { "data": "SponsorLink", "name": "SponsorLink", "autoWidth": true }
+
+
+               , {
+                    "data": null, "": "Action", "autowidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                       var _delete = '';
+
+                                    //_view = `<a href="javascript:viewgroupdetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;
+
+                        _edit = `<a href="javascript:EditBusinessContentSponsor(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+
+                        _delete = `<a href="javascript:confrimDeleteManageBusinessSponsor(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                        var _action = `<div class="edbt">
+
+                                    ${_edit}
+                                    ${_delete}
+
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [4], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+         $('#tblBusiness_ManageSponsor_filter input').unbind();
+         $('#tblBusiness_ManageSponsor_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _sponsorTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+
+
+
+    $('#btnAddSponsor').click(function () {
+        $('#sectionAddSponsor').show();
+        $('#btnAddSponsor').hide();
+        $('#sectionViewSponsor').hide();
+        document.getElementById("pageTextchange").innerHTML = "Add Sponsor";
+        document.getElementById("pageStageChange").innerHTML = "Add Sponsor";
+
+    });
+
+
+
+    function showEditSponsorPage() {
+        $('#sectionAddSponsor').show();
+        $('#sectionViewSponsor').hide();
+        document.getElementById("myText").innerHTML = "Edit Sponsor";
+    document.getElementById("ChangeUpdateText").innerHTML = "Update";
+        document.getElementById("pageTextchange").innerHTML = "Edit Sponsor";
+        document.getElementById("pageStageChange").innerHTML = "Edit Sponsor";
+    $('#ChangeUpdateText').show();
+        $('#btnAddSponsor').hide();
+    $(".error-class").html('');
+
+};
+
+    function EditBusinessContentSponsor(id) {
+        showEditSponsorPage();
+        var _url = "/api/Business/GetBusinessSponsorDetailById?id=" +id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            SponsorId_Global = response.data.Id;
+            $("#txtSponsorTitle").val(response.data.SponsorTitle);
+            $("#SponsorLink").val(response.data.SponsorLink);
+            $("#fileProfileImage_ManageSponsor").val('');
+            if (response.data.BusinessSponsorImageWithPath != "") {
+                $("#previewImage").attr('src', response.data.BusinessSponsorImageWithPath);
+                $("#previewImage").removeClass('d-none');
+            }
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+function ResetAddView() {
+    // Reset data
+
+    $("#txtSponsorTitle").val('');
+    $("#SponsorLink").val('');
+    $("#fileProfileImage_ManageSponsor").val('');
+    $("#previewImage").attr('src', '');
+    $("#previewImage").addClass('d-none');
+    SponsorId_Global = 0;
+
+
+    // show hide panel
+    $('#sectionViewSponsor').show();
+    $('#sectionAddSponsor').hide();
+    $('#btnAddSponsor').show();
+    document.getElementById("pageTextchange").innerHTML = "View Sponsor";
+    document.getElementById("pageStageChange").innerHTML = "View Sponsor";
+    document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+    $(".error-class").html('');
+}
+
+        function btnAddUpdateSponsor() {
+            let is_valid = true;
+            $(".error-class").html('');
+
+            var _mode = (SponsorId_Global > 0) ? 2 : 1;
+
+            let _sponsorTitle = $("#txtSponsorTitle").val().trim();
+            let _sponsorLink = $("#SponsorLink").val().trim();
+
+            let _error_sponsorTitle = $("#error_txtSponsorTitle");
+            let _error_spnsorLink = $("#error_SponsorLink");
+    
+
+
+    if (validate_IsEmptyStringInputFieldValue(_sponsorTitle)) {
+            is_valid = false;
+        _error_sponsorTitle.html('@(Resources.BusinessPanel.SponsorTitleRequired)');
+        }
+
+
+            if (validate_IsEmptyStringInputFieldValue(_sponsorLink)) {
+                is_valid = false;
+                _error_spnsorLink.html('@(Resources.BusinessPanel.SponsorLinkRequired)');
+            }
+            @*if ($("#fileProfileImage_ManageSponsor").val() == '') {
+            is_valid = false;
+                _error_managesponsorIcon.html('@(Resources.BusinessPanel.SelectImageRequired)');
+        }*@
+        //if (_sponsorIcon.length <= 0) {
+        //        is_valid = false;
+        //        $("#error_Icon_EventSponsor").html('Select Icon!');
+        //    }
+
+            if (is_valid) {
+
+                var data = new FormData();
+                data.append("id", SponsorId_Global);
+                data.append("SponsorTitle", _sponsorTitle);
+                data.append("SponsorLink", _sponsorLink);
+
+                var _sponsorImageFile_MS = $("#fileProfileImage_ManageSponsor").get(0);
+                var _sponsorImageFiles = _sponsorImageFile_MS.files;
+
+                data.append("SponsorIcon", _sponsorImageFiles[0]);
+                data.append("mode", _mode);
+
+        $.ajax({
+            url: '/api/Business/AddUpdateBusinessSponsor',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    ResetAddView();
+                    GetAllBusinessContentSponsorPagination();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+                    return;
+                }
+
+
+              
+
+            },
+            error: function (result) {
+                StopLoading();
+                //removeBtnLoading(btnSelector);
+                //enableContinueBtn();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+function confrimDeleteManageBusinessSponsor(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteManageSponsorTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteManageSponsorText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteSponsor(sid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteSponsor(sid) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/Sponsor/DeleteById?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get Staff List
+                    GetAllBusinessContentSponsorPagination();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+
+
+
+// Image File Preview -------------------------------------------------------------
+document.getElementById('fileProfileImage_ManageSponsor').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

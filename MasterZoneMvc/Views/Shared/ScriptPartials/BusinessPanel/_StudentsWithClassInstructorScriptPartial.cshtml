@@ -1,0 +1,149 @@
+﻿<script>
+    var UserToken_Global = "";
+    var _InstructorTable;
+
+    function initializeDataTable_Instructor() {
+        _InstructorTable = $("#ViewBusinessStudent").DataTable();
+    }
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_Instructor();
+                GetAllInstructor();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+
+                        initializeDataTable_Instructor();
+                        GetAllInstructor();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function GetAllInstructor() {
+        StopLoading();
+        // ---------------- Pagination Data Table --------------------
+          var _url_val = "/api/Business/GetStudentListWithClassStudent_ByPagination";
+        _InstructorTable.clear().destroy();
+        _InstructorTable = $("#ViewBusinessStudent").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+
+                }
+                , {
+                    "data": "StudentName", "name": "StudentName", "autoWidth": true
+                    , "render": function(data, type, row) {
+                        return `<a href="/Business/StudentDetail?studentLoginId=${row.StudentUserLoginId}">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-2">
+                                    <img src="${row.StudentImageWithPath}" class="img-size-sm" />
+                                </div>
+                                <div>${row.StudentName} </div>
+                            </div>
+                        </a>`;
+                    }
+                }
+                , { "data": "Email", "name": "Email", "autoWidth": true }
+                , {
+                    "data": "ClassName", "name": "ClassName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `
+                            <div class="d-flex align-items-center" data-id="${row.ClassBookingId}">
+                                <div class="mr-2">
+                                    <img src="${row.ClassImageWithPath}" class="img-size-sm" />
+                                </div>
+                                <div>${row.ClassName} </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                , {
+                    "data": "InstructorName", "name": "InstructorName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `
+                                <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.InstructorLoginId}">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-2">
+                                            <img src="${row.InstructorProfileImageWithPath}" class="img-size-sm" />
+                                        </div>
+                                    <div>${row.InstructorName} </div>
+                                </div></a>
+                            `;
+                        return _data;
+                    }
+                }
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                    }
+                }
+
+                   ],
+
+            "responsive": true,
+            "autoWidth": false,
+
+            "columnDefs": [{
+                "targets": [0], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#ViewBusinessStudent_filter input').unbind();
+        $('#ViewBusinessStudent_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _InstructorTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+</script>

@@ -1,0 +1,699 @@
+﻿
+<script>
+    var BusinessId_Global = 0;
+    var UserToken_Global = "";
+    getAllActiveParentBusinessCategories();
+    var _businessTable;
+    var _BusinessSubCategoryId = 0;
+
+    function initializeDataTable_BusinessOwner() {
+        _businessTable = $("#ViewBusinessDetailForSuperAdmin").DataTable();
+    }
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                //GetBusinessDetailById();
+                initializeDataTable_BusinessOwner();
+                GetAllBusinessOwnerDetail();
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        //GetBusinessDetailById();
+                        initializeDataTable_BusinessOwner();
+                        GetAllBusinessOwnerDetail();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function GetAllBusinessOwnerDetail() {
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Business/GetAllBusinessDetail_ByPagination";
+      _businessTable.clear().destroy();
+        _businessTable = $('#ViewBusinessDetailForSuperAdmin').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , {
+                    "data": null, "": "BusinessName", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //var _Image = (row.ProfileImage == '') ? '' : '<img src="' + row.ProfileImage + '" class="image-small" />';
+                        //return _Image;
+                        var _businessName = (row.BusinessName == null || row.BusinessName == '') ? '----' : row.BusinessName;
+                        return `<a target="_blank" href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.UserLoginId}">
+                        <div class="d-flex flex-column">
+                            <img class="image-small" src="${row.BusinessLogoWithPath}" />
+                            <div class="py-2">(${row.MasterId})</div>
+                            <div class="py-2">${_businessName}</div>
+                        </div>
+                    </a>`;
+                    }
+                }
+                , {
+                    "data": "CategoryName", "name": "CategoryName", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        if (row.CategoryName.toLowerCase() == 'b2b') {
+                            var _icon = (row.ShowOnHomePage == 1) ? '<i class="fas fa-check-square text-success" title="Change visibility on Home Page"></i>' : '<i class="far fa-square"  title="Change visibility on Home Page"></i>';
+                            return `<div class="d-flex flex-column"><span class="mb-2">${row.CategoryName}</span> <button class="btn" onclick="ConfirmToggleHomePageVisibilityStatus(${row.Id})">${_icon} HPV</button></div>`;
+                        }
+                        else {
+                            return row.CategoryName
+                        }
+                    }
+                }
+                , {
+                    "data": "SubCategoryName", "name": "SubCategoryName", "autoWidth": true
+                }
+                , { "data": "Name", "name": "Name", "autoWidth": true }
+                , { "data": "Email", "name": "Email", "autoWidth": true }
+                , { "data": "PhoneNumber", "name": "PhoneNumber", "autoWidth": true }
+                , {
+                    "data": "Activity", "name": "Status", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `${row.Activity}`;
+                    }
+                }
+                , {
+                    "data": null, "": "Action", "autowidth": true,
+                    "render": function (data, type, row) {
+
+                        var _view = `<a href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.UserLoginId}"><i class="fas fa-eye" title="View"></i></a>`;
+                        var _edit = `<a href="javascript:EditBusinessDetail(${row.UserLoginId});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                        var _delete = `<a href="javascript:confrimDelete_ManageBusiness(${row.UserLoginId});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                        var _action = `<div class="edbt">
+
+                                    ${_view}
+                                    ${_edit}
+                                    ${_delete}
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,1,7], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+      $('#ViewBusinessDetailForSuperAdmin_filter input').unbind();
+      $('#ViewBusinessDetailForSuperAdmin_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _businessTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+    function AddNewManageBusiness() {
+        $('#sectionAddUpdate_ManageBusiness').show();
+        $('#ViewDetailForBusiness').hide();
+        $("#ViewDetail").hide();
+        BusinessId_Global = 0;
+        _BusinessSubCategoryId = 0;
+    };
+
+    function btnClickCancel_ManageBusiness() {
+        $('#ViewDetailForBusiness').show();
+        $('#ddlBusiness_ManageBusinessVerified').prop('disabled', true).val('0');
+        $('#sectionAddUpdate_ManageBusiness').hide();
+        $("#ViewDetail").hide();
+        $("#txtFirstName").val('');
+        $("#txtLastName").val('');
+        $("#txtEmail").val('');
+        $("#ddlBusiness_ManageBusinessVerified").val('0').trigger('change');
+        $("#txtPhoneNumber").val('');
+        $("#txtPassword").val('');
+        $("#txtConfirmPassword").val('');
+        $(".error-class").html('');
+
+        $("#ddlBusinessCategory").val('0').trigger('change');
+        BusinessId_Global = 0;
+        _BusinessSubCategoryId = 0;
+    }
+
+    function getAllActiveParentBusinessCategories() {
+    let _url = "/api/BusinessCategory/Parent/GetAllActive";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            // --------------------- append parent categories in dropdown
+            var res_Categories = '<option value="0">Select Category</option>';
+
+            for (var i = 0; i < response.data.length; i++) {
+                    res_Categories += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+            }
+            $("#ddlBusinessCategory").html('').append(res_Categories);
+            // --------------------- append parent categories in dropdown
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function getAllActiveSubCategoriesByParentCategory(id) {
+
+        if (id <= 0) {
+            var res_Categories = '';
+            // --------------------- append parent categories in dropdown
+            var res_Categories = '<option value="0">Select Sub Category</option>';
+            $("#ddlBusinessSubCategory").html('').append(res_Categories);
+            return;
+        }
+
+        let _url = "/api/BusinessCategory/Parent/" + id + "/GetAllActiveSubCategories";
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+
+                var res_Categories = '';
+                // --------------------- append parent categories in dropdown
+                var res_Categories = '<option value="0">Select Sub Category</option>';
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else if (response.data) {
+                    for (var i = 0; i < response.data.SubCategories.length; i++) {
+                        var item = response.data.SubCategories[i];
+                        res_Categories += '<option value="' + item.Id + '">' + item.Name + '</option>';
+                    }
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.BusinessPanel.CategoryData_ErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+                $("#ddlBusinessSubCategory").html('').append(res_Categories);
+                $("#ddlBusinessSubCategory").val(_BusinessSubCategoryId);
+                // --------------------- append parent categories in dropdown
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function btnRegisterFormClick() {
+
+        let is_valid = true;
+
+        $(".error-class").html('');
+        var _mode = (BusinessId_Global > 0) ? 3 : 1;
+
+    let _businessCategoryId = $("#ddlBusinessCategory").val();
+    let _businessSubCategoryId = $("#ddlBusinessSubCategory").val();
+    let _firstName = $("#txtFirstName").val().trim();
+    let _lastName = $("#txtLastName").val().trim();
+    let _email = $("#txtEmail").val().trim();
+    let _phoneNumber = $("#txtPhoneNumber").val().trim();
+    let _password = $("#txtPassword").val().trim();
+    let _confirmPassword = $("#txtConfirmPassword").val().trim();
+    let _verified = $("#ddlBusiness_ManageBusinessVerified").val();
+
+    let _error_businessCategoryId = $("#error_ddlBusinessCategory");
+    let _error_businessSubCategoryId = $("#error_ddlBusinessSubCategory");
+    let _error_firstName = $("#error_txtFirstName");
+    let _error_lastName = $("#error_txtLastName");
+    let _error_email = $("#error_txtEmail");
+    let _error_phoneNumber = $("#error_txtPhoneNumber");
+    let _error_password = $("#error_txtPassowrd");
+     let _error_confirmPassword = $("#error_txtConfirmPassword");
+     let _error_verified = $("#error_ddlBusiness_ManageBusinessVerified");
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+    if (validate_IsEmptySelectInputFieldValue(_businessCategoryId) || parseInt(_businessCategoryId) <= 0) {
+        is_valid = false;
+        _error_businessCategoryId.html('@(Resources.BusinessPanel.SelectCategoryRequired)');
+    }
+    if (validate_IsEmptySelectInputFieldValue(_businessSubCategoryId) || parseInt(_businessSubCategoryId) <= 0) {
+        is_valid = false;
+        _error_businessSubCategoryId.html('@(Resources.BusinessPanel.SelectSubCategoryRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_firstName)) {
+        is_valid = false;
+        _error_firstName.html('@(Resources.BusinessPanel.FirstNameRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_lastName)) {
+        is_valid = false;
+        _error_lastName.html('@(Resources.BusinessPanel.LastNameRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_phoneNumber)) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+    }
+    else if (_phoneNumber.indexOf(' ') >= 0) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.PhoneNumberNotEmptySpaceRequired)');
+    }
+    else if (!phone_test.test(_phoneNumber)) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.ValidPhoneNumberRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_password)) {
+        is_valid = false;
+        _error_password.html('@(Resources.BusinessPanel.PasswordRequired)');
+    }
+    else if (validate_IsEmptyStringInputFieldValue(_confirmPassword)) {
+        is_valid = false;
+        _error_confirmPassword.html('@(Resources.BusinessPanel.ConfirmPasswordRequired)');
+    }
+    else if (_confirmPassword != _password) {
+        is_valid = false;
+        _error_confirmPassword.html("@(Resources.BusinessPanel.PasswordNotMatch_ErrorMessage)");
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.BusinessPanel.EmailRequired)');
+    }
+    else if (!TestEmail.test(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+        }
+
+        if (_mode == 3) {
+            if (validate_IsEmptySelectInputFieldValue(_verified) || parseInt(_verified) <= 0) {
+        is_valid = false;
+            _error_verified.html('@(Resources.BusinessPanel.SelectVerifiedRequired)');
+    }
+        }
+
+
+
+    if (is_valid) {
+        StartLoading();
+        //var _dataBusinessCategory = _businessCategoryId;
+        //if (_businessSubCategoryId > 0) {
+        //    _dataBusinessCategory = _businessSubCategoryId
+        //}
+
+        var data = new FormData();
+        var countryPhoneCode = '+64';
+        data.append("Id", BusinessId_Global);
+        data.append("BusinessCategoryId", _businessCategoryId);
+        data.append("BusinessSubCategoryId", _businessSubCategoryId);
+        data.append("Email", _email);
+        data.append("Password", _password);
+        data.append("FirstName", _firstName);
+        data.append("LastName", _lastName);
+        data.append("PhoneNumber", _phoneNumber);
+        data.append('Mode', _mode);
+        data.append('Verified', _verified);
+
+        $.ajax({
+            url: '/api/Business/AddUpdateBySuperAdmin',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    StopLoading();
+                    btnClickCancel_ManageBusiness();
+                    GetAllBusinessOwnerDetail();
+
+                },
+                error: function (result) {
+                    //StopLoading();
+                    GetAllBusinessOwnerDetail();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+}
+
+function onParentCategoryChange() {
+    var parentId = $('#ddlBusinessCategory').val();
+    getAllActiveSubCategoriesByParentCategory(parentId);
+}
+
+/// To get the edit detail for business
+    function EditBusinessDetail(id) {
+        $('#ViewDetailForBusiness').hide();
+        $('#ddlBusiness_ManageBusinessVerified').prop('disabled', false).val('0');
+        document.getElementById("pageTextchange").innerHTML = "Update";
+        document.getElementById("ChangePageTextForEdit").innerHTML = "Edit Manage Business";
+        $('#sectionAddUpdate_ManageBusiness').show();
+
+        var _url = "/api/Business/GetBusinessDetail/" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+           BusinessId_Global = id;
+            $("#ddlBusinessCategory").val(response.data.BusinessCategoryId).trigger('change');
+            $("#ddlBusinessSubCategory").val(response.data.BusinessSubCategoryId);
+            _BusinessSubCategoryId = response.data.BusinessSubCategoryId;
+            $("#txtFirstName").val(response.data.FirstName);
+            $("#txtLastName").val(response.data.LastName);
+            $("#txtEmail").val(response.data.Email);
+            $("#txtPhoneNumber").val(response.data.PhoneNumber);
+            $("#txtPassword").val(response.data.Password);
+            $("#txtConfirmPassword").val(response.data.Password);
+            $("#ddlBusiness_ManageBusinessVerified").val(response.data.Verified).trigger('change');
+            _verified = response.data.Verified;
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+    function confrimDelete_ManageBusiness(id)
+ {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmDeleteManageBusinessTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmDeleteManageBusinessText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteBusinessDetail(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+ function DeleteBusinessDetail(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/BusinessDetailDelete/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessOwnerDetail();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmToggleHomePageVisibilityStatus(id) {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTitleMessage)",
+        text: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTextMessage)",
+        type: "warning",
+        buttons: {
+            cancel: "@(Resources.ErrorMessage.No)",
+            confirm: "@(Resources.ErrorMessage.Yes)"
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            ToggleHomePageVisibilityStatus(id);
+        } else {
+
+        }
+    });
+}
+
+function ToggleHomePageVisibilityStatus(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Business/ToggleHomePageVisibilityStatus/" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    _businessTable.ajax.reload();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+</script>

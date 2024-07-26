@@ -1,0 +1,140 @@
+﻿
+@{
+    ViewBag.Title = "StudentPauseClassRequest";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+}
+
+@section Styles{
+    @*<link rel="stylesheet" href="~/Content/business-panel/css/vendor/dataTables.bootstrap4.min.css" />
+        <link rel="stylesheet" href="~/Content/business-panel/css/vendor/datatables.responsive.bootstrap4.min.css" />*@
+
+    <style>
+        .PauseClassRequesttable {
+            width: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+    </style>
+}
+
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+
+                @Html.Partial("_VisitorPanelSidebarPartial")
+
+            </div>
+            <div class="col-sm-9">
+                <!-- PauseClassRequest-section -->
+                <div id="PauseClassRequest" class="section-2-notifications inrsection-ntfcn inrsection-mltp">
+                    <h2 class="my-4">My PauseClass Request</h2>
+                    <div id="sectionViewStaff">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <table id="ViewPauseClassRequest" class="PauseClassRequesttable">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Business Name</th>
+                                                    <th>Class Name</th>
+                                                    <th>Date</th>
+                                                    <th>Reason</th>
+                                                    <th>Response</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="EditBusinessPauseClassModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h2 class="modal-title">Pause Class Request</h2>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <label> Class Name</label>
+                <div id="BusinessDetails_EditBusinessPauseModal">
+                    @* Data will be appended *@
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="date_time"> Start Date</label>
+                            <input type="date" class="form-control" id="Business_StartDate" onclick="datepicker();" required />
+                            <div class="error-class" id="error_Business_StartDate"></div>
+                        </div>
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="date_time"> End Date</label>
+                            <input type="date" class="form-control" id="Business_EndDate" onclick="ChooseEndDate();" required />
+                            <div class="error-class" id="error_Business_EndDate"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="textPauseDays">Pause Days</label>
+                            <input type="text" class="form-control" id="Business_PauseDays" readonly />
+                            <div class="error-class" id="error_Business_PauseDays"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="txtDescription">Reason</label>
+                            <textarea type="text" id="txtDescription" class="form-control"></textarea>
+                            <div class="error-class" id="error_txtDescription"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark cstm-btn w-auto" onclick="btnPauseClassFormClick();">
+                    Update
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="ResetAddPauseClassView()" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+    <script src="~/Content/business-panel/js/vendor/datatables.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_StudentPauseClassRequestScriptPartial.cshtml")
+}
+

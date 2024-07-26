@@ -1,0 +1,2137 @@
+﻿<script>
+    var UserToken_Global = "";
+    var _StudioEquipmentTable;
+    var _AudioTable;
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+
+    function initializeDataTable_StudioEquipment() {
+        _StudioEquipmentTable = $("#tblStudioEquipmentDetailView").DataTable();
+    }
+    function initializeDataTable_Audio() {
+        _AudioTable = $("#tblAudioDetailView").DataTable();
+    }
+
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+
+                UserToken_Global = dataToken;
+                GetAllBusinessContentAudioPagination();
+                EditBusinessContentMusicBanner();
+                EditBusinessContentAbout();
+                EditBusinessContentService();
+                EditBusinessContentVideo();
+                EditBusinessContentEvent();
+                EditBusinessContentMusicProfessional();
+                EditBusinessContentClasses();
+                EditStudioEquipment();
+                GetAllBusinessContentStudioEquipmentPagination();
+                initializeDataTable_StudioEquipment();
+                EditAudioDetail();
+                initializeDataTable_Audio();
+
+;                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        EditBusinessContentMusicBanner();
+                        EditBusinessContentAbout();
+                        EditBusinessContentService();
+                        EditBusinessContentVideo();
+                        EditBusinessContentEvent();
+                        EditBusinessContentMusicProfessional();
+                        EditBusinessContentClasses();
+                        EditStudioEquipment();
+                        GetAllBusinessContentStudioEquipmentPagination();
+                        initializeDataTable_StudioEquipment();
+                        EditAudioDetail();
+                        initializeDataTable_Audio();
+                        GetAllBusinessContentAudioPagination();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+
+    function AddStudioEquipmentDetail() {
+        $("#collapseAddStudioEquipment").modal('show');
+
+    }
+
+
+    function AddAudioDetail() {
+        $("#collapseAddPortfolioDetail").modal('show');
+    }
+      var MusicBannerId_Global = 0;
+   function btnSubmitMusicBannerClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+       var _mode =  1;
+
+         let _manageTitle = $("#txtTitle").val().trim();
+         let _manageButtontext = $("#txtButtonText").val().trim();
+       let _manageButtonLink = $("#txtButtonLink").val().trim();
+       let _managedescription = $("#music_description").val().trim();
+
+       let _error_manageimageFiles = $("#error_fileProfileImage_ManageMusicBannerImage");
+
+       var _musicImageFile_MS = $("#fileProfileImage_ManageMusicBannerImage").get(0);
+       var _musicImageFiles = _musicImageFile_MS.files;
+
+       if (_musicImageFiles.length <= 0) {
+           _is_valid = false;
+           _error_manageimageFiles.html('@(Resources.BusinessPanel.BusinessBannerImageRequired)');
+           return;
+       }
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", MusicBannerId_Global);
+            data.append("Title", _manageTitle);
+            data.append("ButtonText", _manageButtontext);
+            data.append("ButtonLink", _manageButtonLink);
+            data.append("Description", _managedescription);
+            data.append('Mode', _mode);
+
+
+            data.append('BannerImage', _musicImageFiles[0]);
+
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessBanner',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentMusicBanner() {
+
+        var _url = "/api/Business/BannerDetail/Get/";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            MusicBannerId_Global = response.data.Id;
+        $("#txtTitle").val(response.data.Title);
+        $("#txtButtonText").val(response.data.ButtonText);
+            $("#txtButtonLink").val(response.data.ButtonLink);
+            $("#music_description").val(response.data.Description);
+            $("#fileProfileImage_ManageMusicBannerImage").val('');
+        if (response.data.BannerImageWithPath != "") {
+            $("#previewMusicImage").attr('src', response.data.BannerImageWithPath);
+            $("#previewMusicImage").removeClass('d-none');
+        }
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+    // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageMusicBannerImage').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewMusicImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewMusicImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewMusicImage').src = event.target.result;
+        $('#previewMusicImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+    }
+
+     ///About Section
+
+    var AboutId_Global = 0;
+    function btnSubmitBusinessContentAboutClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode =  1;
+
+        let _manageAboutTitle = $("#txtAboutTitle").val().trim();
+        let _manageAboutSubTitle = $("#txtAboutSubTitle").val().trim();
+        let _manageAboutDescription = $("#sports_Aboutdescription").val().trim();
+
+        let _error_manageAboutImage = $("#error_fileProfileImage_ManageAboutImage");
+
+        var _aboutImageFile_MS = $("#fileProfileImage_ManageAboutImage").get(0);
+        var _aboutImageFiles = _aboutImageFile_MS.files;
+
+        if (_aboutImageFiles.length <= 0) {
+            _is_valid = false;
+            _error_manageAboutImage.html('@(Resources.BusinessPanel.BusinessAboutImageRequired)');
+            return;
+        }
+
+
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", AboutId_Global);
+            data.append("Title", _manageAboutTitle);
+            data.append("SubTitle", _manageAboutSubTitle);
+            data.append("Description", _manageAboutDescription);
+            data.append('Mode', _mode);
+
+
+            data.append('AboutImage', _aboutImageFiles[0]);
+
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessAbout',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+      // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageAboutImage').addEventListener('change', handleAboutImageUpload);
+
+    function handleAboutImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewAboutImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewAboutImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewAboutImage').src = event.target.result;
+        $('#previewAboutImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+    function EditBusinessContentAbout() {
+        var _url = "/api/Business/GetBusinessContentAbout" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            AboutId_Global = response.data.Id;
+            $("#txtAboutTitle").val(response.data.Title);
+            $("#txtAboutSubTitle").val(response.data.SubTitle);
+            $("#sports_Aboutdescription").val(response.data.Description);
+            $("#fileProfileImage_ManageAboutImage").val('');
+        if (response.data.AboutImageWithPath != "") {
+            $("#previewAboutImage").attr('src', response.data.AboutImageWithPath);
+            $("#previewAboutImage").removeClass('d-none');
+        }
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+     ///////////////////////////////////////////////////To Business  Content Service Detail ///////////////////////////////////
+
+     function ResetAddView() {
+         $("#txtServiceTitle").val('');
+        $(".error-class").html('');
+        $("#txtDescription").val('');
+    }
+    var ServiceId_Global = 0;
+
+    function btnSubmitBusinessContentServiceClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = 1;
+
+        let _manageTitle = $("#txtServiceTitle").val().trim();
+        let _manageDescription = $("#txt_description").val().trim();
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", ServiceId_Global);
+            data.append("ServiceTitle", _manageTitle);
+            data.append("ShortDescription", _manageDescription);
+            data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentService',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentService() {
+        var _url = "/api/Business/GetBusinessContentServiceDetail" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            ServiceId_Global = response.data.BusinessServiceDetail.Id;
+            $("#txtServiceTitle").val(response.data.BusinessServiceDetail.ServiceTitle);
+            $("#txt_description").val(response.data.BusinessServiceDetail.ShortDescription);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+     ///////////////////////////////////////////////////////////////To Vedio Section ///////////////////////////
+
+    var VedioId_Global = 0;
+    function btnSubmitBusinessContentVideoClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = 1;
+
+          let _manageTitle = $("#txtVideoTitle").val().trim();
+          let _manageDescription = $("#txt_Videodescription").val().trim();
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", VedioId_Global);
+            data.append("Title", _manageTitle);
+            data.append("VideoDescription", _manageDescription);
+            data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/BusinessContentVideo/AddUpdatePCCMeta_Detail',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentVideo() {
+        var _url = "/api/BusinessContentVideo/GetVideosDetail" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            VedioId_Global = response.data.BusinessContentVideo.Id;
+            $("#txtVideoTitle").val(response.data.BusinessContentVideo.Title);
+            $("#txt_Videodescription").val(response.data.BusinessContentVideo.VideoDescription);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    //////////////////////////////////////////////////////////////////Event Detail ///////////////////////////////////
+     var EventId_Global = 0;
+    function btnSubmitBusinessEventDescriptionClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+        //var _mode = (EventId_Global > 0) ? 2 : 1;
+        var _mode = 1;
+
+        let _manageDescription = $("#event_description").val().trim();
+
+        let _error_manageDescription = $("#error_event_description");
+
+
+        if (validate_IsEmptyStringInputFieldValue(_manageDescription)) {
+            is_valid = false;
+            _error_manageDescription.html('@(Resources.BusinessPanel.DescriptionRequired)');
+        }
+
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", EventId_Global);
+            data.append("Description", _manageDescription);
+            data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessEventDescription',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentEvent() {
+        var _url = "/api/Business/GetBusinessContentEventDetail" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            EventId_Global = response.data.Id;
+            $("#event_description").val(response.data.Description);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    //////////////////////////////////////////////////////////To Add Professional///////////////////////////////////
+    var ProfessionalId_Global = 0;
+
+    function btnSubmitMusicProfessionalClick() {
+        let is_valid = true;
+        $(".error-class").html('');
+         var _mode = 1;
+
+        let _manageTitle = $("#Professionaltitle").val().trim();
+        let _managedescription = $("#Professionaldescription").val().trim();
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", ProfessionalId_Global);
+            data.append("ProfessionalTitle", _manageTitle);
+            data.append("Description", _managedescription);
+            data.append('Mode', _mode);
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessProfessional',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        //GetAllBusinessContentBannerPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentMusicProfessional() {
+
+        var _url = "/api/Business/ProfessionalDetail/Get/";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            ProfessionalId_Global = response.data.Id;
+            $("#Professionaltitle").val(response.data.ProfessionalTitle);
+            $("#Professionaldescription").val(response.data.Description);
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                //GetAllBusinessContentTennisPagination();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    ///////////////////////////////////////////////////////////////Our Classes///////////////////////////////////////////////////////
+
+    var ClassId_Global = 0;
+    function EditBusinessContentClasses() {
+        var _url = "/api/Business/GetBusinessContentClassDetail" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            ClassId_Global = response.data.Id;
+            $("#txtTitle_OurClassesSection").val(response.data.Title);
+            $("#txt_description_OurClassesSection").val(response.data.Description);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    function btnSubmitBusinessContentClassClick() {
+        var _mode = 1;
+        let _manageTitle = $("#txtTitle_OurClassesSection").val().trim();
+        let _manageDescription = $("#txt_description_OurClassesSection").val();
+
+
+            var data = new FormData();
+
+            data.append("Id", ClassId_Global);
+            data.append("Title", _manageTitle);
+            data.append("Description", _manageDescription);
+            data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentClasses',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+
+    ///////////////////////////////////////////////////////////////Studio Equipment///////////////////////////////////////////////////////
+    var StudioId_Global = 0;
+    function EditStudioEquipment() {
+        var _url = "/api/Business/GetBusinessContentStudioEquipment_PPCMetaDetail" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            StudioId_Global = response.data.Id;
+            $("#txtTitle_OurTitleSection").val(response.data.Title);
+            $("#txtTitle_OurSubTitleSection").val(response.data.SubTitle);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    function btnSubmitStudioEquipmentClick() {
+        var _mode = 1;
+        let _manageTitle = $("#txtTitle_OurTitleSection").val().trim();
+        let _manageSubTitle = $("#txtTitle_OurSubTitleSection").val();
+
+
+            var data = new FormData();
+
+             data.append("Id", StudioId_Global);
+            data.append("Title", _manageTitle);
+         data.append("SubTitle", _manageSubTitle);
+            data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentStudioEquipment_PPCMeta',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+    ///////////////////////////////////////////////////////////////////Business Content Studio Equiment///////////////////////////
+
+    var StudioEquipmentId_Global = 0;
+    function btnSubmitBusinessContentStudioEquipmentClick() {
+
+        var _mode = (StudioEquipmentId_Global > 0) ? 2 : 1;
+
+        let _manageEquimentType = $("#txt_TypeEquipmentSection").val().trim();
+        let _manageEquipmentValue = $("#text_tagEquipment").val().trim();
+
+        let _error_manageEquimentType = $("#error_txt_TypeEquipmentSection");
+        let _error_manageEquipmentValue = $("#error_text_tagEquipment");
+
+        if (validate_IsEmptyStringInputFieldValue(_manageEquimentType)) {
+            is_valid = false;
+            _error_manageEquimentType.html('@(Resources.BusinessPanel.EquipmentTypeRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_manageEquipmentValue)) {
+            is_valid = false;
+            _error_manageEquipmentValue.html('@(Resources.BusinessPanel.EquipmentValueRequired)');
+        }
+
+
+            var data = new FormData();
+
+        data.append("Id", StudioEquipmentId_Global);
+        data.append("EquipmentType", _manageEquimentType);
+        data.append("EquipmentValue", _manageEquipmentValue);
+            data.append('Mode', _mode);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentStudioEquipment',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessContentStudioEquipmentPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+                    ResetBusinessStudioEquipment();
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+     function EditBusinessContentStudioEquipmentDetail(Id) {
+         $("#collapseAddStudioEquipment").modal('show');
+         var _url = "/api/Business/GetBusinessContentStudioEquipmentDetail?id=" +Id;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            
+            StudioEquipmentId_Global = response.data.Id;
+            $("#txt_TypeEquipmentSection").val(response.data.EquipmentType);
+            $(".bootstrap-tagsinput input").val(response.data.EquipmentValue);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    function ResetBusinessStudioEquipment() {
+        $("#txt_TypeEquipmentSection").val('');
+        $("#text_tagEquipment").tagsinput('removeAll');
+        $("#collapseAddStudioEquipment").modal('hide');
+      
+
+        StudioEquipmentId_Global = 0;
+    }
+
+    function GetAllBusinessContentStudioEquipmentPagination() {
+    var apiUrl = "/api/Business/GetAllBusinessContentStudioEquipmentDetailByPagination";
+
+    _StudioEquipmentTable = $("#tblStudioEquipmentDetailView").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "bDestroy": true,
+        "order": [[2, "desc"]],
+        "ajax": {
+            "url": apiUrl,
+            "type": "POST",
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "error": function (xhr, errorType, exception) {
+                if (xhr.status == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            { "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true },
+            { "data": "EquipmentType", "name": "EquipmentType", "autoWidth": true },
+            { "data": "EquipmentValue", "name": "EquipmentValue", "autoWidth": true },
+            {
+                "data": null, "name": "Action", "autowidth": true,
+                "render": function (data, type, row) {
+                    var editLink = `<a href="javascript:EditBusinessContentStudioEquipmentDetail(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                    var deleteLink = `<a href="javascript:ConfirmDeleteStudioEquipmentDetail(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                    return `<div class="edbt">${editLink} ${deleteLink}</div>`;
+                }
+            }
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [3], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // Binding enter key for searching
+    $('#tblStudioEquipmentDetailView_filter input').unbind().bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _StudioEquipmentTable.search(this.value).draw();
+        }
+    });
+}
+
+
+
+
+    function ConfirmDeleteStudioEquipmentDetail(sid) {
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteStudioEqiupmentTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteStudioEqiupmentText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                DeleteStudioEquipment(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeleteStudioEquipment(sid) {
+        ;
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/DeleteStudioEquipmentDetail?id=" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                    }, 100);
+                    GetAllBusinessContentStudioEquipmentPagination();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////Studio Equipment///////////////////////////////////////////////////////
+    var AudioId_Global = 0;
+    function EditAudioDetail() {
+        var _url = "/api/Business/GetBusinessContentAudio_PPCMetaDetail" ;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            AudioId_Global = response.data.Id;
+            $("#txtPortfolioTitle").val(response.data.Title);
+            $("#music_portfoliodescription").val(response.data.Description);
+            $("#fileProfileImage_ManageAudioImage").val('');
+            if (response.data.AudioImageWithPath != "") {
+                $("#previewAudioImage").attr('src', response.data.AudioImageWithPath);
+                $("#previewAudioImage").removeClass('d-none');
+            }
+            $("#fileProfileImage_ManageAudioPortfolio_Image").val('');
+            if (response.data.PortfolioImageWithPath != "") {
+                $("#previewPortfolio_Image").attr('src', response.data.PortfolioImageWithPath);
+                $("#previewPortfolio_Image").removeClass('d-none');
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    function btnSubmitPortfolioClick() {
+        var _mode = 1;
+
+        let _manageTitle = $("#txtPortfolioTitle").val().trim();
+        let _managedescription = $("#music_portfoliodescription").val();
+
+
+        let _error_managePortofolio_Image = $("#error_fileProfileImage_ManageAudioPortfolio_Image");
+        let _error_manageAudioImage = $("#error_fileProfileImage_ManageAudioImage");
+
+        var _musicaudioImageFile_MS = $("#fileProfileImage_ManageAudioPortfolio_Image").get(0);
+        var _musicaudioImageFiles = _musicaudioImageFile_MS.files;
+
+        if (_musicaudioImageFiles <= 0) {
+            is_valid = false;
+            _error_managePortofolio_Image.html('@(Resources.BusinessPanel.BusinessPortofolioAudioImageRequired)');
+        }
+        var _musicaudio_ImageFile_MS = $("#fileProfileImage_ManageAudioImage").get(0);
+        var _musicaudio_ImageFiles = _musicaudio_ImageFile_MS.files;
+
+        if (_musicaudio_ImageFiles <= 0) {
+            is_valid = false;
+            _error_manageAudioImage.html('@(Resources.BusinessPanel.BusinessAudioImageRequired)');
+            return;
+        }
+
+            var data = new FormData();
+
+        data.append("Id", AudioId_Global);
+            data.append("Title", _manageTitle);
+        data.append("Description", _managedescription);
+        data.append('Mode', _mode);
+        data.append('PortfolioImage', _musicaudioImageFiles[0]);
+        data.append('AudioImage', _musicaudio_ImageFiles[0]);
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentAudio_PPCMeta',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                       // GetAllAdvertisementsForBusinessPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+    ////////////////////////////////Audio Validation /////////////////////////////////////////////////////////
+    document.querySelector('form').addEventListener('submit', function (e) {
+        var fileInput = document.getElementById('audioFile');
+        var fileError = document.getElementById('fileError');
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            fileError.textContent = 'Please select an audio file.';
+            e.preventDefault(); // Prevent form submission
+        } else {
+            var allowedExtensions = ['.mp3', '.wav', '.ogg']; // Add more extensions as needed
+            var fileName = fileInput.files[0].name;
+            var fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+
+            if (allowedExtensions.indexOf(fileExtension) === -1) {
+                fileError.textContent = 'Invalid file format. Please select an audio file with a valid extension.';
+                e.preventDefault(); // Prevent form submission
+            }
+        }
+    });
+    function ResetBusinessContentPortfolio() {
+        $('#txt_AudioTitle').val('');
+        $('#txtArtistName').val('');
+        $(".error-class").html('');
+        $("#fileProfileImage_ManageAudioPortfolio_Image").val('');
+        $("#previewPortfolio_Image").attr('src', '');
+        $("#previewPortfolio_Image").addClass('d-none');
+        $("#fileProfileImage_ManageAudioImage").val('');
+        $("#previewAudioImage").attr('src', '');
+        $("#previewAudioImage").addClass('d-none');
+    }
+
+
+    var PortfolioId_Global = 0;
+    function btnSubmitPortfolioAudioDetailClick() {
+        var _mode = (PortfolioId_Global > 0) ? 2 : 1;
+        let _manageTitle = $("#txt_AudioTitle").val().trim();
+        let _manageArtistname = $("#txtArtistName").val().trim();
+
+
+        var _musicaudioFile_MS = $("#audioFile").get(0);
+        const _musicaudioFiles = _musicaudioFile_MS.files[0];
+        if (!_musicaudioFiles) {
+
+        }
+        else {
+            const allowedTypes = ["audio/mpeg", "audio/wav", "audio/ogg"];
+            if (!allowedTypes.includes(_musicaudioFiles.type)) {
+                swal({
+                    title: 'Error!',
+                    icon: 'error',
+                    text: 'Invalid file format. Please select an audio file with a valid extension'
+                });
+                return;
+            }
+        }
+
+            var data = new FormData();
+
+        data.append("Id", PortfolioId_Global);
+            data.append("Title", _manageTitle);
+        data.append("ArtistName", _manageArtistname);
+        data.append('Mode', _mode);
+
+        data.append('AudioFile', _musicaudioFiles);
+
+
+
+
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessContentAudio',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessContentAudioPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }
+
+     // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageAudioPortfolio_Image').addEventListener('change', handleAudioImageUpload);
+
+    function handleAudioImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewPortfolio_Image').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewPortfolio_Image').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewPortfolio_Image').src = event.target.result;
+        $('#previewPortfolio_Image').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+    }
+
+
+     // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageAudioImage').addEventListener('change', handleProtofolioImageUpload);
+
+    function handleProtofolioImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewAudioImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewAudioImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewAudioImage').src = event.target.result;
+            $('#previewAudioImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+
+    /////////////////////////////////////////////////////////////  Audio Detail Delete //////////////////////////
+
+
+     function ConfirmDeleteAudioDetail(sid) {
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteStudioEqiupmentTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteStudioEqiupmentText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                DeleteAudioDetail(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeleteAudioDetail(sid) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Business/DeleteAudioDetail?id=" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    ////////////////////////////////////////////////////////////// Audio Edit Detail/////////////////////////////////////
+
+    function EditBusinessContentAudioDetail(Id) {
+        $("#collapseAddPortfolioDetail").modal('show');
+        var _url = "/api/Business/GetBusinessContentAudioDetail?id=" +Id;
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            PortfolioId_Global = response.data.Id;
+            $("#txt_AudioTitle").val(response.data.Title);
+            $("#txtArtistName").val(response.data.ArtistName);
+
+            //$("#audioFile").val(response.data.AudioFile);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+      function GetAllBusinessContentAudioPagination() {
+        // ---------------- Pagination Data Table --------------------
+          var _url_val = "/api/Business/GetAllBusinessContentAudioDetailByPagination";
+         // _StudioEquipmentTable.clear().destroy();
+          _AudioTable = $("#tblAudioDetailView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+              "paginate": true,
+              "bDestroy": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+
+                , { "data": "Title", "name": "Title", "autoWidth": true }
+                , { "data": "ArtistName", "name": "ArtistName", "autoWidth": true }
+
+
+                , {
+                    "data": null, "": "AudioFile", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _Image2 = (row.AudioFile == '') ? '' : '<p>' + row.AudioFile + '</p>';
+                        return _Image2;
+                    }
+                }
+               , {
+                    "data": null, "": "Action", "autowidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                       var _delete = '';
+
+                                    //_view = `<a href="javascript:viewgroupdetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;
+
+                        _edit = `<a href="javascript:EditBusinessContentAudioDetail(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+
+                        _delete = `<a href="javascript:ConfirmDeleteAudioDetail(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+
+                        var _action = `<div class="edbt">
+
+                                    ${_edit}
+                                    ${_delete}
+
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [4], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+          $('#tblAudioDetailView_filter input').unbind();
+          $('#tblAudioDetailView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _AudioTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+</script>

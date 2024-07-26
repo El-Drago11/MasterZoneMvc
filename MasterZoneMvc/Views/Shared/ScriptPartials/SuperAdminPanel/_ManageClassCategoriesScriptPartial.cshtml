@@ -1,0 +1,663 @@
+﻿<script>
+    var UserToken_Global = "";
+    var BusinessClassCategoryId_Global = 0;
+
+
+$(document).ready(function () {
+    StartLoading();
+    $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+        if (dataAdminToken != "" && dataAdminToken != null) {
+
+            UserToken_Global = dataAdminToken;
+            getAllActiveParentClassCategoryLists();
+            getAllBusinessCategories();
+
+        }
+        else {
+            $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                if (dataAdminToken != "" && dataAdminToken != null) {
+
+                    UserToken_Global = dataAdminToken;
+                    getAllActiveParentClassCategoryLists();
+                    getAllBusinessCategories();
+
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+});
+
+
+     function getAllActiveParentClassCategoryLists() {
+
+         let _url =  "/api/ClassCategory/GetAllParentClassCategories";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _ParentCategoryList = '';
+                $("#ddlSelectedParentBusinessCategory").html('');
+
+
+                var _ParentCategoryList = '<option value="0">Select Parent BusinessCategory List</option>';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    _ParentCategoryList += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+                }
+
+                $("#ddlSelectedParentBusinessCategory").html('').append(_ParentCategoryList); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+function getAllBusinessCategories() {
+    //let _url = "/api/ClassCategoryType/GetAllClasssCategoryListDetail";
+    let _url = "/api/ClassCategory/GetAllParentClassCategories";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        //crossDomain: true,
+        //xhrFields: {
+        //    withCredentials: true
+        //},
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+
+            }
+
+            // --------------------- append parent categories in dropdown
+
+
+            var _table = $('#tblBusinessClassCategories').DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _parentCategoryData = '';
+            var _name = '';
+            var _status = '';
+            var _action = '';
+            var _categoryIcon = '';
+            var data = [];
+            for (var i = 0; i < response.data.length; i++) {
+                sno++;
+                _parentCategoryData = response.data[i].ParentClassCategoryTypeName;
+                _name = response.data[i].Name;
+                
+
+                var Description = ``;
+                var truncatedDescription = response.data[i].Description;
+                var maxLength = 100;
+                var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                if (truncatedDescription.length > maxLength) {
+                    truncatedDescription = truncatedDescription.substr(0, maxLength) + '.';
+                }
+                if (response.data[i].Description.length < maxLength) {
+
+                    Description = '<span class="description"><span class="full-description">' + response.data[i].Description + '.';
+
+                } else {
+
+                    Description = '<span class="description"><span class="full-description d-none">' + response.data[i].Description + '.' + showLessHtml + '</span ><span class="truncated-description">' + truncatedDescription + '.' + readMoreHtml + '</span></span> ';
+                }
+
+                _action = '<div class="edbt">';
+                _action += '<a href="/SuperAdmin/ManageClassSubCategory?id=' + response.data[i].Id + '"><i class="fas fa-cog"></i></a>';
+                _action += '<a href="javascript:EditBusinessClassCategory(' + response.data[i].Id + ');"><i class="fas fa-edit"></i></a>';
+                _action += `<a href="javascript:confrimDelete_ManageClassCategory(`+ response.data[i].Id +`);"><i class="fas fa-trash "></i></a>`;
+                _action += '</div>';
+                _categoryIcon = (response.data[i].ImageWithPath == '') ? '' : '<img src="' + response.data[i].ImageWithPath +'" class="classcategoryIcon" />';
+
+                //---Check Staff-Status
+                if (response.data[i].IsActive == 1) {
+                    _status = '<a class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStatusClassCategory(' + response.data[i].Id + ');">Active</a>';
+                }
+                else {
+                    _status = '<a class="btn btn-danger btn-sm" style="width:80px;" onclick="ConfirmChangeStatusClassCategory(' + response.data[i].Id + ');">In-Active</a>';
+                }
+                // for read more show less functionality of description
+                $(document).on('click', '.read-more', function (e) {
+                    e.preventDefault();
+                    $(this).closest('.description').find('.full-description').removeClass('d-none');
+                    $(this).closest('.description').find('.truncated-description').addClass('d-none');
+                });
+                $(document).on('click', '.read-less', function (e) {
+                    e.preventDefault();
+                    $(this).closest('.description').find('.full-description').addClass('d-none');
+                    $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+                });
+                data.push([
+                    sno,
+                    _name,
+                    _categoryIcon,
+                    Description,
+                    _status,
+                    _action
+                ]);
+            }
+
+            $('#tblBusinessClassCategories').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    function showAddUpdateClassCategorySection() {
+        $('#sectionViewClassCategories_ManageCategories').addClass('d-none');
+        $('#sectionAddUpdateClassCategory_ManageCategories').removeClass('d-none');
+        getAllActiveParentClassCategoryLists();
+}
+
+function showViewClassCategorySection() {
+    $('#sectionAddUpdateClassCategory_ManageCategories').addClass('d-none');
+    $('#sectionViewClassCategories_ManageCategories').removeClass('d-none');
+}
+
+function resetAddUpdateClassCategoryForm() {
+    $('.error-class').html('');
+    // Reset Fields
+
+    $("#ddlSelectedParentBusinessCategory").val(0).select2();
+    $("#txtClassCategoryName_ManageCategories").val('');
+    $("#txtDescription_ManageCategories").val('');
+    $("#txtCategoryName_ManageCategories").val('');
+    $('#chkIsActive_ManageClassCategories').prop('checked', false);
+    $("#fileClassCategoryImage_ManageCategories").val('');
+    $("#previewImage").attr('src', '');
+    $("#previewImage").addClass('d-none');
+    BusinessClassCategoryId_Global = 0;
+    $('#sectionAddUpdateClassCategory_ManageCategories .card-title').html('Add  Class Category');
+
+}
+
+function EditBusinessClassCategory(id) {
+    if (id <= 0)
+        return;
+
+    StartLoading();
+    let _url = API_Base_URL + "/api/ClassCategoryType/GetById?id="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            let _classCategory = response.data;
+            $("#ddlSelectedParentBusinessCategory").val(_classCategory.ParentClassCategoryTypeId).trigger('change');
+            $("#txtClassCategoryName_ManageCategories").val(_classCategory.Name);
+            $("#txtDescription_ManageCategories").val(_classCategory.Description);
+            $("#previewImage").attr('src', _classCategory.ImageWithPath);
+            $("#previewImage").removeClass('d-none');
+
+            //--Category-Status
+            if (_classCategory.IsActive == 1) {
+                $('#chkIsActive_ManageClassCategories').prop('checked', true);
+            }
+            else {
+                $('#chkIsActive_ManageClassCategories').prop('checked', false);
+            }
+
+
+
+            BusinessClassCategoryId_Global = id;
+            $('#sectionAddUpdateClassCategory_ManageCategories .card-title').html('Edit Category');
+            showAddUpdateClassCategorySection();
+            StopLoading();
+            getAllActiveParentClassCategoryLists();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function AddUpdate_ManageClassCategories() {
+    var is_valid = true;
+    $(".error-class").html('');
+    var _mode = (BusinessClassCategoryId_Global > 0) ? 2 : 1;
+
+    var _parentBusinessCategoryId = $("#ddlSelectedParentBusinessCategory").val();
+    var _categoryName = $("#txtClassCategoryName_ManageCategories").val().trim();
+    var _categoryDescription= $("#txtDescription_ManageCategories").val();
+
+    var _error_parentBusinessCategoryId = $("#error_ddlSelectedParentBusinessCategory");
+    var _error_categoryName = $("#error_txtClassCategoryName_ManageCategories");
+    var _error_categoryDescription = $("#error_txtDescription_ManageCategories");
+    var _error_categoryImage = $("#error_fileClassCategoryImage_ManageCategories");
+
+    @*if (validate_IsEmptySelectInputFieldValue(_parentBusinessCategoryId) || parseInt(_parentBusinessCategoryId) < 0) {
+        is_valid = false;
+        _error_parentBusinessCategoryId.html('@(Resources.SuperAdminPanel.ParentBusinessCategoryRequired)');
+    }*@
+
+    if (validate_IsEmptyStringInputFieldValue(_categoryName)) {
+        is_valid = false;
+        _error_categoryName.html('@(Resources.SuperAdminPanel.ClassCategoryNameRequired)');
+    }
+
+
+    if (validate_IsEmptyStringInputFieldValue(_categoryDescription)) {
+        is_valid = false;
+        _error_categoryDescription.html('@(Resources.SuperAdminPanel.ClassCategoryDescriptionRequired)');
+    }
+
+    @*if (_parentBusinessCategoryId != 0) {
+        if (validate_IsEmptySelectInputFieldValue(_profilePageTypeId)) {
+            is_valid = false;
+            _error_profilePageTypeId.html('@(Resources.SuperAdminPanel.ProfilePageTypeRequired_ErrorMessage)');
+        }
+        if (validate_IsEmptySelectInputFieldValue(_BusinessCategoryKey)) {
+            is_valid = false;
+            _error_BusinessCategoryKey.html('@(Resources.SuperAdminPanel.CategoryKeyRequired_ErrorMessage)');
+        }
+    }*@
+
+
+    if (_mode == 1) {
+        if ($("#fileClassCategoryImage_ManageCategories").val() == '') {
+            is_valid = false;
+            _error_categoryImage.html('@(Resources.SuperAdminPanel.ClassCategoryIconRequired))');
+        }
+    }
+
+    var _isActiveCategory = 0;
+    if ($('#chkIsActive_ManageClassCategories').is(':checked')) {
+        // checked
+        _isActiveCategory = 1;
+    }
+
+    if (is_valid) {
+        StartLoading();
+        var formdata = new FormData();
+
+        formdata.append("Id", BusinessClassCategoryId_Global);
+        formdata.append("ParentClassCategoryTypeId", _parentBusinessCategoryId);
+        formdata.append("IsActive", _isActiveCategory);
+        formdata.append("Name", _categoryName);
+        formdata.append("Description", _categoryDescription);
+        formdata.append("Mode", _mode);
+
+        var _classcategoryImageFile_MC = $("#fileClassCategoryImage_ManageCategories").get(0);
+        var _classcategoryImageFiles = _classcategoryImageFile_MC.files;
+        formdata.append('CategoryImage', _classcategoryImageFiles[0]);
+
+        $.ajax({
+            url: '/api/ClassCategoryType/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: formdata,
+            processData: false,
+            contentType: false,
+            mimeType: 'multipart/form-data',
+            //contentType: 'application/json',
+            type: 'POST',
+            dataType: "json",
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+             //   dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    getAllBusinessCategories();
+                    resetAddUpdateClassCategoryForm();
+                    showViewClassCategorySection();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+
+                    return;
+                }
+
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+    function btnClickCancel_ManageClassCategories() {
+        showViewClassCategorySection();
+        resetAddUpdateClassCategoryForm();
+    }
+
+
+
+
+    function confrimDelete_ManageClassCategory(sid) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmDeleteClassCategoryTitle)",
+            text: "@(Resources.SuperAdminPanel.ConfirmDeleteClassCategoryText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                DeleteClassCategory(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function DeleteClassCategory(sid) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/ClassCategoryType/Delete?id=" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        getAllBusinessCategories();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmChangeStatusClassCategory(sid) {
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmChangeStatusCategoryTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmChangeStatusCategoryText)",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+        cancelButtonText: "@(Resources.ErrorMessage.No)"
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusClassCategory(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+    function ChangeStatusClassCategory(sid) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/ClassCategoryType/ChangeStatus?id=" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    getAllBusinessCategories();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+
+
+    document.getElementById('fileClassCategoryImage_ManageCategories').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.SuperAdminPanel.ValidImageFile_ErrorMessage)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.SuperAdminPanel.ValidFileSize_ErrorMessage, "1 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+
+</script>
+

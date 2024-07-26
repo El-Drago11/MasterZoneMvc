@@ -1,0 +1,497 @@
+﻿<script>
+    var UserToken_Global = "";
+var BannerItemId_Global = 0;
+
+$(document).ready(function () {
+    StartLoading();
+    $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+        if (dataAdminToken != "" && dataAdminToken != null) {
+
+            UserToken_Global = dataAdminToken;
+            getAllBannerItems();
+            StopLoading();
+        }
+        else {
+            $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                if (dataAdminToken != "" && dataAdminToken != null) {
+
+                    UserToken_Global = dataAdminToken;
+                    getAllBannerItems();
+                    StopLoading();
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+});
+
+function getAllBannerItems() {
+    let _url = "/api/ManageHomePage/BannerItem/GetAll";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+
+            }
+
+
+            var _table = $('#tblBannerItems').DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _status = '';
+            var _action = '';
+            var _thumbnail = '';
+            var data = [];
+            for (var i = 0; i < response.data.length; i++) {
+                sno++;
+                _thumbnail = (response.data[i].Image == '') ? '': '<img src="' + response.data[i].ImageWithPath +'" class="img-size-sm" />';
+
+                _action = '<div class="edbt">';
+                _action += '<a href="javascript:EditBannerItem(' + response.data[i].Id + ');"><i class="fas fa-edit"></i></a>';
+                _action += `<a href="javascript:confrimDelete_ManageBannerItem(${response.data[i].Id});"><i class="fas fa-trash "></i></a>`;
+                _action += '</div>';
+
+                //---Check Staff-Status
+                if (response.data[i].Status == 1) {
+                    _status = '<span class="badge badge-success">Active</span>';
+                }
+                else {
+                    _status = '<span class="badge badge-danger">Inactive</span>';
+                }
+
+                data.push([
+                    sno,
+                    response.data[i].Type,
+                    _thumbnail,
+                    response.data[i].Video,
+                    _status,
+                    _action
+                ]);
+            }
+
+            $('#tblBannerItems').DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function showAddUpdateSection() {
+    $('#sectionViewCategories_ManageBannerItem').addClass('d-none');
+    $('#sectionAddUpdateCategory_ManageBannerItem').removeClass('d-none');
+}
+
+function showViewSection() {
+    $('#sectionAddUpdateCategory_ManageBannerItem').addClass('d-none');
+    $('#sectionViewCategories_ManageBannerItem').removeClass('d-none');
+    }
+
+    function enableDisableFieldsByType() {
+        var _id_substring = '_ManageBannerItem';
+        var _type = $("#ddlType" + _id_substring).val();
+
+        if (_type == 'Image') {
+            $("#txtVideo" + _id_substring).prop('disabled', 'true');
+            $("#fileThumbnail" + _id_substring).removeAttr('disabled');
+        }
+        else if (_type == 'Video') {
+            $("#txtVideo" + _id_substring).removeAttr('disabled');
+            $("#fileThumbnail" + _id_substring).prop('disabled', 'true');
+        }
+
+    }
+
+function resetBannerItemForm() {
+    $('.error-class').html('');
+    // Reset Fields
+    var _id_substring = '_ManageBannerItem';
+    $("#txtVideo" + _id_substring).removeAttr('disabled');
+    $("#fileThumbnail" + _id_substring).removeAttr('disabled');
+    $("#ddlType" + _id_substring).removeAttr('disabled');
+
+    $("#ddlType" + _id_substring).val('Image').trigger('change');
+    $("#txtVideo" + _id_substring).val('');
+    $("#thumbnail" + _id_substring).attr('src', '');
+    $("#thumbnail" + _id_substring).addClass('d-none');
+    $('#chkIsActive' + _id_substring).prop('checked', false);
+    $('#fileThumbnail' + _id_substring).val('');
+    $("#txtText" + _id_substring).val('');
+    $("#txtLink" + _id_substring).val('');
+
+    BannerItemId_Global = 0;
+    $('#sectionAddUpdateCategory_ManageBannerItem .card-title').html('Add New');
+}
+
+function EditBannerItem(id) {
+    if (id <= 0)
+        return;
+
+    StartLoading();
+    let _url = API_Base_URL + "/api/ManageHomePage/BannerItem/GetById?id="+id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            let _item = response.data;
+            var _id_substring = '_ManageBannerItem';
+            $("#ddlType" + _id_substring).val(_item.Type).trigger('change');
+            $("#ddlType" + _id_substring).prop('disabled', 'true');
+            $("#txtVideo" + _id_substring).val(_item.Video);
+            $("#txtText" + _id_substring).val(_item.Text);
+            $("#txtLink" + _id_substring).val(_item.Link);
+            if (_item.Image != "") {
+                $("#thumbnail" + _id_substring).attr('src', _item.ImageWithPath);
+                $("#thumbnail" + _id_substring).removeClass('d-none');
+            }
+            else {
+                $("#thumbnail" + _id_substring).addClass('d-none');
+            }
+
+            if (_item.Status == 1) {
+                $('#chkIsActive' + _id_substring).prop('checked', true);
+            }
+            else {
+                $('#chkIsActive' + _id_substring).prop('checked', false);
+            }
+
+            BannerItemId_Global = id;
+            $('#sectionAddUpdateCategory_ManageBannerItem .card-title').html('Edit');
+            showAddUpdateSection();
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function AddUpdate_ManageBannerItem() {
+    var is_valid = true;
+    $(".error-class").html('');
+    var _mode = (BannerItemId_Global > 0) ? 2 : 1;
+
+    var _id_substring = "_ManageBannerItem";
+        let _type = $("#ddlType" + _id_substring).val();
+        let _video = $("#txtVideo" + _id_substring).val().trim();
+        var _text = $("#txtText" + _id_substring).val();
+        var _link = $("#txtLink" + _id_substring).val();
+
+        let _error_thumbnail = $("#error_fileThumbnail" + _id_substring);
+        let _error_video = $("#error_txtVideo" + _id_substring);
+
+        var _error_text = $("#error_txtText" + _id_substring);
+        var _error_link = $("#error_txtLink" + _id_substring);
+
+
+        var _cardThumbnailImageFile_MS = $("#fileThumbnail" + _id_substring).get(0);
+        var _CardThumbnailImageFiles = _cardThumbnailImageFile_MS.files;
+
+        if (_mode <= 1 && _type == 'Image' && _CardThumbnailImageFiles.length <= 0) {
+            is_valid = false;
+            _error_thumbnail.html('@(Resources.SuperAdminPanel.ImageRequired)');
+        }
+
+        if (_type == 'Video' && validate_IsEmptyStringInputFieldValue(_video)) {
+            is_valid = false;
+            _error_video.html('@(Resources.SuperAdminPanel.VideoLinkRequired)');
+        }
+        else if (_type == 'Video' && !isValidHttpLink(_video))
+        {
+            is_valid = false;
+            _error_video.html('@(Resources.SuperAdminPanel.ValidLinkRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_text)) {
+            is_valid = false;
+            _error_text.html('@(Resources.SuperAdminPanel.TextRequired)');
+        }
+
+
+        if (validate_IsEmptyStringInputFieldValue(_link)) {
+            is_valid = false;
+            _error_link.html('@(Resources.SuperAdminPanel.VideoLinkRequired)');
+        }
+        else if (!isValidHttpLink(_link)) {
+            is_valid = false;
+            _error_link.html('@(Resources.SuperAdminPanel.ValidLinkRequired)');
+        }
+
+    if (is_valid) {
+        StartLoading();
+
+         var _status = 0;
+         if ($('#chkIsActive' + _id_substring).is(':checked')) {
+             _status = 1;
+         }
+
+         var data = new FormData();
+
+         data.append("Id", BannerItemId_Global);
+         data.append("Type", _type);
+         data.append("Status", _status);
+         data.append("Mode", _mode);
+         data.append("Video", _video);
+         data.append("Text", _text);
+         data.append("Link", _link);
+         data.append("Image", _CardThumbnailImageFiles[0]);
+
+        $.ajax({
+            url: '/api/ManageHomePage/BannerItem/AddUpdate',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            contentType: false,
+            mimeType: 'multipart/form-data',
+            //contentType: 'application/json',
+            type: 'POST',
+            dataType: "json",
+            success: function (dataResponse) {
+
+                //--If successfully added
+                if (dataResponse.status == 1) {
+                    swal("Success!", dataResponse.message, "success");
+
+                    getAllBannerItems();
+
+                    resetBannerItemForm();
+                    showViewSection();
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+}
+
+function btnClickCancel_ManageBannerItem() {
+    showViewSection();
+    resetBannerItemForm();
+}
+
+function confrimDelete_ManageBannerItem(categoryId) {
+    let textMessage = '@(Resources.SuperAdminPanel.ConfirmDeleteItemText)';
+
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmDeleteItemTitle)",
+        text: textMessage,
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            ajaxDeleteItem(categoryId);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function ajaxDeleteItem(id) {
+    StartLoading();
+    _url =  '/api/ManageHomePage/BannerItem/DeleteById?id=' + id;
+    $.ajax({
+        type: "POST",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            if (response.status == 1) {
+                swal("Success!", response.message, "success");
+            }
+
+            getAllBannerItems();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+      // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileThumbnail_ManageBannerItem').addEventListener('change', handleCardThumbnailImageUpload);
+
+    function handleCardThumbnailImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#thumbnail_ManageBannerItem').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#thumbnail_ManageBannerItem').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('thumbnail_ManageBannerItem').src = event.target.result;
+            $('#thumbnail_ManageBannerItem').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    function validate_IsEmptyStringInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    function validate_IsEmptySelectInputFieldValue(inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

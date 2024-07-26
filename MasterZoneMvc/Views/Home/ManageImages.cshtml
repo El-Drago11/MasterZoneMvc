@@ -1,0 +1,189 @@
+﻿
+@{
+    ViewBag.Title = "ManageImages";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/video-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <style>
+        /* Hide the original file input */
+        input[type="file"] {
+            display: none;
+        }
+        .video-mange .manage-vd .delete-icon {
+            position: absolute;
+            bottom: 37px;
+            z-index: 1;
+            background: var(--mainColor);
+            left: 70px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            border-radius: 25px;
+            cursor: pointer;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+        .video-mange .manage-vd .edit-icon {
+            position: absolute;
+            bottom: 36px;
+            z-index: 1;
+            background: var(--mainColor);
+            left: 18px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        .video-mange h6.title {
+            padding: 10px;
+            background: var(--mainColor);
+            color: #fff;
+            width: 46%;
+            text-align: center;
+        }
+
+        .vd-title-in {
+            background: var(--mainColor);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 10px 20px;
+            margin-top: 15px;
+        }
+
+        /* Style the anchor tag to look like a button */
+        .custom-file-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+<input type="hidden" id="hiddenUserLoginId" value="@ViewBag.UserLoginId" />
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+                @Html.Partial("_VisitorPanelSidebarPartial")
+            </div>
+            <div class="col-sm-9">
+                <div class="vd-title-in">
+                    <div class="video-heading">
+                        All Images
+                    </div>
+                    <div class="vd-edit-in">
+                        Image Edit
+                    </div>
+                </div>
+                <div class="video-mange" id="ContentImageDetail" style="display: flex; flex-wrap: wrap">
+                    <div class="video-add-sec" id="addUpdateSection">
+                        <div class="add-vdieo">
+                            <i class="fa-solid fa-plus" id="AddImage"></i>
+                        </div>
+                        <div class="ad-vd-sidebar" id="adVdSidebar">
+                            <div class="cross-icon">
+                                <i class="fa-solid fa-xmark"></i>
+                            </div>
+                            <p>Video Thumbnail</p>
+
+                            <a class="custom-file-button" id="contentImagethumbnailimage" href="javascript:;" onclick="openFileInput()">
+                                Select Your Profile
+                            </a>
+                            <input type="file" id="Manageuser_imagethumbnailimage" class="form-control" accept="image/*" style="display: none;" />
+
+                            <div class="error-class" id="error_Manageuser_imagethumbnailimage"></div>
+
+                            <div class="textarea-inr">
+                                <h6>Image Title</h6>
+                                <input type="text" class="form-control " placeholder="Enter Video Title" id="textuser_imagetitle" required />
+
+                                <div class="error-class" id="error_textuser_imagetitle"></div>
+                            </div>
+
+                            <div class="btn-iner">
+
+                                <a href="javascript:;" id="Tochangetext" onclick="AddbtnUserImage()">Save</a>
+                                <a href="javascript:;" id="Toclosethepopup" onclick="ResetAddViewUserImage()"> Cancel</a>
+                            </div>
+
+                        </div>
+                    </div>
+  
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<style>
+    header.header.active-h {
+        position: unset;
+    }
+
+    a:hover {
+        color: #f3a762;
+        text-decoration: underline;
+    }
+
+    header.header.active-h div#navbarTogglerDemo03 {
+        width: unset;
+    }
+</style>
+<script>
+
+    $("#AddImage").click(function () {
+        ResetAddViewUserImage();
+
+        $(".video-add-sec").addClass('open-pannel');
+        $("body").addClass('overflow');
+        $("#Toclosethepopup").show();
+
+
+        $(".ad-vd-sidebar .cross-icon>*").click(function () {
+            $(".video-add-sec").removeClass("open-pannel");
+            $("body").removeClass('overflow');
+        });
+
+
+    });
+
+
+</script>
+
+@Html.Partial("~/Views/Shared/ScriptPartials/VisitorPanel/_ManageImagesScriptPartial.cshtml")
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+

@@ -1,0 +1,133 @@
+﻿<script>
+    $(document).ready(function () {
+        GetAllClassesDetailList();
+    });
+
+// Bind All Classes Detail List
+     function GetAllClassesDetailList() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Class/GetAllClassesList',
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+
+                var classNameList = '';
+                for (var i = 0; i < response.data.AllClassList.length; i++) {
+                    var starIcons = '';
+
+                    if (response.data.AllClassList[i].AverageRating) {
+                        rating = response.data.AllClassList[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star" style="color: lightgrey";></i>';
+                            }
+                        }
+                    }
+
+                        var classNameList = `<div class="classes-card-flex">
+                <div class="class-title-iner">
+                    <h5 class="class-title">${response.data.AllClassList[i].BusinessSubCategoryName}</h5>
+                </div>
+                <div class="class-card-items" style="box-shadow: none;">
+
+                    <div class="class-card-items-in">
+                        <div class="koch-profile">
+
+                            <div class="koch-profile-iner">
+                                <img src=${response.data.AllClassList[i].ClassImageWithPath} alt="koch profile" loading="lazy">
+                            </div>
+                            <div class="days-time">
+                                <h5 class="date-title">${response.data.AllClassList[i].ScheduledDay}</h5>
+                                <h5 class="text-month">${response.data.AllClassList[i].ScheduledMonth}</h5>
+
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="details-cards">
+                                <h5>${response.data.AllClassList[i].Name} <span class="time">${response.data.AllClassList[i].ScheduledStartOnTime_24HF}</span></h5>
+                                <h5 class="center-text"></h5>
+                                <h5>${response.data.AllClassList[i].ClassType}(${response.data.AllClassList[i].ClassDays_ShortForm}) ${response.data.AllClassList[i].HoursDifference}Hours</h5>
+                                <div class="location-iner">
+                                    <h5>${response.data.AllClassList[i].Address}</h5>
+                                     <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text"></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="side-profile">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="${response.data.AllClassList[i].BusinessProfileImage}" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>${response.data.AllClassList[i].BusinessOwnerName}</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                               ${starIcons}
+                            </div>
+                        </div>
+                        <div class="cta-iner">
+                            <a href="/Home/ClassDetail?classId= ${response.data.AllClassList[i].Id}" class="primary-button">Book now</a>
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>`;
+
+                $("#BindBusinessAllClassList").append(classNameList);
+                       
+                    
+                    
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+</script>

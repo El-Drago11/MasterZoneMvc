@@ -1,0 +1,381 @@
+﻿
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var UserApartmentBookings = [];
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                //GetApartmentBookingDetail();
+                GetAllActiveApartments();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        //GetApartmentBookingDetail();
+                        GetAllActiveApartments();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function bindFamilyMemberRow(familyMember) {
+        return `
+            <div class="col-12">
+                <div class="align-items-center d-flex" data-family-member-id="${familyMember.User2LoginId}">
+                    <img src="${familyMember.UserProfileImageWithPath}" class="mr-3 user-img">
+                    <div class="d-flex flex-column">
+                        <h4 class="font-weight-bold">${familyMember.FirstName} ${familyMember.LastName}</h4>
+                        <h6>${familyMember.User2Relation_FieldTypeCatalogTextValue}</h6>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // not in use
+    function ResetView() {
+        // Reset data
+        $("#ddlApartment").val('0');
+        $("#ddlBlock").val('0');
+        $("#txtFlatOrVillaNum").val('');
+        $("#txtPhase").val('');
+        $("#txtLane").val('');
+        $("#txtPropertyManagementTypeOtherName").val('');
+        $('#chkMasterId').prop('checked', true);
+        $('#txtMasterId').val('');
+        $('#txtFirstName').val('');
+        $('#txtLastName').val('');
+        $('#txtEmail').val('');
+        $('#txtPhoneNumber').val('');
+        $('#ddlGender').val('0');
+        $('#ddlCourse').val('0');
+        $('#ddlCourseBatch').val('0');
+        $('#ddlArea').val('0');
+        $('#txtActivity').val('');
+
+        $("#formFamilyMemberSection").html('');
+
+        ApartmentId_Global = 0;
+        FamilyNumberCount_Global = 0;
+
+        // show hide panel
+        $('#sectionViewApartmentBooking').show();
+        $('#sectionBookApartment').hide();
+        $('#btnAddApartment').show();
+        document.getElementById("pageTextchange").innerHTML = "View Apartment Booking";
+        document.getElementById("pageStageChange").innerHTML = "View Apartment Booking";
+        document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+        $(".error-class").html('');
+
+    }
+
+    function GetAllActiveApartments()
+    {
+        var _url = "/api/Apartment/GetAllActiveApartments";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var optionList = '<option value="0">Select Apartment</option>';
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    optionList += `<option value="${item.Id}">${item.Name}</option>`;
+                }
+                $('#ddlApartment').html('').append(optionList);
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAllApartmentBookingUserListByApartment()
+    {
+        var apartmentId = $('#ddlApartment').val();
+        var _url = "/api/Apartment/GetAllApartmentBookingsByApartmentId?apartmentId="+apartmentId;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var blockList = ``;
+                for (var b = 0; b < response.data.apartmentBookingBlocks.length; b++) {
+                    var blockVM = response.data.apartmentBookingBlocks[b];
+                    blockList += `
+                    <div class="col-sm-4 border shadow-sm p-2 m-2" style="height: 350px;overflow-y: scroll;">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h5 class="border bg-primary p-2 w-100">${blockVM.Name}</h5>
+                            </div>
+                        </div>
+                        <div class="row">
+                            ${bindBlockUsersList(response.data.apartmentBookingUserList, blockVM.Id)}
+                        </div>
+                    </div>
+                    `;
+                }
+
+                if (response.data.apartmentBookingBlocks.length <= 0) {
+                    blockList = `
+                         <div class="col-sm-12 text-center">
+                             <h5 class="text-black-50">No Bookings or Blocks found!</h5>
+                         </div>`;
+                }
+
+                $('#sectionBlockLists').html('').append(blockList);
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindBlockUsersList(usersList, blockId) {
+
+        var blockUsersList = usersList.filter(x => x.ApartmentBlockId == blockId);
+        var users = ``;
+        for (var u = 0; u < blockUsersList.length; u++) {
+            var user = blockUsersList[u];
+            users += `
+
+                <div class="col-sm-12 mb-1">
+                    <div class="d-flex border p-2 block-user-detail" data-user-login-id="${user.UserLoginId}" data-apartment-booking-id="${user.Id}">
+                        <div class="mr-2">
+                            <img class="trainer-img" src="${user.PersonProfileImageWithPath}" />
+                        </div>
+                        <div class="d-flex flex-column mr-2">
+                            <h5 class="">${user.FlatOrVillaNumber}</h5>
+                            <h5 class="">${user.Phase}, ${user.Lane}</h5>
+                            <h5 class="font-weight-bold">${user.OccupantType}</h5>
+                        </div>
+                        <h5 class="align-self-lg-end">${user.PersonFullName}</h5>
+                    </div>
+                </div>
+
+            `;
+        }
+
+        if (blockUsersList.length <= 0) {
+            users = `<div class="col-sm-12 text-black-50">No Bookings</div>`;
+        }
+
+        return users;
+
+
+    }
+
+    function onChangeApartmentSelection() {
+        GetAllApartmentBookingUserListByApartment();
+    }
+
+    $(document).on('click', '.block-user-detail', function (e) {
+        var userLoginId = $(this).data('user-login-id');
+        $('#sectionViewApartmentBookingDetail').removeClass('d-none');
+        GetApartmentBookingDetailByUser(userLoginId);
+    });
+
+    function GetApartmentBookingDetailByUser(userLoginId) {
+        StartLoading();
+        var _url = "/api/Apartment/GetApartmentBookingDetailByUser?userLoginId=" + userLoginId;
+       
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                //ResetView();
+                UserApartmentBookings = [];
+
+                if (!response.data) {
+                    return;
+                }
+
+                UserApartmentBookings = response.data.apartmentBookingList;
+
+                var item = response.data.apartmentBookingList[0];
+                console.log(item);
+
+                $('.data-block-name').html(item.BlockName);
+                $('.data-flat-number').html(item.FlatOrVillaNumber);
+                $('.data-apartment-name').html(item.ApartmentName);
+                $('.data-occupant-type').html(item.OccupantType);
+                $('.data-person-fullname').html(item.PersonFullName);
+                $('.data-person-profileimage').attr('src', item.PersonProfileImageWithPath);
+
+                var activityList = '';
+                for (var ab = 0; ab < response.data.apartmentBookingList.length; ab++) {
+                    var abItem = response.data.apartmentBookingList[ab];
+                    console.log('activity: ' + ab);
+                    activityList += `<h4 class="font-weight-bold border-radius custom-border-dashed p-2 data-activity" data-activity-apartment-booking-id="${abItem.Id}">${abItem.Activity}</h4>`;
+                }
+
+                $('#apartmentBookedActivityList').html(activityList);
+                // bind first activity class details
+                //bindActivityClassDetails(item.Id);
+                $('.data-activity:first-child').click();
+
+                // Family Members
+                var _familyMembersHtml = '';
+                if (response.data.familyMembers.length <= 0) {
+                    _familyMembersHtml = `<div class="col-12 w-100 text-center"><i>No Family Members</i></div>`;
+                }
+                for (var f = 0; f < response.data.familyMembers.length; f++) {
+                    _familyMembersHtml += bindFamilyMemberRow(response.data.familyMembers[f]);
+                }
+                $('#sectionFamilyMembers').html(_familyMembersHtml);
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    $(document).on('click', '.data-activity', function () {
+        $('.data-activity').removeClass('bg-primary');
+        $(this).addClass('bg-primary');
+        var apartmentBookingId = $(this).data('activity-apartment-booking-id');
+        bindActivityClassDetails(apartmentBookingId);
+    });
+
+    function bindActivityClassDetails(apartmentBookingId) {
+
+        if (UserApartmentBookings.length <= 0) {
+            // set no records 
+            return;
+        }
+
+        var item = UserApartmentBookings.filter(x => x.Id == apartmentBookingId)[0];
+
+        // Class
+        $('.data-class-name').html(item.ClassName);
+        $('.data-class-price').html('Rs. ' + item.ClassPrice);
+        $('.data-class-days').html(item.ClassDays_ShortForm);
+        $('.data-batch-time').html(item.BatchScheduledStartOnTime_24HF + ' - ' + item.BatchScheduledEndOnTime_24HF);
+
+        // Instructor
+        $('.data-instructor-name').html(item.InstructorFullName);
+        $('.data-instructor-category').html(item.InstructorBusinessCategoryName);
+        $('.data-instructor-img').attr('src', item.InstructorProfileImageWithPath);
+        if (item.InstructorIsCertified != 1) {
+            $('.data-certified-icon').addClass('d-none');
+        }
+    }
+
+</script>

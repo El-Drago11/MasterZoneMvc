@@ -1,0 +1,318 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "ProfilePage";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+
+    string ProfilePageTypeKey = ViewBag.ProfilePageTypeKey;
+}
+@section Styles{
+
+    <style>
+        .mb-4, .my-4 {
+            margin-bottom: 0.5rem !important;
+        }
+
+        .previewImage {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+    </style>
+
+
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Profile Page</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Profile Page</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    @*<div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddStaff">Add Discount</a>
+                        </div>*@
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @*@Html.Partial("~/Views/Shared/PageTemplatePartials/_DancePagePartial.cshtml")*@
+        <!--<div id="sectionAddStaff">
+        <div class="row mb-4">
+            <div class="col-12 mb-4">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center p-3">
+                        <h3 class="card-title mb-4"> Dance Banner Infomation</h3>
+                        <p class="float-lg-right">
+                            <button data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                                <i class="fas fa-minus"></i>
+                            </button>
+
+                        </p>
+
+                    </div>
+                    <div class="collapse" id="collapseExample">
+                        <div class="card-body">-->
+        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+        <!--<form>
+                                    <div class="form-group">
+                                        <label for="Title">Title</label>
+                                        <input type="text" id="txtTitle" class="form-control" />
+                                        <div class="error-class" id="error_txtTitle"></div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="SubTitle">Sub-Title</label>
+                                        <input type="text" id="txtSubTitle" class="form-control" />
+                                        <div class="error-class" id="error_txtSubTitle"></div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ButtonText">Button-Text</label>
+                                        <input type="text" id="txtButtonText" class="form-control" />
+                                        <div class="error-class" id="error_txtButtonText"></div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ButtonLink">Button-Link</label>
+                                        <input type="text" id="txtButtonLink" class="form-control" />
+                                        <div class="error-class" id="error_txtButtonLink"></div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dance Banner Image</label>
+                                        <div class="imagePreview">
+                                            <img id="previewImage" class="d-none" style="width: 25%; height: 25%;">
+                                        </div>
+
+                                        <input type="file" id="fileProfileImage_ManageDanceBannerImage" class="border form-control" accept="image/*">
+                                        <div class="error-class" id="error_fileProfileImage_ManageDanceBannerImage"></div>
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitAdvertisementClick()">Save</button>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div id="sectionAddStaff">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center p-3">
+                            <h3 class="card-title mb-4"> Dance About Infomation</h3>
+                            <p class="float-lg-right">
+                                <button data-toggle="collapse" href="#collapseExample1" role="button" aria-expanded="false" aria-controls="collapseExample" class="btn accordion">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+
+                            </p>
+
+                        </div>
+                        <div class="collapse" id="collapseExample1">
+                            <div class="card-body">-->
+        @*<h5 class="mb-4" id="myText"> banner</h5>*@
+        <!--<form>
+                                    <div class="form-group">
+                                        <label for="AboutTitle"> About Title</label>
+                                        <input type="text" id="txtAboutTitle" class="form-control" />
+                                        <div class="error-class" id="error_txtAboutTitle"></div>
+
+                                    </div>
+                                    <div class="form-group d-flex flex-column">
+                                        <label>Dance About Image</label>
+                                        <div class="imagePreview">
+                                            <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                        </div>
+                                        <input type="file" id="fileProfileImage_ManageDanceAboutImage" class="border form-control" accept="image/*">
+                                        <div class="error-class" id="error_fileProfileImage_ManageDanceAboutImage"></div>
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitAdvertisementClick()">Save</button>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>-->
+
+        @if (ProfilePageTypeKey.Equals("dance_web"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_DancePagePartial.cshtml")
+        }
+        @if (ProfilePageTypeKey.Equals("gym_web"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_GymPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("sports"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_SportsPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("yoga_web"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_YogaPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("music_web"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_MusicPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("event_organisation"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_EventOrganisationPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("teacher"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_TeacherPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("education_web"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_EducationPagePartial.cshtml")
+
+        }
+        @if (ProfilePageTypeKey.Equals("instructor"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_InstructorPagePartial.cshtml")
+        }
+        @if (ProfilePageTypeKey.Equals("other"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_OtherProfilePageScriptPartial.cshtml")
+        }
+        @if (ProfilePageTypeKey.Equals("classic_dance"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_ClassicDancePagePartial.cshtml")
+        }
+        @if (ProfilePageTypeKey.Equals("masterpro"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_MasterProPagePartial.cshtml")
+        }
+        @if (ProfilePageTypeKey.Equals("master_profile_api"))
+        {
+            @Html.Partial("~/Views/Shared/PageTemplatePartials/_MasterProfileAPIPagePartial.cshtml")
+        }
+
+    </div>
+</main>
+
+@section Scripts{
+    @if (ProfilePageTypeKey.Equals("dance_web"))
+    {
+        @Html.Partial("~/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageDancePagePartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("gym_web"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageGymScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("sports"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageSportsScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("music_web"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageMusicScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("yoga_web"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageYogaScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("event_organisation"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageEventOrganisationScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("teacher"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageTeacherScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("education_web"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageEducationScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("instructor"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageInstructorScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("other"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageOtherProfileScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("classic_dance"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageClassicDanceScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("masterpro"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageMasterProScriptPartial.cshtml")
+    }
+    @if (ProfilePageTypeKey.Equals("master_profile_api"))
+    {
+
+        @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/PageTemplatePartials/_ManageMasterProfileAPIScriptPartial.cshtml")
+    }
+}
+
+
+
+
+
+
+

@@ -1,0 +1,140 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var CourseBookingId_Global = $('#hidden_courseBookingId').val();
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                getCourseBookingViewDetailById();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        getCourseBookingViewDetailById();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+
+    function getCourseBookingViewDetailById() {
+
+    StartLoading();
+        let _url = "/api/Course/GetBusinessCourseBookingDetailById?id=" + CourseBookingId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+
+                var _courseBookingDetail = response.data.CourseBookingDetail;
+                var _orderDetail = response.data.OrderDetail;
+                var _paymentResponseDetail = response.data.PaymentResponseDetail;
+                //var _classDetail = response.data.ClassDetail;
+                var orderListItems = ``;
+                var courseBookingListItems = ``;
+               // var courseBlockHTML = `
+               //    <div class="d-flex align-items-center my-4">
+               //        <div class="">
+               //            <img src="${_courseBookingDetail.ClassQRCodeWithPath}" class="img-size-sm object-fit-cover mr-2" style="height:100px; width:100px;" />
+               //        </div>
+               //    </div>
+
+               //`;
+
+
+               //this is link of qrcode
+                //<a target="_blank" href="/Home/Certification?id=${_classBookingDetail.Id}&UserLoginId=${_classBookingDetail.UserLoginId}">
+                courseBookingListItems += bindFlexListItemHTML("CourseName Name", _courseBookingDetail.Name);
+                courseBookingListItems += bindFlexListItemHTML("Price", _courseBookingDetail.Price + "/-");
+                courseBookingListItems += bindFlexListItemHTML("Start Date", _courseBookingDetail.Startdate_FormatDates);
+                courseBookingListItems += bindFlexListItemHTML("End Date", _courseBookingDetail.Enddate_FormatDates);
+                courseBookingListItems += bindFlexListItemHTML("Student Name", _courseBookingDetail.StudentName);
+                courseBookingListItems += bindFlexListItemHTML("Group Name", _courseBookingDetail.GroupName);
+               // courseBookingListItems += courseBlockHTML;
+
+                orderListItems += bindFlexListItemHTML("Order #", _orderDetail.Id);
+                orderListItems += bindFlexListItemHTML("Date", _orderDetail.CreatedOn_FormatDate);
+                orderListItems += bindFlexListItemHTML("Discount", _orderDetail.TotalDiscount);
+                orderListItems += bindFlexListItemHTML("GST", _orderDetail.GST);
+                orderListItems += bindFlexListItemHTML("<b>Total Amount</b>", `<b>${_orderDetail.TotalAmount}/-</b>`);
+                orderListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                orderListItems += bindFlexListItemHTML("Payment Method", _orderDetail.PaymentMethod);
+                orderListItems += bindFlexListItemHTML("Payment Approved", (_paymentResponseDetail.Approved) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+                orderListItems += bindFlexListItemHTML("Transaction ID", _paymentResponseDetail.TransactionID);
+
+                $('#sectionBookingDetail').html(courseBookingListItems);
+                $('#sectionOrderDetails').html(orderListItems);
+
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+
+    function bindFlexListItemHTML(key, value) {
+        return `
+        <div class="d-flex d-flex h6 justify-content-between w-100">
+            <div><b>${key}: </b></div>
+            <div>${value}</div>
+        </div>
+        <hr class="mt-0 mb-0" />
+    `;
+    }
+
+
+
+</script>

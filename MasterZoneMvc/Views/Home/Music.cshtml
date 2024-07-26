@@ -1,0 +1,1115 @@
+﻿
+@{
+    Layout = null;
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music</title>
+    <!-- jquery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"
+            integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"
+            integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+          integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+          integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- fontawesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
+          integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="~/Content/assets/lightbox/css/lightbox.css" rel="stylesheet" />
+    <!-- font link -->
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/dataTables.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/datatables.responsive.bootstrap4.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+          integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <!-- font link end -->
+    <link rel="stylesheet" href="~/Content/assets/music-stylesheet.css">
+    <link href="~/Content/assets/frontend_common.css" rel="stylesheet" />
+
+    <script src="~/Content/assets/music-main.js"></script>
+    <style>
+        .back-title {
+            margin-top: -67px;
+        }
+
+        .cta a.primary-button:hover {
+            transform: translateY(-4px);
+            background: transparent;
+            border: 1px solid #f3a762;
+            text-decoration: unset;
+            color: #f3a762;
+        }
+
+        .slick-list {
+            flex: 1;
+        }
+
+        @@media(max-width : 800px) {
+            .video-inr iframe {
+                width: 346px;
+                height: 200px;
+            }
+        }
+
+        section#section-yoga-5 {
+            background: #f3a762 !important;
+        }
+    </style>
+
+</head>
+
+<body>
+    <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+    <!-- header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-main">
+                <div class="logo" id="BindBusinessLogoDetail">
+                    @*<a href="">
+                            <img src="~/Content/visitor-panel/image/dark logo.png" alt="logo" loading="lazy">
+                            <span class="logo-name">MASTER <br> ZONE</span>
+                        </a>*@
+                </div>
+                <div class="nav-sec">
+                    <div class="menu">
+                        <ul>
+                            <li><a href="#">Home</a></li>
+                            <li><a href="#about01">About</a></li>
+                            <li><a href="#plan01">Packages</a></li>
+                            <li><a href="#services01">Services</a></li>
+                            <li><a href="#gallery01">Video</a></li>
+                            <li><a href="#classes01">Classes </a></li>
+                            <li><a href="#events01">Events </a></li>
+                            <li><a href="#Profess01">Professionals </a></li>
+                            <li><a id="hdcntusbtn" href="#contact-us01">Contact Us </a></li>
+                        </ul>
+                    </div>
+                    <div class="mobile_menu navmain-opener"><span></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- banner section -->
+    <div id="MusicBannerImageDetail">
+        @*<div class="hero-banner" style="background-image: url('/Content/visitor-panel/image/hero-banner.jpg');">
+            <div class="container position-relative">
+                <div class="banner-text">
+                    <h1 class="heading-title">
+                        Learn The <span class="style-color"><span>Music</span></span> From The Masters
+                    </h1>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper
+                        mattis, pulvinar dapibus leo.
+
+                    </p>
+                    <a class="primary-button" href="#">
+                        Learn more
+                    </a>
+                </div>
+            </div>*@
+
+    </div>
+    </div>
+    <!-- banner section end -->
+
+    <section id="about01" class="music-sc-01 dance-sc-01 dance-sc-dnc01">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="dnc01-img-oterp" id="AboutImageDetail_Music">
+                        @*<img class="dnc-cl-img" src="~/Content/visitor-panel/image/guitar-abt-sc.png">*@
+                    </div>
+                </div>
+                <div class="col-sm-6 align-self-sm-center">
+                    <div class="dnc-cnt-wrap1" id="AboutDetailForMusicPage">
+                        <!--<h6 class="dnc-head-01 position-relative">ABOUT US</h6>
+                        <div class="dnc-cnt-01">
+                            <h3 class="dnc-cl-hd">#1 Music Studio.</h3>
+                            <p class="dnc-cl-txt-01 text-justify">
+                                Aeromint Studio is a dance school established in 1999.
+                                We aim to
+                                provide all students with the understanding and an insight into both technique and
+                                choreography to prepare them for the professional sector. Lorem ipsum dolor, sit amet
+                                consectetur
+                                adipisicing elit. Quia vel fugiat eum quasi delectus, ipsum, ducimus dolorum eaque in
+                                cum quo
+                                repudiandae dolore exercitationem nam aliquam? Consectetur molestias enim distinctio
+                                tenetur dolorum
+                                harum saepe laudantium atque maxime architecto reprehenderit, quaerat quam animi
+                                accusantium libero
+                                incidunt commodi, pariatur illum, minus soluta eaque omnis blanditiis modi recusandae?
+                                Minima assumenda
+                                iste illum temporibus?
+                            </p>-->
+                        <!-- <a href="#" class="btn btn-outline-dark rounded-pill ">Learn More</a> -->
+                        <!--</div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- upcoming plan grid -->
+    <div id="plan01" class="upcoming-grid">
+        <div class="container">
+            <div class="up-title">
+                <h2>Our Plans and Packages</h2>
+            </div>
+            <div class="upcoming-evt" id="BusinessUpComingPlan_Music">
+
+            </div>
+        </div>
+    </div>
+    <!-- service -->
+    <div id="services01" class="box-section">
+        <div class="container">
+            <div class="box-title" id="BusinessContentServiceDetail">
+                @*<div class="main-title">
+                        <span class="back-title">Our Services</span>
+                        <h3>
+                            Services What We Offer
+                        </h3>
+                    </div>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                        et dolore magna aliqua
+                    </p>*@
+            </div>
+            <div class="box-items">
+                <div class="box-main" id="BindBusinessContentServiceDetail">
+
+                    @*<div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/voice (1).png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Voice Recording
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/mixernew.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Sound Mixing
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/editing.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Audio Editing
+
+
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/record.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Live Recording
+
+
+
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/studio.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Mobile Studio
+
+
+
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/tracking.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Track Mastering
+
+
+
+
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/voice (1).png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Voice Recording
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/mixernew.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Sound Mixing
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/editing.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Audio Editing
+
+
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/record.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Live Recording
+
+
+
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/studio.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Mobile Studio
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-iner">
+                            <div class="box-inr">
+                                <div class="box-icon">
+                                    <img src="~/Content/visitor-panel/image/tracking.png" alt="voice">
+                                </div>
+                                <div class="box-content">
+                                    <h4>
+                                        Track Mastering
+                                    </h4>
+                                    <p>
+                                        Lorem ipsum dolor sit amet, consect adipiscing elit, sed do eiusmod tempor incididunt
+                                        ut labore et dolore
+
+                                    </p>
+                                    <a class="simple-button" href="">
+                                        Read more <i class="fa-solid fa-arrow-right-long"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>*@
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end  -->
+    <!-- studio section start -->
+    <div class="studio-sec" id="BindBusinessStudioEquipment_Section">
+        <div class="container">
+            <div class="studio-title" id="BusinessContentStudioEquipmentDetail">
+                @*<h6 class="sub-title"> What we use</h6>
+                    <h2>
+                        Studio Equipment
+                    </h2>*@
+            </div>
+            <ul class="tabs" id="BindBusinessContentStudioEquipmenttabDetail">
+                @*<li data-tab="#microphones">
+                        Microphones
+                    </li>
+                    <li data-tab="#monitors">
+                        Monitors
+                    </li>
+                    <li data-tab="#instruments">
+                        Instruments
+                    </li>
+
+                    <li data-tab="#software">
+                        Software
+                    </li>
+                    <li data-tab="#amps">
+                        Amps
+                    </li>*@
+
+            </ul>
+            <div class="tab-content">
+                <div id="microphones" class="tabbing">
+                    <ul class="multicol" id="BindBusinessContentStudioEquipmentlstDetail_ForMusic">
+                        @*<li>Slate ML-1 VMS</li>
+                            <li>The Kracken Sub Kick</li>
+                            <li>Nuemann KM 184 x2</li>
+                            <li>Lewitt LCT 940</li>
+                            <li>Rode NTK</li>
+                            <li>Electrovoice RE-20</li>
+                            <li>Sennheiser MKH 70</li>
+                            <li>Shure SM58-C</li>
+                            <li>Slate ML-1 VMS</li>
+                            <li>The Kracken Sub Kick</li>
+                            <li>Nuemann KM 184 x2</li>
+                            <li>Audio Technica AT2035</li>
+                            <li>Blue Microphones Bluebird SL</li>
+                            <li>AKG C214</li>
+                            <li>Rode NT1-A</li>*@
+                    </ul>
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+    <!-- end  -->
+    <!-- video section -->
+    <div id="gallery01" class="video-sec">
+        <div class="container">
+            <div class="video-title " id="BusinessContentVideoDetail">
+
+            </div>
+            <div class="video-section" id="BindBusinessContentVideoDetail">
+                @*<div class="video-items">
+                          <div class="video-inr">
+                              <video width="320" height="240" controls>
+                                  <source src="~/Content/videos/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
+                              </video>
+                          </div>
+                          <div class="video-des">
+                              <h4>New Year party</h4>
+                              <p>November 12,2016</p>
+                          </div>
+                    </div>*@
+
+            </div>
+
+        </div>
+    </div>
+    <div class="track-section" id="BindBusinessAudioDetail_Section">
+        <div id="BindAudioImageDetail">
+            @*<div class="left-track">
+                    <img src="~/Content/visitor-panel/image/tracks-left.png">
+                </div>
+                <div class="right-track">
+                    <img src="~/Content/visitor-panel/image/tracks-right.png">
+                </div>*@
+        </div>
+        <div class="page-center">
+            <div class="track-iner">
+                <div class="tack-title" id="BindBusinessContentAudioDetail">
+                    @*<h6 class="sub-title">
+                            Our portfolio
+                        </h6>
+                        <h2>
+                            Recent Records
+                        </h2>
+                        <p>
+                            Curabitur fermentum vitae eros eu porta. Curabitur et risus egestas, vulputate lacus eget,
+                            sodales odio. Mauris suscipit eleifend mauris. Curabitur fermentum.
+
+                        </p>*@
+                </div>
+                <div class="track-main" id="BusinessContentAudioListForVisitorPanel">
+                    @*<div class="name-audio">
+                            <div class="track-name">
+                                <h6>London Beats</h6>
+                                <p>Calvin Norris</p>
+
+                            </div>
+                            <div class="audio-track">
+                                <audio controls id="player" src="~/Content/audio/file_example_MP3_1MG.mp3"> </audio>
+                            </div>
+                        </div>
+                        <div class="name-audio">
+                            <div class="track-name">
+                                <h6>London Beats</h6>
+                                <p>Calvin Norris</p>
+
+                            </div>
+                            <div class="audio-track">
+                                <audio controls id="player" src="~/Content/audio/file_example_MP3_1MG.mp3"> </audio>
+                            </div>
+                        </div>
+                        <div class="name-audio">
+                            <div class="track-name">
+                                <h6>London Beats</h6>
+                                <p>Calvin Norris</p>
+
+                            </div>
+                            <div class="audio-track">
+                                <audio controls id="player" src="~/Content/audio/file_example_MP3_1MG.mp3"> </audio>
+                            </div>
+                        </div>
+                        <div class="name-audio">
+                            <div class="track-name">
+                                <h6>London Beats</h6>
+                                <p>Calvin Norris</p>
+
+                            </div>
+                            <div class="audio-track">
+                                <audio controls id="player" src="~/Content/audio/file_example_MP3_1MG.mp3"> </audio>
+                            </div>
+                        </div>
+                        <div class="name-audio">
+                            <div class="track-name">
+                                <h6>London Beats</h6>
+                                <p>Calvin Norris</p>
+
+                            </div>
+                            <div class="audio-track">
+                                <audio controls id="player" src="~/Content/audio/file_example_MP3_1MG.mp3"> </audio>
+                            </div>
+                        </div>
+                        <div class="name-audio">
+                            <div class="track-name">
+                                <h6>London Beats</h6>
+                                <p>Calvin Norris</p>
+
+                            </div>
+                            <div class="audio-track">
+                                <audio controls id="player" src="~/Content/audio/file_example_MP3_1MG.mp3"> </audio>
+                            </div>
+                        </div>*@
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- choose our classes -->
+    <div id="classes01" class="classes-section">
+        <div class="container">
+            <div class="classes-title" id="BindOurClassContentDetails_Music">
+               
+            </div>
+            <div class="classes_scrollbar_div">
+                <div class="card-main" id="BindOurClassesList_Music">
+
+                </div>
+                <div class="cta-inr">
+                    <a class="primary-button btsfkdslsl" href="javascript:;" id="BtnViewMoreClassList" onclick=" ViewMoreClassList();">Read more</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- upcoming events grid -->
+    <div id="events01" class="upcoming-grid">
+        <div class="container">
+            <div class="up-title">
+                <h2>Up Coming Events</h2>
+                <p id="BindEventSectionDescription_VisitorPanel">
+
+                </p>
+            </div>
+            <div class="upcoming-evt" id="BusinessUpComingEvents_Music">
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- start logo swap -->
+    <!-- end logo swap -->
+
+    <div id="sponsor01" class="our-sponsor-page logo-swap-sec">
+        <div class="container">
+            <div class="up-title">
+                <h2 class="text-white text-center">Our Sponsors</h2>
+            </div>
+            <div class="row logos-" id="BindEventSponser_Music">
+                @*<div class="col">
+                        <div class="logo-img">
+                            <img src="~/Content/visitor-panel/image/partner-1.png" alt="partner" loading="lazy">
+                            <div class="hover">
+                                <img src="~/Content/visitor-panel/image/partner-1.png" alt="partner" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="logo-img">
+                            <img src="~/Content/visitor-panel/image/partner-2.png" alt="partner" loading="lazy">
+                            <div class="hover">
+                                <img src="~/Content/visitor-panel/image/partner-2.png" alt="partner" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="logo-img">
+                            <img src="~/Content/visitor-panel/image/partner-3.png" alt="partner" loading="lazy">
+                            <div class="hover">
+                                <img src="~/Content/visitor-panel/image/partner-3.png" alt="partner" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="logo-img">
+                            <img src="~/Content/visitor-panel/image/partner-4.png" alt="partner" loading="lazy">
+                            <div class="hover">
+                                <img src="~/Content/visitor-panel/image/partner-4.png" alt="partner" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="logo-img">
+                            <img src="~/Content/visitor-panel/image/partner-5.png" alt="partner" loading="lazy">
+                            <div class="hover">
+                                <img src="~/Content/visitor-panel/image/partner-5.png" alt="partner" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="logo-img">
+                            <img src="~/Content/visitor-panel/image/partner-6.png" alt="partner" loading="lazy">
+                            <div class="hover">
+                                <img src="~/Content/visitor-panel/image/partner-6.png" alt="partner" loading="lazy">
+                            </div>
+                        </div>
+                    </div>*@
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- track section -->
+    <div id="Profess01" class="team-section">
+        <div class="container">
+            <div class="team-heading" id="ProfessionalInformation_MusicDetail">
+                @*<h2> Our Engineers </h2>
+                    <p> With us you will set yourself free.</p>*@
+            </div>
+            <div class="team-tranier" id="BussinessProfessionalDetail">
+
+
+            </div>
+        </div>
+    </div>
+    <!-- team section end -->
+    <!-- our service end -->
+
+    <section id="section-yoga-5" class="section sc-yg-01y">
+        <div class="container">
+            <div class="vd-heading">
+                <h2 class="text-center">Image Gallery </h2>
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 sc-5-y-sc-y">
+                    <div class="row mt-4" id="BindBusinessImages">
+                        @*<div class="col-md-4 col-sm-12 vd-w-txt">
+                                <a href="~/Content/visitor-panel/image/yg-sd-tmp1.jpg" data-lightbox="image-2">
+                                    <img src="~/Content/visitor-panel/image/yg-sd-tmp1.jpg"
+                                         class="yg-sc-img989dsfjsd">
+                                </a>
+                                <h5 class="vid-sc-head-32j vid-sc-head-32jab">
+                                    Watch our yoga class
+                                </h5>
+                                <p class="vid-sc-txtjfkljkj">Absolute beginners</p>
+                            </div>
+
+
+                            <div class="col-md-4 col-sm-12 vd-w-txt">
+                                <a href="image/yg-sd-tmp2.jpg" data-lightbox="image-3">
+                                    <img src="~/Content/visitor-panel/image/yg-sd-tmp2.jpg"
+                                         class="yg-sc-img989dsfjsd">
+                                </a>
+                                <h5 class="vid-sc-head-32j vid-sc-head-32jab">
+                                    Watch our yoga class
+                                </h5>
+                                <p class="vid-sc-txtjfkljkj">Upper body power</p>
+                            </div>
+                            <div class="col-md-4 col-sm-12 vd-w-txt">
+                                <a href="image/yg-sd-tmp2.jpg" data-lightbox="image-3">
+                                    <img src="~/Content/visitor-panel/image/yg-sd-tmp2.jpg"
+                                         class="yg-sc-img989dsfjsd">
+                                </a>
+                                <h5 class="vid-sc-head-32j vid-sc-head-32jab">
+                                    Watch our yoga class
+                                </h5>
+                                <p class="vid-sc-txtjfkljkj">Upper body power</p>
+                            </div>*@
+                    </div>
+                    @*<div class="row">
+                            <div class="col-md-4 col-sm-12 vd-w-txt">
+                                <a href="image/yg-sd-tmp3.jpg" data-lightbox="image-4">
+                                    <img src="~/Content/visitor-panel/image/yg-sd-tmp3.jpg"
+                                         class="yg-sc-img989dsfjsd">
+                                </a>
+                                <h5 class="vid-sc-head-32j vid-sc-head-32jab">
+                                    Watch our yoga class
+                                </h5>
+                                <p class="vid-sc-txtjfkljkj">Twisty flow </p>
+                            </div>
+                            <div class="col-md-4 col-sm-12 vd-w-txt">
+                                <a href="image/yg-sd-tmp4.jpg" data-lightbox="image-5">
+                                    <img src="~/Content/visitor-panel/image/yg-sd-tmp4.jpg"
+                                         class="yg-sc-img989dsfjsd">
+                                </a>
+                                <h5 class="vid-sc-head-32j vid-sc-head-32jab">
+                                    Watch our yoga class
+                                </h5>
+                                <p class="vid-sc-txtjfkljkj">The pigeon rodeo</p>
+                            </div>
+                            <div class="col-md-4 col-sm-12 vd-w-txt">
+                                <a href="image/yg-sd-tmp4.jpg" data-lightbox="image-5">
+                                    <img src="~/Content/visitor-panel/image/yg-sd-tmp4.jpg"
+                                         class="yg-sc-img989dsfjsd">
+                                </a>
+                                <h5 class="vid-sc-head-32j vid-sc-head-32jab">
+                                    Watch our yoga class
+                                </h5>
+                                <p class="vid-sc-txtjfkljkj">The pigeon rodeo</p>
+                            </div>
+                        </div>*@
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <div id="gym-event-page" class="info-featured  new-review-sectionscxdsds">
+        <div class="container">
+            <div class="pro-title dncevsc08">
+                <h2>
+                    Recent Reviews
+                    <span class="adrbtn-0">
+                        <a target="_blank" href="/Home/Review?UserLoginId=@ViewBag.BusinessOwnerLoginId" class="btn btn-outline-dark rwsc-addrwbt view-all-reviews ml-2">View All Reviews</a>
+                    </span>
+                    <span class="adrbtn-0">
+                        <a class="rwsc-addrwbt btn btn-outline-dark" onclick="ShowAddReviewPopup();">Add Review</a>
+                    </span>
+                </h2>
+            </div>
+            <div class="upcoming-evt dnc-rw-sc-crd" id="RatingReviewDetailCard"></div>
+        </div>
+    </div>
+
+    <!-- modal -->
+    <button class="d-none" id="btnAddReviewPoup" data-toggle="modal" data-target="#AddReviewPopup"></button>
+    <div id="AddReviewPopup" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content mdl-cnt-001m">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="exampleModalLabel" onclick="resetAddUpdateForm();">Add Review</h5>
+                    <button type="button" class="close close-mdl-jk" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="feedback" action="">
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <div class="review-stars">
+                                    <i class="fa-solid fa-star star-value" data-star-value="1"></i>
+                                    <i class="fa-solid fa-star star-value" data-star-value="2"></i>
+                                    <i class="fa-solid fa-star star-value" data-star-value="3"></i>
+                                    <i class="fa-solid fa-star star-value" data-star-value="4"></i>
+                                    <i class="fa-solid fa-star star-value" data-star-value="5"></i>
+                                </div>
+                                <input type="hidden" id="ratingInput" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pinfo">Write your feedback</div>
+                    <div class="form-group">
+                        <div class="col-md-12 inputGroupContainer">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-pencil" style="line-height: 4"></i></span>
+                                <textarea class="text form-control" id="review" rows="3"></textarea>
+                            </div>
+                            <div class="error-class" id="error_Instructor_RatingFeedback"></div>
+                        </div>
+                    </div>
+                    <div class="text-center"></div>
+                </form>
+                <div class="modal-footer border-0">
+                    <button id="mdl-frm-bt" type="button" class="btn btn-outline-dark frm-outsd" onclick="AddUpdate_ManageInstructorRating()">Submit</button>
+                    <button type="button" class="btn btn-outline-dark" data-dismiss="modal" onclick="resetAddUpdateForm();">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+    <div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup">
+        <div class="modal-dialog">
+            <div class="modal-content" style="align-items: center;">
+                <!-- Modal Header -->
+                <div class="modal-header w-100">
+                    <h4 class="modal-title">Please Login</h4>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body text-center pt-5 pb-5">
+                    <p>Please login to your account by click on below button</p>
+
+                    <div class="login_btn">
+                        <a id="loginButton" class="btn btn-outline-dark cstm-btn w-auto" href="/Home/Login">
+                            Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="contact-us01" class="contact-us-sc">
+        <footer class="footer container">
+            <div id="dance-contact-pj" class="footer-items">
+                <div class="page-center">
+                    <div class="col-flex">
+                        <div class="right-column">
+                            <div class="contact-heading" id="ContentDetail">
+
+                            </div>
+                            <div class="timming-section" id="BindBusinessTiming_Section">
+                                <div class="heading-inr d-flex">
+                                    <h2 class="form-heading-contact-us-page">Business Hours</h2>
+                                    <span class="text-light text-center text-sm font-weight-bold" id="closeBusinessDay"></span>
+                                </div>
+                                <div id="BindBusinessTiming"></div>
+                                <div class="align-content-center">
+                                    <h2 class="form-heading-contact-us-page-footer text-light">NOTE:</h2>
+                                    <span class="text-light text-center text-sm" id="BusinessNotes"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="left-form">
+                            <div class="forn-heading">
+                                <h3 class="text-white">Let's get in touch!</h3>
+                                @*<p>
+                                    Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+                                    Dolores quidem labore tenetur nostrum inventore obcaecati sequi eaque
+                                </p>*@
+
+                            </div>
+                            <form action="" id="contactForm">
+                                <div class="form_input">
+                                    <label for="firstname">Name</label>
+                                    <input type="text" id="text_Contact_Name" name="name" placeholder="Name">
+                                    <div class="error-class" id="error_text_Contact_Name"></div>
+                                </div>
+                                <div class="form_flex">
+
+                                    <div class="form_input">
+                                        <label for="email">Email Address </label>
+                                        <input type="email" id="text_Email_Address" name="email" placeholder="Your Email">
+                                        <div class="error-class" id="error_text_Email_Address"></div>
+                                    </div>
+
+                                    <div class="form_input">
+                                        <label for="phone">Phone Number</label>
+                                        <input type="text" id="text_phone" name="phone" placeholder="Your Phone">
+                                        <div class="error-class" id="error_text_phone"></div>
+                                    </div>
+                                </div>
+                                <div class="form_input">
+                                    <label for="textarea" id="text_Messages">Message</label>
+                                    <textarea placeholder="Message">
+    </textarea><div class="error-class" id="error_text_Messages"></div>
+                                </div>
+
+                                <button class="button--primary prmbtnbtjk" type="button" value="Submit" onclick=" btnSubmitUser();">Submit</button>
+                            </form>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- footer -->
+    <footer class="footer" id="BindBusinessAboutContactInformation_Section">
+        <div class="container">
+            <div class="row-sec">
+                <div class="col-lg-one">
+                    <div id="BindBusinessAboutDetail">
+                        @*<h4 class="uppercase">Music </h4>
+                            <p class="small">
+                                Vestibulum in ultrices justo. Praesent placerat justo metus, vitae malesuada lacus
+                                eleifend vel. Vivamus viverra volutpat leo, a gravida dolor posuere congue.
+                            </p>*@
+                    </div>
+                    <div class="footer-social" id="BusinessSocialDetail_Footer">
+                        @*<div class="social-icon">
+                                <a href=""><i class="fa-brands fa-facebook-f"></i> </a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-twitter"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>*@
+                    </div>
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">Quick Links</h5>
+                        <ul>
+                            <li><a href="#BindBusinessLogoDetail">Home</a></li>
+                            <li><a href="#about01">About</a></li>
+                            <li><a href="#Profess01">Instructors</a></li>
+                            <li><a href="#events01">Events</a></li>
+                            <li><a href="#services01">Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">
+                            Useful Links
+                        </h5>
+                        <ul>
+                            <li><a href="#Profess01">Professional</a></li>
+                            <li><a href="#gallery01">Video Gallery</a></li>
+                            <li><a href="#section-yoga-5">Image Gallery</a></li>
+                            <li><a href="#classes01">Classes</a></li>
+                            <li><a href="#plan01">Packages</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-two" id="BindContactDetailInformation">
+                    @*<h5>Contact Us</h5>
+                        <p>
+                            178 West 27th Street, Suite 527, New York NY 10012 United States
+                        </p>
+                        <a href="tel:1234567890">1234567890</a>
+                        <a href="mailto:company@yourname.com">company@yourname.com</a>*@
+                </div>
+
+            </div>
+        </div>
+    </footer>
+    <!-- copyright section -->
+    <div class="copyrights border-top pt-3" style="background-color: #f3a762;">
+        <div class="page-center">
+            <div class="row">
+
+                <div class="col-sm-12 col-md-6">
+                    <strong class="d-flex copyrights-text " style="white-space: nowrap;">
+                        <p class="text-white"> Copyright © 2023</p> <a class="copyright-company-name mr-2 ml-2" href="index.html"> Master Zone.</a>
+                        <p class="text-white">All rights reserved.</p>
+                    </strong>
+
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="float-md-right d-sm-inline-block">
+                        <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                            <p class="text-white text-center" id="footer-text" style="color: #869099;
+                            font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/Content/assets/lightbox/js/lightbox.js"></script>
+    <script>
+        lightbox.option({
+            'resizeDuration': 200,
+            'wrapAround': true
+        })
+
+
+        $('.studio-sec .tabs li:first').click();
+
+
+        $('.logo-flex').slick({
+            dots: true,
+            arrows: true,
+            infinite: true,
+            speed: 300,
+            slidesToShow: 6,
+            slidesToScroll: 1,
+            responsive: [
+                {
+                    breakpoint: 1024,
+                    settings: {
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        infinite: true,
+                        dots: true
+                    }
+                },
+                {
+                    breakpoint: 767,
+                    settings: {
+                        slidesToShow: 1,
+                        slidesToScroll: 1
+                    }
+                }
+            ]
+        });
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+            crossorigin="anonymous"></script>
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/business-panel/js/vendor/datatables.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/moment.min.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_MusicScriptPartial.cshtml")
+
+</body>
+</html>

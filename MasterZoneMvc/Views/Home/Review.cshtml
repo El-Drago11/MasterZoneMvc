@@ -1,0 +1,473 @@
+﻿
+@{
+    ViewBag.Title = "Review";
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+    long UserLoginId = ViewBag.UserLoginId;
+}
+
+@section Styles{
+
+    <link rel="stylesheet" href="~/Content/assets/stylesheet-cer.css">
+    <link rel="stylesheet" href="~/Content/assets/education-cer.css">
+    <link rel="stylesheet" href="~/Content/assets/class-stylesheet.css">
+    <link rel="stylesheet" href="~/Content/assets/index-stylesheet.css">
+    <link rel="stylesheet" href="~/Content/assets/review.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new.css">
+    <style>
+        .review-fl-lt .review-stars > i {
+            font-size: 28px;
+            color: #D3D3D3;
+        }
+        /* Add your custom CSS styles here */
+        .review-stars {
+            cursor: pointer;
+        }
+
+        .review-profile .verified img {
+            width: auto;
+        }
+    </style>
+    <style>
+
+        .review-profile .review-details .star-section i {
+            font-size: 30px;
+            color: #D3D3D3;
+        }
+
+        .review-It {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        .form-control {
+            display: block;
+            width: 55%;
+            height: calc(1.5em + 0.75rem + 2px);
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+    </style>
+    <style>
+        .progress-bar {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 24px; /* Separate bars from container */
+        }
+
+
+
+        .progress-title-holder {
+            padding-bottom: 7px;
+            position: relative;
+            margin: 5px 0;
+            font-family: Montserrat, sans-serif;
+            font-size: 15px;
+            line-height: 15px;
+            font-weight: 400;
+            color: #2e2e2e;
+        }
+
+        .progress-title {
+            z-index: 100;
+        }
+
+        .progress-number-wrapper {
+            width: 100%;
+            z-index: 10;
+        }
+
+        .progress-number-mark {
+            margin-bottom: 4px;
+            border-radius: 3px;
+            background-color: rgb(22,23,29);
+            padding: 0 8px;
+            position: absolute;
+            bottom: 0;
+            -moz-transform: translateX(-50%);
+            -o-transform: translateX(-50%);
+            transform: translateX(-50%);
+            -ms-transform: translateX(-50%);
+            -webkit-transform: translateX(-50%);
+        }
+
+        .progress-number-wrapper,
+        .progress-number-mark {
+            font-family: Open Sans, sans-serif;
+            font-size: 11px;
+            line-height: 24px;
+            height: 24px;
+            letter-spacing: 0px;
+            font-weight: 600;
+            font-style: normal;
+            text-transform: none;
+            color: #ffffff;
+        }
+
+        .down-arrow {
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-top: 3px solid #16171d;
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            -moz-transform: translateX(-50%);
+            -o-transform: translateX(-50%);
+            transform: translateX(-50%);
+            -ms-transform: translateX(-50%);
+            -webkit-transform: translateX(-50%);
+        }
+
+        .progress-content-outter {
+            height: 10px;
+            background-color: #eee;
+            border-radius: 10px;
+        }
+
+        .review-bar.checkbox-bar {
+            display: flex;
+        }
+
+        .checkbox-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .checkbox {
+            height: 15px;
+            width: 15px;
+            border: 1px solid #000;
+            flex: 0 0 auto;
+        }
+
+        .star-text {
+            color: #000;
+            margin: 0 10px;
+        }
+
+        .progress-content {
+            height: 10px;
+            background-color: var(--websitesColor);
+            width: 0%; /* Initial value */
+            border-radius: 10px;
+        }
+    </style>
+    <!-- slick slider -->
+
+}
+<input type="hidden" id="hiddenUserLoginId" value="@ViewBag.UserLoginId" />
+<div class="review-profile">
+    <div class="page-center" id="Instructor">
+        @*<div class="review-pro-col">
+                <div class="review-col-lt">
+                     <div class="review-details-iner">
+
+                         <div class="profile-review">
+
+                                <img src="~/Content/visitor-panel/image/profile-01.png" alt="img" loading="lazy">
+
+                         </div>
+                         <div class="review-details">
+                             <h4>Master Zone</h4>
+                 <div class="star-section">
+                     <i class="fa-solid fa-star"></i>
+                     <i class="fa-solid fa-star"></i>
+                     <i class="fa-solid fa-star"></i>
+                     <i class="fa-solid fa-star"></i>
+                     <i class="fa-solid fa-star"></i>
+                     <span>4.8</span>
+                 </div>
+                 <p>
+                     Reviews
+                     <span class="typography">7,104 - Excellent</span>
+                 </p>
+                 <div class="verified">
+                     <img src="~/Content/visitor-panel/image/shield.png" alt="shield">
+                     <span>VERIFIED COMPANY</span>
+                 </div>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+                <div class="review-col-rt">
+                    <div class="website-iner">
+                        <a href=""></a>
+                        <p>www.masterzone.com</p>
+                        <p>Visit This Websites</p>
+                    </div>
+                </div>*@
+    </div>
+</div>
+
+
+<!-- write a view section -->
+<div class="reviews-div">
+    <div class="page-center">
+        <div class="review-col-flex">
+            <div class="review-fl-lt">
+
+                <div class="review--lt-inr" style="display: inherit; ">
+                    <div class="review-It">
+                        <div class="user-img">
+                            <img src="~/Content/visitor-panel/image/user.png" alt="user" loading="lazy">
+                            <p> Write a Review</p><br />
+
+                        </div>
+
+                        @*<textarea name="description" class="form-control" id="training_description" placeholder="Write a review"></textarea>
+                            <div class="error-class" id="error_training_description"></div>*@
+
+
+
+                        <div class="review-stars">
+                            <i class="fa-solid fa-star star-value" data-star-value="1"></i>
+                            <i class="fa-solid fa-star star-value" data-star-value="2"></i>
+                            <i class="fa-solid fa-star star-value" data-star-value="3"></i>
+                            <i class="fa-solid fa-star star-value" data-star-value="4"></i>
+                            <i class="fa-solid fa-star star-value" data-star-value="5"></i>
+                        </div>
+                        <input type="hidden" id="ratingInput" />
+                    </div>
+                    <div class="col-md-12">
+                        <textarea name="description" id="Reviewdescription" rows="6" placeholder="Write a review"></textarea>
+                        <div class="error-class" id="error_Reviewdescription"></div>
+                    </div>
+
+                    @*<div class="col-md-12">
+                            <div class="input-group" style="width: 90%;">
+                                <span class="input-group-addon"></span>
+
+                                <select class="form-control" id="ratingstar">
+                                    <option value="0">Select Rating</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                                <div class="error-class" id="error_ratingstar"></div>
+                            </div>
+                        </div>*@
+
+                    <button type="button" class="btn btn-primary m-2" onclick="btnSubmitToReviewInfo();">Save</button>
+
+                </div>
+
+
+
+
+                <div class="reviews-box" id="ReviewProgress">
+                    @*<div class="styles_header">
+                            <div class="review-title">
+                                <h5>Reviews</h5>
+                                <span class="star"><i class="fa-solid fa-star"></i></span>
+                                <span class="rating">4.8</span>
+                            </div>
+                            <p class="typography">7,157 total</p>
+                        </div>
+                        <div class="review-bar">
+                            <div class="checkbox-bar">
+                                <div class="checkbox">
+
+                                </div>
+                                <div class="star-text">
+                                    <span>5 Star</span>
+                                </div>
+                                <div class="progress-bar" data-percentage="80%">
+
+                                    <div class="progress-content-outter">
+                                        <div class="progress-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkbox-bar">
+                                <div class="checkbox">
+                                </div>
+                                <div class="star-text">
+                                    <span>4 Star</span>
+                                </div>
+                                <div class="progress-bar" data-percentage="7%">
+
+                                    <div class="progress-content-outter">
+                                        <div class="progress-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkbox-bar">
+                                <div class="checkbox">
+                                </div>
+                                <div class="star-text">
+                                    <span>3 Star</span>
+                                </div>
+                                <div class="progress-bar" data-percentage="5%">
+
+                                    <div class="progress-content-outter">
+                                        <div class="progress-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkbox-bar">
+                                <div class="checkbox">
+                                </div>
+                                <div class="star-text">
+                                    <span>2 Star</span>
+                                </div>
+                                <div class="progress-bar" data-percentage="2%">
+
+                                    <div class="progress-content-outter">
+                                        <div class="progress-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkbox-bar">
+                                <div class="checkbox">
+                                </div>
+                                <div class="star-text">
+                                    <span>1 Star</span>
+                                </div>
+                                <div class="progress-bar" data-percentage="1%">
+
+                                    <div class="progress-content-outter">
+                                        <div class="progress-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>*@
+                </div>
+
+
+
+            </div>
+
+            <div class="review-fl-rt">
+                <div class="sidebar-section">
+                    <div class="title">
+                        <h6>Company activity</h6>
+                        <a href="">See all</a>
+                    </div>
+                    <div class="text-heading">
+                        <div class="text-title">
+                            <div class="svg-icon">
+                                <svg viewBox="0 0 16 16" class="icon_icon__ECGRl icon_appearance-default___4uy_" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 1.25v-1H4v1H0v14.5h16V1.25h-4v-1h-1v1H8.5v-1h-1v1H5Zm-1 1H1v12.5h14V2.25h-3v1h2v10.5H2V3.25h2v-1Zm1 1v-1h2.5v1H5Zm-1 1v.5h1v-.5h2.5v.5h1v-.5H11v.5h1v-.5h1v8.5H3v-8.5h1Zm7-1v-1H8.5v1H11Z"></path></svg>
+                            </div>
+                            <p> Claimed profile</p>
+                            <div class="hover-text">
+                                <p>
+                                    By claiming their Trustpilot profile, this company can reply to reviews, ask customers to write reviews, and more.
+                                    Any company can claim their profile and ask customers to review them for free <a href="">learn more</a>
+                                </p>
+
+                            </div>
+                        </div>
+                        <div class="text-title hover-two">
+                            <div class="svg-icon">
+                                <svg viewBox="0 0 16 16" class="icon_icon__ECGRl icon_appearance-default___4uy_" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.143 16 16 0 0 6.857l5.714 3.429L9.143 16ZM6 9.295l-3.815-2.29 10.683-4.578L6 9.295Zm.705.705 6.868-6.868-4.578 10.683L6.705 10Z"></path></svg>
+                            </div>
+                            <p> Asks for reviews — positive or negative</p>
+                            <div class="hover-text">
+                                <p>
+                                    This company actively asks customers to write reviews using Trustpilot’s invitation services. This may result in a more representative star rating.<a href="">learn more</a>
+                                </p>
+
+                            </div>
+                        </div>
+                        <div class="text-title hover-three">
+                            <div class="svg-icon">
+                                <svg viewBox="0 0 16 16" class="icon_icon__ECGRl icon_appearance-default___4uy_" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px"><path d="M8.4 2v1.143a2.9 2.9 0 0 1 2.36 2.374l-.986.166A1.9 1.9 0 0 0 7.9 4.1C6.792 4.1 6 4.806 6 5.8c0 .484.208.828.557 1.1.367.285.886.483 1.454.612.632.143 1.313.383 1.846.798.552.43.943 1.05.943 1.89 0 1.475-1.076 2.463-2.4 2.663V14h-1v-1.143A2.9 2.9 0 0 1 5 10h1a1.9 1.9 0 0 0 1.9 1.9c1.108 0 1.9-.707 1.9-1.7 0-.484-.209-.83-.557-1.101-.367-.286-.886-.483-1.453-.611h-.001c-.632-.145-1.313-.385-1.846-.8C5.392 7.26 5 6.642 5 5.8c0-1.475 1.076-2.464 2.4-2.663V2h1Z"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0Zm-1 0A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path></svg>
+                            </div>
+                            <p>Pays for extra features</p>
+                            <div class="hover-text">
+                                <p>
+                                    Companies that subscribe to Trustpilot’s paid plans have access to more review invitations, business support, and  <a href="">other features.</a>
+                                </p>
+
+                            </div>
+                        </div>
+                        <div class="text-title hover-four">
+                            <div class="svg-icon">
+                                <svg viewBox="0 0 16 16" class="icon_icon__ECGRl icon_appearance-default___4uy_" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.25.975H4.246A4.25 4.25 0 0 0 2.5 9.085v3.847l3.457-3.457h.299c.049.854.4 1.664.994 2.276a3.39 3.39 0 0 0 2.432 1.036h1.332l2.861 2.945v-3.3a3.468 3.468 0 0 0 1.47-1.402 3.595 3.595 0 0 0 .413-2.355 3.54 3.54 0 0 0-1.156-2.084 3.41 3.41 0 0 0-1.16-.667A4.25 4.25 0 0 0 9.25.975Zm3.912 5.91a4.248 4.248 0 0 1-3.912 2.59H7.258c.048.596.299 1.157.71 1.58a2.39 2.39 0 0 0 1.714.732h1.754l1.439 1.48V11.76l.325-.122c.534-.2.986-.587 1.275-1.098a2.594 2.594 0 0 0 .296-1.7 2.54 2.54 0 0 0-.827-1.495 2.41 2.41 0 0 0-.782-.458ZM2.175 2.749a3.25 3.25 0 0 1 2.077-.773H9.25a3.25 3.25 0 0 1 0 6.5H5.543L3.5 10.518V8.4l-.33-.12a3.25 3.25 0 0 1-.995-5.532Z"></path></svg>
+                            </div>
+                            <p> Replied to 5 out of 60 negative reviews</p>
+                            <div class="hover-text">
+                                <p>
+                                    Trustpilot regards 1 and 2-star reviews as negative. Data is based on the last 12 months, and all days of the week are taken into account. <a href=""> Read more</a>
+                                </p>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+<div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup" style="padding: 196px 1px 169px 347px;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="width: 50%; align-items: center;">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Please Login</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button id="submitEnquiry" type="button" class="btn btn-outline-dark cstm-btn w-auto">
+                    <a href="/Home/Login">
+                        Login
+                    </a>
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+
+    <script>
+        jQuery(document).ready(function () {
+
+            jQuery('.progress-bar').each(function () {
+                jQuery(this).find('.progress-content').animate({
+                    width: jQuery(this).attr('data-percentage')
+                }, 2000);
+
+                jQuery(this).find('.progress-number-mark').animate(
+                    { left: jQuery(this).attr('data-percentage') },
+                    {
+                        duration: 2000,
+                        step: function (now, fx) {
+                            var data = Math.round(now);
+                            jQuery(this).find('.percent').html(data + '%');
+                        }
+                    });
+            });
+        });
+    </script>
+
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    @Html.Partial("~/Views/Shared/ScriptPartials/VisitorPanel/_ManageReviewScriptPartial.cshtml")
+
+}
+
+
+
+

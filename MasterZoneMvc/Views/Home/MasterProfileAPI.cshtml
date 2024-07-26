@@ -1,0 +1,995 @@
+﻿
+@{
+    Layout = null;
+    ViewBag.Title = "MasterProfileAPI";
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.3.3/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/js/bootstrap.min.js"></script>
+
+    <!-- jquery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js" integrity="sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- slick slider -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js" integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- fontawesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- font link -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
+    <!-- font link end -->
+    <link rel="stylesheet" href="~/Content/visitor-panel/css/stylesheet.css">
+    @*<link href="~/Content/visitor-panel/classic-dance/css/stylesheet.css" rel="stylesheet"/>*@
+    <link href="~/Content/assets/frontend_common.css" rel="stylesheet" />
+    <link href="~/Content/assets/MasterProfileAPI.css" rel="stylesheet" />
+    <link href="~/Content/assets/lightbox/css/lightbox.css" rel="stylesheet" />
+    <script src="~/Scripts/js/main.js"></script>
+    <script src="~/Content/visitor-panel/Masterpro/js/main.js"></script>
+</head>
+<body class="index-template">
+    <input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+
+    <!-- header -->
+    <header class="header">
+        <div class="page-center">
+            <div class="header-main">
+                <div class="logo" id="BindBusinessLogoDetail">
+                    @*<a href="index.html">
+                            <img src="~/Content/visitor-panel/image/LOGO.png" alt="logo" loading="lazy">
+                        </a>*@
+                </div>
+                <div class="nav-sec">
+                    <div class="menu">
+                        <ul>
+                            <li><a class="active_menu" href="/Home/MasterProfileAPI?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Home</a></li>
+                            <li><a href="/Home/MasterInstructors?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Instructor </a></li>
+                            <li><a href="/Home/MemberShip?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Membership</a></li>
+                            <li><a href="/Home/TimeTable?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Time Table</a></li>
+                            <li><a href="/Home/BusinessRoom?businessOwnerLoginId=@ViewBag.BusinessOwnerLoginId">Room</a></li>
+                            <li><a href="#contactsection">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div class="mobile_menu navmain-opener"><span></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="hero-banner-video" id="BindBusinessBannerDetail">
+        @*<video width="100%" height="100%" autoplay muted loop>
+                <source src="~/Content/videos/ScreenFlow.mp4" type="video/mp4">
+            </video>
+            <div class="banner-content">
+                <h1>DANCE STUDIO </h1>
+                <h4>DANCE CLASSES FOR EVERYBODY </h4>
+            </div>*@
+    </div>
+    <!-- about section -->
+    <div class="about-section">
+        <div class="page-center">
+            <div class="about-col">
+                <div class="ab-lf">
+                    <div class="text-inr" id="BindBusinessAboutDetail">
+                        @*<p>Lorem ipsum dolor</p>
+                            <h4>Welcome To Our <span class="highlight"> Classical Dance  </span> </h4>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus eveniet.</p>
+                            <p>
+                                Ipsum dolor sit amet, consectetur adipisicing elit. Soluta doloremque assumenda reprehenderit
+                                architecto distinctio expedita nulla, quam laudantium
+                                dolor suscipit praesentium eveniet placeat quas, nisi asperiores nihil quibusdam dolorum.
+                            </p>*@
+                    </div>
+                    <div class="icon-txt-main" id="BindAboutServiceDetail">
+                        @*<div class="icon-text">
+                                <div class="icon-in">
+                                    <img src="~/Content/visitor-panel/image/ballet.png" alt="icon" loading="lazy">
+                                </div>
+                                <div class="text">
+                                    <h6>Classical Dance</h6>
+                                    <p>Lorem ipsum dolor sit.</p>
+                                </div>
+                            </div>
+                            <div class="icon-text">
+                                <div class="icon-in">
+                                    <img src="~/Content/visitor-panel/image/ballet.png" alt="icon" loading="lazy">
+                                </div>
+                                <div class="text">
+                                    <h6>Classical Dance</h6>
+                                    <p>Lorem ipsum dolor sit.</p>
+                                </div>
+                            </div>
+                            <div class="icon-text">
+                                <div class="icon-in">
+                                    <img src="~/Content/visitor-panel/image/ballet.png" alt="icon" loading="lazy">
+                                </div>
+                                <div class="text">
+                                    <h6>Classical Dance</h6>
+                                    <p>Lorem ipsum dolor sit.</p>
+                                </div>
+                            </div>
+                            <div class="icon-text">
+                                <div class="icon-in">
+                                    <img src="~/Content/visitor-panel/image/ballet.png" alt="icon" loading="lazy">
+                                </div>
+                                <div class="text">
+                                    <h6>Classical Dance</h6>
+                                    <p>Lorem ipsum dolor sit.</p>
+                                </div>
+                            </div>*@
+                    </div>
+                </div>
+                <div class="ab-rt" id="BindAboutImageDetail">
+                    @*<img src="~/Content/visitor-panel/image/kath-png.png" alt="sports">*@
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end about -->
+    <!-- our training classes -->
+    <div class="our-training-section">
+        <div class="page-center">
+            <div class="traning-title" id="BindBusinessExploreDetail">
+                @*<h2>OUR CLASSES</h2>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Morbi et arcu condimentum libero auctor commodo.
+                        Ut vitae dui in urna imperdiet bibendum.
+                    </p>*@
+            </div>
+            <div class="training-col">
+                <div class="training-lt-col">
+                    <ul class="training-tab-list">
+                        <li data-tab="#training_one">
+                            <a class="icon-img-text" onclick="GetAllBusinessFindMasterProfileList('Training')" href="javascript:GetAllBusinessFindMasterProfileList('Training');" style="color: black;">
+                                <img src="~/Content/visitor-panel/image/icon-dumble.png" alt="img" loading="lazy">
+                                <h6>Find Training</h6>
+
+                            </a>
+                        </li>
+                        <li data-tab="#training_second" onclick="GetAllBusinessFindMasterProfileList('Instructor');">
+                            <a class="icon-img-text" @*href="javascript:GetAllBusinessFindMasterProfileList('Instructor');"*@
+                               style="color: black;">
+                                <img src="~/Content/visitor-panel/image/icon-dumble.png" alt="img" loading="lazy">
+                                <h6>Find Instructor </h6>
+                            </a>
+                        </li>
+                        <li data-tab="#training_three" onclick="GetAllBusinessFindMasterProfileList('Event');">
+                            <a class="icon-img-text" @*href="javascript:GetAllBusinessFindMasterProfileList('Becomes');"*@
+                               style="color: black;">
+                                <img src="~/Content/visitor-panel/image/icon-dumble.png" alt="img" loading="lazy">
+                                <h6>Find Event</h6>
+                            </a>
+                        </li>
+                        <li data-tab="#training_fourth" onclick="GetAllBusinessFindMasterProfileList('Classes');">
+                            <a class="icon-img-text" @*href="javascript:GetAllBusinessFindMasterProfileList('Classes');"*@
+                               style="color: black;">
+                                <img src="~/Content/visitor-panel/image/icon-dumble.png" alt="img" loading="lazy">
+                                <h6>Find a class</h6>
+                            </a>
+                        </li>
+
+
+                    </ul>
+                    @*<div class="view-all">
+                            <a class="primary-button" href="#">View All Schedules</a>
+                        </div>*@
+                </div>
+                <div class="training-rt-col">
+                    <div class="training-tabbing" id="BindBusinessContentFindMasterProfileDetailList">
+                        @*<div class="tab-img" id="training_one">
+                                <img src="~/Content/visitor-panel/image/bg-banner.jpg" alt="img" loading="lazy">
+                                <div class="box-text">
+                                    <h3>Find Training</h3>
+                                    <p>
+                                        Phasellus convallis mauris sed elementum vulputate. Donec posuere leo sed dui eleifend hendrerit. Sed suscipit suscipit erat, sed vehicula ligula. Aliquam ut sem fermentum sem tincidunt lacinia gravida aliquam nunc. Morbi quis erat imperdiet, molestie nunc ut, accumsan diam.
+                                    </p>
+                                    <a class="primary-button" href="#">View Schedule</a>
+                                </div>
+
+                            </div>
+                            <div class="tab-img" id="training_second">
+                                <img src="~/Content/visitor-panel/image/bhangra.jpg" alt="img" loading="lazy">
+                                <div class="box-text">
+                                    <h3>Find Instructor </h3>
+                                    <p>
+                                        Phasellus convallis mauris sed elementum vulputate. Donec posuere leo sed dui eleifend hendrerit. Sed suscipit suscipit erat, sed vehicula ligula. Aliquam ut sem fermentum sem tincidunt lacinia gravida aliquam nunc. Morbi quis erat imperdiet, molestie nunc ut, accumsan diam.
+                                    </p>
+                                    <a class="primary-button" href="new-instructor.html">View Schedule</a>
+                                </div>
+
+                            </div>
+                            <div class="tab-img" id="training_three">
+                                <img src="~/Content/visitor-panel/image/bg-banner.jpg" alt="img" loading="lazy">
+                                <div class="box-text">
+                                    <h3>Become</h3>
+                                    <p>
+                                        Phasellus convallis mauris sed elementum vulputate. Donec posuere leo sed dui eleifend hendrerit. Sed suscipit suscipit erat, sed vehicula ligula. Aliquam ut sem fermentum sem tincidunt lacinia gravida aliquam nunc. Morbi quis erat imperdiet, molestie nunc ut, accumsan diam.
+
+                                    </p>
+                                    <a class="primary-button" href="instructor-training.html">View Schedule</a>
+                                </div>
+
+                            </div>
+                            <div class="tab-img" id="training_fourth">
+                                <img src="~/Content/visitor-panel/image/bhangra.jpg" alt="img" loading="lazy">
+                                <div class="box-text">
+                                    <h3>Find a class</h3>
+                                    <p>
+                                        Phasellus convallis mauris sed elementum vulputate. Donec posuere leo sed dui eleifend hendrerit. Sed suscipit suscipit erat, sed vehicula ligula. Aliquam ut sem fermentum sem tincidunt lacinia gravida aliquam nunc. Morbi quis erat imperdiet, molestie nunc ut, accumsan diam.
+
+                                    </p>
+                                    <a class="primary-button" href="#">View Schedule</a>
+                                </div>
+
+                            </div>*@
+
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+    <!--  our training classes end -->
+    <!-- events slider -->
+    <div class="event-slider-sec" id="eventsection">
+        <div class="page-center">
+            <div class="title">
+                <h2>Acro Events</h2>
+                <p id="BindEventDescription">
+                    @*Aenean consectetur viverra molestie.
+                        Integer vitae faucibus augue. Etiam ac ultricies urna. In fringilla lorem varius auctor tempus.*@
+                </p>
+            </div>
+
+
+
+            <div class="events-slider slider-single" id="BindBusinessSingleEventDetail">
+                @*<div class="event-flex">
+
+                        <div class="event-left">
+                            <div class="event-img">
+                                <img src="~/Content/visitor-panel/image/event1.jpg" alt="events" loading="lazy">
+                                <div class="slider-cap">
+                                    <p><strong>Pellentesque habitant</strong></p>
+                                    <span class="date">27 June, 2018</span>
+                                </div>
+                            </div>
+
+                            <div class="event-right">
+
+                                <div class="event-dtls">
+                                    <h3 class="title-heading">Pellentesque habitant, rutrum pretium lacus. Etiam egestas, metus </h3>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <a class="arrow-right" href="#">
+                                        <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z" /></svg>
+                                    </a>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="event-flex">
+                        <div class="event-left">
+                            <div class="event-img">
+                                <div class="slider-cap">
+                                    <p><strong>Pellentesque habitant</strong></p>
+                                    <span class="date">27 June, 2018</span>
+                                </div>
+                                <img src="~/Content/visitor-panel/image/event2.jpg" alt="events" loading="lazy">
+                            </div>
+
+                            <div class="event-right">
+                                <div class="event-dtls">
+                                    <h3 class="title-heading">Pellentesque habitant, rutrum pretium lacus. Etiam egestas, metus </h3>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <a class="arrow-right" href="#">
+                                        <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z" /></svg>
+                                    </a>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="event-flex">
+                        <div class="event-left">
+                            <div class="event-img">
+                                <img src="~/Content/visitor-panel/image/event3.jpg" alt="events" loading="lazy">
+                                <div class="slider-cap">
+                                    <p><strong>Pellentesque habitant</strong></p>
+                                    <span class="date">27 June, 2018</span>
+                                </div>
+                            </div>
+
+                            <div class="event-right">
+
+                                <div class="event-dtls">
+                                    <h3 class="title-heading">Pellentesque habitant, rutrum pretium lacus. Etiam egestas, metus </h3>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <a class="arrow-right" href="#">
+                                        <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z" /></svg>
+                                    </a>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="event-flex">
+                        <div class="event-left">
+                            <div class="event-img">
+                                <img src="~/Content/visitor-panel/image/event4.jpg" alt="events" loading="lazy">
+
+                                <div class="slider-cap">
+                                    <p><strong>Pellentesque habitant</strong></p>
+                                    <span class="date">27 June, 2018</span>
+                                </div>
+                            </div>
+
+                            <div class="event-right">
+
+                                <div class="event-dtls">
+                                    <h3 class="title-heading">Pellentesque habitant, rutrum pretium lacus. Etiam egestas, metus </h3>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <div class="description">
+                                        <p>onsectetur adipiscing elit. Vestibulum vel erat enim. Integer mattis id magna vel pellentesque. Nunc nisl purus, sagittis sed nulla nec, rutrum pretium lacus. Etiam egestas, metus </p>
+                                    </div>
+                                    <a class="arrow-right" href="#">
+                                        <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z" /></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>*@
+            </div>
+
+            <div class="events-sm-cards slider-nav" id="BindBusinessEventDetailList" style="display: flex;">
+                @*<div class="sm-cards-iner">
+                        <div class="event-sm-items">
+                            <div class="img-card">
+                                <img src="~/Content/visitor-panel/image/enent-thumb1.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="card-content">
+                                <h6>Pellentesque habitant</h6>
+                                <p class="date">27 June, 2018</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sm-cards-iner">
+                        <div class="event-sm-items">
+                            <div class="img-card">
+                                <img src="~/Content/visitor-panel/image/enent-thumb2.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="card-content">
+                                <h6>Pellentesque habitant</h6>
+                                <p class="date">27 June, 2018</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sm-cards-iner">
+                        <div class="event-sm-items">
+                            <div class="img-card">
+                                <img src="~/Content/visitor-panel/image/enent-thumb3.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="card-content">
+                                <h6>Pellentesque habitant</h6>
+                                <p class="date">27 June, 2018</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sm-cards-iner">
+                        <div class="event-sm-items">
+                            <div class="img-card">
+                                <img src="~/Content/visitor-panel/image/enent-thumb4.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="card-content">
+                                <h6>Pellentesque habitant</h6>
+                                <p class="date">27 June, 2018</p>
+                            </div>
+                        </div>
+                    </div>*@
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- our courses -->
+    <div class="our-courses">
+        <div class="page-center">
+            <div class="title">
+                <h2>Our Classes</h2>
+            </div>
+
+            <div class="button-group filters-button-group" id="BindBusinessClassCategoryDetail">
+                @*<button class="button is-checked" data-filter="*">show all</button>*@
+                @*<button class="button" data-filter=".zumba">Zumba Dance</button>
+                    <button class="button" data-filter=".bharathanatym">Bharathanatym </button>
+                    <button class="button" data-filter=".kathak">Kathak Dance</button>
+                    <button class="button" data-filter=".yoga">Yoga</button>*@
+            </div>
+
+            <div id="BindBusinessShowAllClassDetail">
+
+            </div>
+            <div class="show-cta">
+                <a class="primary-button" href="javascript:;" onclick="ViewMoreAllClasses()" id="BtnViewMoreAllClass">show more</a>
+            </div>
+            <div class="show-cta">
+                <a class="primary-button" href="javascript:;" onclick="ViewMoreAllClassCategoryDetail()" id="BtnViewMoreAllClassCategory">show more</a>
+            </div>
+
+
+
+
+        </div>
+    </div>
+
+    <!-- our branches -->
+    <!-- our branches section-->
+    <div id="AllBranchCard_Section">
+        <div class="our-branches" id="BindBranches_Section">
+            <div class="maintitle_Franchise">
+                <div class="subtitle_Franchise" style="background-image: url(/Content/visitor-panel/image/section-title.svg);">Our Franchise</div>
+                <h2 class="heading-title">Franchise</h2>
+            </div>
+            <div class="page-center">
+                <div class="branche-tag" id="Countryname">
+
+                </div>
+                <div class="branches-table-section">
+                    <div class="table-heading">
+                        <div class="heading-item branches-city">
+                            City/ State
+                        </div>
+                        <div class="heading-item number-of-branches">
+                            Total no of Branches
+                        </div>
+                        <div class="heading-item "></div>
+                        <div class="heading-item "></div>
+                    </div>
+                    <div class="branches-items-flex">
+                        <div class="branches-row ">
+
+                            <div class="branches-item ">
+                                <ul class="listing-iner" id="BusinessBranchesAddressDetaillst">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="branches-row " id="BusinessBranchesTotalRecordDetail">
+
+                        </div>
+                        <div class="branches-row" id="BusinessBranchLogoDetail">
+
+                        </div>
+                        <div class="branches-row " id="BindBusinessBranchViewDetail">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Our branches card -->
+        <div class="branches-cards-section d-none" id="branch_card">
+            <div class="page-center">
+
+                <div class="branches-cards-tabs" id="bangalore_karnatka">
+                    <div class="branches-cards-title" id="BusinessAddressDetail">
+
+                    </div>
+                    <div class="branch-card-sec-flex" id="BusinessContentBranchLocationDetail">
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    @*---------Course details start--------*@
+    <div id="table-sectionid" class="table-section course-section">
+        <div class="page-center">
+            <div class="table-responsive" id="BindCourseWithcertificate">
+                <h3>Training provided for the following courses </h3>
+
+                <table id="customers">
+                    <tr>
+                        <th>ID</th>
+                        <th>Course Name</th>
+                        <th>Duration</th>
+                        <th>Start Date</th>
+                        <th>Get Details</th>
+                    </tr>
+                    <tbody id="BusinessCourseInfoWithCertificate" class="BusinessCourseDetailmoredetails">
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div id="BindLicensedCourseDetail_Section">
+                <h3>
+                    Training and certification provided for the following courses
+                </h3>
+                <table id="customers">
+                    <tr>
+                        <th>ID</th>
+                        <th>Course Name</th>
+                        <th>Duration</th>
+                        <th>Start Date</th>
+                        <th>Get Details</th>
+                    </tr>
+                    <tbody id="BusinessCourseDetailCertificateExam">
+                    </tbody>
+
+                </table>
+            </div>
+
+            @*Affilated University  *@
+            <div class="univercity-tab" id="BindBusinessUniversityImage_Section">
+                <div class="container">
+                    <div class="uni-col">
+                        <div class="uni-left">
+                            <div class="title-uni">
+                                <h2>
+                                    Affiliated from the following Universities
+                                </h2>
+                            </div>
+                            <div class="tabbing-img" id="BindBusinessUniversityImageDetail">
+
+                            </div>
+                        </div>
+                        <div class="uni-right">
+                            <div class="title-uni">
+                                <h2>
+                                    Affiliated from the following Universities
+                                </h2>
+                            </div>
+                            <ul class="tab-left-side-contenttion-inner mt-4" id="BindBusinessContentUniversityLogoDetailList">
+                            </ul>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    @*---------Course details end--------*@
+
+
+
+    <!-- gallery section -->
+    <div class="gallery-section">
+        <div class="page-center">
+            <div class="video-col">
+                <div class="video-lt">
+
+                    <div class="video-content" id="Video_content">
+
+                    </div>
+                    <div class="main-video" id="SingleVideoDetail">
+
+                    </div>
+                    @*<div class="video-content">
+                            <h2>Our Gallery</h2>
+                            <p>
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce efficitur hendrerit tellus ac rutrum
+                            </p>
+                        </div>
+                        <div class="main-video">
+                            <video width="320" height="240" controls>
+                                <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                            </video>
+                        </div>*@
+                </div>
+                <div class="video-rt">
+                    <div class="video-iner-sec" id="BusinessVideoDetail">
+                        @*<div class="video-items">
+                                <video width="320" height="240" controls>
+                                    <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                                </video>
+                                <h6>Lorem ipsum </h6>
+                            </div>
+                            <div class="video-items">
+                                <video width="320" height="240" controls>
+                                    <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                                </video>
+                                <h6>Lorem ipsum </h6>
+                            </div>
+                            <div class="video-items">
+                                <video width="320" height="240" controls>
+                                    <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                                </video>
+                                <h6>Lorem ipsum </h6>
+                            </div>
+                            <div class="video-items">
+                                <video width="320" height="240" controls>
+                                    <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                                </video>
+                                <h6>Lorem ipsum </h6>
+                            </div>
+                            <div class="video-items">
+                                <video width="320" height="240" controls>
+                                    <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                                </video>
+                                <h6>Lorem ipsum </h6>
+                            </div>
+                            <div class="video-items">
+                                <video width="320" height="240" controls>
+                                    <source src="~/Content/videos/yoga.mp4" type="video/mp4">
+                                </video>
+                                <h6>Lorem ipsum </h6>
+                            </div>*@
+                    </div>
+                </div>
+
+            </div>
+            @*<div class="gallery-more">
+                    <a class="primary-button" href="gallery-page.html">See more</a>
+                </div>*@
+        </div>
+
+
+    </div>
+
+    <!-- contact Us section -->
+    <div class="contact-us-section" id="contactsection">
+        <div class="page-center">
+            <div class="contact-title">
+                <h2>CONTACT US</h2>
+            </div>
+        </div>
+    </div>
+    <div class="contact-form">
+        <div class="page-center">
+
+            <div class="contact-form-flex">
+                <div class="contact-form-lt">
+                    <div class="form-heading" id="BindContactInfomation">
+
+                    </div>
+                    <div class="contact_info_sec" id="BindBusinessContactDetail">
+
+
+                    </div>
+
+
+                </div>
+                <div class="contact-form-rt">
+                    <form>
+                        <div class="form-filed">
+
+                            <input type="text" id="text_Contact_Name" placeholder="Full Name" required />
+                            <div class="error-class" id="error_text_Contact_Name"></div>
+                        </div>
+                        <div class="form-filed">
+                            <input type="email" id="text_Email_Address" placeholder="Email" required />
+                            <div class="error-class" id="error_text_Email_Address"></div>
+                        </div>
+                        <div class="form-filed">
+                            <input type="number" id="text_phone" placeholder="Phone Number" required />
+                            <div class="error-class" id="error_text_phone"></div>
+                        </div>
+                        <div class="form-filed">
+                            <textarea required placeholder="Message" id="text_Messages"></textarea>
+                            <div class="error-class" id="error_text_Messages"></div>
+                        </div>
+                        <input type="button" class="primary-button" value="Send message" onclick=" btnSubmitUser();">
+                    </form>
+                </div>
+                <div class="contact-col-businesshours">
+
+                    <div class="businessHours">Business Hours  <span class="text-center text-sm font-weight-bold ml-4 color-red" id="closeBusinessDay"></span></div>
+                    <div class="businesshours_details">
+                        <div id="BindBusinessTiming">
+
+                        </div>
+                        <div class="businessHours mt-4"><div class="color-red">Notes</div>  <span class="text-center text-sm font-weight-bold ml-4" id="BusinessNotes"></span></div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- footer -->
+    <footer class="footer">
+        <div class="page-center">
+            <div class="row-sec">
+                <div class="col-lg-one">
+                    <div class="footer-logo" id="BinsBusinessContentAboutDetail">
+
+                        @*<a href="index.html">
+                                <img src="~/Content/visitor-panel/image/LOGO.png" alt="logo" loading="lazy">
+                            </a>
+                            <div class="logo-title">
+                                <h6>NrityamRuchi Academy Of Performing Arts </h6>
+                            </div>
+
+                                        <p class="small">Vestibulum in ultrices justo. Praesent placerat justo metus, vitae malesuada lacus eleifend vel. Vivamus viverra volutpat leo, a gravida dolor posuere congue.</p>*@
+                    </div>
+                    <div class="footer-social" id="BusinessSocialDetail_Footer">
+                        @*<div class="social-icon">
+                                <a href=""><i class="fa-brands fa-facebook-f"></i>	</a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-twitter"></i></a>
+                            </div>
+                            <div class="social-icon">
+                                <a href=""><i class="fa-brands fa-instagram"></i></a>
+                            </div>*@
+                    </div>
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">Quick Links</h5>
+                        <ul>
+                            <li>
+                                <a href="#">Home</a>
+                            </li>
+                            <li>
+                                <a href="#BindBusinessAboutDetail">About Us</a>
+                            </li>
+
+                            <li>
+                                <a href="#eventsection">Event</a>
+                            </li>
+                            <li>
+                                <a href="#contactsection">Contact Us</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+
+                <div class="col-lg-two">
+                    <div class="menu-one">
+                        <h5 class="uppercase">
+                            Useful Links
+
+                        </h5>
+                        <ul>
+                            <li>
+                                <a href="#">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="#">Terms and Conditions</a>
+                            </li>
+
+                            <li>
+                                <a href="#">Support</a>
+                            </li>
+                            <li>
+                                <a href="#">Faq</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+                <div class="col-lg-two" id="BindContactDetailInformation">
+                    @*<h5>Contact Us</h5>
+                        <p>
+                            178 West 27th Street, Suite 527, New York NY 10012 United States
+                        </p>
+                        <a href="tel:1234567890">1234567890</a>
+                        <a href="mailto:company@yourname.com">company@yourname.com</a>*@
+                </div>
+
+            </div>
+        </div>
+    </footer>
+    <!-- copyright section -->
+    <div class="copyrights border-top pt-3" style="background-color: #f3a762;">
+        <div class="page-center">
+            <div class="row">
+
+                <div class="col-sm-12 col-md-6">
+                    <strong class="d-flex copyrights-text " style="white-space: nowrap;">
+                        <p class="text-white"> Copyright © 2023</p> <a class="copyright-company-name mr-2 ml-2" href="index.html"> Master Zone.</a>
+                        <p class="text-white">All rights reserved.</p>
+                    </strong>
+
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="float-md-right d-sm-inline-block">
+                        <a class="text-white" target="_blank" href="https://protolabzit.com/">
+                            <p class="text-white text-center" id="footer-text" style="color: #869099;
+                              font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
+<script>
+
+    lightbox.option({
+        'resizeDuration': 200,
+        'wrapAround': true
+    })
+
+    $('.index-template .event-slider-sec .slider-single').slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        dots: false,
+        arrows: false,
+        fade: true,
+        adaptiveHeight: true,
+        infinite: false,
+        useTransform: true,
+        speed: 400,
+        cssEase: 'cubic-bezier(0.77, 0, 0.18, 1)',
+    });
+
+    $('.index-template .event-slider-sec .slider-nav')
+        .on('init', function (event, slick) {
+            $('.index-template .event-slider-sec .slider-nav .slick-slide.slick-current').addClass('is-active');
+        })
+        .slick({
+            slidesToShow: 4,
+            slidesToScroll: 4,
+            dots: false,
+            arrows: false,
+            focusOnSelect: false,
+            infinite: false,
+            responsive: [{
+                breakpoint: 1150,
+                settings: {
+                    slidesToShow: 3,
+                    slidesToScroll: 3,
+                    dots: true,
+                }
+            }, {
+                breakpoint: 991,
+                settings: {
+                    slidesToShow: 2,
+                    slidesToScroll: 2,
+                    dots: true
+                }
+            }, {
+                breakpoint: 767,
+                settings: {
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                    dots: true
+                }
+            }]
+        });
+
+    $('.index-template .event-slider-sec .slider-single').on('afterChange', function (event, slick, currentSlide) {
+        $('.index-template .event-slider-sec .slider-nav').slick('slickGoTo', currentSlide);
+        var currrentNavSlideElem = '.index-template .event-slider-sec  .slider-nav .slick-slide[data-slick-index="' + currentSlide + '"]';
+        $('.index-template .event-slider-sec .slider-nav .slick-slide.is-active').removeClass('is-active');
+        $(currrentNavSlideElem).addClass('is-active');
+    });
+
+    $('.index-template .event-slider-sec .slider-nav').on('click', '.slick-slide', function (event) {
+        event.preventDefault();
+        var goToSingleSlide = $(this).data('slick-index');
+
+        $('.index-template .event-slider-sec  .slider-single').slick('slickGoTo', goToSingleSlide);
+    });
+
+
+    // isotop
+
+    // init Isotope
+    //var $grid = $('.grid').isotope({
+    //    itemSelector: '.element-item',
+    //    layoutMode: 'fitRows'
+    //});
+    // filter functions
+    //var filterFns = {
+    //    // show if number is greater than 50
+    //    numberGreaterThan50: function () {
+    //        var number = $(this).find('.number').text();
+    //        return parseInt(number, 10) > 50;
+    //    },
+    //    // show if name ends with -ium
+    //    ium: function () {
+    //        var name = $(this).find('.name').text();
+    //        return name.match(/ium$/);
+    //    }
+    //};
+    // bind filter button click
+    //$('.filters-button-group').on('click', 'button', function () {
+    //    var filterValue = $(this).attr('data-filter');
+    //    // use filterFn if matches value
+    //    filterValue = filterFns[filterValue] || filterValue;
+    //    $grid.isotope({ filter: filterValue });
+    //});
+    //// change is-checked class on buttons
+    //$('.button-group').each(function (i, buttonGroup) {
+    //    var $buttonGroup = $(buttonGroup);
+    //    $buttonGroup.on('click', 'button', function () {
+    //        $buttonGroup.find('.is-checked').removeClass('is-checked');
+    //        $(this).addClass('is-checked');
+    //    });
+    //});
+    // tab section
+    $('.our-training-section .training-tab-list>li').click(function () {
+        $('.our-training-section .training-tabbing .tab-img').hide();
+        $('.our-training-section .training-tab-list>li.active').removeClass('active-tab');
+        $(this).addClass('active-tab');
+        var panel = $(this).attr('data-tab');
+        $(panel).fadeIn(1000);
+
+        return false;  // prevents link action
+
+    });  // end click
+    $('.our-training-section .training-tab-list>li:first').click();
+
+
+</script>
+<script src="~/Content/assets/lightbox/js/lightbox.js"></script>
+<script src="/Scripts/js/loader.js"></script>
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+@Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_MasterProfileAPIScriptPartial.cshtml")

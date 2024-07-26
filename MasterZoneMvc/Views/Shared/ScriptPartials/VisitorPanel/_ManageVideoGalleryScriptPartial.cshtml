@@ -1,0 +1,286 @@
+﻿<script>
+    var UserVideoList_LastRecordId_Global = 0;
+    $(document).ready(function () {
+        GetUserVideoListDetail();
+    });
+
+
+    function GetUserVideoListDetail() {
+        $('#SearchUserVideo_ByTitle').val('');
+        $('.searchnotfound').addClass('d-none');
+        $.ajax({
+            type: "GET",
+            url: '/api/UserContentVideo/GetVideoListUser?lastRecordId=0',
+            contentType: 'application/json',
+            success: function (response) {
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var fulluserVideoDisplay = '';
+                if (response.data.UserVideoDetailList.length === 0) {
+                    fulluserVideoDisplay = '<div class="w-100 font-italic text-center text-black-50 py-2">No User Video Detail. </div>';
+                } else {
+                    fulluserVideoDisplay = `<iframe  height="460" src="${"https://www.youtube.com/embed/" + response.data.UserVideoDetailList[0].VideoLink}"  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen>
+                          </iframe>
+                          <div class="text-vd">
+                              <h6>${response.data.UserVideoDetailList[0].VideoTitle}</h6>
+                              <p>${response.data.UserVideoDetailList[0].VideoDescription}</p>
+                          </div>
+                      `;
+                }
+
+                $("#DisplayFullVideoUser").html(fulluserVideoDisplay);
+
+                var UserVideoList = '';
+                // if no enquiries found and not a hit from ViewMore.
+                if (response.data.UserVideoDetailList.length <= 0) {
+                    $('#BindUserVideoList').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Video!</i></div>');
+                    $('#BtnViewMoreUserVideoList').addClass('d-none');
+                    StopLoading();
+                    return;
+                }
+
+                if (response.data.UserVideoDetailList.length <= 0) {
+                    $('#BtnViewMoreUserVideoList').addClass('d-none');
+                }
+                else if (response.data.UserVideoDetailList.length < 3) {
+                    $('#BtnViewMoreUserVideoList').addClass('d-none');
+                }
+                else {
+                    UserVideoList_LastRecordId_Global = response.data.UserVideoDetailList[response.data.UserVideoDetailList.length - 1].Id;
+                    $('#BtnViewMoreUserVideoList').removeClass('d-none');
+                }
+
+                UserVideoList = getHTMLBindedUserVideoData(response.data.UserVideoDetailList);
+
+                $('#BindUserVideoList').html(UserVideoList);
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                } else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ShowingVideo(videoLink, id, videoTitle, videoDescription) {
+
+        $(".bindVideoThumbNail").removeClass('activeThumbNail');
+        $("#BindVideoThumbNail_" + id).addClass('activeThumbNail');
+
+        $("#DisplayFullVideoUser").html('');
+        var fullVideoDisplay = ` <div>
+                  <iframe width="100%" height="460" src="${ "https://www.youtube.com/embed/" + videoLink}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen>
+                  </iframe>
+                  <div class="text-vd">
+                      <h6>${videoTitle}</h6>
+                      <p>${videoDescription}</p>
+                  </div>`;
+
+        $("#DisplayFullVideoUser").html(fullVideoDisplay);
+    }
+
+
+
+    function ViewMoreUserVideoList() {
+
+
+
+        let _url = "/api/UserContentVideo/GetVideoListUser?lastRecordId=" + UserVideoList_LastRecordId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+                var UserVideoList = '';
+
+                if (response.data.UserVideoDetailList.length <= 0) {
+                    $('#BtnViewMoreUserVideoList').addClass('d-none');
+                }
+                else if (response.data.UserVideoDetailList.length < 3)
+                {
+                    $('#BtnViewMoreUserVideoList').addClass('d-none');
+                }
+                else
+                {
+                    UserVideoList_LastRecordId_Global = response.data.UserVideoDetailList[response.data.UserVideoDetailList.length - 1].Id;
+                    $('#BtnViewMoreUserVideoList').removeClass('d-none');
+                }
+
+                UserVideoList = getHTMLBindedUserVideoData(response.data.UserVideoDetailList);
+
+                $('#BindUserVideoList').append(UserVideoList);
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function getHTMLBindedUserVideoData(UserVideoList) {
+
+        var userVideoListDetail = ``;
+            for (var i = 0; i < UserVideoList.length; i++)
+            {
+                var _userVideoList = UserVideoList[i];
+
+                  userVideoListDetail += `<div class="video-items">
+                     <div class="video-youtb">
+                         <img   height="160" src="${_userVideoList.VideoThumbNailImageWithPath}" alt="img" id="BindVideoThumbNail_${_userVideoList.Id}" class="vid-slider-thumb bindVideoThumbNail"
+                         onclick="ShowingVideo('${_userVideoList.VideoLink}',${_userVideoList.Id},'${_userVideoList.VideoTitle}','${_userVideoList.VideoDescription}');">
+                     </div>
+                     <div class="vd-profile-sec">
+
+                         <div class="vd-des">
+                             <p>${_userVideoList.VideoTitle}</p>
+                             <p>${_userVideoList.VideoDescription}</p>
+                         </div>
+                     </div>
+                   </div>
+                  `;
+            }
+
+        return userVideoListDetail;
+    }
+
+
+ function SearchUserVideoByTitle() {
+
+
+   var _searchTitle_val = $("#SearchUserVideo_ByTitle").val();
+     $('#BtnViewMoreUserVideoList').addClass('d-none');
+
+
+
+   $.ajax({
+       type: "GET",
+       url: '/api/UserContentVideo/GetVideoListUserByTitle?searchtitle=' + _searchTitle_val,
+       //headers: {
+       //    "Authorization": "Bearer " + UserToken_Global,
+       //    "Content-Type": "application/json"
+       //},
+       contentType: 'application/json',
+       success: function (response)
+       {
+           if (response.status < 1) {
+               $.iaoAlert({
+                   msg: response.message,
+                   type: "error",
+                   mode: "dark",
+               });
+               return;
+           }
+           
+           var UserVideoDetailList = response.data.UserVideoDetailList;
+
+           
+           var userVideoListDetail = ``;
+           if (response.data.UserVideoDetailList.length == 0) {
+
+               $('.searchnotfound').removeClass('d-none');
+           }
+           else {
+               $('.searchnotfound').addClass('d-none');
+           }
+           for (var i = 0; i < response.data.UserVideoDetailList.length; i++)
+           {
+               
+               userVideoListDetail += `<div class="video-items">
+                     <div class="video-youtb">
+                         <img  height="160" src="${UserVideoDetailList[i].VideoThumbNailImageWithPath}" alt="img" id="BindVideoThumbNail_${UserVideoDetailList[i].Id}" class="vid-slider-thumb bindVideoThumbNail"
+                         onclick="ShowingVideo('${UserVideoDetailList[i].VideoLink}',${UserVideoDetailList[i].Id},'${UserVideoDetailList[i].VideoTitle}','${UserVideoDetailList[i].VideoDescription}');">
+                     </div>
+                     <div class="vd-profile-sec">
+
+                         <div class="vd-des">
+                             <p>${UserVideoDetailList[i].VideoTitle}</p>
+                             <p>${UserVideoDetailList[i].VideoDescription}</p>
+                         </div>
+                     </div>
+                   </div>
+                  `;
+               $('#BindUserVideoList').html(userVideoListDetail);
+
+           }
+           StopLoading();
+
+       },
+       error: function (result)
+       {
+           StopLoading();
+
+           if (result["status"] == 401) {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+           else {
+               $.iaoAlert({
+                   msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                   type: "error",
+                   mode: "dark",
+               });
+           }
+       }
+   });
+ }
+
+</script>

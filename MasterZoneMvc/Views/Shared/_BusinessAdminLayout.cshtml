@@ -1,0 +1,950 @@
+﻿
+@using MasterZoneMvc.Common;
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+    string ProfilePageTypeKey = "sports"; //Context.Items["ProfilePageTypeKey"] as string;
+    //string ProfilePageTypeKey = (ViewBag.ProfilePageTypeKey != null) ? ViewBag.ProfilePageTypeKey : "sports"; // TODO: Get from Controller via ViewBag
+}
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <link rel="stylesheet" href="~/Content/business-panel/font/iconsmind-s/css/iconsminds.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/font/simple-line-icons/css/simple-line-icons.css" />
+
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/bootstrap.rtl.only.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/fullcalendar.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/dataTables.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/datatables.responsive.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/glide.core.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/bootstrap-stars.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/nouislider.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/bootstrap-datepicker3.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/component-custom-switch.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/main.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/bootstrap-tagsinput.css">
+
+    <!--Stylish Alert-->
+    <link href="~/Content/lib/StylishAlert/iao-alert.css" rel="stylesheet" />
+    <link href="~/Content/custom/css/common.css" rel="stylesheet" />
+
+    <style>
+        .error-class {
+            color: red;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        footer.page-footer {
+            padding-top: 1.2rem;
+            padding-bottom: 1.2rem;
+            height: 50px;
+        }
+
+        /* Datatable settings --------------------------------------------------*/
+        table.dataTable thead {
+            background: #00365a;
+            color: #fff;
+        }
+
+        table.dataTable td, table.dataTable th {
+            padding-left: 10px;
+        }
+
+        .dataTables_wrapper {
+            margin-top: 12px;
+        }
+
+        div.dataTables_wrapper div.dataTables_filter input {
+            margin-left: 0.5em !important;
+        }
+
+        .dataTables_wrapper .paginate_button.page-item.previous .page-link, .dataTables_wrapper .paginate_button.page-item.next .page-link {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .dataTables_paginate .pagination {
+            float: right;
+        }
+
+
+        /* Siedebar Menu Settings -----------------------------------------------*/
+        .menu .main-menu ul li a {
+            height: 85px;
+        }
+        /* Siedebar Menu Settings -----------------------------------------------*/
+
+        /* Datatable settings ---------------------------------------------------*/
+
+        #login_profileImage {
+            height: 40px !important;
+            object-fit:cover !important;
+        }
+    </style>
+
+    @*----------------------- RENDER Styles ---------------------------------*@
+    @RenderSection("Styles", false)
+    @*----------------------- RENDER Styles ---------------------------------*@
+</head>
+<body id="app-container" class="menu-default show-spinner">
+    @Html.Partial("_LoaderPartial")
+    <nav class="navbar fixed-top">
+        <div class="d-flex align-items-center navbar-left">
+            <a href="#" class="menu-button d-none d-md-block">
+                <svg class="main" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 17">
+                    <rect x="0.48" y="0.5" width="7" height="1" />
+                    <rect x="0.48" y="7.5" width="7" height="1" />
+                    <rect x="0.48" y="15.5" width="7" height="1" />
+                </svg>
+                <svg class="sub" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 17">
+                    <rect x="1.56" y="0.5" width="16" height="1" />
+                    <rect x="1.56" y="7.5" width="16" height="1" />
+                    <rect x="1.56" y="15.5" width="16" height="1" />
+                </svg>
+            </a>
+
+            <a href="#" class="menu-button-mobile d-xs-block d-sm-block d-md-none">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 17">
+                    <rect x="0.5" y="0.5" width="25" height="1" />
+                    <rect x="0.5" y="7.5" width="25" height="1" />
+                    <rect x="0.5" y="15.5" width="25" height="1" />
+                </svg>
+            </a>
+
+            <div>
+                <a class="navbar-logo mr-auto" href="/@ControllerNameForLinks/Dashboard">
+                    <div class="lg"><img src="@Resources.StaticResources.MasterzoneLogo" style="width: auto; height: 3rem;"></div>
+                    <!-- <span class="logo-mobile d-block d-xs-none"></span> -->
+                </a>
+            </div>
+
+            <!-- <div class="search" data-search-path="Pages.Search.html?q=">
+                <input placeholder="Search...">
+                <span class="search-icon">
+                    <i class="simple-icon-magnifier"></i>
+                </span>
+            </div> -->
+            <!-- <a class="btn btn-sm btn-outline-primary ml-3 d-none d-md-inline-block"
+                href="https://1.envato.market/5kAb">&nbsp;BUY&nbsp;</a> -->
+        </div>
+
+
+        <a class="navbar-logo1 pr-5 mr-5" href="/@ControllerNameForLinks/Dashboard">
+            <div class="lg"><img id="login_businessLogo" src="" style="width: auto; height: 3rem;"></div>
+            <!-- <span class="logo-mobile d-block d-xs-none"></span> -->
+        </a>
+
+        <div class="navbar-right">
+            <div class="header-icons d-inline-block align-middle">
+                <div class="d-none d-md-inline-block align-text-bottom mr-3">
+                    <!-- <div class="custom-switch custom-switch-primary-inverse custom-switch-small pl-1"
+                        data-toggle="tooltip" data-placement="left" title="Dark Mode">
+                        <input class="custom-switch-input" id="switchDark" type="checkbox" checked>
+                        <label class="custom-switch-btn" for="switchDark"></label>
+                    </div> -->
+                </div>
+
+                <div class="position-relative d-none d-sm-inline-block">
+                    <!-- <button class="header-icon btn btn-empty" type="button" id="iconMenuButton" data-toggle="dropdown"
+                         aria-haspopup="true" aria-expanded="false">
+                         <i class="simple-icon-grid"></i>
+                     </button> -->
+                    <div class="dropdown-menu dropdown-menu-right mt-3  position-absolute" id="iconMenuDropdown">
+                        <a href="#" class="icon-menu-item">
+                            <i class="iconsminds-equalizer d-block"></i>
+                            <span>Settings</span>
+                        </a>
+
+                        <a href="#" class="icon-menu-item">
+                            <i class="iconsminds-male-female d-block"></i>
+                            <span>Users</span>
+                        </a>
+
+                        <a href="#" class="icon-menu-item">
+                            <i class="iconsminds-puzzle d-block"></i>
+                            <span>Components</span>
+                        </a>
+
+                        <a href="#" class="icon-menu-item">
+                            <i class="iconsminds-bar-chart-4 d-block"></i>
+                            <span>Profits</span>
+                        </a>
+
+                        <a href="#" class="icon-menu-item">
+                            <i class="iconsminds-file d-block"></i>
+                            <span>Surveys</span>
+                        </a>
+
+                        <a href="#" class="icon-menu-item">
+                            <i class="iconsminds-suitcase d-block"></i>
+                            <span>Tasks</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="position-relative d-inline-block">
+                    <button class="header-icon btn btn-empty" type="button" id="notificationButton"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="simple-icon-bell"></i>
+                        <span class="count">3</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right mt-3 position-absolute" id="notificationDropdown">
+                        <div class="scroll">
+                            <div class="d-flex flex-row mb-3 pb-3 border-bottom">
+                                <a href="#">
+                                    <img src="/Content/business-panel/img/profiles/l-2.jpg" alt="Notification Image"
+                                         class="img-thumbnail list-thumbnail xsmall border-0 rounded-circle" />
+                                </a>
+                                <div class="pl-3">
+                                    <a href="#">
+                                        <p class="font-weight-medium mb-1">Joisse Kaycee just sent a new comment!</p>
+                                        <p class="text-muted mb-0 text-small">09.04.2018 - 12:45</p>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-row mb-3 pb-3 border-bottom">
+                                <a href="#">
+                                    <img src="/Content/business-panel/img/notifications/1.jpg" alt="Notification Image"
+                                         class="img-thumbnail list-thumbnail xsmall border-0 rounded-circle" />
+                                </a>
+                                <div class="pl-3">
+                                    <a href="#">
+                                        <p class="font-weight-medium mb-1">1 item is out of stock!</p>
+                                        <p class="text-muted mb-0 text-small">09.04.2018 - 12:45</p>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-row mb-3 pb-3 border-bottom">
+                                <a href="#">
+                                    <img src="~/Content/business-panel/img/notifications/2.jpg" alt="Notification Image"
+                                         class="img-thumbnail list-thumbnail xsmall border-0 rounded-circle" />
+                                </a>
+                                <div class="pl-3">
+                                    <a href="#">
+                                        <p class="font-weight-medium mb-1">New order received! It is total $147,20.</p>
+                                        <p class="text-muted mb-0 text-small">09.04.2018 - 12:45</p>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-row mb-3 pb-3 ">
+                                <a href="#">
+                                    <img src="~/Content/business-panel/img/notifications/3.jpg" alt="Notification Image"
+                                         class="img-thumbnail list-thumbnail xsmall border-0 rounded-circle" />
+                                </a>
+                                <div class="pl-3">
+                                    <a href="#">
+                                        <p class="font-weight-medium mb-1">
+                                            3 items just added to wish list by a user!
+                                        </p>
+                                        <p class="text-muted mb-0 text-small">09.04.2018 - 12:45</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="header-icon btn btn-empty d-none d-sm-inline-block" type="button" id="fullScreenButton">
+                    <i class="simple-icon-size-fullscreen"></i>
+                    <i class="simple-icon-size-actual"></i>
+                </button>
+
+            </div>
+
+            <div class="user d-inline-block">
+                <button class="btn btn-empty p-0" type="button" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                    <span id="login_userName" class="name"></span>
+                    <span>
+                        <img id="login_profileImage" alt="Profile Picture" src="" />
+                    </span>
+                </button>
+
+                <div class="dropdown-menu dropdown-menu-right mt-3">
+                    <a class="dropdown-item" href="/@ControllerNameForLinks/MyAccount">Account</a>
+                    <a class="dropdown-item" href="/@ControllerNameForLinks/ProfileSettings">Profile Settings</a>
+                    <a class="dropdown-item" href="/Business/Logout">Sign out</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="menu">
+        <div class="main-menu">
+            <div class="scroll">
+                <ul class="list-unstyled">
+                    @if (permissionKeys.Contains("Dashboard"))
+                    {
+                        <li class="active">
+                            <a id="a_Sidebar_Dashboard" href="/@ControllerNameForLinks/Dashboard" class="commonNavLinkClass">
+                                <i class="iconsminds-shop-4"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageBranches"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageBranches" href="/@ControllerNameForLinks/ManageBranches" class="text-center commonNavLinkClass">
+                                <i class="iconsminds-diploma-2"></i> Manage Branches
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageStaff"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageStaff" href="#ManageStaff" class="commonNavLinkClass">
+                                <i class="iconsminds-business-mens"></i> Manage Staff
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageStudent"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageStudent" href="#sub_ManageStudent" class="commonNavLinkClass">
+                                <i class="iconsminds-student-male"></i> Manage Student
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageBusinessPlans"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_Packages" href="#ManageBusinessPlans" class="commonNavLinkClass">
+                                <i class="iconsminds-box-with-folders"></i> Plans/Packages
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageScheduleClass"))
+                    {
+                        @*<li>
+                <a id="a_Sidebar_ScheduleClasses" href="/@ControllerNameForLinks/ScheduleClass" class="text-center commonNavLinkClass">
+                    <i class="iconsminds-calendar-4"></i> My Schedule/Classes
+                </a>
+            </li>*@
+                        <li>
+                            <a id="a_Sidebar_ScheduleClasses" href="#ManageClass" class="text-center commonNavLinkClass">
+                                <i class="iconsminds-calendar-4"></i> My Schedule/Classes
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ScheduleCourses"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_scheduleCourse" href="/@ControllerNameForLinks/ScheduleCourses" class="text-center commonNavLinkClass">
+                                <i class="iconsminds-calendar-4"></i> My Courses
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("MyBooking"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_myBooking" href="/@ControllerNameForLinks/MyBooking" class="text-center commonNavLinkClass">
+                                <i class="iconsminds-book"></i> My Booking
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageCertifications"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageCertifications" href="#ManageCertifications" class="text-center commonNavLinkClass">
+                                <i class="iconsminds-diploma-2"></i> Manage Certifications
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageGroups"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageGroups" href="/@ControllerNameForLinks/Group" class="commonNavLinkClass">
+                                <i class="iconsminds-conference"></i> Manage Groups
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageEvents"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageEvents" href="/@ControllerNameForLinks/Event" class="commonNavLinkClass">
+                                <i class="iconsminds-check"></i> Manage Events
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageDiscounts"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageDiscounts" href="/@ControllerNameForLinks/Discount" class="commonNavLinkClass">
+                                <i class=" iconsminds-pricing"></i> Manage Discounts
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageAdvertisements"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageAdvertisements" class="text-center commonNavLinkClass" href="/@ControllerNameForLinks/Advertisement">
+                                <i class="iconsminds-tv"></i> Manage Advertisements
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManageExams"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageExams" href="/@ControllerNameForLinks/Exam" class="commonNavLinkClass">
+                                <i class="iconsminds-notepad"></i> Manage Exams
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("ManagePayments"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManagePayments" href="/@ControllerNameForLinks/PaymentsTransactionDetailsBusiness" class="commonNavLinkClass">
+                                <i class="iconsminds-dollar"></i> Manage Payments
+                            </a>
+                        </li>
+                    }
+
+                    @if (permissionKeys.Contains("Miscellaneous"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_Miscellaneous" href="#Miscellaneous" class="commonNavLinkClass">
+                                <i class="iconsminds-puzzle"></i>Miscellaneous
+                            </a>
+                        </li>
+                    }
+                    @if (ProfilePageTypeKey.Equals("sports")) // check for Sports Club page
+                    {
+                        <li>
+                            <a id="a_Sidebar_SprotsClub" href="#SportsClub" class="commonNavLinkClass">
+                                <i class="iconsminds-puzzle"></i>Sports Club
+                            </a>
+                        </li>
+                    }
+
+                    @if (permissionKeys.Contains("Enquiry"))
+                    {
+                        <li>
+                            <a id="a_sidebar_manageenquiries" href="/@ControllerNameForLinks/Enquiry" class="commonnavlinkclass">
+                                <i class="iconsminds-speach-bubble-asking"></i> Manage enquiries
+                            </a>
+                        </li>
+                    }
+
+                    @if (permissionKeys.Contains("ManageQueries"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_ManageQueries" href="/@ControllerNameForLinks/ManageQueries" class="commonNavLinkClass">
+                                <i class="iconsminds-speach-bubble-asking"></i> Manage Queries
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("MyAccount"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_MyAccount" href="/@ControllerNameForLinks/MyAccount" class="commonNavLinkClass">
+                                <i class="iconsminds-administrator"></i>My Account
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("Backup"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_Backup" class="text-center commonNavLinkClass" href="/@ControllerNameForLinks/Backup">
+                                <i class="iconsminds-data-cloud"></i> Backup
+                            </a>
+                        </li>
+                    }
+                    @if (permissionKeys.Contains("CustomForm"))
+                    {
+                        <li>
+                            <a id="a_Sidebar_CustomForm" class="commonNavLinkClass" href="#ManageCustomForm">
+                                <i class="iconsminds-file"></i> Custom Form
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="sub-menu">
+            <div class="scroll">
+                @if (permissionKeys.Contains("ManageStaff"))
+                {
+                    <ul class="list-unstyled" data-link="ManageStaff" id="ManageStaff">
+
+                        <li>
+                            <div id="collapseProduct" class="collapse show">
+                                <ul class="list-unstyled inner-level-menu">
+                                    @if (permissionKeys.Contains("ManageStaff_ViewStaff"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ViewStaff" href="/@ControllerNameForLinks/ManageStaff" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-dollar"></i> <span class="d-inline-block">View Staff</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("ManageStaff_StaffSalary"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_StaffSalaries" href="/@ControllerNameForLinks/ManageSalary" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-dollar"></i> <span class="d-inline-block">Salaries</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("ManageStaff_StaffAttendance"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_StaffAttendance" href="/@ControllerNameForLinks/Attendance" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-calendar-1"></i> <span class="d-inline-block">Attendance</span>
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                }
+                @if (permissionKeys.Contains("ManageScheduleClass"))
+                {
+                    <ul class="list-unstyled" data-link="ManageClass" id="ManageClass">
+                        <li>
+                            <div id="collapseProduct" class="collapse show">
+                                <ul class="list-unstyled inner-level-menu">
+
+                                    <li>
+                                        <a id="a_Sidebar_Sub_ManageBatch" href="/@ControllerNameForLinks/ManageBatch">
+                                            <i class="iconsminds-calendar-4"></i> <span class="d-inline-block">
+                                                Manage Batch
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="a_Sidebar_Sub_ManageClass" href="/@ControllerNameForLinks/ScheduleClass">
+                                            <i class="iconsminds-calendar-4"></i> <span class="d-inline-block">
+                                                Manage Class
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="a_Sidebar_PauseClassDetail" href="/@ControllerNameForLinks/PauseClassDetail">
+                                            <i class="iconsminds-calendar-4"></i> <span class="d-inline-block">
+                                                Manage  Pause Class
+                                            </span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                }
+                @if (permissionKeys.Contains("ManageCertifications"))
+                {
+                    <ul class="list-unstyled" data-link="ManageCertifications" id="ManageCertifications">
+                        <li>
+                            <div id="collapseProduct" class="collapse show">
+                                <ul class="list-unstyled inner-level-menu">
+                                    @if (permissionKeys.Contains("ManageCertifications_VerifyCertificates"))
+                                    {
+                                        @*<li>
+                                            <a id="a_Sidebar_Sub_CertificateRequests" href="/@ControllerNameForLinks/CertificateRequests" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                    Certificate Requests
+                                                </span>
+                                            </a>
+                                        </li>*@
+                                        <li>
+                                            <a id="a_Sidebar_Sub_MyBookedLicenses" href="/@ControllerNameForLinks/MyBookedLicenses" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                    My Booked Licenses
+                                                </span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a id="a_Sidebar_Sub_BookCertificateLicense" href="/@ControllerNameForLinks/BookCertificateLicense" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                    Book License
+                                                </span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a id="a_Sidebar_Sub_CertificateVerify" href="/@ControllerNameForLinks/Certificate" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                    Certificates Verify
+                                                </span>
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                }
+                @if (permissionKeys.Contains("Miscellaneous"))
+                {
+                    <ul class="list-unstyled" data-link="Miscellaneous" id="Miscellaneous">
+
+                        <li>
+                            <div id="collapseProduct" class="collapse show">
+                                <ul class="list-unstyled inner-level-menu">
+                                    @if (permissionKeys.Contains("Miscellaneous_ViewMessages"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ViewMessages" href="/@ControllerNameForLinks/MessageChat" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-inbox-full"></i> <span class="d-inline-block">View Messages</span>
+                                            </a>
+                                        </li>
+                                        @*<li>
+                                            <a id="a_Sidebar_Sub_ViewMessages" href="/@ControllerNameForLinks/Message" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-inbox-full"></i> <span class="d-inline-block">View Messages</span>
+                                            </a>
+                                        </li>*@
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_Notifications"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_Notifications" href="/@ControllerNameForLinks/Notification" class="commonSubNavLinkClass">
+                                                <i class=" iconsminds-bell"></i> <span class="d-inline-block">Notifications</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_BusinessTiming"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_BusinessTiming" href="/@ControllerNameForLinks/TimeSlot" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-sand-watch-2"></i> <span class="d-inline-block">
+                                                    Business Timimg
+                                                </span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_ManageReviews"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ManageReviews" href="/@ControllerNameForLinks/ManageReviews" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-speach-bubble-3"></i> <span class="d-inline-block">
+                                                    Manage Reviews
+                                                </span>
+                                            </a>
+                                        </li>
+
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_ManageBusinessVideos"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ManageVideos" href="/@ControllerNameForLinks/ManageBusinessVideos" class="commonSubNavLinkClass">
+                                                <i class="glyph-icon iconsminds-youtube"></i> <span class="d-inline-block">
+                                                    Manage Videos
+                                                </span>
+                                            </a>
+                                        </li>
+
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_ManageBusinessImages"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ManageImages" href="/@ControllerNameForLinks/ManageBusinessImages" class="commonSubNavLinkClass">
+                                                <i class="glyph-icon iconsminds-photo"></i> <span class="d-inline-block">
+                                                    Manage Images
+                                                </span>
+                                            </a>
+                                        </li>
+
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_ManageBusinessService"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ManageBusinessService" href="/@ControllerNameForLinks/ManageBusinessService" class="commonSubNavLinkClass">
+                                                <i class="glyph-icon iconsminds-photo"></i> <span class="d-inline-block">
+                                                    Manage Service
+                                                </span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_BusinessSponsor"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ManageSponsors" href="/@ControllerNameForLinks/Sponsors" class="commonSubNavLinkClass">
+                                                <i class="glyph-icon iconsminds-photo"></i> <span class="d-inline-block">
+                                                    Business Sponsors
+                                                </span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("Miscellaneous_ProfilePage"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ManageProfilePage" href="/@ControllerNameForLinks/ProfilePage" class="commonSubNavLinkClass">
+                                                <i class="glyph-icon iconsminds-photo"></i> <span class="d-inline-block">
+                                                    Profile Page
+                                                </span>
+                                            </a>
+                                        </li>
+                                    }
+                                    <li>
+                                        <a id="a_Sidebar_ManageExpense" href="/Business/ManageExpense" class="commonSubNavLinkClass">
+                                            <i class="fa fa-dollar-sign"></i> <span class="d-inline-block">Manage Expense</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                }
+                @if (ProfilePageTypeKey.Equals("sports")) // for Sports Club
+                {
+                    <ul class="list-unstyled" data-link="SportsClub" id="SportsClub">
+                        <li>
+                            <div id="collapseProduct" class="collapse show">
+                                <ul class="list-unstyled inner-level-menu">
+
+                                    <li>
+                                        <a id="a_Sidebar_Sub_ManageApartments" href="/@ControllerNameForLinks/ManageApartment" class="commonSubNavLinkClass">
+                                            <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                Manage Apartments
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="a_Sidebar_Sub_ManageApartmentBooking" href="/@ControllerNameForLinks/ManageApartmentBooking" class="commonSubNavLinkClass">
+                                            <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                Manage Booking
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="a_Sidebar_Sub_ViewApartmentBooking" href="/@ControllerNameForLinks/ApartmentBookingAllDetail" class="commonSubNavLinkClass">
+                                            <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                View Booking
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="a_Sidebar_Sub_BookingRequest" href="/@ControllerNameForLinks/TennisBooking" class="commonSubNavLinkClass">
+                                            <i class="iconsminds-diploma-2"></i> <span class="d-inline-block">
+                                                 Booking Request
+                                            </span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                }
+                @if (permissionKeys.Contains("ManageBusinessPlans"))
+                {
+                    <ul class="list-unstyled" data-link="ManageBusinessPlans" id="ManageBusinessPlans">
+
+                        @if (permissionKeys.Contains("ManageBusinessPlans_ViewPackages"))
+                        {
+                            <li>
+                                <a id="a_Sidebar_Sub_ViewPackages" href="/@ControllerNameForLinks/Package" class="commonSubNavLinkClass">
+                                    <i class="iconsminds-synchronize"></i> <span class="d-inline-block">View Packages</span>
+                                </a>
+                            </li>
+                        }
+                        @if (permissionKeys.Contains("ManageBusinessPlans_TransferPackage"))
+                        {
+                            <li>
+                                <a id="a_Sidebar_Sub_TransferPackages" href="/@ControllerNameForLinks/TransferPackage" class="commonSubNavLinkClass">
+                                    <i class="iconsminds-synchronize"></i> <span class="d-inline-block">Transfer Package</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a id="a_Sidebar_Sub_TransferNotification" href="/@ControllerNameForLinks/TransferNotification" class="commonSubNavLinkClass">
+                                    <i class="iconsminds-synchronize"></i> <span class="d-inline-block">Transfer Notification</span>
+                                </a>
+                            </li>
+                        }
+                        @if (permissionKeys.Contains("ManageBusinessPlans_ViewTrainings"))
+                        {
+                            <li>
+                                <a id="a_Sidebar_Sub_ManageTraining" href="/@ControllerNameForLinks/Training" class="commonSubNavLinkClass">
+                                    <i class="iconsminds-synchronize"></i> <span class="d-inline-block">View Training</span>
+                                </a>
+                            </li>
+
+                        }
+
+                    </ul>
+                }
+                @if (permissionKeys.Contains("ManageStudent"))
+                {
+                    <ul class="list-unstyled" data-link="sub_ManageStudent" id="sub_ManageStudent">
+                        @if (permissionKeys.Contains("ManageStudent_ViewStudent"))
+                        {
+                            <li>
+                                <a id="a_Sidebar_Sub_ManageStudent" href="/@ControllerNameForLinks/Student" class="commonSubNavLinkClass">
+                                    <i class="iconsminds-business-mens"></i> <span class="d-inline-block">Manage Student</span>
+                                </a>
+                            </li>
+
+                        }
+                        @if (permissionKeys.Contains("ManageStudent_ViewStudentClass"))
+                        {
+                            <li>
+                                <a id="a_Sidebar_Sub_ViewStudentWithClassInstructor" href="/@ControllerNameForLinks/StudentWithClassInstructor" class="commonSubNavLinkClass">
+                                    <i class="iconsminds-business-mens"></i> <span class="d-inline-block">View Student Class</span>
+                                </a>
+                            </li>
+
+                        }
+                    </ul>
+                }
+                @if (permissionKeys.Contains("Enquiry"))
+                {
+                    
+                        <ul class="list-unstyled" data-link="SubManageEnquiries" id="SubManageEnquiries">
+                            <li>
+                                <div id="collapseProduct" class="collapse show">
+                                    <ul class="list-unstyled inner-level-menu">
+                                        <li>
+                                            <a id="a_Sidebar_ManageEnquiry" href="/@ControllerNameForLinks/Enquiry" class="commonNavLinkClass">
+                                                <i class="iconsminds-speach-bubble-asking"></i> Manage Enquiries
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a id="a_Sidebar_ManageFollowUp" href="/@ControllerNameForLinks/EnquiryFollowsup" class="commonNavLinkClass">
+                                                <i class="iconsminds-speach-bubble-asking"></i> Follow Up
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+
+                        </ul>
+                    
+                }
+                @if (permissionKeys.Contains("CustomForm"))
+                {
+                    <ul class="list-unstyled" data-link="ManageCustomForm" id="ManageCustomForm">
+
+                        <li>
+                            <div id="collapseProduct" class="collapse show">
+                                <ul class="list-unstyled inner-level-menu">
+                                    @*@if (permissionKeys.Contains("CustomForm"))
+                                        {
+                                            <li>
+                                                <a id="a_Sidebar_Sub_CustomForm" href="/@ControllerNameForLinks/CustomForm" class="commonSubNavLinkClass">
+                                                    <i class="iconsminds-dollar"></i> <span class="d-inline-block">Custom Form</span>
+                                                </a>
+                                            </li>
+                                        }*@
+                                    @if (permissionKeys.Contains("ViewCustomForm"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_ViewCustomForm" href="/@ControllerNameForLinks/ViewCustomForm" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-dollar"></i> <span class="d-inline-block">View Custom Form</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (permissionKeys.Contains("BusinessCustomTransferForm"))
+                                    {
+                                        <li>
+                                            <a id="a_Sidebar_Sub_BusinessCustomTransferForm" href="/@ControllerNameForLinks/BusinessCustomTransferForm" class="commonSubNavLinkClass">
+                                                <i class="iconsminds-dollar"></i> <span class="d-inline-block"> Transfer Form</span>
+                                            </a>
+                                        </li>
+                                    }
+
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+
+    @*----------------------- RENDER BODY ---------------------------------*@
+    @RenderBody()
+    @*----------------------- RENDER BODY ---------------------------------*@
+
+
+
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 col-sm-6">
+                        <!-- <p class="mb-0 text-muted">ColoredStrategies 2019</p> -->
+                        <strong>Copyright © 2023 <a href="/">Master Zone.</a></strong>
+
+                        All rights reserved.
+
+                    </div>
+                    <div class="col-sm-6 d-none d-sm-block">
+                        <div class="float-right d-none d-sm-inline-block">
+                            <a target="_blank" href="https://protolabzit.com/">
+                                <p id="ftxt" style="color: #869099;
+                          font-size: 1rem;"> Developed &amp; Designed by: Protolabz eServices</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/Content/business-panel/js/vendor/jquery-3.3.1.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/bootstrap.bundle.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/Chart.bundle.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/chartjs-plugin-datalabels.js"></script>
+    <script src="/Content/business-panel/js/vendor/moment.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/fullcalendar.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/datatables.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/perfect-scrollbar.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/progressbar.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/jquery.barrating.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/select2.full.js"></script>
+    <script src="/Content/business-panel/js/vendor/nouislider.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/bootstrap-datepicker.js"></script>
+    <script src="/Content/business-panel/js/vendor/Sortable.js"></script>
+    <script src="/Content/business-panel/js/vendor/mousetrap.min.js"></script>
+    <script src="/Content/business-panel/js/vendor/glide.min.js"></script>
+    <script src="/Content/business-panel/js/dore.script.js"></script>
+    <script src="/Content/business-panel/js/scripts.js"></script>
+    <script src="/Content/business-panel/js/vendor/bootstrap-tagsinput.min.js" style="opacity: 1;"></script>
+
+    <!--Stylish-ALERT-->
+    <script src="/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+
+    <script src="/Scripts/js/site.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+    <script src="~/Scripts/js/business-panel/CommonLogin.js"></script>
+    @*----------------------- RENDER SCRIPTS ---------------------------------*@
+    @RenderSection("Scripts", false)
+    @*----------------------- RENDER SCRIPTS ---------------------------------*@
+</body>
+</html>

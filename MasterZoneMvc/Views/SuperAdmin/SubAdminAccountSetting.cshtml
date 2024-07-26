@@ -1,0 +1,213 @@
+﻿
+@{
+    ViewBag.Title = "SubAdminAccountSetting";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+
+@{
+    ViewBag.Title = "AccountSetting";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+@section Styles{
+    <style>
+
+
+        .ProfileImagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .MasterLogoPreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+
+<main>
+
+    <div class="content-wrapper" style="min-height: 544.4px;">
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>Account Setting</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                            <li class="breadcrumb-item active">Account Setting</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-6 mb-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4" id="myText">Profile Settings</h5>
+                                <hr />
+                                <form class="form-horizontal">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <label>First Name<span class="text-danger">*</span></label>
+                                            <input type="text" id="txtFirstName" class="border form-control">
+                                            <div class="error-class" id="error_txtFirstName"></div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label>Last Name <span class="text-danger">*</span></label>
+                                            <input type="text" id="txtLastName" class="border form-control">
+                                            <div class="error-class" id="error_txtLastName"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <label>Email  <span class="text-danger">*</span></label>
+                                            <input type="text" id="txtEmail" class="border form-control">
+                                            <div class="error-class" id="error_txtEmail"></div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label>Contact No.<span class="text-danger">*</span></label>
+                                            <input type="text" id="txtContactNumber" class="form-control" />
+                                            <div class="error-class" id="error_txtContactNumber"></div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row">
+                                        <div class="col-sm-6 m-3">
+                                            <button type="submit" class="btn btn-danger" onclick="btnSubmitSubAdmin();">Submit</button>
+                                        </div>
+                                    </div>
+
+
+                                </form>
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-6 mb-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4" id="myText">Change Password</h5>
+                                <hr />
+                                <form class="form-horizontal">
+                                    <div class="form-group row">
+                                        <label for="inputName" class="col-sm-4 col-form-label">Current Password</label>
+                                        <div class="col-sm-8">
+                                            <input type="email" class="form-control" id="txtOldPassword_ChangePassword" placeholder="Current Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inputEmail" class="col-sm-4 col-form-label">New Password</label>
+                                        <div class="col-sm-8">
+                                            <input type="email" class="form-control" id="txtNewPassword_ChangePassword" placeholder="New Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inputName2" class="col-sm-4 col-form-label">Confirm Password</label>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" id="txtConfirmNewPassword_ChangePassword" placeholder="Confirm Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="offset-sm-4 col-sm-8">
+                                            <button type="submit" class="btn btn-danger" onclick="updateChangePassword()">Update Password</button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-6 mb-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4" id="myText">Profile Image</h5>
+                                <hr />
+                                <form class="form-horizontal">
+
+
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <label>Profile Image<span class="text-danger">*</span></label>
+                                            <div class="ProfileImagePreview">
+                                                <img id="previewImage" class="d-none" style="width:100%; height:100%;">
+                                            </div>
+                                            <input type="file" id="fileProfileImage_ManageSubAdmin" class="border form-control" accept="image/*">
+                                            <div class="error-class" id="error_fileProfileImage_ManageSubAdmin"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6 m-3">
+                                            <button type="submit" class="btn btn-danger" onclick="btnAddUpdateSubAdminProfileImage();">Submit</button>
+                                        </div>
+                                    </div>
+
+
+                                </form>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="col-6 mb-4">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5 class="mb-4" id="myText">Masterzone Logo Update</h5>
+                                    <hr />
+                                    <form class="form-horizontal">
+
+
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <label>Masterzone Logo<span class="text-danger">*</span></label>
+                                                <div class="MasterLogoPreview">
+                                                    <img id="Masterlogo" class="d-none" style="width:100%; height:100%;">
+                                                </div>
+                                                <input type="file" id="fileMasterlogo_ManageSuperAdmin" class="border form-control" accept="image/*">
+                                                <div class="error-class" id="error_fileMasterlogo_ManageSuperAdmin"></div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6 m-3">
+                                                <button type="submit" class="btn btn-danger">Submit</button>
+                                            </div>
+                                        </div>
+
+
+                                    </form>
+
+
+                                </div>
+                            </div>
+                        </div>*@
+                </div>
+
+            </div><!-- /.container-fluid -->
+        </section>
+
+    </div>
+
+</main>
+@section Scripts{
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    @Html.Partial("/Views/Shared/ScriptPartials/_ChangePasswordScriptPartial.cshtml")
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_SubAdminProfilePageScriptPartial.cshtml")
+}
+
+
+

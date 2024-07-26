@@ -1,0 +1,633 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+    ViewData["Title"] = "Manage License";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.bubble.css" />
+
+
+    <style>
+        .UploadedImage {
+            width: 53px;
+            height: 53px;
+        }
+
+        .UploadedImagePreviewBox {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .panelPermissionSection {
+            max-height: 250px;
+            overflow-y: scroll;
+            border: 1px solid #cecece;
+            padding: 5px 25px;
+        }
+    </style>
+}
+
+<input type="hidden" class="hidden" id="CertificateId" value="@ViewBag.CertificateId" />
+
+<div id="AllLicense">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 id="ManagePageTextLicense">Manage License</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/ManageCertificate">Manage Certificate</a></li>
+                                <li class="breadcrumb-item active" id="pageTextchange">Manage License</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="selectedCertificateProfile" class="d-flex align-items-center">
+
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12" id="ViewDetailForLicense">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title" id="pageStageChange">Manage License</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <button id="AddLicense" type="button" class="btn btn-primary">
+                                                &plus; Add License
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+
+                                    <table id="ViewLicenseForSuperAdmin" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>S.No</th>
+                                                <th>Certification</th>
+                                                <th>License Logo</th>
+                                                <th>Title</th>
+                                                <th>Description</th>
+                                                <th>Price Type</th>
+                                                @*<th>Commission Type</th>
+                                                    <th>Commission Value</th>*@
+                                                <th>Achieving Order</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>S.No</th>
+                                                <th>Certification</th>
+                                                <th>License Logo</th>
+                                                <th>Title</th>
+                                                <th>Description</th>
+                                                <th>Price Type</th>
+                                                @*<th>Commission Type</th>
+                                                    <th>Commission Value</th>*@
+                                                <th>Achieving Order</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- /.container-fluid -->
+            </section>
+
+
+            <section class="content" id="LicenseAdd" style="display: none;">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Default box -->
+                            <div class="card card-default">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-9 d-flex align-items-center">
+                                            <h3 class="card-title" id="ChangePageTextForEdit">Add License</h3>
+                                        </div>
+                                        <div class="col-sm-3 d-flex justify-content-end">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="resetAddUpdateLicenseForm();">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <form method="post" target="_blank" action="/SuperAdmin/Download_LicenseCertificatePreviewPDF" id="pdfPreviewForm" class="d-none">
+                                        <input type="hidden" name="licenseId" />
+                                        <textarea class="d-none" name="licenseCertificateTemplate_Html"></textarea>
+                                        <input type="submit" value="submit" />
+                                    </form>
+                                    <form>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="ddlCertificateId">Certification Profile</label>
+                                                    <select id="ddlCertificateId" class="form-control select2">
+                                                        <option value="0">Select</option>
+                                                    </select>
+                                                    <div class="error-class" id="error_ddlCertificateId"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 ">
+                                                <!-- /.form-group -->
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Title<span class="text-danger"></span></label>
+                                                    <input type="text" id="txtLicenseTitle" class="border form-control">
+                                                    <div class="error-class" id="error_txtLicenseTitle"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Description<span class="text-danger"></span></label>
+                                                    <textarea name="description" class="form-control" rows="5" id="licenseDescription"></textarea>
+                                                    <div class="error-class" id="error_licenseDescription"></div>
+                                                    <!-- /.form-group -->
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>License Logo<span class="text-danger"></span></label>
+                                                    <div class="UploadedImagePreviewBox">
+                                                        <img id="previewLicenceImage" class="d-none" style="width:100%; height:100%;">
+                                                    </div>
+                                                    <input type="file" id="fileLicenseImage_ManageLicense" class="border form-control" accept="image/*">
+                                                    <div class="error-class" id="error_fileLicenseImage_ManageLicense"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            @*<div class="col-md-6">
+                                            <div class="form-group d-flex flex-column">
+                                                <label>Certificate Image<span class="text-danger"></span></label>
+                                                <div class="UploadedImagePreviewBox">
+                                                    <img id="previewCertificateImage" class="d-none" style="width:100%; height:100%;">
+                                                </div>
+                                                <input type="file" id="fileCertifcateImage_ManageLicense" class="border form-control" accept="image/*">
+                                                <div class="error-class" id="error_fileCertificateImage_ManageLicense"></div>
+                                            </div>
+                                        </div>*@
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="float-left">Certificate Template(HTML)<span class="text-danger"></span></label>
+                                                    <button type="button" class="float-right btn btn-xs btn-warning" onclick="btnPreviewLicenseCertificatePDF()">Preview</button>
+                                                    <button type="button" class="float-right btn btn-xs btn-info mr-2" data-toggle="modal" data-target="#htmlTemplateInfoModal"><i class="fas fa-info-circle"></i> info</button>
+                                                    <textarea id="txtLicenseCertificateHTMLContent" class="border form-control" rows="5"></textarea>
+                                                    <div class="error-class" id="error_txtLicenseCertificateHTMLContent"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Signature <span class="text-danger"></span></label>
+                                                    <div class="UploadedImagePreviewBox">
+                                                        <img id="previewSignatureImage" class="d-none" style="width:100%; height:100%;">
+                                                    </div>
+                                                    <input type="file" id="fileSignatureImage_ManageLicense" class="border form-control" accept="image/*">
+                                                    <div class="error-class" id="error_fileSignatureImage_ManageLicense"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Signature 2 <span class="text-danger"></span></label>
+                                                    <div class="UploadedImagePreviewBox">
+                                                        <img id="previewSignature2Image" class="d-none" style="width:100%; height:100%;">
+                                                    </div>
+                                                    <input type="file" id="fileSignature2Image_ManageLicense" class="border form-control" accept="image/*">
+                                                    <div class="error-class" id="error_fileSignature2Image_ManageLicense"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div id="signature3Group" class="form-group d-flex flex-column">
+                                                    <label>Signature 3 <span class="text-danger"></span></label>
+                                                    <div class="UploadedImagePreviewBox">
+                                                        <img id="previewSignature3Image" class="d-none" style="width:100%; height:100%;">
+                                                    </div>
+                                                    <input type="file" id="fileSignature3Image_ManageLicense" class="border form-control" accept="image/*">
+                                                    <div class="error-class" id="error_fileSignature3Image_ManageLicense"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @*<div class="row">
+            <div class="col-md-12">
+                <div class="form-group d-flex flex-column">
+                    <label>Additional Information</label>
+                    <div class="html-editor form-control" id="Additional_Information" style="height: 163px;"></div>
+                    <div class="error-class" id="error_Additional_Information"></div>
+                </div>
+            </div>
+        </div>*@
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group d-flex flex-column">
+                                                <label>Time Duration</label>
+                                                <input type="number" class="form-control" id="digitTimePeriod" required />
+                                                <div class="error-class" id="error_digitTimePeriod"></div>
+                                            </div>
+
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group d-flex flex-column">
+                                                <label>Month Duration</label>
+                                                <select type="text" class="form-control" id="txtTimePeriod" required>
+                                                    <option selected>Select an Option</option>
+                                                    <option value="Month">Monthly</option>
+                                                    <option value="Year">Yearly</option>
+                                                </select>
+                                                <div class="error-class" id="error_txtTimePeriod"></div>
+                                            </div>
+                                        </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label>Achieving Order</label>
+                                                    <input type="number" class="form-control" id="txtAchievingOrder" value="0" min="0" required />
+                                                    <div class="error-class" id="error_txtAchievingOrder"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group d-flex flex-column">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="chkIsActive">
+                                                        <label class="form-check-label" for="chkIsActive" style="cursor:pointer;">Is Active</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label>License Price</label>
+                                                <div class="row">
+                                                    <div class="custom-control custom-radio col-6">
+                                                        <input type="radio" id="PriceFree" name="License_Price" class="custom-control-input" value="0">
+                                                        <label class="custom-control-label" for="PriceFree">Free</label>
+                                                    </div>
+                                                    <div class="custom-control custom-radio col-6">
+                                                        <input type="radio" id="PricePaid" name="License_Price" class="custom-control-input" value="1" checked>
+                                                        <label class="custom-control-label" for="PricePaid">Paid</label>
+                                                    </div>
+                                                </div>
+                                                <div class="row" id="priceSection">
+                                                    <div class="form-group col-12">
+                                                        <label for="txtPrice">Price</label>
+                                                        <input type="text" id="txtPrice" class="form-control IsDecimal">
+                                                        <div class="error-class" id="error_txtPrice"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="form-group col-12">
+                                                        <label for="txtMinSellingPrice">Min. Selling Price</label>
+                                                        <input type="text" id="txtMinSellingPrice" class="form-control IsDecimal">
+                                                        <div class="error-class" id="error_txtMinSellingPrice"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6" id="commissionSection">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="ddlCommissionType">Commission Type</label>
+                                                    <select id="ddlCommissionType" class="select2">
+                                                        <option value="0">Select</option>
+                                                        @*<option value="FixedAmount">Fixed Amount</option>
+                        <option value="PercentageBased">Percentage Based</option>
+                        <option value="Nil">Nil</option>*@
+                                                    </select>
+                                                    <div class="error-class" id="error_ddlCommissionType"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6" id="commissionSection">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="txtCommissionValue">Commission Value</label>
+                                                    <input type="text" class="form-control IsDecimal" id="txtCommissionValue" required />
+                                                    <div class="error-class" id="error_txtCommissionValue"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="txtGSTPercent">GST (%)</label>
+                                                    <input type="text" class="form-control IsDecimal" id="txtGSTPercent" />
+                                                    <div class="error-class" id="error_txtGSTPercent"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="txtGSTDescription">GST Description</label>
+                                                    <input type="text" class="form-control" id="txtGSTDescription" />
+                                                    <div class="error-class" id="error_txtGSTDescription"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="ddlLicense_ManageLicense">Is License to Teach</label>
+                                                    <select name="ddlLicense_ManageLicense" id="ddlLicense_ManageLicense" form="carform" default="unslected" class="form-control" onchange="DisplayTeachLicenseType();">
+                                                        <option value="0">Select LicenseToTeach</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="2">No</option>
+
+                                                    </select>
+
+                                                    <div class="error-class" id="error_ddlLicense_ManageLicense"></div>
+
+                                                </div>
+                                            </div>
+
+                                            <div class="col-sm-6">
+                                                <div id="DisplayTeachTypeShow" Style="display: none">
+                                                    <div class="form-group d-flex flex-column">
+                                                        <label for="ddlLicenseDisplay_ManageLicenseDisplay">License to teach: Display Type</label>
+                                                        <select name="ddlLicenseDisplay_ManageLicenseDisplay" id="ddlLicenseDisplay_ManageLicenseDisplay" form="carform" default="unslected" class="form-control" onchange="DisplayLicenseName();">
+                                                            <option value="0">Select License</option>
+                                                            <option value="Brand">Brand</option>
+                                                            <option value="License">License</option>
+                                                            <option value="Custom">Custom</option>
+                                                        </select>
+
+                                                        <div class="error-class" id="error_ddlLicenseDisplay_ManageLicenseDisplay"></div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+
+                                            <div class="col-md-12">
+                                                <div id="ShowLicenseDisplay" Style="display: none">
+                                                    <div class="form-group d-flex flex-column">
+                                                        <label>License to Teach: Display Name </label>
+                                                        <input type="text" class="form-control" id="txtLicenseDisplayName" />
+                                                        <div class="error-class" id="error_txtLicenseDisplayName"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <div class="row">
+
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex flex-column">
+                                                    <label for="ddlLicense_ManageLicenseMastroPro">Is Master Pro</label>
+                                                    <select name="ddlLicense_ManageLicenseMastroPro" id="ddlLicense_ManageLicenseMastroPro" form="carform" default="unslected" class="form-control" onchange="DisplayLicenseName();">
+                                                        <option value="0">Select Master Pro</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="2">No</option>
+                                                    </select>
+
+                                                    <div class="error-class" id="error_ddlLicense_ManageLicenseMastroPro"></div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <hr />
+                                                <h4>License Permissions</h4>
+                                                <div id="BusinessPanelPermissions_ManageLicense" class="panelPermissionSection">
+
+                                                </div>
+                                                <div class="error-class" id="error_BusinessPanelPermissions_ManageLicense"></div>
+                                            </div>
+                                            <!-- /.col -->
+                                        </div>
+                                        @*<div class="row">
+            <div class="col-md-12">
+                <hr />
+                <h4>Features</h4>
+                <div id="BusinessPanelFeatures" class="panelPermissionSection">
+
+                </div>
+            </div>
+        </div>*@
+
+</form>
+                                    <!-- /.row -->
+                                </div>
+
+                                <div class="card-footer">
+                                    <button type="button" id="pageTextchangeSave" class="btn btn-primary" onclick="AddUpdate_ManageLicense();">Save</button>
+                                    <button type="button" class="btn btn-danger" onclick="resetAddUpdateLicenseForm()">Cancel</button>
+                                </div>
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
+</div>
+
+
+@*------------------------------------- Modal ------------------------------------------------------ *@
+<div class="modal fade" id="htmlTemplateInfoModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Template Info</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body pt-0">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Switch Key</th>
+                            <th>Copy</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>[MasterzoneLogoPath]</code></td>
+                            <td><button onclick="copyToClipboard('[MasterzoneLogoPath]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Embed Masterzone Logo Path. Example: <code>&lt;img src="[MasterzoneLogoPath]" /&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>[Name]</code></td>
+                            <td><button onclick="copyToClipboard('[Name]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>User full name</td>
+                        </tr>
+                        <tr>
+                            <td><code>[IssueDate]</code></td>
+                            <td><button onclick="copyToClipboard('[IssueDate]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Issue date (e.g., 2023-01-01)</td>
+                        </tr>
+                        <tr>
+                            <td><code>[CertificateNumber]</code></td>
+                            <td><button onclick="copyToClipboard('[CertificateNumber]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Unique certificate number</td>
+                        </tr>
+                        <tr>
+                            <td><code>[CertificateLogoPath]</code></td>
+                            <td><button onclick="copyToClipboard('[CertificateLogoPath]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Certificate logo path. Example: <code>&lt;img src="[CertificateLogoPath]" /&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>[CertificateTitle]</code></td>
+                            <td><button onclick="copyToClipboard('[CertificateTitle]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Certificate title</td>
+                        </tr>
+                        <tr>
+                            <td><code>[LicenseTitle]</code></td>
+                            <td><button onclick="copyToClipboard('[LicenseTitle]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>License title</td>
+                        </tr>
+                        <tr>
+                            <td><code>[LicenseLogoPath]</code></td>
+                            <td><button onclick="copyToClipboard('[LicenseLogoPath]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>License logo path</td>
+                        </tr>
+                        <tr>
+                            <td><code>[Signature1Path]</code></td>
+                            <td><button onclick="copyToClipboard('[Signature1Path]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Signature 1 path. Example: <code>&lt;img src="[Signature1Path]" /&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>[Signature2Path]</code></td>
+                            <td><button onclick="copyToClipboard('[Signature2Path]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Signature 2 path. Example: <code>&lt;img src="[Signature2Path]" /&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>[Signature3Path]</code></td>
+                            <td><button onclick="copyToClipboard('[Signature3Path]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Signature 3 path. Example: <code>&lt;img src="[Signature3Path]" /&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>[TimePeriod]</code></td>
+                            <td><button onclick="copyToClipboard('[TimePeriod]')" class="btn"><i class="fas fa-copy" aria-label="Copy"></i></button></td>
+                            <td>Time period</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*------------------------------------- Modal ------------------------------------------------------ *@
+
+
+@section Scripts{
+    <!-- Select2 -->
+    <script src="/Content/superadmin-panel/plugins/select2/js/select2.full.min.js"></script>
+
+    <script>
+        $(function () {
+            $('.select2').select2();
+        });
+    </script>
+
+    <script>
+        function copyToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            console.log("Copied to clipboard: " + text);
+
+            $.iaoAlert({
+                msg: "Copied to clipboard: " + text,
+                type: "success",
+                mode: "dark",
+            });
+        }
+    </script>
+
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+    <script>
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAbout = new Quill('#Additional_Information', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+
+    </script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageLicenseScriptPartial.cshtml")
+
+}
+
+

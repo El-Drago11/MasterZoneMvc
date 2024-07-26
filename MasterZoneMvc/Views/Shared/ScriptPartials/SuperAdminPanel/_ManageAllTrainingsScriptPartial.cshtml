@@ -1,0 +1,298 @@
+﻿<script>
+    var UserToken_Global = "";
+    var _trainingsTable;
+
+
+$(document).ready(function () {
+    StartLoading();
+    $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+        if (dataAdminToken != "" && dataAdminToken != null) {
+
+            UserToken_Global = dataAdminToken;
+            initializeDataTable_Events();
+            GetAllTrainings();
+            StopLoading();
+        }
+        else {
+            $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                if (dataAdminToken != "" && dataAdminToken != null) {
+
+                    UserToken_Global = dataAdminToken;
+                    initializeDataTable_Events();
+                    GetAllTrainings();
+                    StopLoading();
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+});
+
+
+    function initializeDataTable_Events() {
+        _trainingsTable = $("#tblAllTrainings").DataTable();
+    }
+
+function GetAllTrainings() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Training/GetAllTrainingsByPaginationForSuperAdmin";
+    _trainingsTable.clear().destroy();
+    _trainingsTable = $("#tblAllTrainings").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[1, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            }
+            , {
+                "data": "ShowOnHomePage", "name": "ShowOnHomePage", "autoWidth": true
+                , "render": function (data, type, row) {
+                    var _icon = (row.ShowOnHomePage == 1) ? '<i class="fas fa-check-square text-success" title="Change visibility on Home Page"></i>' : '<i class="far fa-square"  title="Change visibility on Home Page"></i>';
+                    return `<button class="btn" onclick="ConfirmToggleHomePageVisibilityStatus(${row.Id})">${_icon}</button>`;
+                }
+            }
+            , {
+                "data": "Status", "name": "Status", "autoWidth": true
+                , "render": function (data, type, row) {
+                    var _data = (row.Status == 1) ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>';
+                    return _data;
+                }
+            }
+            , {
+                "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <a target="_blank" href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.BusinessOwnerLoginId}">
+                            <div class="d-flex flex-grow-1">
+                                <div class="mr-2"><img src="${row.BusinessLogoWithPath}" class="img-size-sm" /></div>
+                                <div class="mb-1">${row.BusinessName}</div>
+                            </div>
+                        </a>
+                    `;
+                }
+            }
+            , {
+                "data": "TrainingName", "name": "TrainingName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    var _data = `
+                    <a target="_blank" href="/Home/Certification?id=${row.Id}">
+                        <div class="d-flex align-items-center">
+                                <div class="mr-2">
+                                    <img src="${row.TrainingImageWithPath}" class="img-size-sm" />
+                                </div>
+                            <div>${row.TrainingName} </div>
+                        </div>
+                    </a>
+                    `;
+                    return _data;
+                }
+            }
+            , {
+                "data": "ShortDescription",
+                "name": "ShortDescription",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    var maxLength = 150; // Maximum length to show initially
+                    var description = data;
+                    var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                    var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                    if (description.length > maxLength) {
+                        var trimmedDescription = description.substr(0, maxLength);
+
+                    }
+                    if (description.length < maxLength) {
+                        return '<span class="description"><span class="full-description">' + description + '.';
+
+                    } else {
+
+                        return '<span class="description"><span class="full-description d-none">' + description + '...' + showLessHtml + '</span ><span class="truncated-description">' + trimmedDescription + '...' + readMoreHtml + '</span></span> ';
+                    }
+                }
+            }
+            , { "data": "Price", "name": "Price", "autoWidth": true }
+            , {
+                "data": "StartDate",
+                "name": "StartDate",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    // Parse the TransferDate to a Date object
+                    var transferDate = new Date(data);
+
+                    // Get day, month, and year components
+                    var day = transferDate.getDate();
+                    var month = transferDate.getMonth() + 1; // January is 0
+                    var year = transferDate.getFullYear();
+
+                    // Add leading zero if day or month is a single digit
+                    day = (day < 10) ? '0' + day : day;
+                    month = (month < 10) ? '0' + month : month;
+
+                    // Format the date as dd/mm/yyyy
+                    var formattedDate = day + '/' + month + '/' + year;
+
+                    return formattedDate;
+                }
+            }
+
+            , {
+                "data": "EndDate",
+                "name": "EndDate",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    // Parse the TransferDate to a Date object
+                    var transferDate = new Date(data);
+
+                    // Get day, month, and year components
+                    var day = transferDate.getDate();
+                    var month = transferDate.getMonth() + 1; // January is 0
+                    var year = transferDate.getFullYear();
+
+                    // Add leading zero if day or month is a single digit
+                    day = (day < 10) ? '0' + day : day;
+                    month = (month < 10) ? '0' + month : month;
+
+                    // Format the date as dd/mm/yyyy
+                    var formattedDate = day + '/' + month + '/' + year;
+
+                    return formattedDate;
+                }
+            }
+
+        ],
+
+        "responsive": true,
+        "autoWidth": false,
+        //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "columnDefs": [{
+            "targets": [0], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+
+    // for read more show less functionality of description
+    $(document).on('click', '.read-more', function (e) {
+        e.preventDefault();
+        $(this).closest('.description').find('.full-description').removeClass('d-none');
+        $(this).closest('.description').find('.truncated-description').addClass('d-none');
+    });
+    $(document).on('click', '.read-less', function (e) {
+        e.preventDefault();
+        $(this).closest('.description').find('.full-description').addClass('d-none');
+        $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+    });
+    // for enabling search box only send requet on pressing enter
+    $('#tblAllTrainings_filter input').unbind();
+    $('#tblAllTrainings_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _trainingsTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+
+    function ConfirmToggleHomePageVisibilityStatus(id) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTitleMessage)",
+            text: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: "@(Resources.ErrorMessage.No)",
+                confirm: "@(Resources.ErrorMessage.Yes)"
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                ToggleHomePageVisibilityStatus(id);
+            } else {
+                
+            }
+        });
+    }
+
+    function ToggleHomePageVisibilityStatus(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Training/ToggleHomePageVisibilityStatus/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllTrainings();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+</script>
+

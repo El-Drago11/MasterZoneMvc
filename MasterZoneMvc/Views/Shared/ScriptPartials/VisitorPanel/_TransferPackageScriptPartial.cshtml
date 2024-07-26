@@ -1,0 +1,887 @@
+﻿<script>
+    var UserToken_Global = "";
+    var TransferPackageId_Global = 0;
+    var _packagenotificationTable;
+    var MyUserLoginId_Global = 0;
+
+     $(document).ready(function () {
+   // StartLoading();
+    $.get("/Home/GetStudentToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            getAllActiveStudentsLists();
+            getAllActivePlansLists();
+           // getAllActiveBusinessLists();
+            initializeDataTable_packagetransferrequest();
+            GetAllViewPackage();
+            GetCountriesList();
+        }
+        else {
+            StopLoading();
+        }
+    });
+});
+
+    $('#ToTransferRequest').click(function () {
+        $('#ViewRequestTransferPackage').show();
+        $('#sectionViewPackage').hide();
+        $('#ToTransferRequest').hide();
+        getAllActiveStudentsLists();
+        getAllActivePlansLists();
+      //  getAllActiveBusinessLists();
+    });
+
+    function initializeDataTable_packagetransferrequest() {
+        _packagenotificationTable = $("#ViewPackageNotification").DataTable();
+    }
+
+     function GetAllViewPackage() {
+
+            // ---------------- Pagination Data Table --------------------
+         var _url_val = "/api/TransferPackage/GetAllPackageStudentNotificationDetailByPagination";
+         _packagenotificationTable.clear().destroy();
+         _packagenotificationTable = $("#ViewPackageNotification").DataTable({
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "orderMulti": false,
+                "ordering": true,
+                "paginate": true,
+                "order": [[3, "desc"]],
+                "ajax": {
+                    "headers": {
+                        "Authorization": "Bearer " + UserToken_Global
+                    },
+                    "url": _url_val,
+                    "type": "POST",
+                    "error": function (result) {
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+
+                    }
+                    , {
+                        "data": "TransferType", "name": "TransferType", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            var _data = (row.TransferType == 1) ? "Same Business" : "Another Business";
+                            return _data;
+                        }
+                    }
+                    , {
+                        "data": "TransferToStudentName", "name": "TransferToStudentName", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            var _transferToDetail = '';
+
+                            if (row.TransferType == 1) {
+
+                                _transferToDetail = `<b>Student</b><br/>
+                                     <div class="d-flex align-items-center">
+                                         <div class="mr-2">
+                                             <img src="${row.TrasferToStudentProfileImageWithPath}" class="img-size-sm" />
+                                         </div>
+                                         <div>${row.TransferToStudentName} </div>
+                                     </div>`;
+                            }
+                            else if (row.TransferType == 2) {
+                                _transferToDetail = `<b>Business</b><br/><a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.TransferToUserLoginId}">
+                                      <div class="d-flex align-items-center">
+                                          <div class="mr-2">
+                                              <img src="${row.TransferToBusinessLogoWithPath}" class="img-size-sm" />
+                                          </div>
+                                          <div>${row.TrasferToBusinessName} </div>
+                                      </div></a>`;
+                            }
+                            return _transferToDetail;
+                        }
+                    }
+                    , {
+                        "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            return `<a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${row.BusinessOwnerLoginId}">
+                                      <div class="d-flex align-items-center">
+                                          <div class="mr-2">
+                                              <img src="${row.BusinessLogoWithPath}" class="img-size-sm" />
+                                          </div>
+                                          <div>${row.BusinessName} </div>
+                                      </div></a>`;
+                        }
+
+                    }
+
+                    , {
+                        "data": "PlanName", "name": "PlanName", "autoWidth": true
+
+                    }
+
+                    , {
+                        "data": "TransferDate", "name": "TransferDate", "autoWidth": true
+
+                    }
+                    , {
+                        "data": "CreatedOn_FormatDate", "name": "CreatedOn", "autoWidth": true
+
+                    }
+                    , {
+                        "data": null, "name": "TransferStatus", "autoWidth": true
+                        , "render": function (data, type, row) {
+                            //---Check Rating-Status
+                            var _status = '';
+                            if (row.TransferStatus == 0) {
+                                _status = '<a class="badge badge-warning text-white btn-sm" style="width:max-content;">Pending</a>';
+                            }
+                            else if (row.TransferStatus == 1){
+                                _status = '<a class="badge badge-success text-white btn-sm" style="width:max-content;">Accepted</a>';
+                            }
+                            else if (row.TransferStatus == 2) {
+                                _status = '<a class="badge badge-danger text-white btn-sm" style="width:max-content;">Rejected</a>';
+                            }
+                            return _status;
+                        }
+                    }
+
+                ],
+
+                "responsive": true,
+                "autoWidth": false,
+
+                "columnDefs": [{
+                    "targets": [0], // column index (start from 0)
+                    "orderable": false, // set orderable false for selected columns
+                }]
+            });
+
+            // for enabling search box only send requet on pressing enter
+         $('#ViewPackageNotification_filter input').unbind();
+         $('#ViewPackageNotification_filter input').bind('keyup', function (e) {
+                if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                    _packagenotificationTable.search(this.value).draw();
+                }
+            });
+
+
+    }
+
+    $(document).ready(function () {
+        $('#ddlSelectTransferPackageType').on('change', function () {
+            var selectedOption = $(this).val();
+            if (selectedOption === '2') {
+                $('#BusinessPackage').show();
+            } else {
+                $('#BusinessPackage').hide();
+            }
+        });
+    });
+
+    function ResetbtnTransferPackage() {
+        $("#ddlSelectTransferPackageType").val('0');
+        $("#ddlSelectedStudentsForTransferPackage").val('0').trigger('change');
+        $("#ddlSelectedPlansForTransferPackage").val('0').trigger('change');
+        $("#txtTransferReasonDescription").val('');
+        $("#ddlSelectedBusinessForTransferPackage").val('0');
+        $("#txtStartDate").val('');
+        $("#country").val('0').trigger('change');
+        $("#state").val('0').trigger('change');
+        $("#city").val('0').trigger('change');
+        $('#sectionViewPackage').show();
+        $('#ViewRequestTransferPackage').hide();
+        $('#ToTransferRequest').show();
+        $(".error-class").html('');
+    }
+
+    function resetEmptyDropdown(querySelector) {
+        $(querySelector).html('');
+        $(querySelector).append('<option value="0">Select</option>');
+    }
+
+    function onChangeTransferStudentForField() {
+        if ($('#ddlSelectTransferPackageType').val() == 2) {
+           // $("#ddlSelectedStudentsForTransferPackage").prop('disabled', true);
+            $('#BusinessList').show();
+            $('#StudentList').hide();
+            $("#SearchBusinessbymasterid").val('');
+            $('#UserDetailsCard').empty();
+            
+
+        }
+        else if ($('#ddlSelectTransferPackageType').val() == 1) {
+            //$("#ddlSelectedStudentsForTransferPackage").prop('disabled', false);
+          //  $("#ddlSelectedStudentsForTransferPackage").val('').trigger('change');
+            $('#BusinessList').hide();
+            $('#StudentList').show();
+            $('#UserDetailsCard').val('');
+            $("#Searchbymasterid").val('');
+            $('#UserDetailsCard').empty();
+
+            
+
+        }
+    }
+
+
+     function getAllActiveStudentsLists() {
+
+         let _url =  "/api/TransferPackage/GetAllFollowerStudents";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _selectList = '<option value="0">Select Student</option>';
+                $("#ddlSelectedStudentsForTransferPackage").html('');
+                for (var i = 0; i < response.data.length; i++) {
+                    var _studentName = response.data[i].StudentName;
+                    _selectList += '<option value="' + response.data[i].UserLoginId + '">' + _studentName + '</option>';
+                }
+                $("#ddlSelectedStudentsForTransferPackage").html('').append(_selectList); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+      function getAllActivePlansLists() {
+
+          let _url =  "/api/TransferPackage/GetAllPlanBookings";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _selectList = '<option value="0">Select Package</option>';
+                $("#ddlSelectedPlansForTransferPackage").html('');
+                for (var i = 0; i < response.data.length; i++) {
+                    var _planName = response.data[i].PlanName;
+                    var _BusinessName = response.data[i].BusinessName;
+                    _selectList += '<option value="' + response.data[i].Id + '">' + _planName + " (" +_BusinessName + ")"+  '</option>';
+                }
+                $("#ddlSelectedPlansForTransferPackage").html('').append(_selectList); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+       @*function getAllActiveBusinessLists() {
+
+           let _url =  "/api/TransferPackage/GetAllFollowerBusiness";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _selectList = '<option value="0">Select Business</option>';
+                $("#ddlSelectedBusinessForTransferPackage").html('');
+                for (var i = 0; i < response.data.length; i++) {
+                    var _businessName =  response.data[i].BusinessName;
+                    _selectList += '<option value="' + response.data[i].UserLoginId + '">' + _businessName + '</option>';
+                }
+                $("#ddlSelectedBusinessForTransferPackage").html('').append(_selectList); //.select2();
+
+                StopLoading();
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+    }*@
+
+    function btnSubmitToStudentPackage() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+         //  var _mode = (TransferPackageId_Global > 0) ? 2 : 1;
+           let _selectedtransferpackageType = $("#ddlSelectTransferPackageType").val();
+         //  let _selectedtransferpackageforstudent = $("#ddlSelectedStudentsForTransferPackage").val();
+           let _transferreason = $("#txtTransferReasonDescription").val().trim();
+           let _transferPlanPackage = $("#ddlSelectedPlansForTransferPackage").val();
+        
+           let _transferstartdate = $("#txtStartDate").val().trim();
+           let _transferCity = $("#txt_City").val();
+           let _transferState = $("#state").val();
+
+           let _error_selectedtransferpackageType = $("#error_ddlSelectTransferPackageType");
+        //   let _error_selectedtransferpackageforstudent = $("#error_ddlSelectedStudentsForPackage");
+           let _error_transferreason = $("#error_txtTransferReasonDescription");
+           let _error_transferPlanPackage = $("#error_ddlSelectedPlansForPackage");
+         
+           let _error_transferstartdate = $("#error_txtStartDate");
+           let _error_transferCity = $("#error_txt_City");
+           let _error_transferState = $("#error_state");
+
+           if (validate_IsEmptySelectInputFieldValue(_selectedtransferpackageType)) {
+            is_valid = false;
+               _error_selectedtransferpackageType.html('@(Resources.VisitorPanel.TransferTypeRequired)');
+        }
+
+            @*if (_selectedtransferpackageType === '1')
+            {
+
+               if (validate_IsEmptySelectInputFieldValue(_selectedtransferpackageforstudent))
+                   {
+                is_valid = false;
+                   _error_selectedtransferpackageforstudent.html('@(Resources.VisitorPanel.TransferStudentRequired)');
+                 }
+
+               }*@
+
+
+           if (validate_IsEmptyStringInputFieldValue(_transferreason)) {
+            is_valid = false;
+               _error_transferreason.html('@(Resources.VisitorPanel.TransferReasonRequired)');
+           }
+           if (validate_IsEmptySelectInputFieldValue(_transferPlanPackage)) {
+            is_valid = false;
+                _error_transferPlanPackage.html('@(Resources.VisitorPanel.TransferPlanPackageRequired)');
+        }
+           if (validate_IsEmptyStringInputFieldValue(_transferstartdate)) {
+            is_valid = false;
+               _error_transferstartdate.html('@(Resources.VisitorPanel.TransferStartDateRequired)');
+           }
+
+           if (_selectedtransferpackageType === '2') {
+               if (validate_IsEmptySelectInputFieldValue(_transferCity)) {
+                   is_valid = false;
+                   _error_transferCity.html('@(Resources.VisitorPanel.TransferCityRequired)');
+               }
+               if (validate_IsEmptySelectInputFieldValue(_transferState)) {
+                   is_valid = false;
+                   _error_transferState.html('@(Resources.VisitorPanel.TransferStateRequired)');
+               }
+                   @*if (validate_IsEmptySelectInputFieldValue(_transferBusiness)) {
+                       is_valid = false;
+                       _error_transferBusiness.html('@(Resources.VisitorPanel.TransferBusinessRequired)');
+                   }*@
+           }
+
+
+
+        if (is_valid) {
+            var data = new FormData();
+
+            data.append("Id", TransferPackageId_Global);
+            data.append("TransferStudent", MyUserLoginId_Global);
+            data.append("TransferReason", _transferreason);
+            data.append("TransferStartDate", _transferstartdate);
+            data.append("TransferType", _selectedtransferpackageType);
+            data.append("TransferCity", _transferCity);
+            data.append("TransferState", _transferState);
+            //data.append("PlanId", _transferPlanPackage);
+            data.append("PlanBookingId", _transferPlanPackage);
+
+
+            $.ajax({
+                url: '/api/TransferPackage/AddPackage',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        ResetbtnTransferPackage();
+                        GetAllViewPackage();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function GetCountriesList() {
+
+    $("#country").html('');
+    $("#country").append('<option value="0" data-id="0">Select</option>');
+
+    $.ajax({
+        type: "GET",
+        url: "/api/Country/GetAllCountriesListData",
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataCountries) {
+
+            var res_country = '';
+
+            for (var i = 0; i < dataCountries.data.length; i++) {
+
+                res_country += '<option value="' + dataCountries.data[i].Name + '" data-id = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+            }
+
+            $("#country").append(res_country);
+            StopLoading();
+        },
+       error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+function ChangeCountry() {
+
+    StartLoading();
+    //var _country_id = $("#ddl_ClassOfflineCountry").val();
+    var _country_id = $('#country').find('option:selected').attr('data-id');
+    $("#state").html('');
+    $("#state").append('<option value="0" data-id="0">Select</option>');
+
+
+    $.ajax({
+        type: "GET",
+        url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataState) {
+
+            var res_state = '';
+            var hasListItem = false;
+            for (var i = 0; i < dataState.data.length; i++) {
+                res_state += '<option value="' + dataState.data[i].Name + '" data-id= "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+            }
+
+            $("#state").append(res_state);
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+function ChangeState() {
+
+    StartLoading();
+    var _state_id = $('#state').find('option:selected').attr('data-id');;
+
+    $("#txt_City").html('');
+    $("#txt_City").append('<option value="0" data-id="0">Select</option>');
+
+    $("#span_CityField_RequiredSign").show();
+
+    $.ajax({
+        type: "GET",
+        url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataCity) {
+
+            //--Check if cities exist related to the selected-state
+            if (dataCity.data.length > 0) {
+                var res_city = '';
+                var hasListItem = false;
+
+                for (var i = 0; i < dataCity.data.length; i++) {
+                    res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                }
+
+                $("#txt_City").append(res_city);
+            }
+            else {
+                //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                $("#span_CityField_RequiredSign").hide();
+            }
+
+            StopLoading();
+        },
+       error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+
+
+
+
+    function SearchByMasterId() {
+
+        $("#SearchBusinessbymasterid").val('');
+
+
+
+        var _searchid_val = $("#Searchbymasterid").val();
+              $.ajax({
+                  type: "GET",
+                  url: '/api/TransferPackage/GetUserdetailsByMasterId?searchid=' + _searchid_val,
+
+                  contentType: 'application/json',
+                  success: function (response)
+                  {
+                      if (response.status < 1) {
+                          $.iaoAlert({
+                              msg: response.message,
+                              type: "error",
+                              mode: "dark",
+                          });
+                          return;
+                      }
+                      var UsercardHTML = ``;
+                     
+
+                      var Userdetails = response.data.DetailsList;
+                      if (Userdetails == null) {
+                          UsercardHTML = `<h4 class="mt-4 text-center">Invalid Master Id !</h4>`;
+                          $('#UserDetailsCard').html(UsercardHTML);
+                      }
+                      else
+                      {
+                         var uniqueCheckboxId = 'checkbox_' + Userdetails.Id;
+
+                          UsercardHTML = `
+                                <div class="col-6 mb-2">
+                                    <div class="align-items-center border d-flex flex-row p-2 w-50">
+                                        <img class="business-logo" src="${Userdetails.StudentProfileImageWithPath}">
+                                        <div class="d-flex flex-column flex-grow-1 mx-3">
+                                            <div class="text-bold"><a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${Userdetails.UserLoginId}">${Userdetails.StudentName}</a></div>
+
+                                            <div class="text-muted"> ${Userdetails.MasterId}</div>
+                                        </div>
+                                        <div class="">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="businessOwnerId" id="${uniqueCheckboxId}" value="${Userdetails.Id}" onclick="BusinessCheckedUserId(${Userdetails.UserLoginId})">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                          $('#UserDetailsCard').html(UsercardHTML);
+                      }
+
+                      StopLoading();
+
+                  },
+                  error: function (result)
+                  {
+                      StopLoading();
+
+                   if (result["status"] == 401) {
+                        $.iaoAlert({
+                              msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                              type: "error",
+                              mode: "dark",
+                          });
+                      }
+                      else {
+                      $.iaoAlert({
+                              msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                              type: "error",
+                              mode: "dark",
+                          });
+                      }
+                  }
+              });
+    }
+
+
+   
+
+    function SearchBusinessListByMasterId() {
+
+        $("#Searchbymasterid").val('');
+
+        var _searchBusinessid_val = $("#SearchBusinessbymasterid").val();
+
+        
+          $.ajax({
+              type: "GET",
+              url: '/api/TransferPackage/GetBusinessdetailsByMasterId?searchid=' + _searchBusinessid_val,
+
+              contentType: 'application/json',
+              success: function (response)
+              {
+                  if (response.status < 1) {
+                      $.iaoAlert({
+                          msg: response.message,
+                          type: "error",
+                          mode: "dark",
+                      });
+                      return;
+                  }
+                  var UsercardHTML = ``;
+
+                  var Userdetails = response.data.DetailsList;
+                  if (Userdetails == null) {
+                      UsercardHTML = `<h4 class="mt-4 text-center">Invalid Master Id !</h4>`;
+                      $('#UserDetailsCard').html(UsercardHTML);
+                  }
+                  else {
+
+                      var uniqueCheckboxId = 'checkbox_' + Userdetails.Id;
+
+                      UsercardHTML = `
+                            <div class="col-6 mb-2">
+                                <div class="align-items-center border d-flex flex-row p-2 w-50">
+                                    <img class="business-logo" src="${Userdetails.BusinessProfileImageWithPath}">
+                                    <div class="d-flex flex-column flex-grow-1 mx-3">
+                                        <div class="text-bold"><a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${Userdetails.UserLoginId}">${Userdetails.BusinessName}</a></div>
+
+                                        <div class="text-muted"> ${Userdetails.MasterId}</div>
+                                    </div>
+                                    <div class="">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="businessOwnerId" id="${uniqueCheckboxId}" value="${Userdetails.Id}" onclick="BusinessCheckedUserId(${Userdetails.UserLoginId})">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                      $('#UserDetailsCard').html(UsercardHTML);
+                  }
+
+                  StopLoading();
+
+              },
+              error: function (result)
+              {
+                  StopLoading();
+
+               if (result["status"] == 401) {
+                    $.iaoAlert({
+                          msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                          type: "error",
+                          mode: "dark",
+                      });
+                  }
+                  else {
+                  $.iaoAlert({
+                          msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                          type: "error",
+                          mode: "dark",
+                      });
+                  }
+              }
+          });
+    }
+
+
+    function BusinessCheckedUserId(userLoginId) {
+        MyUserLoginId_Global = userLoginId;
+    }
+
+
+
+
+
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue <= 0)
+            return true;
+        return false;
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

@@ -1,0 +1,400 @@
+﻿
+@{
+    ViewBag.Title = "Profile Settings";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+
+
+@section Styles{
+    @Html.Partial("/Views/Shared/ScriptPartials/_GoogleMapsScriptPartial.cshtml");
+
+    <style>
+        .CurrentPlanPackage td {
+            text-align: right;
+        }
+        #bind_currentpackage{
+            text-align: justify;
+        }
+        .error-message {
+            color: red;
+        }
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+            .imagePreview img {
+                width: 100%;
+                height: 100%;
+
+            }
+
+        .coverImagePreview {
+            border: 2px dashed #cecece;
+            height: 125px;
+            width: 200px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+        .coverImagePreview img {
+            object-fit:contain;
+            width:100%;
+            height: 100%;
+        }
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Profile Setting</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Dashboard">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange">Profile Setting </li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+
+        <div id="sectionAddProfileSetting">
+            <div class="row mb-4">
+                <div class="col-8 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+
+                            <form>
+
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="displayBusinessCategory">Category</label>
+                                        <div id="displayBusinessCategory"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="displayBusinessSubCategory">Sub Category</label>
+                                        <div id="displayBusinessSubCategory"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="ProfileFirstName">Owner First Name</label>
+                                        <input type="text" id="txtProfileFirstName" class="form-control" />
+                                        <div class="error-class" id="error_txtProfileFirstName"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="StaffLastName">Owner Last Name</label>
+                                        <input type="text" id="txtProfileLastName" class="form-control" />
+                                        <div class="error-class" id="error_txtProfileLastName"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="Email">Email</label>
+                                        <input type="text" id="txtEmail" class="form-control" />
+                                        <div class="error-class" id="error_txtEmail"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="PhoneNumber">Phone Number</label>
+                                        <input type="tel" id="PhoneNumber" class="form-control" />
+                                        <div class="error-class" id="error_PhoneNumber"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="Experience">Experience</label>
+                                        <input type="text" id="txtExperience" class="form-control" />
+                                        <div class="error-class" id="error_txtExperience"></div>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="MasterId">MasterId visibility </label>
+                                        <div class="radio-button">
+                                            <div class="radio-iner">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <input type="radio" id="Private" name="Privacy_Id" value="1">
+                                                        <label for="Private">Private (visibile to only Me)</label>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <input type="radio" id="Public" name="Privacy_Id" value="2">
+                                                        <label for="Public">Public (visible to all)</label>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-12">
+
+                                                        <input type="radio" id="Protected" name="Privacy_Id" value="3">
+                                                        <label for="Protected">Protected (visible to linked users)</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="txtBusinessName">Business Name</label>
+                                        <input type="text" id="txtBusinessName" class="form-control" />
+                                        <div class="error-class" id="error_txtBusinessName"></div>
+                                    </div>
+                                </div>
+
+                                                            <!--<div class="form-group d-flex flex-column">
+                                    <label>Profile Image</label>
+                                    <div class="imagePreview">
+                                        <img id="ProfileImage" class="d-none">
+                                    </div>
+                                    <input type="file" id="fileProfileImage_ManageProfile" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileProfileImage_ManageProfile"></div>
+                                </div>-->
+                                                            <!-- /.form-group -->
+                                                            <!--<div class="form-group d-flex flex-column">
+                                    <label>Business Logo</label>
+                                    <div class="imagePreview">
+                                        <img id="BusinessLogo" class="d-none">
+                                    </div>
+                                    <input type="file" id="fileBusinesslogo_ManageProfile" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_filebusinesslogo_ManageProfile"></div>
+                                </div>-->
+                                                            <!-- /.form-group -->
+
+
+                                <div class="form-group">
+                                    <label for="ProfileAbout">About</label>
+                                    <textarea type="text" id="txtProfileAbout" class="form-control"></textarea>
+                                    <div class="error-class" id="error_txtProfileAbout"></div>
+                                </div>
+                                <!-- /.form-group -->
+                                <h3>Business Location</h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description">Address</label>
+                                            <textarea name="description" class="form-control" rows="6" id="Business_Address"></textarea>
+                                            <div class="error-class" id="error_Business_Address"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="country">Country</label>
+                                            @*<input type="text" class="form-control" id="country" readonly />*@
+                                            <select id="country" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                            </select>
+                                            <input type="text" id="country" class="form-control EventCountryState MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_txtCountry"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="state">State</label>
+                                            @*<input type="text" class="form-control" id="state" readonly />*@
+                                            <select id="state" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();">
+                                            </select>
+                                            <input type="text" id="state" class="form-control EventCountryState  MapLocation d-none" readonly />
+
+                                            <div class="error-class" id="error_state"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="Business_ManageProfileMap" style="width: 100%; height: 259px;"></div>
+                                        <input type="hidden" id="LocationLatitude" value="" />
+                                        <input type="hidden" id="LocationLongitude" value="" />
+                                        <div class="col-12 from-group text-center mt-4 mb-4">
+                                            <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-md-6">
+                                        <label for="city">City</label>
+                                        @*<input type="text" class="form-control" id="txt_City" required />*@
+                                        <select id="txt_City" class="form-control WithoutMapLocation" data-width="100%">
+                                        </select>
+                                        <input type="text" id="txt_City" class="form-control MapLocation d-none" value="" />
+                                        <div class="error-class" id="error_txt_City"></div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="txt_PinCode">Pincode</label>
+                                        <input type="text" class="form-control" id="txt_PinCode" required />
+                                        <div class="error-class" id="error_txt_PinCode"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-6">
+                                        <label for="Landmark">Please Enter Location Landmark</label>
+                                        <input type="text" class="form-control" id="Landmark_name" required />
+                                        <div class="error-class" id="error_Landmark_name"></div>
+                                    </div>
+                                   
+                                    <!-- /.form-group -->
+                                </div>
+                                <div class="row">
+                                    <div class="form-group col-12">
+                                        <label for="website">Offical WebSite Url</label>
+                                        <input type="text" class="form-control" id="officialWebsite_URl" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">FaceBook Profile Link</label>
+                                        <input type="text" class="form-control" id="Facebook_Profilelink" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">Instagram Profile Link</label>
+                                        <input type="text" class="form-control" id="Instagram_Profilelink" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">LinkedIn Profile Link</label>
+                                        <input type="text" class="form-control" id="LinkedInWebsite_ProfileLink" />
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="website">Twitter Profile Link</label>
+                                        <input type="text" class="form-control" id="TwitterWebsite_ProfileLink" />
+                                    </div>
+                                </div>
+
+
+                                <div id="BusinessPanelPermissions_ManageStaff">
+
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnAddUpdateProfile()">Submit</button>
+                                @*  <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddView()">Cancel</a>*@
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h2>Master ID</h2>
+                            <div class="d-flex justify-content-between">
+                                <span class="font-weight-bold">Master ID:</span>
+                                <div class="d-flex flex-column">
+                                    <span class="font-weight-bold" id="businessMasterId"></span>
+                                    <span id="businessUniqueUserId"></span>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <span class="font-weight-bold">Master User ID:</span>
+                                <div class="d-flex flex-column">
+                                    <span class="font-weight-bold" id="studentUserMasterId"></span>
+                                    <span id="studentUniqueUserId"></span>
+                                </div>
+                            </div>
+                            <hr />
+                            <h4>Temporary IDs</h4>
+                            <div id="sectionTemporaryMasterIdDetails">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h2 class="text-center pb-4">Current Plan/Package</h2>
+                                <div id="Current_Packge text-center">
+                                    <table class="table CurrentPlanPackage">
+                                        <tbody id="bind_currentpackage">
+                                            @*<tr><th>Title</th><td>Basic</td></tr>
+                                            <tr><th>Start Date</th><td></td></tr>
+                                            <tr><th>End Date</th><td></td></tr>*@
+                                        </tbody>
+                                    </table>
+                                    @*<h2 >Current Package</h2>*@
+                                </div>
+                                <a href="/Business/UpgradePackage" class="btn btn-primary mb-0 text-center">Upgrade</a>
+                            </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h2>Visitor Profile Page</h2>
+                            <a id="btnVisitorProfilePage" href="#" target="_blank" class="btn btn-primary mb-0 text-center">Visit</a>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <div class="row">
+                                <div class="form-group d-flex flex-column col-12">
+                                    <label>Profile Image</label>
+                                    <div class="imagePreview">
+                                        <img id="ProfileImage" class="d-none">
+                                    </div>
+                                    <input type="file" id="fileProfileImage_ManageProfile" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileProfileImage_ManageProfile"></div>
+
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0 ml-3" id="ChangeUpdateProfileImageText" onclick="btnAddUpdateProfileImage()">Save</button>
+                                <div class="my-3 separator w-100"></div>
+                                
+                                <div class="form-group d-flex flex-column col-12">
+                                    <label>Cover Image</label>
+                                    <div class="coverImagePreview">
+                                        <img id="CoverImage" class="d-none">
+                                    </div>
+                                    <input type="file" id="fileCoverImage_ManageProfile" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_fileCoverImage_ManageProfile"></div>
+
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0 ml-3" id="ChangeUpdateCoverImageText" onclick="btnAddUpdateCoverImage()">Save</button>
+                                <div class="my-3 separator w-100"></div>
+                                <div class="form-group d-flex flex-column col-12">
+                                    <label>Business Logo</label>
+                                    <div class="imagePreview">
+                                        <img id="BusinessLogo" class="d-none">
+                                    </div>
+                                    <input type="file" id="fileBusinesslogo_ManageProfile" class="border form-control" accept="image/*">
+                                    <div class="error-class" id="error_filebusinesslogo_ManageProfile"></div>
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0 ml-3" id="ChangeUpdateBusinessLogoText" onclick="btnAddUpdateBusinessLogo()">Save</button>
+                                <div class="my-3 separator w-100"></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="form-group d-flex flex-column col-12 text-left">
+                                    <label for="text_DocumentTitile_ManageProfile" class="text-left mt-4">Document Title</label>
+                                    <input type="text" id="text_DocumentTitile_ManageProfile" class="form-control" placeholder="Enter document title">
+                                    <div class="error-class" id="error_text_DocumentTitile_ManageProfile"></div>
+                                </div>
+
+                                <div class="form-group d-flex flex-column col-12 text-left">
+                                    <label class="text-left mt-2">Document Upload</label>
+                                    <div id="BusinessDocument">
+                                        <a href="/Business/ViewDocumentsBusiness" id="ViewBusinessDocument">
+                                            <input type="button" class="btn btn-success mb-0" value="View" />
+                                        </a>
+                                    </div>
+                                    <input type="file" id="fileBusinessDocument_ManageProfile" class="border form-control">
+                                    <div class="error-class" id="error_fileBusinessDocument_ManageProfile"></div>
+                                </div>
+                                <button type="button" class="btn btn-primary mb-0 ml-3" onclick="btnAddBusinessDocuments()">Save</button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ProfileSettingScriptPartial.cshtml")
+}
+

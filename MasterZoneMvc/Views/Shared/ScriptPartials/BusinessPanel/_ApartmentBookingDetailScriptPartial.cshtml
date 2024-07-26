@@ -1,0 +1,178 @@
+﻿
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+
+
+    $(document).ready(function () {
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetApartmentBookingDetail();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        GetApartmentBookingDetail();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    
+    function GetApartmentBookingDetail() {
+        var apartmentBookingId = $('#hdnApartmentBookinId').val();
+
+        var _url = "/api/Apartment/GetApartmentBookingDetail?apartmentBookingId="+apartmentBookingId;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                //ResetView();
+
+                var item = response.data;
+                console.log(item);
+
+                $('.data-block-name').html(item.BlockName);
+                $('.data-flat-number').html(item.FlatOrVillaNumber);
+                $('.data-apartment-name').html(item.ApartmentName);
+                $('.data-occupant-type').html(item.OccupantType);
+                $('.data-activity').html(item.Activity);
+                $('.data-person-fullname').html(item.PersonFullName);
+                $('.data-person-profileimage').attr('src', item.PersonProfileImageWithPath);
+
+                // Class
+                $('.data-class-name').html(item.ClassName);
+                $('.data-class-price').html('Rs. ' + item.ClassPrice);
+                $('.data-class-days').html(item.ClassDays_ShortForm);
+                $('.data-batch-time').html(item.BatchScheduledStartOnTime_24HF + ' - ' + item.BatchScheduledEndOnTime_24HF);
+
+
+                // Instructor
+                $('.data-instructor-name').html(item.InstructorFullName);
+                $('.data-instructor-category').html(item.InstructorBusinessCategoryName);
+                $('.data-instructor-img').attr('src', item.InstructorProfileImageWithPath);
+                if (item.InstructorIsCertified != 1) {
+                    $('.data-certified-icon').addClass('d-none');
+                }
+
+                // Family Members
+                var _familyMembersHtml = '';
+                if (item.FamilyMembers.length <= 0) {
+                    _familyMembersHtml = `<div class="col-12 w-100 text-center"><i>No Family Members</i></div>`;
+                }
+                for (var f = 0; f < item.FamilyMembers.length; f++) {
+                    _familyMembersHtml += bindFamilyMemberRow(item.FamilyMembers[f]);
+                }
+                $('#sectionFamilyMembers').html(_familyMembersHtml);
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindFamilyMemberRow(familyMember) {
+        return `
+            <div class="col-12">
+                <div class="align-items-center d-flex" data-family-member-id="${familyMember.User2LoginId}">
+                    <img src="${familyMember.UserProfileImageWithPath}" class="mr-3 user-img">
+                    <div class="d-flex flex-column">
+                        <h4 class="font-weight-bold">${familyMember.FirstName} ${familyMember.LastName}</h4>
+                        <h6>${familyMember.User2Relation_FieldTypeCatalogTextValue}</h6>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function ResetView() {
+        // Reset data
+        $("#ddlApartment").val('0');
+        $("#ddlBlock").val('0');
+        $("#txtFlatOrVillaNum").val('');
+        $("#txtPhase").val('');
+        $("#txtLane").val('');
+        $("#txtPropertyManagementTypeOtherName").val('');
+        $('#chkMasterId').prop('checked', true);
+        $('#txtMasterId').val('');
+        $('#txtFirstName').val('');
+        $('#txtLastName').val('');
+        $('#txtEmail').val('');
+        $('#txtPhoneNumber').val('');
+        $('#ddlGender').val('0');
+        $('#ddlCourse').val('0');
+        $('#ddlCourseBatch').val('0');
+        $('#ddlArea').val('0');
+        $('#txtActivity').val('');
+
+        $("#formFamilyMemberSection").html('');
+
+        ApartmentId_Global = 0;
+        FamilyNumberCount_Global = 0;
+
+        // show hide panel
+        $('#sectionViewApartmentBooking').show();
+        $('#sectionBookApartment').hide();
+        $('#btnAddApartment').show();
+        document.getElementById("pageTextchange").innerHTML = "View Apartment Booking";
+        document.getElementById("pageStageChange").innerHTML = "View Apartment Booking";
+        document.getElementById("ChangeUpdateText").innerHTML = "Submit";
+        $(".error-class").html('');
+
+    }
+
+</script>

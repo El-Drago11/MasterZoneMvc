@@ -1,0 +1,1432 @@
+﻿
+<script>
+    var CertificateId_Global = 0;
+    var CertificateTypeKey_Global = "";
+    var UserToken_Global = "";
+    var LicenseId_Global = 0;
+    var SelectedPermissionArr_Global = [];
+    var SelectedFeaturePermissionArr_Global = [];
+
+    function initializeDataTable_License() {
+        _licenseTable = $("#ViewLicenseForSuperAdmin").DataTable();
+    }
+
+    $(document).ready(function () {
+
+        CertificateId_Global = $('#CertificateId').val();
+
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+
+                UserToken_Global = dataAdminToken;
+                GetCertificatesDetailById();
+                getAllActiveCommissionTypes();
+                GetAllBusinessPanelPermissions();
+                GetAllBusinessPanelFeatures();
+                GetAllCertificatesListForDropdown();
+                initializeDataTable_License();
+                GetAllCreatedLicense();
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        GetCertificatesDetailById();
+                        getAllActiveCommissionTypes();
+                        GetAllBusinessPanelPermissions();
+                        GetAllBusinessPanelFeatures();
+                        GetAllCertificatesListForDropdown();
+                        initializeDataTable_License();
+                        GetAllCreatedLicense();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+
+            //StopLoading();
+        });
+
+        $('input[name="License_Price"]').on('change', function () {
+            $('#priceSection').toggleClass('d-none');
+        });
+
+
+    });
+
+
+    function GetAllCreatedLicense() {
+
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/License/GetAllLicenseByPagination?certificateId="+CertificateId_Global;
+        _licenseTable.clear().destroy();
+        _licenseTable = $("#ViewLicenseForSuperAdmin").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[2, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , { "data": "CertificateName", "name": "CertificateName","autoWidth": true}
+                , {
+                    "data": null, "": "LicenseLogo", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _Image = (row.LicenseLogoWithPath == '') ? '' : '<img src="' + row.LicenseLogoWithPath + '" class="UploadedImage" />';
+                        return _Image;
+                    }
+                }
+                , { "data": "Title","name": "Title","autoWidth": true}
+                , {
+                    "data": "Description", "name": "Description", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _desc = `<p>${row.Description}</p>`;
+                        if (row.Description.length > 150) {
+                            _desc = `<p>` + row.Description.substring(0, 50) + "...";
+                        }
+                        return _desc;
+                    }
+                }
+                , {
+                    "data": null, "name": "IsPaid", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _priceType = '';
+                        if (row.IsPaid == 1) {
+                            _priceType = '<span class="badge badge-success text-white">Paid</span>';
+                            _priceType += `<br/><span class="badge badge-info text-white">Commission Type: ${row.CommissionTypeName}</span>`;
+                            _priceType += `<br/><span class="badge badge-info text-white">Commission Value: ${row.CommissionValue}</span>`;
+                        }
+                        else {
+                            _priceType = '<span class="badge badge-danger text-white">Free</span>';
+                        }
+                        return _priceType;
+                    }
+                }
+                //, { "data": "CommissionType", "name": "CommissionType", "autoWidth": true }
+                //, { "data": "CommissionValue", "name": "CommissionValue", "autoWidth": true }
+                , { "data": "AchievingOrder", "name": "AchievingOrder", "autoWidth": true }
+                , {
+                    "data": null, "": "Status", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Advertisement-Status
+                        var _status = '';
+                        if (row.Status == 1) {
+                            _status = '<a class="btn btn-success text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusLicense(' + row.Id + ');">Active</a>';
+                        }
+                        else {
+                            _status = '<a class="btn btn-danger text-white btn-sm" style="width:max-content;" onclick="ConfirmChangeStatusLicense(' + row.Id + ');">In-Active</a>';
+                        }
+                        return _status;
+                    }
+                }
+                , {
+                    "data": null, "": "action", "autowidth": true,
+                    "render": function (data, type, row) {
+
+                        var _edit = `<a href="javascript:EditLicense(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                        var _delete = `<a href="javascript:ConfirmDeletedLicense(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                        var _action = `<div class="edbt">
+
+
+                                    ${_edit}
+                                    ${_delete}
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,8], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#ViewLicenseForSuperAdmin_filter input').unbind();
+        $('#ViewLicenseForSuperAdmin_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _licenseTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+
+    $('#AddLicense').click(function () {
+        GetAvailableAchievingOrderNumber();
+
+        LicenseId_Global = 0;
+        $('#LicenseAdd').show();
+        $('#ViewDetailForLicense').hide();
+        document.getElementById("ManagePageTextLicense").innerHTML = "Add License";
+        document.getElementById("pageTextchange").innerHTML = "Add License";
+    });
+
+    // ------------- PERMISSIONS FUNCTIONALITY --------------------
+    function GetAllBusinessPanelPermissions() {
+        var _url = "/api/Permisssions/GetAll/BusinessPanel";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                //console.log(response.data);
+
+                $("#BusinessPanelPermissions_ManageLicense").html('');
+                var checkboxesData = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var permission = response.data[i];
+
+                    // print parent Permission
+                    checkboxesData += `
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input chk_permission" data-id="${permission.Id}" data-parent-id="0" id="chk_permission_${permission.Id}">
+                            <label class="form-check-label" for="chk_permission_${permission.Id}" style="cursor:pointer;">${permission.TextValue}</label>
+                        </div>
+                    `;
+
+                    if (permission.SubPermissions != null && permission.SubPermissions.length > 0) {
+                        for (var spi = 0; spi < permission.SubPermissions.length; spi++) {
+                            var subPermission = permission.SubPermissions[spi];
+                            checkboxesData += `
+                                <div class="ml-4 form-check">
+                                    <input type="checkbox" class="form-check-input chk_permission" data-id="${subPermission.Id}" data-parent-id="${permission.Id}" id="chk_permission_${subPermission.Id}">
+                                    <label class="form-check-label" for="chk_permission_${subPermission.Id}" style="cursor:pointer;">${subPermission.TextValue}</label>
+                                </div>
+                            `;
+                        }
+                    }
+
+                }
+
+                $("#BusinessPanelPermissions_ManageLicense").html('').append(checkboxesData); //.select2();
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function clearPermissionsArray() {
+        SelectedPermissionArr_Global = [];
+    }
+
+    function onPermissionSelectionChange() {
+        clearPermissionsArray();
+        // readd all checked permissions
+        $(".chk_permission").each(function () {
+            var self = $(this);
+            if (self.is(':checked')) {
+                SelectedPermissionArr_Global.push(self.attr("data-id"));
+            }
+        });
+    }
+
+
+
+    function resetPermissionSelectionsFromObj(permissions) {
+        clearPermissionsArray();
+        for (var i = 0; i < permissions.length; i++) {
+            SelectedPermissionArr_Global.push(permissions[i]);
+        }
+    }
+
+    function updateCheckboxes() {
+        clearPermissionCheckboxes();
+        for (var i = 0; i < SelectedPermissionArr_Global.length; i++) {
+            $('.chk_permission[data-id="' + SelectedPermissionArr_Global[i] + '"]').prop('checked', true);
+        }
+    }
+
+
+    function clearPermissionCheckboxes() {
+        $('.chk_permission').prop('checked', false);
+    }
+
+    function getAllSubPermissionCheckboxes(parentId) {
+        return $('.chk_permission[data-parent-id="' + parentId + '"]');
+    }
+    function getAllCheckedSubPermissionCheckboxes(parentId) {
+        return $('.chk_permission[data-parent-id="' + parentId + '"]:checked');
+    }
+    ////Permissions Checked
+    $(document).on('change', '.chk_permission', function () {
+        var $checkbox = $(this);
+        var _checkboxProp = false;
+        if ($checkbox.is(':checked')) {
+            //console.log('checked!');
+            _checkboxProp = true;
+        }
+        else {
+            //console.log('unchecked!');
+            _checkboxProp = false;
+        }
+        var _parentCheckboxId = $checkbox.attr('data-parent-id');
+        var _id = $checkbox.attr('data-id');
+
+        // if this checkbox is parent checkbox then check/uncheck all sub checkboxes
+        if (_parentCheckboxId == 0) {
+            var subPermissionCheckboxes = getAllSubPermissionCheckboxes(_id);
+            if (subPermissionCheckboxes.length > 0) {
+                subPermissionCheckboxes.prop('checked', _checkboxProp);
+            }
+        }
+        // else it is a sub-checkbox then check the parent if atleaset one is selected and uncheck if all are unselected
+        else {
+            var subPermissionCheckboxes = getAllSubPermissionCheckboxes(_parentCheckboxId);
+            var subPermissionCheckboxes_Checked = getAllCheckedSubPermissionCheckboxes(_parentCheckboxId);
+            var flag_check_parent = false;
+            if (subPermissionCheckboxes_Checked.length > 0) {
+                flag_check_parent = true;
+            }
+            else {
+                flag_check_parent = false;
+            }
+            $('#chk_permission_' + _parentCheckboxId).prop('checked', flag_check_parent);
+        }
+
+        // update global array of selections
+        onPermissionSelectionChange();
+    });
+
+////Closed Permission checked
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    document.getElementById('fileLicenseImage_ManageLicense').addEventListener('change', function (e) { handleImageUpload(e, '#previewLicenceImage') });
+    document.getElementById('fileCertifcateImage_ManageLicense').addEventListener('change', function (e) { handleImageUpload(e, '#previewCertificateImage') });
+    document.getElementById('fileSignatureImage_ManageLicense').addEventListener('change', function (e) { handleImageUpload(e, '#previewSignatureImage') });
+    document.getElementById('fileSignature2Image_ManageLicense').addEventListener('change', function (e) { handleImageUpload(e, '#previewSignature2Image') });
+    document.getElementById('fileSignature3Image_ManageLicense').addEventListener('change', function (e) { handleImageUpload(e, '#previewSignature3Image') });
+
+    function handleImageUpload(event, previewImageTagSelector = '#previewImage') {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 2 * 1024*1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: '@(Resources.SuperAdminPanel.ValidImageFile_ErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $(previewImageTagSelector).addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "2 MB"))',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $(previewImageTagSelector).addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            //document.getElementById('previewImage').src = event.target.result;
+            $(previewImageTagSelector).attr('src', event.target.result);
+            $(previewImageTagSelector).removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+    function resetPreviewImage(querySelector) {
+        $(querySelector).attr('src', '');
+        $(querySelector).addClass('d-none');
+    }
+
+    function setPreviewImage(querySelector, imgSrc) {
+        $(querySelector).attr('src', imgSrc);
+        $(querySelector).removeClass('d-none');
+    }
+
+    function DisplayTeachLicenseType() {
+        if ($("#ddlLicense_ManageLicense").val() === '2') {
+            $("#DisplayTeachTypeShow").hide();
+            $("#ShowLicenseDisplay").hide();
+        }
+        else if ($("#ddlLicense_ManageLicense").val() === '1') {
+            $("#DisplayTeachTypeShow").show();
+
+        }
+    }
+
+    function DisplayLicenseName() {
+        if ($("#ddlLicenseDisplay_ManageLicenseDisplay").val() === 'Custom') {
+            $("#ShowLicenseDisplay").show();
+        }
+        else if ($("#ddlLicenseDisplay_ManageLicenseDisplay").val() === 'Brand' || $("#ddlLicenseDisplay_ManageLicenseDisplay").val() === 'License') {
+            $("#ShowLicenseDisplay").hide();
+        }
+    }
+
+    function resetAddUpdateLicenseForm() {
+        $("#ShowLicenseDisplay").addClass('d-none');
+
+        $('.error-class').html('');
+        // Reset Fields
+        $("#txtLicenseName_ManageLicenses").val('');
+        $("#Additional_Information .ql-editor").html('');
+        $('#LicenseAdd').hide();
+        $('#ViewDetailForLicense').show();
+
+        $("#ddlCertificateId").val(CertificateId_Global).trigger('change');
+        $("#txtLicenseTitle").val('');
+        $("#licenseDescription").val('');
+        $("#fileLicenseImage_ManageLicense").val('');
+        $("#fileCertifcateImage_ManageLicense").val('');
+        $("#fileSignatureImage_ManageLicense").val('');
+        $("#fileSignature2Image_ManageLicense").val('');
+        $("#fileSignature3Image_ManageLicense").val('');
+        $("#txtTimePeriod").val('');
+        $("#txtAchievingOrder").val('0');
+        $('#ddlCommissionType').val('0').trigger('change');
+        $('#txtCommissionValue').val('');
+        $('#chkIsActive').prop('checked', false);
+        $('#txtMinSellingPrice').val('');
+        $('#txtGSTPercent').val('');
+        $('#txtGSTDescription').val('');
+        $('#txtPrice').val('');
+        $('#txtLicenseCertificateHTMLContent').val('');
+
+        $('#ddlLicense_ManageLicense').val('0').trigger('change');
+        $('#ddlLicenseDisplay_ManageLicenseDisplay').val('0').trigger('change');
+        $('#txtLicenseDisplayName').val('');
+
+
+        resetPreviewImage('#previewLicenceImage');
+        resetPreviewImage('#previewCertificateImage');
+        resetPreviewImage('#previewSignatureImage');
+        resetPreviewImage('#previewSignature2Image');
+        resetPreviewImage('#previewSignature3Image');
+
+        document.getElementById("pageTextchange").innerHTML = "Manage License";
+        document.getElementById("pageStageChange").innerHTML = "View License";
+        document.getElementById("ManagePageTextLicense").innerHTML = "Manage License";
+        $('#AddLicense').show();
+        LicenseId_Global = 0;
+        clearPermissionCheckboxes();
+        resetFeaturePermissions();
+    }
+
+    function AddUpdate_ManageLicense() {
+
+        var is_valid = true;
+        $(".error-class").html('');
+        var _mode = (LicenseId_Global > 0) ? 2 : 1;
+
+        let _certificateId = $("#ddlCertificateId").val();
+        let _licenseTitle = $("#txtLicenseTitle").val().trim();
+        let _shortdescription = $("#licenseDescription").val().trim();
+        let $licenseImage = $("#fileLicenseImage_ManageLicense");
+        let $certificateImage = $("#fileCertifcateImage_ManageLicense");
+        let $signatureImage = $("#fileSignatureImage_ManageLicense");
+        let $signature2Image = $("#fileSignature2Image_ManageLicense");
+        let $signature3Image = $("#fileSignature3Image_ManageLicense");
+        let _digitTimePeriod = $("#digitTimePeriod").val().trim();
+        let _timePeriod = $("#txtTimePeriod").val().trim();
+        let _achievingOrder = $("#txtAchievingOrder").val().trim();
+        let _commissionType = $('#ddlCommissionType').val();
+        let _commissionValue = $('#txtCommissionValue').val();
+        let _price = $('#txtPrice').val();
+        let _sellingPrice = $('#txtMinSellingPrice').val();
+        let _gstPercent = $('#txtGSTPercent').val();
+        let _gstDescription = $('#txtGSTDescription').val();
+        let _licenseCertificateHTMLContent = $('#txtLicenseCertificateHTMLContent').val();
+        let _licenseToTeach = $("#ddlLicense_ManageLicense").val();
+        let _licenseToTeachDisplay = $("#ddlLicenseDisplay_ManageLicenseDisplay").val();
+        let _licenseToTeachDisplayForName = $("#txtLicenseDisplayName").val().trim();
+        let _licenseMasterPro = $("#ddlLicense_ManageLicenseMastroPro").val();
+
+
+        let _isActive = ($('#chkIsActive').is(':checked')) ? 1 : 0;
+        let _isPaid = $('input[name="License_Price"]:checked').val();
+
+        let _error_certificateId = $("#error_ddlCertificateId");
+        let _error_licenseTitle = $("#error_txtLicenseTitle");
+        let _error_licenseImage = $("#error_fileLicenseImage_ManageLicense");
+        let _error_certificateImage = $("#error_fileCertificateImage_ManageLicense");
+        let _error_signatureImage = $("#error_fileSignatureImage_ManageLicense");
+        let _error_signature2Image = $("#error_fileSignature2Image_ManageLicense");
+        let _error_signature3Image = $("#error_fileSignature3Image_ManageLicense");
+        let _error_digitTimePeriod = $("#error_digitTimePeriod");
+        let _error_timePeriod = $("#error_txtTimePeriod");
+        let _error_achievingOrder = $("#error_txtAchievingOrder");
+        let _error_commissionType = $('#error_ddlCommissionType');
+        let _error_commissionValue = $('#error_txtCommissionValue');
+        let _error_shortdescription = $("#error_licenseDescription");
+        //let _error_AdditionalInformation = $("#error_Additional_Information");
+        let _error_price = $('#error_txtPrice');
+        let _error_sellingPrice = $('#error_txtMinSellingPrice');
+        let _error_gstPercent = $('#error_txtGSTPercent');
+        let _error_gstDescription = $('#error_txtGSTDescription');
+        let _error_licenseCertificateHTMLContent = $('#error_txtLicenseCertificateHTMLContent');
+        let _error_licenseToTeach = $("#error_ddlLicense_ManageLicense");
+        let _error_licenseToTeachDisplay = $("#error_ddlLicenseDisplay_ManageLicenseDisplay");
+        let _error_licenseToTeachDisplayForName = $("#error_txtLicenseDisplayName");
+        let _error_licenseMasterPro = $("#ddlLicense_ManageLicenseMastroPro");
+
+
+        if (_licenseToTeach  == '0') {
+            is_valid = false;
+            _error_licenseToTeach.html('@(Resources.SuperAdminPanel.LicenseToTeachRequired)');
+        }
+
+
+         if (_licenseToTeach == '1' && _licenseToTeachDisplay == '0') {
+            is_valid = false;
+            _error_licenseToTeachDisplay.html('@(Resources.SuperAdminPanel.LicenseToTeachDisplayRequired)');
+        }
+
+
+        if (_licenseToTeachDisplay === 'Custom' && _licenseToTeachDisplayForName === "") {
+            is_valid = false;
+            _error_licenseToTeachDisplayForName.html('@(Resources.SuperAdminPanel.LicenseToTeachDisplayNameRequired)');
+        }
+
+
+
+        if (validate_IsEmptySelectInputFieldValue(_certificateId)) {
+            is_valid = false;
+            _error_certificateId.html('@(Resources.SuperAdminPanel.License_CertificateSelectionRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_licenseCertificateHTMLContent)) {
+            is_valid = false;
+            _error_licenseCertificateHTMLContent.html('@(Resources.SuperAdminPanel.License_LicenseCertificateHTMLContentRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_licenseTitle)) {
+            is_valid = false;
+            _error_licenseTitle.html('@(Resources.SuperAdminPanel.License_TitleRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_shortdescription)) {
+            is_valid = false;
+            _error_shortdescription.html('@(Resources.SuperAdminPanel.License_DescriptionRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_digitTimePeriod)) {
+            is_valid = false;
+            _error_digitTimePeriod.html('@(Resources.SuperAdminPanel.License_TimePeriodRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_timePeriod)) {
+            is_valid = false;
+            _error_timePeriod.html('@(Resources.SuperAdminPanel.License_TimePeriodRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_achievingOrder) || _achievingOrder <= "0") {
+            is_valid = false;
+            _error_achievingOrder.html('@(Resources.SuperAdminPanel.License_AchievingOrderRequired)');
+        }
+
+        if (_mode == 1) {
+            if ($licenseImage.val() == '') {
+                is_valid = false;
+                _error_licenseImage.html('@(Resources.SuperAdminPanel.License_LicenseLogoImageRequired)');
+            }
+            if ($certificateImage.val() == '') {
+                is_valid = false;
+                _error_certificateImage.html('@(Resources.SuperAdminPanel.License_CertificateImageRequired)');
+            }
+            if ($signatureImage.val() == '') {
+                is_valid = false;
+                _error_signatureImage.html('@(Resources.SuperAdminPanel.License_SignatureImageRequired)');
+            }
+            if ($signature2Image.val() == '') {
+                is_valid = false;
+                _error_signature2Image.html('@(Resources.SuperAdminPanel.License_SignatureImageRequired)');
+            }
+            if (CertificateTypeKey_Global == 'CT_MasterPro' && $signature3Image.val() == '') {
+                is_valid = false;
+                _error_signature3Image.html('@(Resources.SuperAdminPanel.License_SignatureImageRequired)');
+            }
+
+        }
+
+        if (_isPaid == 1) {
+            if (isNaN(_price)) {
+                is_valid = false;
+                _error_price.html('@(Resources.SuperAdminPanel.NumericValueRequired)');
+            }
+            else if (_price <= 0) {
+                is_valid = false;
+                _error_price.html('@(Resources.SuperAdminPanel.License_CommissionValueGreaterThanZeroRequired)');
+            }
+        }
+
+        if (validate_IsEmptySelectInputFieldValue(_commissionType)) {
+            is_valid = false;
+            _error_commissionType.html('@(Resources.SuperAdminPanel.License_CommissionTypeRequired)');
+        }
+
+        if (isNaN(_commissionValue)) {
+            is_valid = false;
+            _error_price.html('@(Resources.SuperAdminPanel.NumericValueRequired)');
+        }
+        else if (_commissionValue <= 0) {
+            is_valid = false;
+            _error_commissionValue.html('@(Resources.SuperAdminPanel.License_CommissionValueGreaterThanZeroRequired)');
+        }
+
+        if (isNaN(_sellingPrice)) {
+            is_valid = false;
+            _error_sellingPrice.html('@(Resources.SuperAdminPanel.NumericValueRequired)');
+        }
+        else if (_sellingPrice <= 0) {
+            is_valid = false;
+            _error_sellingPrice.html('@(Resources.SuperAdminPanel.License_CommissionValueGreaterThanZeroRequired)');
+        }
+
+        if (SelectedPermissionArr_Global.length === 0) {
+            is_valid = false;
+            $("#error_BusinessPanelPermissions_ManageLicense").html('@(Resources.SuperAdminPanel.License_PermisionsRequired)');
+        }
+        // validate feature permissions
+        if (!isValidFeaturePermissions()) {
+            is_valid = false;
+        }
+
+        if (!is_valid) {
+            $.iaoAlert({
+                msg: 'Please check errors!',
+                type: "error",
+                mode: "dark",
+            });
+        }
+
+        if (validate_IsEmptySelectInputFieldValue(_licenseMasterPro)) {
+            is_valid = false;
+            _error_licenseMasterPro.html('@(Resources.SuperAdminPanel.License_MasterProRequired)');
+        }
+
+
+
+        if (is_valid) {
+            StartLoading();
+            var formdata = new FormData();
+
+            formdata.append("Id", LicenseId_Global);
+            formdata.append("CertificateId", _certificateId);
+            formdata.append("Title", _licenseTitle);
+            formdata.append("Description", _shortdescription);
+            formdata.append("LicenseDuration", _digitTimePeriod);
+            formdata.append("TimePeriod", _timePeriod);
+            formdata.append("AchievingOrder", _achievingOrder);
+            formdata.append("CommissionType", _commissionType);
+            formdata.append("CommissionValue", _commissionValue);
+            formdata.append("Status", _isActive);
+            formdata.append("IsPaid", _isPaid);
+            formdata.append("MinSellingPrice", _sellingPrice);
+            formdata.append("GSTPercent", _gstPercent);
+            formdata.append("GSTDescription", _gstDescription);
+            formdata.append("Price", _price);
+            formdata.append("MasterPro", _licenseMasterPro);
+            formdata.append("BusinessPanelPermissions", SelectedPermissionArr_Global.join(","));
+            formdata.append("FeaturePermissions", JSON.stringify(SelectedFeaturePermissionArr_Global));
+            formdata.append("LicenseCertificateHTMLContent", encodeURIComponent(_licenseCertificateHTMLContent));
+            formdata.append("Mode", _mode);
+            formdata.append("IsLicenseToTeach", _licenseToTeach);
+            formdata.append("LicenseToTeach_Type", _licenseToTeachDisplay);
+            formdata.append("LicenseToTeach_DisplayName", _licenseToTeachDisplayForName);
+
+
+            var _licenseImageFile_MC = $("#fileLicenseImage_ManageLicense").get(0);
+            var _licenseImageFiles = _licenseImageFile_MC.files;
+            formdata.append('LicenseLogoImage', _licenseImageFiles[0]);
+
+            //var _certificateImageFile_MC = $("#fileCertifcateImage_ManageLicense").get(0);
+            //var _certificateImageFiles = _certificateImageFile_MC.files;
+            //formdata.append('CertificateImage', _certificateImageFiles[0]);
+
+            var _signatureImageFile_MC = $("#fileSignatureImage_ManageLicense").get(0);
+            var _signatureImageFiles = _signatureImageFile_MC.files;
+            formdata.append('SignatureImage', _signatureImageFiles[0]);
+
+            var _signature2ImageFile_MC = $("#fileSignature2Image_ManageLicense").get(0);
+            var _signature2ImageFiles = _signature2ImageFile_MC.files;
+            formdata.append('Signature2Image', _signature2ImageFiles[0]);
+
+            var _signature3ImageFile_MC = $("#fileSignature3Image_ManageLicense").get(0);
+            var _signature3ImageFiles = _signature3ImageFile_MC.files;
+            formdata.append('Signature3Image', _signature3ImageFiles[0]);
+
+              $.ajax({
+                  url: '/api/License/AddUpdate',
+                    headers: {
+                        "Authorization": "Bearer " + UserToken_Global,
+
+                    },
+                  data: formdata,
+                    processData: false,
+                    mimeType: 'multipart/form-data',
+                    contentType: false,
+                    //contentType: 'application/json',
+                    type: 'POST',
+                    success: function (dataResponse) {
+
+                        //--Parse into Json of response-json-string
+                        dataResponse = JSON.parse(dataResponse);
+
+                        //--If successfully added/updated
+                        if (dataResponse.status === 1) {
+                            swal("Success!", dataResponse.message, "success");
+                            GetAllCreatedLicense();
+                            resetAddUpdateLicenseForm();
+                            StopLoading();
+                        }
+                        else {
+                            swal({
+                                title: 'Error!',
+                                icon: 'error',
+                                text: dataResponse.message
+                            });
+                            StopLoading();
+
+                            return;
+                        }
+
+                        resetAddUpdateLicenseForm();
+                        StopLoading();
+
+                    },
+                    error: function (result) {
+                        StopLoading();
+                        if (result["status"] == 401) {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                        else {
+                            $.iaoAlert({
+                                msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                                type: "error",
+                                mode: "dark",
+                            });
+                        }
+                    }
+                });
+
+        }
+    }
+
+
+    function EditLicense(Id) {
+        $('#LicenseAdd').show();
+        $('#ViewDetailForLicense').hide();
+        document.getElementById("ChangePageTextForEdit").innerHTML = "Edit License";
+        document.getElementById("pageTextchangeSave").innerHTML = "Update";
+        document.getElementById("pageTextchange").innerHTML = "Edit License";
+        document.getElementById("ManagePageTextLicense").innerHTML = "Edit License";
+        $("#ChangePageTextForEdit").show();
+        $('#AddLicense').hide();
+        $(".error-class").html('');
+
+        var _url = "/api/License/GetById/" + Id;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                LicenseId_Global = response.data.Id;
+                var item = response.data;
+
+
+                $("#ddlCertificateId").val(item.CertificateId).trigger('change');
+                $("#txtLicenseTitle").val(item.Title);
+                $("#licenseDescription").val(item.Description);
+                $("#txtTimePeriod").val(item.TimePeriod);
+                $("#txtAchievingOrder").val(item.AchievingOrder);
+                $('#txtMinSellingPrice').val(item.MinSellingPrice);
+                $('#txtGSTPercent').val(item.GSTPercent);
+                $('#txtGSTDescription').val(item.GSTDescription);
+                $('#txtPrice').val(item.Price);
+                $('#ddlLicense_ManageLicenseMastroPro').val(item.MasterPro);
+                $('#ddlCommissionType').val(item.CommissionType).trigger('change');
+                $('#txtCommissionValue').val(item.CommissionValue);
+                $('#txtLicenseCertificateHTMLContent').val(item.LicenseCertificateHTMLContent);
+
+                if (item.IsPaid == 1) {
+                    $('input[name="License_Price"] #PricePaid').prop('checked', true);
+                }
+                else {
+                    $('input[name="License_Price"] #PriceFree').prop('checked', false);
+                }
+
+                if (item.Status == 1)
+                    $('#chkIsActive').prop('checked', true);
+                else
+                    $('#chkIsActive').prop('checked', false);
+
+                $("#ddlLicense_ManageLicense").val(item.IsLicenseToTeach).trigger('change');
+                if (item.IsLicenseToTeach == "1") {
+                    $("#DisplayTeachTypeShow").removeClass('d-none');
+                    $("#ddlLicenseDisplay_ManageLicenseDisplay").val(item.LicenseToTeach_Type).trigger('change');
+                }
+
+                if (item.LicenseToTeach_Type === "Custom") {
+                    $("#ShowLicenseDisplay").removeClass('d-none');
+                    $("#txtLicenseDisplayName").val(item.LicenseToTeach_DisplayName);
+                }
+
+                setPreviewImage('#previewLicenceImage', item.LicenseLogoImageWithPath);
+                setPreviewImage('#previewCertificateImage', item.LicenseCertificateImageWithPath);
+                setPreviewImage('#previewSignatureImage', item.SignatureImageWithPath);
+                setPreviewImage('#previewSignature2Image', item.Signature2ImageWithPath);
+                setPreviewImage('#previewSignature3Image', item.Signature3ImageWithPath);
+
+                // update permissions
+                resetPermissionSelectionsFromObj(item.LicensePermissions.split(','));
+                updateCheckboxes();
+                setFeaturePermissions(item.FeaturePermissions);
+                // update features data
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+    function ConfirmChangeStatusLicense(id) {
+
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmChangeStatusLicenseTitle)",
+            text: "@(Resources.SuperAdminPanel.ConfirmChangeStatusLicenseText)",
+            type: "warning",
+            buttons: {
+                cancel: "@(Resources.ErrorMessage.No)",
+                confirm: "@(Resources.ErrorMessage.Yes)"
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusLicense(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function ChangeStatusLicense(id) {
+        StartLoading();
+
+        $.ajax({
+            type: "POST",
+            url: "/api/License/ChangeStatus/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff-status successfully updated
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllCreatedLicense();
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmDeletedLicense(id) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmDeletedLicenseTitleMessage)",
+            text: "@(Resources.SuperAdminPanel.ConfirmDeletedLicenseTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: "@(Resources.ErrorMessage.No)",
+                confirm: "@(Resources.ErrorMessage.Yes)"
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeleteLicense(id);
+            } else {
+
+            }
+        });
+    }
+
+    function DeleteLicense(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/License/DeleteById/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllCreatedLicense();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //// ---------------- Features List --------------------
+
+    //$featureSection = $("#BusinessPanelFeatures");
+    function GetAllBusinessPanelFeatures() {
+        const _url = "/api/Features/GetAllActive/BusinessPanel";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            //console.log(response.data);
+
+            $("#BusinessPanelFeatures").html('');
+            var checkboxesData = '';
+
+            for (var i = 0; i < response.data.length; i++) {
+                var feature = response.data[i];
+
+                var featureLimitInputHTML = '';
+                if (feature.IsLimited) {
+                    featureLimitInputHTML = `
+                        <div class="col-sm-2">
+                            <input type="text" id="chk_feature_limit_${feature.Id}" class="form-control form-control-sm featureLimit" placeholder="Limit*" />
+                        </div>
+                    `;
+                }
+                // Feature row
+                checkboxesData += `
+                    <div class="row mb-1">
+                        <div class="form-check col-sm-4">
+                            <input type="checkbox" class="form-check-input chk_feature" data-id="${feature.Id}" data-feature-is-limited="${feature.IsLimited}" data-parent-id="0" id="chk_feature_${feature.Id}">
+                            <label class="form-check-label" for="chk_feature_${feature.Id}" style="cursor:pointer;">${feature.TextValue}</label>
+                        </div>
+                        ${featureLimitInputHTML}
+                    </div>
+                `;
+
+            }
+
+            $("#BusinessPanelFeatures").html('').append(checkboxesData);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function GetAllCertificatesListForDropdown() {
+        const _url = "/api/Certificate/GetAll";
+        const $dropdownElement = $("#ddlCertificateId");
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $dropdownElement.html('');
+            var optionsData = '<option value="0">Select</option>';
+
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                optionsData += `<option value="${item.Id}">${item.Name}</option>`;
+            }
+
+            $dropdownElement.html('').append(optionsData);
+            $dropdownElement.val(CertificateId_Global).trigger('change');
+            $dropdownElement.prop('disabled', true);
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+    function GetCertificatesDetailById() {
+        const $dropdownElement = $("#ddlCertificateId");
+
+        var _url = "/api/Certificate/GetById/" + CertificateId_Global;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var content = `
+                    <img src="${response.data.CertificateIconWithPath}" style="height:50px; width:50px;" />
+                    <div class="h3 ml-2 flex-grow-1">${response.data.Name}</div>
+                    <a class="btn btn-sm btn-dark" href="/SuperAdmin/ManageCertificate">Back</a>
+                `;
+                CertificateTypeKey_Global = response.data.CertificateTypeKey;
+                $("#selectedCertificateProfile").html(content);
+
+                if (CertificateTypeKey_Global != "CT_MasterPro") {
+                    $('#signature3Group').addClass('d-none');
+                }
+                else {
+                    $('#signature3Group').removeClass('d-none');
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function getAllActiveCommissionTypes() {
+        let _url = "/api/FieldTypeCatalog/GetAllActiveByKeyName?keyName=LicenseCommissionTypes";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var res_Options = '<option value="0">Select</option>';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    res_Options += '<option value="' + response.data[i].KeyName + '">' + response.data[i].TextValue + '</option>';
+                }
+
+                $("#ddlCommissionType").html('').append(res_Options).select2();
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetAvailableAchievingOrderNumber() {
+        var _url = "/api/License/GetAvailableLicenseAchievingOrder?certificateId=" + CertificateId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var item = response.data;
+
+                $("#txtAchievingOrder").val(item.AvailableAchievingOrder);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    };
+
+
+//// Feature Permission functions --------------------------------------
+    function resetFeaturePermissions() {
+        $('.chk_feature').prop('checked', false);
+        $('.featureLimit').val('');
+        $('.featureLimit').removeClass('border-danger');
+    }
+
+    function clearFeaturePermissionsArray() {
+        SelectedFeaturePermissionArr_Global = [];
+    }
+
+    function setFeaturePermissions(itemPermissions) {
+        resetFeaturePermissions();
+        for (var i = 0; i < itemPermissions.length; i++) {
+            $('#chk_feature_' + itemPermissions[i].FeatureId).prop('checked', true);
+            if (itemPermissions[i].IsLimited == 1)
+                $('#chk_feature_limit_' + itemPermissions[i].FeatureId).val(itemPermissions[i].Limit);
+        }
+    }
+
+    function onFeaturePermissionSelectionChange() {
+        clearFeaturePermissionsArray();
+        // readd all checked permissions
+        $(".chk_feature").each(function () {
+            var self = $(this);
+            if (self.is(':checked')) {
+                var featureObj = { FeatureId: self.attr("data-id"), IsLimited: self.attr('data-feature-is-limited'), Limit: $('#chk_feature_limit_' + self.attr('data-id')).val() }
+                SelectedFeaturePermissionArr_Global.push(featureObj);
+            }
+        });
+    }
+
+    function isValidFeaturePermissions() {
+        clearFeaturePermissionsArray();
+        $('.featureLimit').removeClass('border-danger');
+        var isValid = true;
+        // readd all checked permissions
+        $(".chk_feature").each(function () {
+            var self = $(this);
+            if (self.is(':checked')) {
+                var featureId = self.attr("data-id");
+                var isLimited = self.attr('data-feature-is-limited');
+                var limit = $('#chk_feature_limit_' + featureId).val();
+                if (isLimited == 1 && (limit == '' || isNaN(limit))) {
+                    $('#chk_feature_limit_' + featureId).addClass('border-danger');
+                    isValid = false;
+                }
+                var featureObj = {
+                    FeatureId: featureId, IsLimited: isLimited, Limit: limit
+                }
+                SelectedFeaturePermissionArr_Global.push(featureObj);
+            }
+        });
+        return isValid;
+    }
+
+    $(document).on('change', '.chk_feature', function () {
+        var $checkbox = $(this);
+        var _checkboxProp = false;
+        if ($checkbox.is(':checked')) {
+            //console.log('checked!');
+            _checkboxProp = true;
+        }
+        else {
+            //console.log('unchecked!');
+            _checkboxProp = false;
+        }
+
+        // update global array of selections
+        //onFeaturePermissionSelectionChange();
+    });
+
+
+//// Feature Permission functions --------------------------------------
+
+
+    function btnPreviewLicenseCertificatePDF() {
+        console.log('clicked');
+        var htmlTemplate = $('#txtLicenseCertificateHTMLContent').val();
+        $('#pdfPreviewForm input[name="licenseId"]').val(LicenseId_Global);
+        $('#pdfPreviewForm textarea[name="licenseCertificateTemplate_Html"]').val(htmlTemplate);
+        $('#pdfPreviewForm').submit();
+    }
+</script>

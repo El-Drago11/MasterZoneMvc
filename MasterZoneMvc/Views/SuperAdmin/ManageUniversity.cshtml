@@ -1,0 +1,253 @@
+﻿
+@{
+    ViewBag.Title = "ManageUniversity";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+
+<style>
+    .previewimageUniversityImagePreview {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imageUniversityImagePreview {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+
+    .previewimageUniversityLogoPreview {
+        width: 75px;
+        height: 75px;
+    }
+
+    .imageUniversityLogoPreview {
+        border: 2px dashed #cecece;
+        height: 75px;
+        width: 75px;
+        margin: 5px 0px;
+        padding: 5px;
+    }
+</style>
+
+
+<div id="AllUniversity">
+    <div class="wrapper">
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Manage University</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active">View University</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-sm-10 d-flex align-items-center">
+                                            <h3 class="card-title">View University</h3>
+                                        </div>
+                                        <div class="col-sm-2 d-flex justify-content-end">
+                                            <a href="javascript:;" id="AddUniversity">
+                                                <button type="submit" class="btn btn-primary">
+                                                    &plus; Add New
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.card -->
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <table id="tblUniversityDetailView" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>SNo.</th>
+                                                <th>University Logo</th>
+                                                <th>University Image</th>
+                                                <th> University</th>
+
+                                                <th>Description</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>SNo.</th>
+                                                <th>University Logo</th>
+                                                <th>University Image</th>
+                                                <th> University</th>
+
+                                                <th>Description</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <!-- /.card-body -->
+                                <!-- /.card -->
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                        <!-- /.row -->
+                    </div>
+                    <!-- /.container-fluid -->
+                </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        
+    </div>
+</div>
+<aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+</aside>
+
+
+
+<div id="AddNewUniversity" style="display: none">
+    <div class="wrapper">
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 id="TochangeHeader">Manage University</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/SuperAdmin/Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active" id="pageUpTextChange">Add New University</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+
+                <!-- Default box -->
+                <div class="card card-default">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-sm-9 d-flex align-items-center">
+                                <h3 class="card-title" id="ToChangeTextTitle">Add New University</h3>
+                            </div>
+                            <div class="col-sm-3 d-flex justify-content-end">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="ResetBusinessUniversityDetail();">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form>
+                                    <div class="form-group d-flex flex-column">
+                                        <label> University Image</label>
+                                        <div class="imageUniversityImagePreview">
+
+                                            <img id="previewimageUniversityImagePreview" class="d-none" style="width:100%; height:100%;">
+                                        </div>
+                                        <input type="file" id="fileProfileImage_ManageUniversityImage" class="border form-control" accept="imageAbout/*">
+                                        <div class="error-class" id="error_fileProfileImage_ManageUniversityImage"></div>
+                                    </div>
+
+
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description"> Description</label>
+                                            <textarea name="description" class="form-control" rows="6" id="text_description" style="width: 211%;"></textarea>
+                                            <div class="error-class" id="error_text_description"></div>
+                                        </div>
+                                    </div>
+                                    @*<div class="form-group">
+                                            <div class="form-group">
+                                                <label for="date_time"> End Date</label>
+                                                <input type="date" class="form-control" id="Education_EndDate" required />
+                                                <div class="error-class" id="error_Education_EndDate"></div>
+                                            </div>
+
+                                        </div>*@
+                                    <div class="form-group">
+                                        <label for="Title">  University/School Name</label>
+                                        <input type="text" id="txtEducationUniversity" class="form-control" />
+                                        <div class="error-class" id="error_txtEducationUniversity"></div>
+
+                                    </div>
+                                    <div class="form-group d-flex flex-column">
+                                        <label> University Logo</label>
+                                        <div class="imageUniversityLogoPreview">
+
+                                            <img id="previewimageUniversityLogoPreview" class="d-none" style="width:100%; height:100%;">
+                                        </div>
+                                        <input type="file" id="fileProfileImage_ManageUniversityLogo" class="border form-control" accept="imageAbout/*">
+                                        <div class="error-class" id="error_fileProfileImage_ManageUniversityLogo"></div>
+                                    </div>
+
+                                </form>
+
+                                <!-- /.col -->
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary" id="ToChangeUpdateText" onclick="btnSubmitBusinessContentUniversityClick();">Save</button>
+                            @*<button type="submit" class="btn btn-danger" id="ResetCancel" onclick="CancelbtnChange();">Cancel</button>*@
+                            <button type="button" class="btn btn-danger" id="ResetCancelbtn" onclick="ResetBusinessUniversityDetail();">Cancel</button>
+                        </div>
+                        <!-- /.card-body -->
+                        <!-- <div class="card-footer">
+                          Visit <a href="https://select2.github.io/">Select2 documentation</a> for more examples and information about
+                          the plugin.
+                        </div> -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+    </div>
+</div>
+
+
+
+@section Scripts{
+
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/SuperAdminPanel/_ManageUniversityScriptPartial.cshtml")
+}

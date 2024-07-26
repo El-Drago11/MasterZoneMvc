@@ -1,0 +1,2477 @@
+﻿<script>
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+    var ClassList_LastRecordId_Global = 0;
+    var State = "";
+    var City = "";
+    var UserToken_Global = "";
+    var InstructorId_Global = 0;
+
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+            }
+            else {
+
+                StopLoading();
+            }
+        });
+        $('#branches-cards-section-data').addClass('d-none');
+
+    });
+    $(document).ready(function () {
+        var encodedReturnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        $('#loginButton').attr('href', '/Home/Login?returnUrl=' + encodedReturnUrl);
+        GetContactDetail();
+        GetAllBusinessTimingData_footer();
+         GetAllBusinessEventImages();
+         GetAllBusinessVideosList();
+         getClassList();
+         GetAllRatingReview();
+         GetInstructorProfessionalDetail();
+         GetAllBusinessBranchesDetailList();
+         GetAllBusinessClassicDanceVideosList();
+         GetAllBusinessClassicDanceDetail();
+         GetAllBusinessClassicDanceBannerDetail();
+         GetAllBusinessClassicClassesTimingDetail('Monday');
+         GetContactInformationDetail();
+         GetBusinessAboutDetail();
+         GetAllBusinessOurClassSectionDetails();
+         GetEducationCourseWithCertificateDetailList();
+        GetEducationCourseWithCertificateAndExamDetailList();
+        GetAllBusinessContentUniversityDetailList();
+        //Music Package
+        GetAllPlanPackagesDetail();
+        //Event
+        GetAllEventDetail();
+    });
+
+      function btnSubmitUser() {
+
+    let is_valid = true;
+
+    $('.error-class').html('');
+    let _name = $("#text_Contact_Name").val().trim();
+    let _contact_email_address = $("#text_Email_Address").val().trim();
+    let _contact_phone_detail = $("#text_phone").val();
+    let _contact_messages = $("#text_Messages").val();
+
+    let _error_name = $("#error_text_Contact_Name");
+    let _error_contact_email_address = $("#error_text_Email_Address");
+    let _error_contact_phone_detail = $("#error_text_phone");
+    let _error_contact_messages = $("#error_text_Messages");
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+    if (validate_IsEmptyStringInputFieldValue(_name)) {
+        is_valid = false;
+        _error_name.html('@(Resources.VisitorPanel.NameRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_contact_email_address)) {
+        is_valid = false;
+        _error_contact_email_address.html('@(Resources.VisitorPanel.EmailRequired)');
+    }
+    else if (!TestEmail.test(_contact_email_address)) {
+        is_valid = false;
+        _error_contact_email_address.html('@(Resources.VisitorPanel.ValidEmailRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_contact_phone_detail)) {
+        is_valid = false;
+        _error_contact_phone_detail.html('@(Resources.VisitorPanel.PhoneNumberRequired)');
+    }
+    else if (_contact_phone_detail.indexOf(' ') >= 0) {
+        is_valid = false;
+        _error_contact_phone_detail.html('@(Resources.VisitorPanel.PhoneNumberNotEmptySpaceRequired)');
+    }
+    else if (!phone_test.test(_contact_phone_detail)) {
+        is_valid = false;
+        _error_contact_phone_detail.html('@(Resources.VisitorPanel.ValidPhoneNumberRequired)');
+    }
+    if (validate_IsEmptyStringInputFieldValue(_contact_messages)) {
+        is_valid = false;
+        _error_contact_messages.html('@(Resources.VisitorPanel.MessageRequired)');
+    }
+
+    if (is_valid) {
+        StartLoading();
+
+        var _Params = {
+            "Name": _name,
+            "EmailAddress": _contact_email_address,
+            "PhoneNumber": _contact_phone_detail,
+            "Message": _contact_messages,
+            "businessOwnerLoginId": BusinessOwnerLoginId_Global
+        };
+        $.ajax({
+            url: '/api/ContactDetail/SendContactUsMessage',
+            data: JSON.stringify(_Params),
+            processData: false,
+            // mimeType: 'multipart/form-data',
+            // contentType: false,
+            contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+
+                //--If successfully sent
+                if (dataResponse.status == 1) {
+                    $.iaoAlert({
+                        msg: '@(Resources.VisitorPanel.Contact_SuccessMessage)',
+                        type: "success",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    swal({
+                        title: dataResponse.message,
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                }
+                StopLoading();
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+
+
+    //Bind Business Contact Detail
+    function GetContactDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var facebooklink = '';
+                if (response.data.BusinessTimingDetail.FacebookProfileLink !== null && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    facebooklink = `<div class="social-icon">
+            <a target="_blank" href="${response.data.BusinessTimingDetail.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+        </div>`;
+                }
+
+                var twitterlink = '';
+                if (response.data.BusinessTimingDetail.TwitterProfileLink !== null && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    twitterlink = `<div class="social-icon">
+                <a target="_blank" href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+            </div>`;
+                }
+
+                var linkdinlink = '';
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink !== null && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    linkdinlink = `<div class="social-icon">
+                <a target="_blank" href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>`;
+                }
+
+                var BusinessSocial = `
+                   ${facebooklink}
+                   ${twitterlink}
+                   ${linkdinlink}`;
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data.BusinessTimingDetail === null) {
+                    $("#businesscontact_sec").addClass('disply_none_section');
+                }
+                else {
+                    htmlBusinessContactDetail = ` <div class="address-sec">
+                            <div class="font-icon">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div class="address-text">
+                                <h4>
+                                     ${response.data.BusinessTimingDetail.Address}
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="address-sec">
+                            <div class="font-icon">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div class="address-text">
+                                <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}">
+                                    ${response.data.BusinessTimingDetail.PhoneNumber}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="address-sec">
+                            <div class="font-icon">
+                                <i class="fa-regular fa-envelope"></i>
+                            </div>
+                            <div class="address-text">
+                                <a href="${response.data.BusinessTimingDetail.Email}">
+                                   ${response.data.BusinessTimingDetail.Email}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="sharing-title" id="SocialContact_section">
+                            <h6 >Social Follow</h6>
+                        </div>
+                        <div class="social-sharing">
+
+                        ${BusinessSocial}
+                        </div>`;
+                           $("#BindBusinessContactDetail").append(htmlBusinessContactDetail);
+                    }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Business Event Images Detail
+    function GetAllBusinessEventImages() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetUpcomingEventsListWithAdditionalData?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var allBusinessEventImages = '';
+                if (response.data.BusinessEventImageDetail.length === 0) {
+                    $(".gallery-right-col").addClass('disply_none_section');
+                }
+                else {
+                    for (var i = 0; i < response.data.BusinessEventImageDetail.length; i++) {
+
+                        allBusinessEventImages += `<div class="card-image">
+                                    <a href="${response.data.BusinessEventImageDetail[i].BusinessEventImagesWithPath}" data-fancybox="gallery" data-caption="Caption Images 1">
+                                        <img src="${response.data.BusinessEventImageDetail[i].BusinessEventImagesWithPath}" alt="Image Gallery">
+                                    </a>
+                                </div>`;
+
+                    }
+                    $("#BusinessContentEventImage").append(allBusinessEventImages);
+                }
+
+                var fullBusinessEventImageDisplay = '';
+                if (response.data.BusinessUpcomingEvents.length === 0) {
+                    $("#BindBusinessGallery_Section").addClass('disply_none_section');
+                } else {
+
+
+                    for (var i = 0; i < response.data.BusinessUpcomingEvents.length; i++) {
+                        fullBusinessEventImageDisplay += `    <li>
+                                <a class="nav-link m-0 p-0 ${i === 0 ? 'active' : ''}" id="activeImage_${response.data.BusinessUpcomingEvents[i].Id}" data-toggle="tab" >
+                                    <div class="gallery-iner">
+                                        <img src="${response.data.BusinessUpcomingEvents[i].EventFeaturedImageWithPath}" alt="gallery-img" loading="lazy" onclick="ShowingEventImages('${response.data.BusinessUpcomingEvents[i].Id}');">
+                                        <h6 class="img-years">${response.data.BusinessUpcomingEvents[i].StartMonth}, ${response.data.BusinessUpcomingEvents[i].StartDay}</h6>
+                                    </div>
+                                </a>
+                            </li>`;
+                    }
+
+                    $("#BindBusinessContentEventDetailList").html(fullBusinessEventImageDisplay);
+
+
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ShowingEventImages(Id) {
+        $('#BusinessContentEventImage').html('');
+        $('.nav-link').removeClass('active');
+        $('#activeImage_' + Id).addClass('active');
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentEventImageSectionDetailForVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global + '&&eventId=' + Id,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlBusinessContentEventImageDetailListDisplay = '';
+
+                if (response.data === null || response.data.length === 0) {
+                    $("#BindBusinessGallery_Section").addClass('d-none');
+                } else {
+                    for (var i = 0; i < response.data.length; i++) {
+                        htmlBusinessContentEventImageDetailListDisplay += `<div class="card-image">
+                                    <a href="${response.data[i].BusinessEventImagesWithPath}" data-fancybox="gallery" data-caption="Caption Images 1">
+                                        <img src="${response.data[i].BusinessEventImagesWithPath}" alt="Image Gallery">
+                                    </a>
+                                </div>`;
+                    }
+                }
+
+                $("#BusinessContentEventImage").html(htmlBusinessContentEventImageDetailListDisplay);
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Business Videos
+    function GetAllBusinessVideosList() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/BusinessContentVideo/GetBusinessContentVideos?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var VideoDisplay = '';
+                if (response.data.BusinessContentVideo == null) {
+                    $("#SingleVideoDetail").addClass('d-none');
+                } else {
+                    var _firstVideo = ``;
+                    if (response.data.BusinessContentVideoList.length > 0) {
+                        _firstVideo = `<iframe width="100%" height="360" src="${"https://www.youtube.com/embed/" + response.data.BusinessContentVideoList[0].VideoLink}" frameborder="0" allowfullscreen></iframe>`;
+                    }
+                    var fulldisplayvideo = `${_firstVideo}`;
+
+                    $("#SingleVideoDetail").html(fulldisplayvideo);
+
+                  var Videocontent = `
+                   <h2> ${response.data.BusinessContentVideo.Title}</h2>
+                   <p>
+                      ${response.data.BusinessContentVideo.VideoDescription}
+                   </p>`;
+                            $("#Video_content").html(Videocontent);
+                }
+
+
+                var VideothumbnailList = '';
+                if (response.data.BusinessContentVideoList.length === 0) {
+                    $(".gallery-section").addClass('d-none');
+                }
+                else
+                {
+                    for (var i = 0; i < response.data.BusinessContentVideoList.length; i++) {
+
+                      VideothumbnailList += `<div class="video-items" style="margin: inherit;" id="BindVideoThumbNail_${response.data.BusinessContentVideoList[i].Id}"  >
+                         <img src="${response.data.BusinessContentVideoList[i].VideoThumbNailImageWithPath}" class="imageDisplay" onclick="ShowingVideo('${"https://www.youtube.com/embed/" + response.data.BusinessContentVideoList[i].VideoLink}',${response.data.BusinessContentVideoList[i].Id});"/>
+                     </div>`;
+
+
+                    }
+                    $("#BusinessVideoDetail").append(VideothumbnailList);
+                 }
+
+
+
+                //$('#BindBusinessVideosList').slick({
+                //    slidesToShow: 3,
+                //    slidesToScroll: 1,
+                //});
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ShowingVideo(videoLink, id) {
+        $(".video-items").removeClass('activeThumbNail');
+        $("#BindVideoThumbNail_" + id).addClass('activeThumbNail');
+
+        $("#SingleVideoDetail").html('');
+        var fullVideoDisplay = `<iframe width="100%" height="303" src="${videoLink}" frameborder="0" allowfullscreen></iframe>`;
+
+        $("#SingleVideoDetail").html(fullVideoDisplay);
+    }
+
+    // Bind Business Classes Information Detail
+     function GetAllBusinessOurClassSectionDetails() {
+          $.ajax({
+            type: "GET",
+              url: '/api/Business/GetBusinessContentClassDetailsForVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var htmlClassContentDetails = '';
+                if (response.data === null) {
+                    $("#BindClassInformationDetail_section").addClass('disply_none_section');
+                }
+                else {
+                    htmlClassContentDetails = ` <h6 class="sub-title">${response.data.Title}  </h6>
+                <h2>
+                 ${response.data.Description}
+                </h2>`;
+                $("#BindBusinessOurClassesInfo_ForClassicDance").append(htmlClassContentDetails);
+                }
+
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //   Our CLASSS
+    function getClassList() {
+
+        $.ajax({
+            type: "GET",
+
+            url: '/api/Business/GetAllClassListLastRecorded?businessOwnerLoginId=' + BusinessOwnerLoginId_Global + '&&lastRecordId=0',
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+                var htmlBusinessClassesList = '';
+
+                if (response.data.ClassList.length <= 0) {
+                    $('#BindClassInformationDetail_section').addClass('disply_none_section');
+                    $('#BtnViewMoreClassList').addClass('d-none');
+                    $('#BtnViewMoreClassList').css('display', 'none');
+
+                    StopLoading();
+                    return;
+                }
+
+                for (var i = 0; i < response.data.ClassList.length; i++)
+                {
+
+                    if (response.data.length <= 0)
+                    {
+                        $("#BtnViewMoreClassList").addClass('btnViewMoreUpcomingClass');
+                    } else {
+                        $("#BtnViewMoreClassList").removeClass('d-none');
+                    }
+
+                    for (var i = 0; i < response.data.ClassList.length; i++) {
+                        var item = response.data.ClassList[i];
+
+
+                        htmlBusinessClassesList = ` <div class="col-lg">
+                            <div class="dance-box class-wrap">
+                                <div class="dance-box_img">
+                                    <img src="${item.ClassImageWithPath}" alt="dance_2_1">
+                                </div>
+                                <div class="dance-box_content bg-mask" style="background-image: url('/Content/visitor-panel/image/shape_3.png');">
+                                    <h3 class="dance-box_title e-title"><a href="">${item.Name}</a></h3>
+                                    <p class="dance-box_text e-text">${item.Description}</p>
+                                    <div class="btn"><a href="/Home/ClassDetail?classId=${item.Id}" class="primary-button">Explore Details</a></div>
+                                </div>
+                            </div>
+                        </div>`;
+
+
+                        $("#BindBusinessClassesDetail").append(htmlBusinessClassesList);
+                    }
+                }
+                    // Check if there is more data to load
+                    if (response.data.ClassList.length > 0) {
+                        ClassList_LastRecordId_Global = response.data.ClassList[response.data.ClassList.length - 1].Id;
+                        $('#BtnViewMoreClassList').removeClass('d-none');
+
+                    }
+                    else {
+                        $('#BtnViewMoreClassList').css('display', 'none');
+                        // No more data, hide the "View More" button
+                        //---not working d-none class
+                        $('#BtnViewMoreClassList').addClass('d-none');
+                    }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ViewMoreClassList() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetAllClassListLastRecorded?businessOwnerLoginId=' + BusinessOwnerLoginId_Global + '&&lastRecordId=' + ClassList_LastRecordId_Global,
+
+            contentType: 'application/json',
+            success: function (response) {
+
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+                // if no enquiries found and not a hit from ViewMore.
+                if (response.data.ClassList.length <= 0) {
+                    $('#BtnViewMoreClassList').addClass('d-none');
+
+                        $('#BtnViewMoreClassList').css('display', 'none');
+
+                        $('.view-all').addClass('d-none');
+                        StopLoading();
+                        return;
+                }
+
+                var recordlimit = 2;
+                if (response.data.ClassList.length < recordlimit) {
+
+                    $('#BtnViewMoreClassList').css('display', 'none');
+                }
+                if (response.data.ClassList.length <= 0) {
+                    //---not working d-none class
+                    $('#BtnViewMoreClassList').addClass('d-none');
+
+                    $('#BtnViewMoreClassList').css('display', 'none');
+
+                }
+                else {
+                    ClassList_LastRecordId_Global = response.data.ClassList[response.data.ClassList.length - 1].Id;
+                    $('#BtnViewMoreClassList').removeClass('d-none');
+                }
+                var htmlBusinessClassesList = '';
+                for (var i = 0; i < response.data.ClassList.length; i++) {
+                    var item = response.data.ClassList[i];
+                    htmlBusinessClassesList = ` <div class="col-lg">
+                    <div class="dance-box class-wrap">
+                        <div class="dance-box_img">
+                            <img src="${item.ClassImageWithPath}" alt="dance_2_1">
+                        </div>
+                        <div class="dance-box_content bg-mask" style="background-image: url('/Content/visitor-panel/image/shape_3.png');">
+                            <h3 class="dance-box_title e-title"><a href="">${item.Name}</a></h3>
+                            <p class="dance-box_text e-text">${item.Description}</p>
+                            <div class="btn"><a href="/" class="primary-button">Explore Details</a></div>
+                        </div>
+                    </div>
+                </div>`;
+
+
+                    $("#BindBusinessClassesDetail").append(htmlBusinessClassesList);
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+    // Bind Business Branches Detail
+    function GetAllBusinessBranchesDetailList() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBranchesDetailForVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                if (response.data.length === 0) {
+                    $("#AllBranchCard_Section").addClass('disply_none_section');
+                }
+                else {
+                    for (var i = 0; i < response.data.BranchDetails.length; i++) {
+
+                        var BusinessCountryname = `${response.data.BranchDetails[i].Country}`;
+
+                        $("#Countryname").html(BusinessCountryname);
+                    }
+                }
+
+                if (response.data.BranchDetails.length === 0) {
+                    $("#AllBranchCard_Section").addClass('disply_none_section');
+                }
+                else {
+                    for (var i = 0; i < response.data.BranchDetails.length; i++) {
+
+                        var BusinessBranchesDetaillst = ` <li class="branches-city-text">
+                                 <a href="javascript:GetAllBusinessBranchLocationDetailList('${response.data.BranchDetails[i].State}','${response.data.BranchDetails[i].City}');">${response.data.BranchDetails[i].City}/${response.data.BranchDetails[i].State}</a>
+                             </li>`;
+
+
+
+                        $("#BusinessBranchesAddressDetaillst").append(BusinessBranchesDetaillst);
+                    }
+                }
+                var BusinessTotalBranchesdetail = '';
+                if (response.data.BranchDetails.length === 0) {
+                    $("#BindBranches_Section").addClass('disply_none_section');
+                }
+                else {
+                    for (var i = 0; i < response.data.BranchDetails.length; i++)
+                    {
+                         var BusinessTotalBranchesdetail = `<div class="branches-item ">
+                             <div class="number-of-branches-text">
+                                ${response.data.BranchDetails[i].TotalCount}
+                             </div>
+                         </div>`;
+
+
+
+                        $("#BusinessBranchesTotalRecordDetail").append(BusinessTotalBranchesdetail);
+                    }
+                }
+                var BusinessLogodetail = '';
+                if (response.data.BranchListforBusinessLogo.length === 0) {
+                    $("#BindBranches_Section").addClass('disply_none_section');
+                }
+                else
+                {
+                    for (var i = 0; i < response.data.BranchDetails.length; i++) {
+                        var BusinessLogodetail = `<div class="branches-item img-width">
+                         <div class="branch-logo">
+                             <img src="${response.data.BranchListforBusinessLogo.BusinessLogoWithPath}" alt="branche-logo" loading="lazy">
+                         </div>
+                       </div>`;
+
+                        $("#BusinessBranchLogoDetail").append(BusinessLogodetail);
+                    }
+                }
+
+                var BusinessBranchViewDetail = '';
+                if (response.data.BranchDetails.length === 0) {
+                    $("#BindBranches_Section").addClass('disply_none_section');
+                }
+                else {
+                    for (var i = 0; i < response.data.BranchDetails.length; i++) {
+
+                        var BusinessBranchViewDetail = `<div class="branches-item ">
+                         <div class="branch-cta">
+                             <a href="javascript:GetAllBusinessBranchLocationDetailList('${response.data.BranchDetails[i].State}','${response.data.BranchDetails[i].City}');">View all</a>
+                         </div>
+
+                     </div>`;
+
+
+
+                        $("#BindBusinessBranchViewDetail").append(BusinessBranchViewDetail);
+                    }
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //Bind Business Branch Detail For Location
+    function GetAllBusinessBranchLocationDetailList(State, City) {
+        $("#BusinessAddressDetail").empty();
+        $("#BusinessContentBranchLocationDetail").empty();
+
+        $.ajax({
+            type: "Get",
+            url: '/api/Business/GetBranchesDetailLocationForVisitorPanel?state=' + State + '&city=' + City + '&businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var ClassicDanceBranchTitleDetail = '';
+                if (response.data.length === 0) {
+                    $('#BusinessAddressDetail').addClass('d-none');
+                }
+                else {
+                    $("#branches-cards-section-data").removeClass('d-none');
+                    for (var i = 0; i < response.data.length; i++) {
+                        ClassicDanceBranchTitleDetail = `
+                          ${response.data[i].State} / ${response.data[i].City}
+                        `;
+                        $("#BusinessAddressDetail").html(ClassicDanceBranchTitleDetail);
+                    }
+                }
+                var ClassicDanceBranchLocationDetailList = '';
+                if (response.data.length === 0)
+                {
+                    $('#BusinessContentBranchLocationDetail').addClass('disply_none_section');
+                }
+                else
+                {
+                    for (var i = 0; i < response.data.length; i++)
+                    {
+                       ClassicDanceBranchLocationDetailList = `<div class="branch-flex-items">
+                                <div class="logo-iner">
+                                    <img src="${response.data[i].BusinessLogoWithPath}" alt="branch-logo" loading="lazy">
+
+                                </div>
+                                <div class="branch-content">
+                                    <h6 class="branch-place">${response.data[i].BusinessName}</h6>
+
+                                    <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${response.data[i].UserLoginId}">
+                                    <span class="visit-tag">Visit Us</span></a>
+                                    <p class="branch-description">
+                                        ${response.data[i].Address}
+                                    </p>
+                                </div>
+                       </div>`;
+
+                       $("#BusinessContentBranchLocationDetail").append(ClassicDanceBranchLocationDetailList);
+                    }
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind Business classic Detail
+    function GetAllBusinessClassicDanceDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/ClassicDance/GetBusinessContentClassicDanceDetail_PPCMetaForVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                // Clear previous content
+                $("#BindBusinessClassicDanceDetail").empty().removeClass('display_none_section');
+                $("#BusinessClassicDanceImage").empty().removeClass('display_none_section');
+                $("#BusinessClassicDetailList").empty().removeClass('display_none_section');
+                $("#BindBusinessClassicDanceDtaillist").empty().removeClass('display_none_section');
+                $(".dance-tab-step-iner").removeClass('display_none_section');
+                $("#bindclassicdancestep_section").removeClass('display_none_section');
+
+                var ClassicDanceDetail = response.data.ClassicDanceDetail;
+                if (ClassicDanceDetail === null) {
+                    $("#BindBusinessClassicDanceDetail").addClass('display_none_section');
+                    $("#BusinessClassicDanceImage").addClass('display_none_section');
+                } else {
+                    $("#BindBusinessClassicDanceDetail").append(`
+                    <h6 class="sub-title">${ClassicDanceDetail.Title}</h6>
+                    <h2>${ClassicDanceDetail.SubTitle}</h2>
+                `);
+                    $("#BusinessClassicDanceImage").append(`
+                    <img src="${ClassicDanceDetail.TechniqueImagePath}" alt="dance-img" loading="lazy">
+                `);
+                }
+
+                var ClassicDanceDetailList = response.data.ClassicDanceDetailList;
+                if (ClassicDanceDetailList.length === 0) {
+                    $(".dance-tab-step-iner").addClass('display_none_section');
+                    $("#bindclassicdancestep_section").addClass('display_none_section');
+                } else {
+                    ClassicDanceDetailList.forEach(function (item) {
+                        $("#BusinessClassicDetailList").append(`<li><a href="#dance_step_one_${item.Id}">${item.Title}</a></li>`);
+                        var BusinessTechniqueItemDetailList = '';
+
+                        if (typeof item.TechniqueItemList === 'string') {
+                            var optionsArray = item.TechniqueItemList.split(',');
+
+                            optionsArray.forEach(function (option) {
+                                BusinessTechniqueItemDetailList += `<li>${option}</li>`;
+                            });
+                        } else {
+                            $("#bindclassicdancestep_section").addClass('display_none_section');
+                        }
+
+                        $("#BindBusinessClassicDanceDtaillist").append(`
+                        <div class="dance-description" id="dance_step_one_${item.Id}">
+                            <p>${item.Description}</p>
+                            <div class="dance-listing">
+                                <ul>${BusinessTechniqueItemDetailList}</ul>
+                            </div>
+                        </div>
+                    `);
+                    });
+
+                    // Dance tab section
+                    $('.dance-tab-section .dance-tab-flex ul.dance-step>li:first-child').addClass('active-tab');
+                    $('.dance-description').hide();
+                    $('.dance-description:first').show();
+
+                    // Click function
+                    $('.dance-tab-section .dance-tab-flex ul.dance-step>li').click(function () {
+                        $('.dance-tab-section .dance-tab-flex ul.dance-step>li').removeClass('active-tab');
+                        $(this).addClass('active-tab');
+                        $('.dance-description').hide();
+
+                        var activeTab = $(this).find('a').attr('href');
+                        $(activeTab).fadeIn();
+                        return false;
+                    });
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                var errorMessage = result["status"] == 401 ? 'Unauthorized! Invalid Token!' : 'There is some technical error, please try again!';
+                $.iaoAlert({
+                    msg: errorMessage,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        });
+    }
+
+
+
+    //Bind Business Classic Dance Video Detail
+    function GetAllBusinessClassicDanceVideosList() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/ClassicDance/GetBusinessContentClassicDanceVideoDetailForVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var ClassicDanceVideoDisplay = '';
+                if (response.data === null) {
+                    $(".video-setion").addClass('disply_none_section');
+                } else {
+
+                    var ClassicDanceVideoDisplay = `     <div class="video-content">
+                                        <h6 class="title">
+                                            ${response.data.Title}
+                                        </h6>
+                                        <h2>   ${response.data.SubTitle}</h2>
+                                        <h6>
+                                            ${response.data.Note}
+                                        </h6>
+                                    </div>
+                                    <div class="cta-repeater">
+                                        <a class="primary-button" href="${response.data.ButtonLink}">${response.data.ButtonText}</a>
+                                        <a class="secondary-cta" href="${response.data.ButtonLink1}">${response.data.ButtonText1}</a>
+                                    </div>`;
+
+
+                $("#BindBusinessClassicDanceVideoDetail").html(ClassicDanceVideoDisplay);
+                }
+
+
+
+                var VideoPlay = '';
+                if (response.data === null) {
+                    $("#BusinessClassicDanceVideoDetail").addClass('disply_none_section');
+                } else {
+
+                    var VideoPlay = ` <div class="play-btn" href="${response.data.VideoLink}">
+                                </div>
+                                <img src="${response.data.VideoImageWithPath}" alt="video-img" loading="lazy">`;
+
+                $("#BusinessClassicDanceVideoDetail").html(VideoPlay);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //Bind Business Classic Dance Banner Detail
+
+    function GetAllBusinessClassicDanceBannerDetail() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/ClassicDance/GetClassicDanceProfileDetailForVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var ClassicDanceBannerDisplay = '';
+                if (response.data == null) {
+                    ClassicDanceBannerDisplay = ` <div class="hero-banner-section" style="background-image: url(/Content/images/defaultbannerimage.jpg);">
+
+                      </div>`;
+                    $("#BindBusinessBannerDetail").html(ClassicDanceBannerDisplay);
+                } else {
+
+                     ClassicDanceBannerDisplay = ` <div class="hero-banner-section" style="background-image: url('${response.data.BannerImageWithPath}');">
+                        <div class="top-img">
+                            <img src="${response.data.ClassicImageWithPath}" alt="banner-first" loading="lazy">
+                        </div>
+                        <div class="bottom-img">
+                            <img src="${response.data.ImageWithPath}" alt="banner-two" loading="lazy">
+                        </div>
+                    </div>`;
+                $("#BindBusinessBannerDetail").html(ClassicDanceBannerDisplay);
+                }
+
+
+                var SchdeuleImageDetail = '';
+                if (response.data == null) {
+                    $("#BusinessSchdeuleImage").addClass('d-none');
+                } else {
+                    SchdeuleImageDetail = `<img  src="${response.data.ScheduleImageWithPath}" alt="dance" loading="lazy">`;
+
+                    $("#BusinessSchdeuleImage").append(SchdeuleImageDetail);
+                }
+
+                var SchdeuleClassDetail = '';
+                if (response.data == null) {
+                    $("#BusinessSchdeuleClassDetail").addClass('d-none');
+                } else {
+                    SchdeuleClassDetail = `<h6 class="sub-title">${response.data.Title}</h6>
+                <h2>${response.data.SubTitle}</h2>`;
+
+                    $("#BusinessSchdeuleClassDetail").append(SchdeuleClassDetail);
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind Busines Classic Dance Classes Timing Detail
+
+    function GetAllBusinessClassicClassesTimingDetail(day) {
+        var ClassDaysGlobal = day;
+        $("#BindBusinessClassicTimingDetailList").empty();
+        $.ajax({
+            type: "GET",
+            url: '/api/Class/GetClasesTimingDetail?classDays=' + ClassDaysGlobal + '&businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var ClassicDanceTimingDetailList = ``;
+                var ClassicDanceErrorMessage = `<div class="schedules-details-inerss">
+                               <h4 class="record-error-message ">No Record!</h4>
+                    </div>`;
+                if (response.data.length === 0) {
+                    $("#BindBusinessClassicTimingDetailList").html(ClassicDanceErrorMessage);
+                }
+                else {
+                    for (var i = 0; i < response.data.length; i++) {
+
+                        ClassicDanceTimingDetailList += `<div class="row-iner first-color">
+                                <div class="time-iner">
+                                   ${response.data[i].ScheduledStartOnTime_24HF}
+                                  To  ${response.data[i].ScheduledEndOnTime_24HF}
+                                </div>
+
+                                <div class="dance-type">
+
+                                       ${response.data[i].BatchName}
+                                </div>
+                                <div class="teacher-iner">
+                                   By ${response.data[i].InstructorFullName}
+                                </div>
+
+                                <div class="join-cta-iner">
+                                    <a class="join-now" href="">Join Now</a>
+                                </div>
+                        </div>`;
+                    }
+                        $("#BindBusinessClassicTimingDetailList").append(ClassicDanceTimingDetailList);
+
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function GetBusinessAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentAboutDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessLogoDetail = '';
+                if (response.data === null) {
+                    $("#BusinessLogoDetail").addClass('disply_none_section');
+                }
+                else {
+                    BusinessLogoDetail = ` <a href="javascript:;">
+                    <img src="${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 76px;">
+                </a>`;
+                    $("#BusinessLogoDetail").append(BusinessLogoDetail);
+
+                }
+
+                var htmlBusinessAboutDetail = '';
+                if (response.data === null) {
+                    $(".footer").addClass('disply_none_section');
+                } else {
+                    htmlBusinessAboutDetail = `<h3 class="dnc-cl-hd">${response.data.Title}</h3>
+                        <p class="dnc-cl-txt-01">
+                            ${response.data.About}
+                        </p>`;
+                    htmlBusinessAboutDetail = ` <div class="footer-logo">
+                        <a href="index.html">
+                            <img src="  ${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 52px;
+                            width: auto;">
+                        </a>
+                        <div class="logo-title">
+                        </div>
+                    </div>
+                    <p class="small">  ${response.data.About.slice(0, 200)}.... <a href="#bindclassicdancestep_section"><span>Read More</span></a> </p>
+                    `;
+
+                      $("#BindBusinessAboutDetail").append(htmlBusinessAboutDetail);
+                }
+
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind  Footer Business Contact Detail
+    function GetContactInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var facebooklink = '';
+                if (response.data.BusinessTimingDetail.FacebookProfileLink !== null && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    facebooklink = `<div class="social-icon">
+    <a target="_blank" href="${response.data.BusinessTimingDetail.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+</div>`;
+                }
+
+                var twitterlink = '';
+                if (response.data.BusinessTimingDetail.TwitterProfileLink !== null && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    twitterlink = `<div class="social-icon">
+        <a target="_blank" href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+    </div>`;
+                }
+
+                var linkdinlink = '';
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink !== null && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    linkdinlink = `<div class="social-icon">
+        <a target="_blank" href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+    </div>`;
+                }
+
+                var BusinessSocial = `
+           ${facebooklink}
+           ${twitterlink}
+           ${linkdinlink}`;
+                $("#BusinessSocialDetail_Footer").append(BusinessSocial);
+
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data.BusinessTimingDetail === null) {
+                    $(".footer").addClass('disply_none_section');
+                }
+                else {
+                    htmlBusinessContactDetail = `<h5>Contact Us</h5>
+                <p>
+                     ${response.data.BusinessTimingDetail.Address}
+                </p>
+                <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}"> ${response.data.BusinessTimingDetail.PhoneNumber}</a>
+                <a href="${response.data.BusinessTimingDetail.Email}">${response.data.BusinessTimingDetail.Email}</a>`;
+
+
+                    $("#BindContactDetailInformation").append(htmlBusinessContactDetail);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function GetEducationCourseWithCertificateDetailList() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Course/GetCourseDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var _courseListwithCertificate = response.data.CourseListwithCertificate;
+                var row = '';
+
+                if (response.data.CourseListwithCertificate.length === 0) {
+                    $("#WithoutTrainingDetail").addClass('d-none');
+                } else {
+
+                    for (var i = 0; i < response.data.CourseListwithCertificate.length; i++) {
+                        // Create a Business Training Detail List for each entry in the List
+                        // var moredetails=  `<a href="/Home/Details?courseId=${_courseListwithCertificate[i].Id}&businessOwnerLoginId=${BusinessOwnerLoginId_Global}"></a>`;
+
+                        row = `<tr><td>${_courseListwithCertificate[i].Id}</td>
+                         <td>${_courseListwithCertificate[i].Name}</td>
+                         <td>${_courseListwithCertificate[i].Duration} ${_courseListwithCertificate[i].DurationType}</td>
+                         <td>${_courseListwithCertificate[i].CourseStartDate} </td>
+                         <td><a class="cta-detail" href="/Home/Details?courseId=${_courseListwithCertificate[i].Id}&businessOwnerLoginId=${BusinessOwnerLoginId_Global}">Details <i class="fa-solid fa-angle-right"></i></a>
+                           </td>
+                         </tr>`;
+
+                        $("#BusinessCourseInfoWithCertificate").append(row);
+
+                    }
+
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function GetEducationCourseWithCertificateAndExamDetailList() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Course/GetCourseDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _courseListwithCertificateAndExam = response.data.CourseListwithCertificateAndExam;
+
+                var row = '';
+                if (response.data.CourseListwithCertificateAndExam.length === 0) {
+                    $("#BindLicensedCourseDetail_Section").addClass('d-none');
+                } else {
+
+
+                    for (var i = 0; i < response.data.CourseListwithCertificateAndExam.length; i++) {
+                        row = `<tr>
+                         <td>${_courseListwithCertificateAndExam[i].Id}</td>
+                       <td>${_courseListwithCertificateAndExam[i].Name}</td>
+                      <td>${_courseListwithCertificateAndExam[i].Duration} ${_courseListwithCertificateAndExam[i].DurationType}</td>
+                      <td>${_courseListwithCertificateAndExam[i].CourseStartDate}</td>
+                      <td><a class="cta-detail" href="/Home/Details?courseId=${_courseListwithCertificateAndExam[i].Id}&businessOwnerLoginId=${BusinessOwnerLoginId_Global}">Details <i class="fa-solid fa-angle-right"></i></a>
+                      </td>
+                      </tr>`;
+
+                        $("#BusinessCourseDetailCertificateExam").append(row);
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    // Bind Busines Instructor Professional Detail
+    //function GetInstructorProfessionalDetail() {
+    //    $.ajax({
+    //        type: "GET",
+    //        url: '/api/Business/GetProfessionalDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+    //        contentType: 'application/json',
+    //        success: function (response) {
+    //            if (response.status < 1) {
+    //                $.iaoAlert({
+    //                    msg: response.message,
+    //                    type: "error",
+    //                    mode: "dark",
+    //                });
+    //                return;
+    //            }
+
+    //            var BusinessProfessionalDetail = '';
+    //            if (response.data.BusinessContentProfessionalDetail === null) {
+    //                console.log(response.data)
+    //                // $("#BindBusinessDanceProfessionalDetail_Section").addClass('d-none');
+    //                BusinessProfessionalDetail = `<div class="team-heading">
+    //                            <h2> Our Professionals </h2>
+    //                        </div>
+    //                    `;
+    //            }
+    //            else {
+    //                BusinessProfessionalDetail = `<h2>
+    //                         ${response.data.BusinessContentProfessionalDetail.ProfessionalTitle}
+    //                     </h2>
+    //                     <p>
+    //                         ${response.data.BusinessContentProfessionalDetail.Description}
+    //                     </p>`;
+    //                $("#ProfessionalInformation_DanceDetail").append(BusinessProfessionalDetail);
+    //            }
+
+
+    //            var htmlBusinessInstructorProfessionalDetail = '';
+    //            if (!response.data.BusinessContentProfessionalList || response.data.BusinessContentProfessionalList.length === 0) {
+    //                $("#BindBusinessDanceProfessionalDetail_Section").addClass('d-none');
+    //            }
+    //            else {
+    //                htmlBusinessInstructorProfessionalDetail = response.data.BusinessContentProfessionalList.map(item => {
+    //                    var BusinessSocialLinks = '';
+
+    //                    if (item.FacebookProfileLink) {
+    //                        BusinessSocialLinks += `<div class="social-icons">
+    //         <a href="${item.FacebookProfileLink}" title="facebook"><i class="fa-brands fa-facebook-f"></i> </a>
+    //     </div>`;
+    //                    }
+
+    //                    if (item.TwitterProfileLink) {
+    //                        BusinessSocialLinks += ` <div class="social-icons">
+    //         <a href="${item.TwitterProfileLink}" title="twitter"><i class="fa-brands fa-twitter"></i></a>
+    //     </div>`;
+    //                    }
+    //                    if (item.LinkedInProfileLink) {
+    //                        BusinessSocialLinks += `<div class="social-icons">
+    //         <a href="${item.LinkedInProfileLink}" title="linkedin"><i class="fa-brands fa-linkedin-in"></i></a>
+    //     </div>`;
+    //                    }
+
+    //                    return `<div class="trainer-inr">
+    //                     <div class="tranier-img">
+    //                         <img src="${item.BusinessProfileImageWithPath}" alt="tranier-img" loading="lazy" style="height: 176px;">
+    //                     </div>
+    //                     <div class="tranier-profile">
+    //                         <h4>${item.BusinessName}</h4>
+    //                         <p>${item.Designation}</p>
+    //                         <div class="social-follow">
+    //                             ${BusinessSocialLinks}
+    //                         </div>
+    //                     </div>
+    //                 </div>`;
+    //                });
+
+    //                $("#BusinessProfessionalList").append(htmlBusinessInstructorProfessionalDetail);
+    //            }
+
+
+
+    //            $('#BusinessProfessionalList').slick({
+    //                arrows: true,
+    //                dots: true,
+    //                infinite: true,
+    //                mobileFirst: true,
+    //                responsive: [
+    //                    {
+    //                        breakpoint: 1024,
+    //                        settings: {
+    //                            slidesToShow: 6,
+    //                            slidesToScroll: 1,
+    //                        }
+    //                    },
+    //                    {
+    //                        breakpoint: 767,
+    //                        settings: {
+    //                            slidesToShow: 2,
+    //                            slidesToScroll: 2,
+    //                        }
+    //                    },
+    //                    {
+    //                        breakpoint: 580,
+    //                        settings: {
+    //                            slidesToShow: 1,
+    //                            slidesToScroll: 1,
+    //                        }
+    //                    }
+
+    //                ]
+
+    //            });
+
+
+    //            StopLoading();
+    //        },
+    //        error: function (result) {
+    //            // StopLoading();
+
+    //            if (result["status"] == 401) {
+    //                $.iaoAlert({
+    //                    msg: 'Unauthorized! Invalid Token!',
+    //                    type: "error",
+    //                    mode: "dark",
+    //                });
+    //            }
+    //            else {
+    //                $.iaoAlert({
+    //                    msg: 'There is some technical error, please try again!',
+    //                    type: "error",
+    //                    mode: "dark",
+    //                });
+    //            }
+    //        }
+    //    });
+    //}
+   function resetAddUpdateForm() {
+       $('#rate').val('');
+       $('#review').val('');
+       $(".star-value").css("color", "#D3D3D3");
+       InstructorId_Global = 0;
+   }
+   $(".star-value").click(function () {
+       const starValue = parseInt($(this).attr('data-star-value'));
+
+       // Change the color of the clicked star and all stars with lower values
+       $(".star-value").each(function () {
+           const value = parseInt($(this).attr('data-star-value'));
+           if (value <= starValue) {
+               $(this).css("color", "#f3a762");
+           } else {
+               $(this).css("color", "#D3D3D3");
+           }
+       });
+
+       // Save the starValue to the input field with id "ratingInput"
+       $("#ratingInput").val(starValue);
+   });
+
+   function ShowAddReviewPopup()
+   {
+       if (UserToken_Global == "") {
+           $("#btnUserLoginPoup").click();
+       }
+       else {
+           $("#btnAddReviewPoup").click();
+       }
+   }
+
+   //Bind Business Instructor Rating Detail
+function AddUpdate_ManageInstructorRating()
+{
+
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+    var is_valid = true;
+    $(".error-class").html('');
+    let _ratingFeedback = $("#review").val().trim();
+    let _error_ratingFeedback = $("#error_Instructor_RatingFeedback");
+    if (validate_IsEmptyStringInputFieldValue(_ratingFeedback)) {
+        is_valid = false;
+        _error_ratingFeedback.html = $('@(Resources.VisitorPanel.ReviewBodyRequired)');
+    }
+
+    if (is_valid) {
+
+        var formdata = new FormData();
+        const starValue = $("#ratingInput").val();
+        formdata.append("Id", InstructorId_Global);
+
+        formdata.append("Rating", starValue);
+        formdata.append("ReviewBody", _ratingFeedback);
+        // formdata.append("Mode", _mode);
+        $.ajax({
+            url: '/api/Business/AddUpdate?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: formdata,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            type: 'POST',
+            success: function (dataResponse) {
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+
+                    resetAddUpdateForm();
+                    GetAllDancingRatingReview();
+                    StopLoading();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                    StopLoading();
+
+                    return;
+                }
+
+
+                StopLoading();
+
+            },
+            error: function (result) {
+                //StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+
+    }
+}
+
+
+   function GetAllRatingReview() {
+       $.ajax({
+           type: "GET",
+           url: '/api/Review/GetReviewRatingDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+           contentType: 'application/json',
+           success: function (response) {
+               if (response.status < 1) {
+                   $.iaoAlert({
+                       msg: response.message,
+                       type: "error",
+                       mode: "dark",
+                   });
+                   return;
+               }
+
+                $("#RatingReviewDetailCard").html('');
+
+               var DanceReviewImageDetail = '';
+               if (response.data.BusinessReviewDetail == null) {
+                   //  $("#dance-event-page").addClass('d-none');
+               } else {
+                   DanceReviewImageDetail = `<img class="card-img-top" src="${response.data.BusinessReviewDetail.ReviewImageWithPath}" alt="Card image cap">`;
+               }
+
+               var htmlRatingReviewDetail = ''; // Initialize the variable
+
+               if (response.data.DanceRatingReviewDetail && response.data.DanceRatingReviewDetail.length > 0) {
+                   for (var i = 0; i < 6; i++) {
+                       var rating = '';
+                       var starIcons = '';
+
+                       if (response.data.DanceRatingReviewDetail[i] && response.data.DanceRatingReviewDetail[i].Rating) {
+                           rating = response.data.DanceRatingReviewDetail[i].Rating;
+
+                           for (var j = 1; j <= 5; j++) {
+                               if (j <= rating) {
+                                   starIcons += '<i class="fas fa-star star-icon" style="color: #f3a762;"></i>';
+                               } else {
+                                   starIcons += '<i class="fas fa-star star-icon"></i>';
+                               }
+                           }
+
+                            if (response.data.DanceRatingReviewDetail[i].Status == 1) {
+
+                                htmlRatingReviewDetail += `
+                                <div class="card" style="width: 16%;">
+                                    ${DanceReviewImageDetail}
+                                    <div class="card-body text-center">
+                                        <div class="dnc-usr-img-otr1"><img src="${response.data.DanceRatingReviewDetail[i].StudentProfileImageWithPath}" alt="" class="dn-cimg-01s"></div>
+                                        <h5 class="card-title">${response.data.DanceRatingReviewDetail[i].StudentName}</h5>
+                                        <div class="dnc-str-outer">
+                                            ${starIcons}
+                                        </div>
+                                        <p class="card-text" style="overflow: hidden;
+                                            white-space: nowrap;
+                                            text-overflow: ellipsis;">
+                                            ${response.data.DanceRatingReviewDetail[i].ReviewBody}
+                                        </p>
+                                    </div>
+                                </div>`;
+                            }
+                            else {
+                               htmlRatingReviewDetail += ``;
+
+                           }
+
+                       }
+                   }
+                }
+                else {
+                   htmlRatingReviewDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Review Detail. </div>';
+                }
+                $("#RatingReviewDetailCard").append(htmlRatingReviewDetail);
+                   //$('#RatingReviewDetailCard').slick({
+                   //    dots: true,
+                   //    arrows: false,
+                   //    infinite: false,
+                   //    speed: 300,
+                   //    slidesToShow: 6
+                   //});
+
+
+                StopLoading();
+           },
+           error: function (result) {
+               // StopLoading();
+
+               if (result["status"] == 401) {
+                   $.iaoAlert({
+                       msg: 'Unauthorized! Invalid Token!',
+                       type: "error",
+                       mode: "dark",
+                   });
+               }
+               else {
+                   $.iaoAlert({
+                       msg: 'There is some technical error, please try again!',
+                       type: "error",
+                       mode: "dark",
+                   });
+               }
+           }
+       });
+    }
+
+
+
+    //Music package
+
+       function GetAllPlanPackagesDetail() {
+    $.ajax({
+        type: "GET",
+        url: '/api/BusinessPlan/GetBusinessPlanPPCMeta_Detail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var BusinessEventDetail = '';
+
+            if (response.data.BusinessContentPlanList.length <= 0) {
+                $("#BindBuinessPlanDetail_Section").addClass('d-none');
+            } else {
+
+                for (var i = 0; i < response.data.BusinessContentPlanList.length; i++) {
+
+                    BusinessEventDetail = `<div class="event-grid-item">
+                        <div class="event-thumb">
+                            <img src="${response.data.BusinessContentPlanList[i].PlanImageWithPath}" alt="">
+                        </div>
+                        <div class="event-grid-details">
+
+                                <h4>${response.data.BusinessContentPlanList[i].Name}</h4>
+                            <ul>
+                                <li>
+                               ${response.data.BusinessContentPlanList[i].Description}
+                                </li>
+                            </ul>
+                            <div class="event-ticket-price">
+                                <span class="price-big">Rs.${response.data.BusinessContentPlanList[i].Price} /-</span>
+                                <a href="/Booking/Checkout?itemId=${response.data.BusinessContentPlanList[i].Id}&itemType=plan" class="primary-button">Join</a>
+                            </div>
+                        </div>
+                    </div>`;
+
+
+
+                    $("#BusinessUpComingPlan_Music").append(BusinessEventDetail);
+                }
+
+            }
+
+            $('#BusinessUpComingPlan_Music').slick({
+                arrows: false,
+                dots: true,
+                infinite: true,
+                mobileFirst: true,
+                responsive: [
+                    {
+                        breakpoint: 1024,
+                        settings: {
+                            slidesToShow: 4,
+                            slidesToScroll: 1,
+                        }
+                    },
+                    {
+                        breakpoint: 767,
+                        settings: {
+                            slidesToShow: 2,
+                            slidesToScroll: 2,
+                        }
+                    },
+                    {
+                        breakpoint: 580,
+                        settings: {
+                            slidesToShow: 1,
+                            slidesToScroll: 1,
+                        }
+                    }
+
+                ]
+            });
+
+        },
+
+        error: function(result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    // Bind Business All Event Detail
+     function GetAllEventDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetUpcomingEventsListWithAdditionalData?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessEventDetail = '';
+
+
+                if (response.data.BusinessUpcomingEvents.length === 0) {
+
+                } else {
+
+                    for (var i = 0; i < response.data.BusinessUpcomingEvents.length; i++) {
+                        // Assuming you have a variable startTime24HF that holds the time in 24-hour format
+                        var startTime24HF = response.data.BusinessUpcomingEvents[i].StartTime_24HF;
+                        var timeParts = startTime24HF.split(':');
+                        var hours = parseInt(timeParts[0], 10);
+                        var minutes = parseInt(timeParts[1], 10);
+                        var period = (hours < 12) ? 'AM' : 'PM';
+                        if (hours > 12) {
+                            hours -= 12;
+                        } else if (hours === 0) {
+                            hours = 12;
+                        }
+                        var formattedTime = hours + ':' + (minutes < 10 ? '0' : '') + minutes + ' ' + period;
+
+                         BusinessEventDetail = `<div class="event-grid-item">
+                    <div class="event-thumb">
+                        <a href=""><img src="${response.data.BusinessUpcomingEvents[i].EventFeaturedImageWithPath}" alt=""></a>
+                    </div>
+                    <div class="event-grid-details">
+                        <a href="">
+                            <h4> ${response.data.BusinessUpcomingEvents[i].Title}</h4>
+                        </a>
+                        <ul>
+                            <li>
+                                <span class="text-left">Location</span>:<span class="text-right">
+                                  ${response.data.BusinessUpcomingEvents[i].Address}
+                                </span>
+                            </li>
+                            <li>
+                                <span class="text-left">Date</span>:<span class="text-right">${response.data.BusinessUpcomingEvents[i].StartDay},${response.data.BusinessUpcomingEvents[i].StartMonth}</span>
+                            </li>
+                            <li>
+                                <span class="text-left">Time</span>:<span class="text-right">${formattedTime}</span>
+                            </li>
+                        </ul>
+                        <div class="event-ticket-price">
+                            <span class="price-big">Rs. ${response.data.BusinessUpcomingEvents[i].Price}/-</span>
+                            <a href="/Home/Event?eventId=${response.data.BusinessUpcomingEvents[i].Id}" class="primary-button">Ticket</a>
+                        </div>
+                    </div>
+                </div>`;
+
+                        $("#BindBusinessContentUpcomingEventDetailList").append(BusinessEventDetail);
+                    }
+
+                }
+
+                $('#BindBusinessContentUpcomingEventDetailList').slick({
+                    dots: true,
+                    arrows: false,
+                    infinite: false,
+                    speed: 300,
+                    slidesToShow: 3,
+                    slidesToScroll: 3,
+                    responsive: [
+                        {
+                            breakpoint: 1024,
+                            settings: {
+                                slidesToShow: 3,
+                                slidesToScroll: 3,
+                                infinite: true,
+                                dots: true,
+                                arrows: false,
+                            }
+                        },
+                        {
+                            breakpoint: 767,
+                            settings: {
+                                slidesToShow: 2,
+                                slidesToScroll: 2,
+                                dots: true,
+                                arrows: false,
+                            }
+                        },
+                        {
+                            breakpoint: 580,
+                            settings: {
+                                slidesToShow: 1,
+                                slidesToScroll: 1
+                            }
+                        }
+
+                    ]
+
+                });
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Time table Contact
+    function GetAllBusinessTimingData_footer() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/Timing/GetBusinessTimingDataVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlBusinessTiming = '';
+                if (response.data.businessTimingData == 0) {
+                    $("#BindBusinessTiming_Section").addClass('d-none');
+                }
+
+                for (var i = 0; i < response.data.businessTimingData.length; i++) {
+
+                    var openingTiming = moment(response.data.businessTimingData[i].OpeningTime_12HoursFormat, "HH:mm").format("h:mm A");
+                    var closingTiming = moment(response.data.businessTimingData[i].ClosingTime_12HoursFormat, "HH:mm").format("h:mm A");
+                    var openingTiming2 = moment(response.data.businessTimingData[i].OpeningTime2_12HoursFormat, "HH:mm").format("h:mm A");
+                    var closingTiming2 = moment(response.data.businessTimingData[i].ClosingTime2_12HoursFormat, "HH:mm").format("h:mm A");
+                    var BusinessOpenCloseTime = '';
+                    if (response.data.businessTimingData[i].IsOpened == 1) {
+                        BusinessOpenCloseTime = ` <p class="time mt-2">${openingTiming} - ${closingTiming}</p>
+                           <p class="time mt-2">${openingTiming2} - ${closingTiming2}</p> `;
+                    }
+                    else {
+                        BusinessOpenCloseTime = `<p class="time">Close</p>`;
+                    }
+                    htmlBusinessTiming = `<div class="time-schdule">
+                <div class="icon-day">
+                    <i class="fa-regular fa-clock"></i>
+                    <span class="day">${response.data.businessTimingData[i].DayName}</span>
+                </div>
+                ${BusinessOpenCloseTime}
+            </div>`;
+                    $("#BindBusinessTiming").append(htmlBusinessTiming);
+                    if (response.data.businessTimingData[i].TodayOff == "1") {
+                        $("#closeBusinessDay").html(' :  Today We are Closed');
+                    }
+                    $("#BusinessNotes").html(": " + response.data.businessTimingData[i].Notes);
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Business University Detail
+    function GetAllBusinessContentUniversityDetailList() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/BusinessContent/GetAllBusinessEducationAffilatedUniversityDetailVisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var UniversityDetailDisplay = '';
+                if (response.data.BusinessContentUniversityDetail === null) {
+                    $("#BindBusinessUniversityImage_Section").addClass('d-none');
+                }
+                else {
+                    var UniversityDetailDisplay = ` <div id="tab_1" class="uni-image">
+                        <img src="${response.data.BusinessContentUniversityDetail.UniversityImageWithPath}" alt="uni-image">
+                        <p>
+                            ${response.data.BusinessContentUniversityDetail.Description}
+                        </p>
+
+                    </div>`;
+
+                    $("#BindBusinessUniversityImageDetail").html(UniversityDetailDisplay);
+                }
+
+
+                var htmlBusinessContentUniversityList = '';
+                if (!response.data.BusinessContentUniversityDetailList || response.data.BusinessContentUniversityDetailList.length === 0) {
+                    $("#BindBusinessUniversityImage_Section").addClass('d-none');
+                } else {
+                    for (var i = 0; i < response.data.BusinessContentUniversityDetailList.length; i++) {
+
+                        htmlBusinessContentUniversityList += `  <li data-tab="#tab_1">
+                        <div class="uni-img">
+                            <img src="${response.data.BusinessContentUniversityDetailList[i].UniversityLogoWithPath}" alt="profile" loading="lazy" onclick="ShowingUniversityDetail('${response.data.BusinessContentUniversityDetailList[i].UniversityImageWithPath}','${response.data.BusinessContentUniversityDetailList[i].Description}');">
+                            <p>${response.data.BusinessContentUniversityDetailList[i].University}</p>
+
+                        </div>
+
+                    </li>`;
+
+
+
+
+                        $("#BindBusinessContentUniversityLogoDetailList").html(htmlBusinessContentUniversityList);
+                    }
+                }
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+  
+    function ShowingUniversityDetail(universityImageWithPath, description) {
+        $("#BindBusinessUniversityImageDetail").html('');
+        //var InstructorDetails = JSON.parse(InstructorDetailsJSON);
+        var UniversityDetailDisplay = ` <div id="tab_1" class="uni-image">
+                            <img src="${universityImageWithPath}" alt="uni-image">
+                            <p>
+                                ${description}
+                            </p>
+
+                        </div>`;
+
+        $("#BindBusinessUniversityImageDetail").html(UniversityDetailDisplay);
+    }
+
+    // Bind Business Professional Detail
+function GetInstructorProfessionalDetail() {
+    $.ajax({
+        type: "GET",
+        url: '/api/Business/GetProfessionalDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+
+            var htmlBusinessInstructorProfessionalDetail = '';
+            if (!response.data.BusinessContentProfessionalList || response.data.BusinessContentProfessionalList.length === 0) {
+                $("#top_instructor").addClass('d-none');
+                $("#top_instructor_heading").addClass('d-none');
+            }else {
+                htmlBusinessInstructorProfessionalDetail = response.data.BusinessContentProfessionalList.map(item => {
+                    var BusinessSocialLinks = '';
+
+                    if (item.FacebookProfileLink) {
+                        BusinessSocialLinks += `  <li><a href="${item.FacebookProfileLink}" target="_blank"><i class="fa-brands fa-facebook-f"></i></i></a></li >`;
+                    }
+
+                    if (item.TwitterProfileLink) {
+                        BusinessSocialLinks += `  <li><a href="${item.TwitterProfileLink}" target="_blank"><i class="fa-brands fa-twitter"></i></a></li>`;
+                    }
+                    if (item.InstagramProfileLink) {
+                        BusinessSocialLinks += `<li><a href="${item.InstagramProfileLink}" target="_blank"><i class="fa-brands fa-instagram"></i></a></li>`;
+                    }
+
+                  return `
+                      <div class="teachers-items">
+                            <div class="items-in">
+                                <div class="teacher-img">
+                                    <a href="/Home/Teacher?businessOwnerLoginId=${item.InstructorUserLoginId}" target="_blank">
+                                        <img src="${item.BusinessProfileImageWithPath}" alt="teacher">
+                                    </a>
+                                </div>
+                                <div class="teacher__content">
+                                    <h3 class="teacher__title">${item.BusinessName},</h3>
+                                    <span>${item.Designation}</span>
+                                    <div class="teacher__social">
+                                        <ul>
+                                           ${BusinessSocialLinks}
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                  `;
+                }).join('');
+            }
+
+            $("#BindBusinessContentEducationProfessionalDetailList").append(htmlBusinessInstructorProfessionalDetail);
+
+            //$('#BindBusinessContentEducationProfessionalDetailList').slick({
+            //    arrows: true,
+            //    dots: true,
+            //    infinite: true,
+            //    mobileFirst: true,
+            //    responsive: [
+            //        {
+            //            breakpoint: 1024,
+            //            settings: {
+            //                slidesToShow: 6,
+            //                slidesToScroll: 1,
+            //            }
+            //        },
+            //        {
+            //            breakpoint: 767,
+            //            settings: {
+            //                slidesToShow: 2,
+            //                slidesToScroll: 2,
+            //            }
+            //        },
+            //        {
+            //            breakpoint: 580,
+            //            settings: {
+            //                slidesToShow: 1,
+            //                slidesToScroll: 1,
+            //            }
+            //        }
+
+            //    ]
+
+            //});
+            StopLoading();
+        },
+        error: function (result) {
+            // StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: 'Unauthorized! Invalid Token!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: 'There is some technical error, please try again!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+</script>

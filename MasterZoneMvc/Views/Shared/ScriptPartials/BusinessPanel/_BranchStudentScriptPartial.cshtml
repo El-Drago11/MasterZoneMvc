@@ -1,0 +1,139 @@
+﻿<script>
+    var UserToken_Global = "";
+    var BusinessBranchLoginId_Global = $("#hiddenBusinessbranchLoginId").val();
+    var _branchesStudentTable;
+
+    function initializeDataTable_BranchStudent() {
+        _branchesStudentTable = $("#tblBranchesStudentView").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                initializeDataTable_BranchStudent();
+                UserToken_Global = dataToken;
+                GetAllStudentBranchesForBusinessPagination();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_BranchStudent();
+                        GetAllStudentBranchesForBusinessPagination();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetAllStudentBranchesForBusinessPagination() {
+        // ---------------- Pagination Data Table --------------------
+         var _url_val = "/api/Business/GetAllBranchStudentDetailByPagination?branchBusinessLoginId=" + BusinessBranchLoginId_Global;
+         _branchesStudentTable.clear().destroy();
+         _branchesStudentTable = $("#tblBranchesStudentView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+             "columns": [
+                 {
+                     "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                 },
+                 {
+                     "data": null, "name": "StudentName", "autoWidth": true,
+                     "render": function (data, type, row) {
+                         var _data = `<div class="d-flex flex-column">
+                            <div class="mb-2">
+                                 ${row.StudentName}
+                            </div>
+                            <div class="mb-2">
+
+                                ${row.MasterId}
+                            </div>
+                        </div>`;
+                         return _data;
+                     }
+                 },
+                 {
+                     "data": "PhoneNumber", "name": "PhoneNumber", "autoWidth": true
+                 },
+                 {
+                     "data": null, "name": "ClassNameList", "autoWidth": true,
+                     "render": function (data, type, row) {
+                         var _data = `<div class="d-flex flex-column">`;
+
+                         // Loop through ClassNameList to generate columns dynamically
+                         if (row.ClassNameList && row.ClassNameList.length > 0) {
+                             row.ClassNameList.forEach(function (classNameObj) {
+                                 _data += `<div class="mb-2"> ${classNameObj.ClassName}</div>`;
+                             });
+                         }
+
+                         _data += `</div>`;
+                         return _data;
+                     }
+                 },
+                 {
+                     "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true,
+                     "render": function (data, type, row) {
+                         return `${row.CreatedOn_FormatDate}`;
+                     }
+                 }
+             ],
+
+
+            "responsive": true,
+            "autoWidth": false,
+            "columnDefs": [{
+                "targets": [0,3], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblBranchesStudentView_filter input').unbind();
+        $('#tblBranchesStudentView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _branchesStudentTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+</script>
+
+

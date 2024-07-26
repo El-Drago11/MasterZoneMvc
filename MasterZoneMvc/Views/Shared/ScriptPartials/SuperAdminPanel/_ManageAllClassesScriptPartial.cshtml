@@ -1,0 +1,241 @@
+﻿<script>
+    var UserToken_Global = "";
+
+
+$(document).ready(function () {
+    StartLoading();
+    $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+        if (dataAdminToken != "" && dataAdminToken != null) {
+
+            UserToken_Global = dataAdminToken;
+            initializeDataTable_Class();
+            GetAllClasses();
+            StopLoading();
+        }
+        else {
+            $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                if (dataAdminToken != "" && dataAdminToken != null) {
+
+                    UserToken_Global = dataAdminToken;
+                    initializeDataTable_Class();
+                    GetAllClasses();
+                    StopLoading();
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+});
+
+
+    function initializeDataTable_Class() {
+        _classTable = $("#tblAllClasses").DataTable();
+    }
+
+function GetAllClasses() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Class/GetAllClassesByPaginationForSuperAdmin";
+    _classTable.clear().destroy();
+    _classTable = $("#tblAllClasses").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[3, "asc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            }
+            , {
+                "data": "ShowOnHomePage", "name": "ShowOnHomePage", "autoWidth": true
+                , "render": function (data, type, row) {
+                    var _icon = (row.ShowOnHomePage == 1) ? '<i class="fas fa-check-square text-success" title="Change visibility on Home Page"></i>' : '<i class="far fa-square"  title="Change visibility on Home Page"></i>';
+                    return `<button class="btn" onclick="ConfirmToggleHomePageVisibilityStatus(${row.Id})">${_icon}</button>`;
+                }
+            }
+            , {
+                "data": "BusinessName", "name": "BusinessName", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <a target="_blank" href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${row.BusinessOwnerLoginId}">
+                            <div class="d-flex flex-grow-1">
+                                <div class="mr-2"><img src="${row.BusinessLogoWithPath}" class="img-size-sm" /></div>
+                                <div class="mb-1">${row.BusinessName}</div>
+                            </div>
+                        </a>
+                    `;
+                }
+            }
+            , {
+                "data": "Name", "name": "Name", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `
+                        <a target="_blank" href="/Home/ClassDetail?classId=${row.Id}">
+                            <div class="d-flex flex-grow-1">
+                                <div class="mr-2"><img src="${row.ClassImageWithPath}" class="img-size-sm" /></div>
+                                <div class="mb-1">${row.Name}</div>
+                            </div>
+                        </a>
+                    `;
+                }
+            }
+            , {
+                "data": "Description",
+                "name": "Description",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    var maxLength = 150; // Maximum length to show initially
+                    var description = data;
+                    var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                    var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                    if (description.length > maxLength) {
+                        var trimmedDescription = description.substr(0, maxLength);
+
+                    }
+                    if (description.length < maxLength) {
+                        return '<span class="description"><span class="full-description">' + description + '.';
+
+                    } else {
+
+                        return '<span class="description"><span class="full-description d-none">' + description + '...' + showLessHtml + '</span ><span class="truncated-description">' + trimmedDescription + '...' + readMoreHtml + '</span></span> ';
+                    }
+                }
+            }
+            , { "data": "Price", "name": "Price", "autoWidth": true }
+            , { "data": "ClassMode", "name": "ClassMode", "autoWidth": true }
+
+        ],
+
+        "responsive": true,
+        "autoWidth": false,
+        //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "columnDefs": [{
+            "targets": [0], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+
+    // for read more show less functionality of description
+    $(document).on('click', '.read-more', function (e) {
+        e.preventDefault();
+        $(this).closest('.description').find('.full-description').removeClass('d-none');
+        $(this).closest('.description').find('.truncated-description').addClass('d-none');
+    });
+    $(document).on('click', '.read-less', function (e) {
+        e.preventDefault();
+        $(this).closest('.description').find('.full-description').addClass('d-none');
+        $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+    });
+    // for enabling search box only send requet on pressing enter
+    $('#tblAllClasses_filter input').unbind();
+    $('#tblAllClasses_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _classTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+
+    function ConfirmToggleHomePageVisibilityStatus(id) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTitleMessage)",
+            text: "@(Resources.SuperAdminPanel.ConfirmToggleHomePageVisibilityStatusTextMessage)",
+            type: "warning",
+            buttons: {
+                cancel: "@(Resources.ErrorMessage.No)",
+                confirm: "@(Resources.ErrorMessage.Yes)"
+            }
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                ToggleHomePageVisibilityStatus(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function ToggleHomePageVisibilityStatus(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Class/ToggleHomePageVisibilityStatus/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllClasses();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+</script>
+

@@ -1,0 +1,133 @@
+function initializeFullCalendar(events) {
+    if ($().fullCalendar) {
+        $(".attendance_calendar").fullCalendar({
+            themeSystem: "bootstrap4",
+            height: "auto",
+            buttonText: {
+                today: "Today",
+                month: "Month",
+                week: "Week",
+                day: "Day",
+                list: "List"
+            },
+            bootstrapFontAwesome: {
+                prev: " simple-icon-arrow-left",
+                next: " simple-icon-arrow-right",
+                prevYear: " simple-icon-control-start",
+                nextYear: " simple-icon-control-end"
+            },
+            events: events
+        });
+    }
+}
+
+function GetAllStaffAttendance() {
+    var _url = "/api/Staff/GetAll/GetAllSatffAttendanceById?id=" + StaffLoginId_Global;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var today = new Date();
+            var day = today.getDate();
+            var month = today.getMonth() + 1;
+            var year = today.getFullYear();
+
+            var formattedDate = month + '/' + day + '/' + year;
+            $("#SatffAttendanceTodayDate").html(formattedDate);
+            var _table = $("#tblStaffAttendance").DataTable();
+            _table.destroy();
+
+            var sno = 0;
+            var _status = '';
+            var _staffImage = '';
+            var _isApproved = '';
+            var data = [];
+
+            for (var i = 0; i < response.data.length; i++) {
+                var _leaveReason = '';
+
+                sno++;
+                _staffImage = (response.data[i].StaffProfileImageWithPath == "") ? '' : '<img src="' + response.data[i].StaffProfileImageWithPath + '" class="image" />';
+
+                if (response.data[i].AttendanceStatus == 1) {
+                    _status = '<p style="color: green;font-weight: 600;text-align: center">Present</p>';
+                } else if (response.data[i].AttendanceStatus == 2) {
+                    _status = '<p style="color: red;font-weight: 600;text-align: center">Absent</p>';
+                } else if (response.data[i].AttendanceStatus == 3) {
+                    _status = '<p style="color: red;font-weight: 600;text-align: center">On Leave</p>';
+                    if (response.data[i].IsApproved == 1) {
+                        _isApproved = '<p style="color: green;font-weight: 600;">Approved</p>';
+                    } else {
+                        _isApproved = '<p style="color: red;font-weight: 600;">Un-Approved</p>';
+                    }
+                    _leaveReason = `<p>${_isApproved}</p><p>${response.data[i].LeaveReason}</p>`;
+                }
+
+                data.push([
+                    sno,
+                    response.data[i].MasterId,
+                    _staffImage,
+                    response.data[i].StaffName,
+                    _status,
+                    _leaveReason
+                ]);
+            }
+
+            $("#tblStaffAttendance").DataTable({
+                "data": data,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+            });
+
+            // Initialize fullCalendar with the obtained events
+            var calendarEvents = response.data.map(function (item) {
+                return {
+                    title: item.title,
+                    start: item.FormattedAttendanceDate, // Adjust this according to your data
+                    // Add other properties as needed
+                };
+            });
+
+            initializeFullCalendar(calendarEvents);
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}

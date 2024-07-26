@@ -1,0 +1,2201 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+<script>
+    var ClassId_Global = 0;
+    var UserToken_Global = "";
+    var _classTable;
+    var _classFeatureTable;
+    var GroupDetail_Global = {};
+    var ClassFeatureId_Global = 0;
+    var ClassBatchIdList_Global = [];
+
+    var LocationChooseMap = 0;
+    var CountryClassLocation = 'Select';
+    var StateClassLocation = 'Select';
+    var CityClassLocation = 'Select';
+    var LandMarkClassLocation = '';
+    var ClassCategoryTypeId_Global = 0;
+    var ParentClassCategoryTypeId_Global = 0;
+
+    function initializeDataTable_Class() {
+        _classTable = $("#tblClass").DataTable();
+        _classFeatureTable = $("#tblClassFeatures").DataTable();
+    }
+
+  $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_Class();
+                GetAllClasses();
+                GetActiveParentClassCategoryTypeList();
+                GetActiveBatchList();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_Class();
+                        GetAllClasses();
+                        GetActiveParentClassCategoryTypeList();
+
+                        GetActiveBatchList();
+
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+      // Add change event listener to the radio buttons
+      $('input[name="ClassDays"]').change(function () {
+          if ($(this).val() === '1') {
+              $('#SelectedDaysForClass option').prop('selected', true).trigger('change');
+              $('#SelectDaysOfClass').prop('disabled', true);
+          } else {
+              $('#SelectedDaysForClass option').prop('selected', false).trigger('change');
+              $('#SelectDaysOfClass').prop('disabled', false);
+          }
+      });
+      $('input[name="ClassMode"]').change(function () {
+          if ($(this).val() === '1') {
+              $('#ClassURL_Link').prop('disabled', false).show();
+              $('#ClassMapLocation').prop('disabled', true).hide();
+          } else {
+              $('#ClassMapLocation').prop('disabled', true).show();
+              $('#ClassURL_Link').prop('disabled', false).hide();
+              GetCountriesList();
+          }
+      });
+      $('input[name="Class_Price"]').change(function () {
+          if ($(this).val() === '1') {
+              $("#ClassPrice_PaidSection").show();
+              $("#ClassPriceFree_DemoClass_Section").hide();
+              $('#ClassPricePaid_PerClass').prop('checked', true);
+          } else {
+              $("#ClassPrice_PaidSection").hide();
+              $("#ClassPriceFree_DemoClass_Section").show();
+              $('#ClassPricePaid_PerClass').prop('checked', false);
+              $("#ClassPriceFree_DemoClass").prop('checked', true);
+
+          }
+      });
+
+  });
+
+    $("#ddlParentClassCategoryType").on('change', function () {
+        GetActiveClassCategoryTypeList();
+    });
+
+    function btnSubmitClass() {
+
+    let is_valid = true;
+        $(".error-class").html('');
+        let _classLocationCountry = '';
+        let _classLocationState = '';
+        let _classLocationCity = '';
+        var _mode = (ClassId_Global <= 0) ? 1 : 2;
+        let _className = $("#ClassName").val().trim();
+        let _classDescription = $("#ClassDescription").val().trim();
+        let _classPrice = $("#ClassPrice").val().trim();
+        //let _classLimitOfStudent = $("#LimitOfStudentForClass").val().trim();
+        //let _classStartTime = $("#ClassStartTime").val().trim();
+        //let _classEndTime = $("#ClassEndTime").val().trim();
+        var _classMode = $('input[name="ClassMode"]:checked').val();
+        let _classSelectionDays = $("#SelectedDaysForClass").val();
+        /* let _classLoctionAddress = $("#ClassOfflineLocation").val();*/
+        let _classLoctionAddress = $("#ClassOfflineAddress").val();
+        let _classOnlineURl = $("#ClassOnlineURL_Link").val();
+        let _classPriceOption = $('input[name="Class_Price"]:checked').val();
+        let _classPaidOption = $('input[name="Class_Paid"]:checked').val();
+        let _classLocationLandMark = $("#ClassOfflineLandMark").val();
+        let _classLocationPinCode = $("#ClassOfflinePinCode").val();
+        //let _instructor = $("#ddlSelectedInstructorUserLoginId").val();
+        let _classOnlineURL_LinkPassword = $("#ClassOnlineURL_Link_Password").val();
+        //let _groupId = $("#ddlClassGroup").val();
+        let _howToBookText = $("#txtHowToBookClass").val();
+        let _classType = $("#ddlClassType").val();
+        let _classLocationLatitude = $("#LocationLatitude").val();
+        let _classLocationLongitude = $("#LocationLongitude").val();
+        let _classCategoryTypeId = $("#ddlClassCategoryType").val();
+        let _classBatches = $('#ddlSelectBatches').val();
+
+        let _error_className = $("#error_txtClassName");
+        let _error_classDescription = $("#error_txtClassDescription");
+        let _error_classPrice = $("#error_txtClassPricePaid");
+        //let _error_classLimitOfStudent = $("#error_LimitOfStudentForClass");
+        //let _error_classStartTime = $("#error_ClassStartTime");
+        //let _error_classEndTime = $("#error_ClassEndTime");
+        //let _error_groupId = $("#error_ddlClassGroup");
+        let _error_howToBookText = $("#error_txtHowToBookClass");
+        let _error_classType = $("#error_ddlClassType");
+        let _error_classCategoryTypeId = $("#error_ddlClassCategoryType");
+        let _error_classBatches = $('#error_ddlSelectBatches');
+
+        if (LocationChooseMap == 1) {
+            _classLocationCountry = $("input#ddl_ClassOfflineCountry").val();
+            _classLocationState = $("input#ddl_ClassOfflineState").val();
+            _classLocationCity = $("input#ddl_ClassOfflineCity").val();
+        }
+        else {
+            _classLocationCountry = $("#ddl_ClassOfflineCountry").val();
+            _classLocationState = $("#ddl_ClassOfflineState").val();
+            _classLocationCity = $("#ddl_ClassOfflineCity").val();
+        }
+
+        if (_classMode == "0") {
+
+            if (_classLoctionAddress == "") {
+                is_valid = false;
+                $("#error_ClassOfflineAddress").html('@(Resources.BusinessPanel.ErrorMessageOfflineClassLocation)');
+            }
+            if (_classLocationLandMark == "") {
+                is_valid = false;
+                $("#error_ClassOfflineLandMark").html('@(Resources.BusinessPanel.ErrorMessageClassOfflineLandMark)');
+            }
+            if (_classLocationCountry == "" || _classLocationCountry <= 0) {
+                is_vaild = false;
+                $("#error_ddl_ClassOfflineCountry").html('@(Resources.BusinessPanel.ErrorMessageClassOfflineCountry)');
+            }
+            if (_classLocationState <= 0 || _classLocationState == "") {
+                is_vaild = false;
+                $("#error_ddl_ClassOfflineState").html('@(Resources.BusinessPanel.ErrorMessageClassOfflineState)');
+            }
+            if (_classLocationCity <= 0 || _classLocationCity == "") {
+                is_vaild = false;
+                $("#error_ddl_ClassOfflineCity").html('@(Resources.BusinessPanel.ErrorMessageClassOfflineCity)');
+            }
+            if (_classLocationPinCode == "") {
+                is_valid = false;
+                $("#error_ClassOfflinePinCode").html('@(Resources.BusinessPanel.ErrorMessageClassOfflinePinCode)');
+            }
+        }
+        else {
+            let _classOnlineURl = $("#ClassOnlineURL_Link").val();
+            if (_classOnlineURl == "") {
+                is_valid = false;
+                $("#error_ClassOnlineURL_Link").html('@(Resources.BusinessPanel.ErrorMessagOnlineClassURl)');
+            }
+            if (_classOnlineURL_LinkPassword == "") {
+                is_valid = false;
+                $("#error_ClassOnlineURL_Link_Password").html('@(Resources.BusinessPanel.ErrorMessageClassOnlineLinkPassword)');
+            }
+        }
+        var _classDays = $('input[name="ClassDays"]:checked').val();
+        if (_classDays == "0") {
+            let _classSelectionDays = $("#SelectedDaysForClass").val();
+            if (_classSelectionDays <= 0) {
+                is_valid = false;
+                $("#error_SelectedClassDays").html('@(Resources.BusinessPanel.ErrorMessageSelectionDaysClass)');
+                _classSelectionDays = _classSelectionDays.join(',');
+            }
+        }
+        else {
+            //_classSelectionDays = "All Days";
+            let _classSelectionDays = $("#SelectedDaysForClass").val();
+            if (_classSelectionDays <= 0) {
+                is_valid = false;
+                $("#error_SelectedClassDays").html('@(Resources.BusinessPanel.ErrorMessageSelectionDaysClass)');
+                _classSelectionDays = _classSelectionDays.join(',');
+            }
+        }
+
+
+        if (_classPaidOption == "demo") {
+            _classPrice = 0;
+        }
+        else {
+
+            if (validate_IsEmptyStringInputFieldValue(_classPrice) && _classPrice <= 0) {
+                is_valid = false;
+                _error_classPrice.html('@(Resources.BusinessPanel.ErrorMessageClassPrice)');
+            }
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_className))
+        {
+            is_valid = false;
+            _error_className.html('@(Resources.BusinessPanel.ErrorMessageClassName)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_classDescription))
+        {
+            is_valid = false;
+            _error_classDescription.html('@(Resources.BusinessPanel.ErrorMessageClassDescription)');
+        }
+
+        //if (validate_IsEmptyStringInputFieldValue(_classLimitOfStudent))
+        //{
+        //    is_valid = false;
+        //     _error_classLimitOfStudent.html('@(Resources.BusinessPanel.ErrorMessageLimitOfStudent)');
+        //}
+        //if (_classLimitOfStudent <=0)
+        //{
+        //    is_valid = false;
+        //     _error_classLimitOfStudent.html('@(Resources.BusinessPanel.ErrorMessageStudentLenghtInClass)');
+        //}
+        //if (validate_IsEmptyStringInputFieldValue(_classStartTime))
+        //{
+        //    is_valid = false;
+        //    _error_classStartTime.html('@@(Resources.BusinessPanel.ErrorMessageClassStartTime)');
+        //}
+        //if (validate_IsEmptyStringInputFieldValue(_classEndTime))
+        //{
+        //    is_valid = false;
+        //    _error_classEndTime.html('@@(Resources.BusinessPanel.ErrorMessageClassEndTime)');
+        //}
+        //if (_classStartTime > _classEndTime)
+        //{
+        //    is_valid = false;
+        //    _error_classEndTime.html('@@(Resources.BusinessPanel.ErrorMessageEndTimeGreaterThen)');
+        //}
+        //if (_instructor <= 0 || _instructor == "") {
+        //    is_valid = false;
+        //    $("#error_ddlSelectedInstructorUserLoginId").html('@@(Resources.BusinessPanel.ErrorMessageSelectInstructor)')
+        //}
+
+        if (validate_IsEmptyStringInputFieldValue(_howToBookText))
+        {
+            is_valid = false;
+            _error_howToBookText.html('@(Resources.BusinessPanel.HowToBookText_Required)');
+        }
+        //if (validate_IsEmptySelectInputFieldValue(_groupId))
+        //{
+        //    is_valid = false;
+        //    _error_groupId.html('@@(Resources.BusinessPanel.GroupSelection_Required)');
+        //}
+        if (validate_IsEmptySelectInputFieldValue(_classType))
+        {
+            is_valid = false;
+            _error_classType.html('@(Resources.BusinessPanel.ClassTypeSelection_Required)');
+        }
+        if (validate_IsEmptySelectInputFieldValue(_classCategoryTypeId))
+        {
+            is_valid = false;
+            _error_classCategoryTypeId.html('@(Resources.BusinessPanel.ClassCategoryTypeSelection_Required)');
+        }
+        if (_classBatches.length <= 0)
+        {
+            is_valid = false;
+            _error_classBatches.html('@(Resources.BusinessPanel.ClassBatchSelection_Required)');
+        }
+
+        if (is_valid) {
+            var _selectedBatchesList = _classBatches.join(',');
+        var data = new FormData();
+        data.append("id", ClassId_Global);
+        data.append("className", _className);
+        data.append("classDescription", _classDescription);
+        data.append("classPrice", _classPrice);
+        //data.append("classLimitofStudent", _classLimitOfStudent);
+        //data.append("classStartTime", _classStartTime);
+        //data.append("classEndTime", _classEndTime);
+        data.append("classmode", _classMode);
+        data.append("classLocationAddress", _classLoctionAddress);
+        data.append("classOnlineURLLink", _classOnlineURl);
+        data.append("classSelectedDays", _classSelectionDays);
+        data.append("classLocationCountry", _classLocationCountry);
+        data.append("classLocationLandMark", _classLocationLandMark);
+        data.append("classLocationState", _classLocationState);
+        data.append("classLocationCity", _classLocationCity);
+        data.append("classLocationPinCode", _classLocationPinCode);
+        data.append("classPaidOption", _classPaidOption);
+        data.append("classPriceOption", _classPriceOption);
+        data.append("classOnlineURLLinkPassword", _classOnlineURL_LinkPassword);
+        //data.append("instructor", _instructor);
+        //data.append("groupId", _groupId);
+        data.append("howToBookText", _howToBookText);
+        data.append("classType", _classType);
+        data.append("classLocationLatitude", _classLocationLatitude);
+        data.append("classLocationLongitude", _classLocationLongitude);
+        data.append("mode", _mode);
+        data.append("classCategoryTypeId", _classCategoryTypeId);
+        data.append("classBatchesList", _selectedBatchesList);
+
+        var _classImageFile_MS = $("#fileClassImage_ManageClass").get(0);
+        var _classImageFiles = _classImageFile_MS.files;
+        data.append('ClassImage', _classImageFiles[0]);
+
+        $.ajax({
+            url: "/api/Class/AddUpdate",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: "multipart/form-data",
+            contentType: false,
+            //contentType: 'application/json',
+            type: "POST",
+            success: function (dataResponse) {
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllClasses();
+                    ResetClasssAddView();
+                }
+                else {
+                    swal({
+                        title: '',
+                        imageUrl: '/Content/svg/error.svg',
+                        text: dataResponse.message
+                    });
+
+                    //StopLoading();
+
+                }
+
+            },
+            error: function (result) {
+                //StopLoading();
+
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+    function GetAllClasses() {
+        
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Class/GetAllByPagination";
+        _classTable.clear().destroy();
+        _classTable = $("#tblClass").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[3, "asc"]],
+            "ajax": {
+
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+
+                }
+                , {
+                    "data": "ClassImage", "name": "ClassImage", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        return `<img class="image" src="${row.ClassImageWithPath}" />`;
+                    }
+                }
+                , { "data": "Name", "name": "Name", "autoWidth": true }
+
+                ,{
+                    "data": "Description",
+                    "name": "Description",
+                    "autoWidth": true,
+                    "render": function (data, type, row) {
+                        
+
+                        var maxLength = 50; // Maximum length to show initially
+                        var description = data;
+                        var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                        var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                        if (description.length > maxLength) {
+                            var trimmedDescription = description.substr(0, maxLength);
+
+                        }
+                        if (description.length < maxLength) {
+                            return '<span class="description"><span class="full-description">' + description + '.';
+
+                        } else {
+
+                            return '<span class="description"><span class="full-description d-none">' + description + '...' + showLessHtml + '</span ><span class="truncated-description">' + trimmedDescription + '...' + readMoreHtml + '</span></span> ';
+                        }
+                    }
+                 },
+
+
+
+                , { "data": "Price", "name": "Price", "autoWidth": true }
+                , { "data": "BatchName", "name": "BatchName", "autoWidth": true }
+                , {
+                    "data": "ProfileImage", "name": "ProfileImage", "autoWidth": true,
+                        "render": function (data, type, row) {
+                            var _data = `<div class="d-flex flex-column">
+                                       <div class="mb-2  text-center">
+                                           <img class="image" src="${row.InstructorProfileImageWithPath}" />
+                                       </div>
+                                       <div class="mb-2">
+
+                                           ${row.InstructorFullName}
+                                       </div>
+                                   </div>`;
+                            return _data;
+
+                    }
+                }
+                , { "data": "ClassMode", "name": "ClassMode", "autoWidth": true }
+               //, {
+                    //    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    //    , "render": function (data, type, row) {
+                    //        return row.CreatedOn_FormatDate; //`<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                    //    }
+                    //}
+                , {
+                    "data": null, "": "Action", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _edit = '';
+                        var _delete = '';
+                        @if (permissionKeys.Contains("ManageScheduleClass_EditScheduleClass"))
+                          {
+                             <text>
+                               _edit = `<a href="javascript:EditClassById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                             </text>
+                          }
+                        @if (permissionKeys.Contains("ManageScheduleClass_DeleteScheduleClass"))
+                          {
+                              <text>
+                                  _delete = `<a href="javascript:ConfirmDeleteClass(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                              </text>
+                          }
+
+                        var _action = `<div class="edbt">
+                                        ${_edit}
+                                        ${_delete}
+                                    </div>`;
+                        return _action;
+                    }
+                }
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,1, 7], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+
+
+        $(document).on('click', '.read-more', function (e) {
+            e.preventDefault();
+            $(this).closest('.description').find('.full-description').removeClass('d-none');
+            $(this).closest('.description').find('.truncated-description').addClass('d-none');
+        });
+        $(document).on('click', '.read-less', function (e) {
+            e.preventDefault();
+            $(this).closest('.description').find('.full-description').addClass('d-none');
+            $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+        });
+
+        // for enabling search box only send requet on pressing enter
+        $('#tblClass_filter input').unbind();
+        $('#tblClass_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _classTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+  function GetAllClasses() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Class/GetAllByPagination";
+    _classTable.clear().destroy();
+    _classTable = $("#tblClass").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[3, "asc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            //"data": { "_Params": JSON.stringify(_Params) },
+            //"datatype": "json",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+
+            }
+            , {
+                "data": "ClassImage", "name": "ClassImage", "autoWidth": true,
+                "render": function (data, type, row) {
+                    return `<img class="image" src="${row.ClassImageWithPath}" />`;
+                }
+            }
+            , { "data": "Name", "name": "Name", "autoWidth": true }
+
+            , {
+                "data": "Description",
+                "name": "Description",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    
+
+                    var maxLength = 50; // Maximum length to show initially
+                    var description = data;
+                    var readMoreHtml = '<a href="#" class="read-more">Read more</a>';
+                    var showLessHtml = '<a href="#" class="read-less">Show less</a>';
+                    if (description.length > maxLength) {
+                        var trimmedDescription = description.substr(0, maxLength);
+
+                    }
+                    if (description.length < maxLength) {
+                        return '<span class="description"><span class="full-description">' + description + '.';
+
+                    } else {
+
+                        return '<span class="description"><span class="full-description d-none">' + description + '...' + showLessHtml + '</span ><span class="truncated-description">' + trimmedDescription + '...' + readMoreHtml + '</span></span> ';
+                    }
+                }
+            }
+            , { "data": "Price", "name": "Price", "autoWidth": true }
+            , { "data": "BatchName", "name": "BatchName", "autoWidth": true }
+            , {
+                "data": "ProfileImage", "name": "ProfileImage", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                   <div class="mb-2  text-center">
+                                       <img class="image" src="${row.InstructorProfileImageWithPath}" />
+                                   </div>
+                                   <div class="mb-2">
+
+                                       ${row.InstructorFullName}
+                                   </div>
+                               </div>`;
+                        return _data;
+
+                }
+            }
+            , { "data": "ClassMode", "name": "ClassMode", "autoWidth": true }
+           //, {
+                //    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                //    , "render": function (data, type, row) {
+                //        return row.CreatedOn_FormatDate; //`<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                //    }
+                //}
+            , {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _edit = '';
+                    var _delete = '';
+                    @if (permissionKeys.Contains("ManageScheduleClass_EditScheduleClass"))
+                      {
+                         <text>
+                           _edit = `<a href="javascript:EditClassById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                         </text>
+                      }
+                    @if (permissionKeys.Contains("ManageScheduleClass_DeleteScheduleClass"))
+                      {
+                          <text>
+                              _delete = `<a href="javascript:ConfirmDeleteClass(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                          </text>
+                      }
+
+                    var _action = `<div class="edbt">
+                                    ${_edit}
+                                    ${_delete}
+                                </div>`;
+                    return _action;
+                }
+            }
+
+        ],
+
+        "responsive": true,
+        "autoWidth": false,
+        //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "columnDefs": [{
+            "targets": [0,1, 7], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+      $(document).on('click', '.read-more', function (e) {
+          e.preventDefault();
+          $(this).closest('.description').find('.full-description').removeClass('d-none');
+          $(this).closest('.description').find('.truncated-description').addClass('d-none');
+      });
+      $(document).on('click', '.read-less', function (e) {
+          e.preventDefault();
+          $(this).closest('.description').find('.full-description').addClass('d-none');
+          $(this).closest('.description').find('.truncated-description').removeClass('d-none');
+      });
+
+
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblClass_filter input').unbind();
+    $('#tblClass_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _classTable.search(this.value).draw();
+        }
+    });
+
+}
+
+ @*function GetAllClasses() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Class/GetAllByPagination";
+    _classTable.clear().destroy();
+    _classTable = $("#tblClass").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[3, "asc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            {
+                "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+            },
+            {
+                "data": "ClassImage", "name": "ClassImage", "autoWidth": true,
+                "render": function (data, type, row) {
+                    return `<img class="image" src="${row.ClassImageWithPath}" />`;
+                }
+            },
+            { "data": "Name", "name": "Name", "autoWidth": true },
+            {
+                "data": "Description",
+                "name": "Description",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    var maxLength = 100; // Maximum length of description to display
+                    var description = row.Description;
+
+                    // Check if the description length exceeds the maximum length
+                    if (description.length > maxLength) {
+                        var truncatedString = description.substr(0, maxLength);
+                        return truncatedString + '... ' +
+                            '<a href="#" class="read-more" data-description="' + description + '">Read more</a>';
+                    } else {
+                        return description;
+                    }
+                }
+            },
+            { "data": "Price", "name": "Price", "autoWidth": true },
+            { "data": "BatchName", "name": "BatchName", "autoWidth": true },
+            {
+                "data": "ProfileImage", "name": "ProfileImage", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _data = `<div class="d-flex flex-column">
+                               <div class="mb-2  text-center">
+                                   <img class="image" src="${row.InstructorProfileImageWithPath}" />
+                               </div>
+                               <div class="mb-2">
+                                   ${row.InstructorFullName}
+                               </div>
+                           </div>`;
+                    return _data;
+                }
+            },
+            { "data": "ClassMode", "name": "ClassMode", "autoWidth": true },
+            {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _edit = '';
+                    var _delete = '';
+                    @if (permissionKeys.Contains("ManageScheduleClass_EditScheduleClass"))
+                      {
+                         <text>
+                           _edit = `<a href="javascript:EditClassById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                         </text>
+                      }
+                    @if (permissionKeys.Contains("ManageScheduleClass_DeleteScheduleClass"))
+                      {
+                          <text>
+                              _delete = `<a href="javascript:ConfirmDeleteClass(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                          </text>
+                      }
+
+                    var _action = `<div class="edbt">
+                                    ${_edit}
+                                    ${_delete}
+                                </div>`;
+                    return _action;
+                }
+            }
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [0, 1, 7], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }],
+        "drawCallback": function () {
+            // Handle click event for "read more" links
+            $('.read-more').unbind('click').bind('click', function (e) {
+                e.preventDefault();
+                var description = $(this).data('description');
+                alert(description); // For demonstration purposes, show alert with full description
+            });
+        }
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblClass_filter input').unbind();
+    $('#tblClass_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _classTable.search(this.value).draw();
+        }
+    });
+}*@
+
+
+
+
+    function EditClassById(id) {
+        /*GetCountriesList();*/
+        //GetStatesLists();
+        //GetCitiesList();
+
+        var _url = "/api/Class/GetById?id=" + id;
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('.error-class').html('');
+
+                var item = response.data;
+
+                $("#ClassName").val(item.Name);
+                $("#ClassDescription").val(item.Description);
+                //$("#ddlSelectedInstructorUserLoginId").val(item.InstructorLoginId);
+                if (item.IsPaid == 1) {
+                    $("#ClassPricePaid").prop('checked', true);
+                    $("#ClassPriceFree").prop('checked', false);
+                    $("#ClassPrice").val(item.Price);
+                    $("#ClassPrice_PaidSection").show();
+                    $("#ClassPriceFree_DemoClass_Section").hide();
+                    if (item.ClassPriceType == "per_class") {
+                        $("#ClassPricePaid_PerClass").prop('checked', true);
+                        $("#ClassPricePaid_PerMonth").prop('checked', false);
+                        $("#ClassPriceFree_DemoClass").prop('checked', false);
+                    }
+                    if (item.ClassPriceType == "per_month") {
+                        $("#ClassPricePaid_PerMonth").prop('checked', true);
+                        $("#ClassPricePaid_PerClass").prop('checked', false);
+                        $("#ClassPriceFree_DemoClass").prop('checked', false);
+                    }
+                    if (item.ClassPriceType == "demo") {
+                        $("#ClassPriceFree_DemoClass").prop('checked', true);
+                        $("#ClassPricePaid_PerMonth").prop('checked', false);
+                        $("#ClassPricePaid_PerClass").prop('checked', false);
+                    }
+
+                }
+                else {
+                    $("#ClassPriceFree_DemoClass").prop('checked', true);
+                    $("#ClassPricePaid").prop('checked', false);
+                    $("#ClassPriceFree").prop('checked', true);
+                    $("#ClassPrice_PaidSection").hide();
+                    $("#ClassPriceFree_DemoClass_Section").show();
+                }
+
+                //$("#LimitOfStudentForClass").val(item.StudentMaxStrength);
+                //$("#ClassStartTime").val(item.ScheduledStartOnTime_24HF);
+                //$("#ClassEndTime").val(item.ScheduledEndOnTime_24HF);
+                var SelectedClassDayArray = response.data.ClassDays.split(',');
+                $("#SelectedDaysForClass").val(SelectedClassDayArray).trigger('change');
+                ClassBatchIdList_Global = response.data.ClassBatchesIdList;
+
+                if (item.ClassMode == "Online") {
+                    $("#ClassOnlineMode").prop('checked', true);
+                    $("#ClassURL_Link").show();
+                    $("#ClassMapLocation").hide();
+                    $("#ClassOnlineURL_Link").val(item.OnlineClassLink);
+                    $("#ClassOnlineURL_Link_Password").val(item.ClassURLLinkPassword);
+                    //$("#ClassOfflineLocation").val(item.Price);
+                }
+                else if (item.ClassMode == "Offline") {
+                    CountryClassLocation = item.Country;
+                    StateClassLocation = item.State;
+                    CityClassLocation = item.City;
+                    LandMarkClassLocation = item.LandMark;
+                    $("#ClassOfflineMode").prop('checked', true);
+                    $("#ClassMapLocation").show();
+                    $("#ClassURL_Link").hide();
+                    $("#ClassOfflineAddress").val(item.Address);
+                    $("#ClassOfflineLandMark").val(LandMarkClassLocation);
+                    $("#ddl_ClassOfflineCountry").val(CountryClassLocation);
+                    $("#ddl_ClassOfflineState").val(StateClassLocation);
+                    $("#ddl_ClassOfflineCity").val(CityClassLocation);
+                    $("#ClassOfflinePinCode").val(item.Pincode);
+                }
+
+                var classDaysCount = item.ClassDays.split(',').length;
+                if (classDaysCount == 7) {
+                    $("#ClassAllDaysSelected").prop('checked', true);
+                }
+                else  {
+                    $("#ClassSelectionOfDays").prop('checked', true);
+                    //$("#SelectDaysOfClass").show();
+                }
+
+                $('#ddlClassType').val(item.ClassType);
+                //$('#ddlClassGroup').val(item.GroupId);
+                $('#txtHowToBookClass').val(item.HowToBookText);
+
+                $("#fileClassImage_ManageClass").val('');
+                if (response.data.ClassImageWithPath != "") {
+                    $("#previewImage").attr('src', response.data.ClassImageWithPath);
+                    $("#previewImage").removeClass('d-none');
+                }
+                $("#ddlClassCategoryType").val(response.data.ClassCategoryTypeId);
+
+                ClassId_Global = item.Id;
+                ClassCategoryTypeId_Global = response.data.ClassCategoryTypeId;
+                ParentClassCategoryTypeId_Global = response.data.ParentClassCategoryTypeId;
+
+                GetCountriesList();
+                EditScheduleClasses();
+                getAllClassFeatures(ClassId_Global);
+                GetActiveBatchList();
+                GetActiveParentClassCategoryTypeList();
+                initMap();
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function GetActiveBatchList() {
+        var _url = "/api/Batch/GetActiveNonLinkedWithOtherClassBatchList?classId=" + ClassId_Global;
+        $('#ddlSelectBatches').html('');
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    $('#ddlSelectBatches').append(`<option value="${item.Id}">${item.Name}</option>`);
+                }
+
+                $("#ddlSelectBatches").val(ClassBatchIdList_Global).trigger('change');
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+function EditScheduleClasses() {
+    $('#sectionAddClass').show();
+    $('#sectionViewClass').hide();
+    document.getElementById("myText").innerHTML = "Edit My Schedule/Classes";
+    document.getElementById("ChangeUpdateText").innerHTML = "Update";
+    document.getElementById("pageTextchange").innerHTML = "Edit My Schedule/Classes";
+    document.getElementById("pageStageChange").innerHTML = "Edit My Schedule/Classes";
+    $('#ChangeUpdateText').show();
+    $('#btnAddClass').hide();
+    $(".error-class").html('');
+    $('#btnAddClass').click(function () {
+        document.getElementById("myText").innerHTML = "Add My Schedule/Classes";
+        document.getElementById("ChangeUpdateText").innerHTML = "Save";
+        $(".error-class").html('');
+    });
+    $('#sectionViewClassFeature').removeClass('d-none');
+};
+
+
+$(document).ready(function () {
+    $('#btnAddClass').click(function () {
+        $('#sectionAddClass').show();
+        $('#btnAddClass').hide();
+        $('#sectionViewClass').hide();
+        document.getElementById("pageTextchange").innerHTML = "Add My Schedule/Classes";
+        document.getElementById("pageStageChange").innerHTML = "Add My Schedule/Classes";
+        GetCountriesList();
+        initMap();
+    });
+
+});
+
+
+function ShowingViewStaffList() {
+
+    $('#EditScheduleClasses').show();
+
+}
+
+    function ResetClasssAddView() {
+
+        $("#ClassName").val('');
+        $("#ClassDescription").val('');
+        $("#ClassPrice").val('');
+        //$("#LimitOfStudentForClass").val('');
+        //$("#ClassStartTime").val('');
+        //$("#ClassEndTime").val('');
+        $("#ClassOnlineURL_Link").val('');
+        $("#ClassOfflineAddress").val('');
+        $("#ClassOfflineLandMark").val('');
+        $("#ddl_ClassOfflineCountry").val('');
+        $("#ddl_ClassOfflineState").val('');
+        $("#ddl_ClassOfflineCity").val('');
+        $("#ClassOfflinePinCode").val('');
+        $('#sectionViewClass').show();
+        $('#sectionAddClass').hide();
+        $('#btnAddClass').show();
+        $("#ClassAllDaysSelected").prop('checked', true);
+        $("#ClassSelectionOfDays").prop('checked', false);
+        $("#ClassOnlineMode").prop('checked', true);
+        $("#ClassOfflineMode").prop('checked', false);
+        $("#ClassPricePaid_PerMonth").prop('checked', false);
+        $("#ClassPricePaid_PerClass").prop('checked', false);
+        $("#ClassPriceFree_DemoClass").prop('checked', true);
+        $("#ClassPricePaid").prop('checked', false);
+        $("#ClassPriceFree").prop('checked', true);
+        $("#ClassPrice_PaidSection").hide();
+        $("#ClassPriceFree_DemoClass_Section").show();
+        $("#SelectedDaysForClass").val('').trigger('change');
+        $("#ClassOfflineLocation").val('');
+        $("#ClassURL_Link").show();
+        $("#ClassMapLocation").hide();
+        //$("#SelectDaysOfClass").hide();
+        //$("#ddlSelectedInstructorUserLoginId").val('0');
+        $("#ClassOnlineURL_Link_Password").val('');
+        $("#fileClassImage_ManageClass").val('');
+        $("#previewImage").attr('src', '');
+        $("#previewImage").addClass('d-none');
+        //$("#ddlClassGroup").val('0');
+        $("#txtHowToBookClass").val('');
+        $("#ddlClassType").val('0');
+        $("#ddlClassCategoryType").val('0');
+        $("#ddlSelectBatches").val([]).trigger('change');
+        $("#ddlParentClassCategoryType").val('0').trigger('change');
+
+        document.getElementById("pageTextchange").innerHTML = "My Schedule/Classes";
+        document.getElementById("pageStageChange").innerHTML = "My Schedule/Classes";
+        $(".error-class").html('');
+
+        $("input#ddl_ClassOfflineCountry").val('');
+        $("input#ddl_ClassOfflineState").val('');
+        $("input#ddl_ClassOfflineCity").val('');
+        $(".WithoutMapLocation").removeClass('d-none');
+        $(".MapLocation").addClass('d-none');
+        $("#ddl_ClassOfflineCity").html('');
+        $("#ddl_ClassOfflineCity").append('<option value="0">Select</option>');
+        $("#ddl_ClassOfflineState").html('');
+        $("#ddl_ClassOfflineState").append('<option value="0">Select</option>');
+        $("#ddl_ClassOfflineCountry").html('');
+        $("#ddl_ClassOfflineCountry").append('<option value="0">Select</option>');
+        CountryClassLocation = 'Select';
+        LandMarkClassLocation = '';
+
+        ClassId_Global = 0;
+        ClassBatchIdList_Global = [];
+        ClassCategoryTypeId_Global = 0;
+        ParentClassCategoryTypeId_Global = 0;
+
+        GetActiveBatchList();
+        $('#sectionViewClassFeature').addClass('d-none');
+    }
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+    }
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+function ConfirmDeleteClass(id) {
+    swal({
+        title: "Delete Class ",
+        text: "Are you sure to delete this Class ?",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "Yes",
+        }
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                DeleteClassById(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+    function DeleteClassById(id) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Class/DeleteById?id=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if Class successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message);
+                    //--Get Class List
+                    GetAllClasses();
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+     function GetActiveClassCategoryTypeList() {
+         var parentClassCategoryId = $("#ddlParentClassCategoryType").val();
+
+         if (parentClassCategoryId <= 0) {
+             $("#ddlClassCategoryType").html('');
+             var _selectList = '<option value="0">Select Class Category Type</option>';
+             $("#ddlClassCategoryType").html('').append(_selectList); //.select2();
+             return;
+         }
+
+         let _url = "/api/ClassCategoryType/GetByParentCategory?classCategoryTypeId=" + parentClassCategoryId;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $("#ddlClassCategoryType").html('');
+                var _selectList = '<option value="0">Select Class Category Type</option>';
+                for (var i = 0; i < response.data.length; i++) {
+                    _selectList += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+                }
+
+                $("#ddlClassCategoryType").html('').append(_selectList); //.select2();
+                $("#ddlClassCategoryType").val(ClassCategoryTypeId_Global).trigger('change');
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+// Image File Preview -------------------------------------------------------------
+document.getElementById('fileClassImage_ManageClass').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewImage').src = event.target.result;
+        $('#previewImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+}
+// Image File Preview -------------------------------------------------------------
+
+
+// ------------------ Class Feature ------------------------------------
+    function ShowAddUpdateClassFeature() {
+        $("#AddUpdateClassFeatureModal").modal('show');
+        document.getElementById("ChangeUpdateText_ClassFeature").innerHTML = "Submit";
+        document.getElementById("Modal_Title").innerHTML = "Add Class Feature";
+    }
+
+    function AddUpdateClassFeature() {
+        var _classFeatureTitle = $("#txtTitle_ClassFeature").val().trim();
+        var _classFeatureDescription = $("#txtClassFeatureDescription").val().trim();
+        var _classFeatureIcon_MS = $("#Icon_ClassFeature").get(0);
+        var _classFeatureIcon = _classFeatureIcon_MS.files;
+        var _mode = (ClassFeatureId_Global <= 0) ? 1 : 2;
+        let is_valid = true;
+        $(".error-class").html('');
+
+        if (validate_IsEmptyStringInputFieldValue(_classFeatureTitle)) {
+            is_valid = false;
+            $("#error_txtTtile_ClassFeature").html('@(Resources.BusinessPanel.ClassFeature_TitleRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_classFeatureDescription)) {
+            is_valid = false;
+            $("#error_txtClassFeatureDescription").html('@(Resources.BusinessPanel.ClassFeature_DescriptionRequired)');
+        }
+        if (_mode == 1 && _classFeatureIcon.length <= 0) {
+            is_valid = false;
+            $("#error_Icon_ClassFeature").html('@(Resources.BusinessPanel.ClassFeature_IconRequired)');
+        }
+
+        if (is_valid) {
+
+            var data = new FormData();
+            data.append("Id", ClassFeatureId_Global);
+            data.append("ClassId", ClassId_Global);
+            data.append("Title", _classFeatureTitle);
+            data.append("Description", _classFeatureDescription);
+            data.append("Icon", _classFeatureIcon[0]);
+            data.append("mode", _mode);
+
+            $.ajax({
+                url: '/api/Class/Feature/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        $("#AddUpdateClassFeatureModal").modal('hide');
+                        //Reset Event Sponsor Model
+                        ResetAddViewClassFeature();
+                        ClassFeatureId_Global = 0;
+                        //Get All Sponsor List
+                        getAllClassFeatures(ClassId_Global);
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+                        return;
+                    }
+
+                    StopLoading();
+
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    function getAllClassFeatures(ClassFeatureId_Global) {
+        let _url = API_Base_URL + "/api/Class/Feature/GetAllList?classId=" + ClassFeatureId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: data.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblClassFeatures').DataTable();
+                _table.destroy();
+
+                var sno = 0;
+                var _title = '';
+                var _icon = '';
+                var _description = '';
+                var _action = '';
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+                    _title = response.data[i].Title;
+                    _description = response.data[i].Description;
+                    _icon = (response.data[i].ClassFeatureIconWithPath == "") ? '' : '<img src="' + response.data[i].ClassFeatureIconWithPath + '" class="image" />';
+                    _action = '<div class="edbt">';
+                     _action += `<a href="javascript:EditClassFeature(${response.data[i].Id});"><i class="fas fa-edit"></i></a>`;
+                    _action += `<a href="javascript:ConfirmDeleteClassFeature(${response.data[i].Id}, ${response.data[i].ClassId});"><i class="fas fa-trash "></i></a>`;
+                    _action += '</div>';
+                    data.push([
+                        sno,
+                        _title,
+                        _description,
+                        _icon,
+                        _action
+
+                    ]);
+
+                }
+
+                $('#tblClassFeatures').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function EditClassFeature(id) {
+        var _url = "/api/Class/Feature/GetById?id=" + id;
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('.error-class').html('');
+
+                var item = response.data;
+
+                $("#txtTitle_ClassFeature").val(item.Title);
+                $("#txtClassFeatureDescription").val(item.Description);
+                $("#Icon_ClassFeature").val('');
+                if (response.data.ClassFeatureIconWithPath != "") {
+                    $("#previewClassFeatureImage").attr('src', response.data.ClassFeatureIconWithPath);
+                    $("#previewClassFeatureImage").removeClass('d-none');
+                }
+                ClassFeatureId_Global = item.Id;
+
+                EditClassFeatureViewModel();
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function EditClassFeatureViewModel() {
+        $("#AddUpdateClassFeatureModal").modal('show');
+        document.getElementById("ChangeUpdateText_ClassFeature").innerHTML = "Update";
+        document.getElementById("Modal_Title").innerHTML = "Update Class Feature";
+    }
+
+    function ResetAddViewClassFeature() {
+        $("#txtTitle_ClassFeature").val('');
+        $("#txtClassFeatureDescription").val('');
+        $("#Icon_ClassFeature").val('');
+        $('#previewClassFeatureImage').addClass('d-none');
+        $("#AddUpdateClassFeatureModal .error-class").html('');
+        ClassFeatureId_Global = 0;
+    }
+
+    function ConfirmDeleteClassFeature(id, classId) {
+        swal({
+            title: "Delete Class Feature",
+            text: "Are you sure to delete this Class Feature?",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "Yes",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteClassFeature(id, classId);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+
+    function DeleteClassFeature(id, classId) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Class/Feature/DeleteById?id=" + id + "&classId=" + classId,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Event Sponsor List
+                        getAllClassFeatures(ClassId_Global);
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: dataResponse.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Class-Feature Image File Preview -------------------------------------------------------------
+    document.getElementById('Icon_ClassFeature').addEventListener('change', handleClassFeatureImageUpload);
+
+    function handleClassFeatureImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 2 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewClassFeatureImage').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "2 MB"))',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewClassFeatureImage').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewClassFeatureImage').src = event.target.result;
+            $('#previewClassFeatureImage').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+// ------------------ Class Feature ------------------------------------
+
+    function GetCountriesList() {
+
+        $("#ddl_ClassOfflineCountry").html('');
+        $("#ddl_ClassOfflineCountry").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCountriesListData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCountries) {
+
+                var res_country = '';
+
+                for (var i = 0; i < dataCountries.data.length; i++) {
+                    res_country += '<option value="' + dataCountries.data[i].Name + '" data-phonecode-val = "' + dataCountries.data[i].ID + '">' + dataCountries.data[i].Name + '</option>';
+                }
+
+                $("#ddl_ClassOfflineCountry").append(res_country);
+
+                if (ClassId_Global != 0 && CountryClassLocation != undefined && CountryClassLocation != "")
+                    $("#ddl_ClassOfflineCountry").val(CountryClassLocation).trigger('change');
+
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeCountry() {
+
+        StartLoading();
+        //var _country_id = $("#ddl_ClassOfflineCountry").val();
+        var _country_id = $('#ddl_ClassOfflineCountry').find('option:selected').attr('data-phonecode-val');
+        $("#ddl_ClassOfflineState").html('');
+        $("#ddl_ClassOfflineState").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesListByCountry?countryId=" + _country_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                var hasListItem = false;
+                for (var i = 0; i < dataState.data.length; i++) {
+                    if (StateClassLocation != undefined && StateClassLocation != "" && StateClassLocation.toLowerCase() == dataState.data[i].Name.toLowerCase()) {
+                        hasListItem = true;
+                    }
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#ddl_ClassOfflineState").append(res_state);
+
+                if (ClassId_Global != 0 && StateClassLocation != undefined && StateClassLocation != "") {
+                    if (hasListItem) {
+                        $("#ddl_ClassOfflineState").val(StateClassLocation).trigger('change');
+                    }
+                    else {
+                        $("#ddl_ClassOfflineState").addClass('d-none');
+                        $("input#ddl_ClassOfflineState").val(StateClassLocation);
+                        $("input#ddl_ClassOfflineState").removeClass('d-none');
+                    }
+                }
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function GetStatesLists() {
+
+        $("#ddl_ClassOfflineState").html('');
+        $("#ddl_ClassOfflineState").append('<option value="0">Select</option>');
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllStatesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataState) {
+
+                var res_state = '';
+
+                for (var i = 0; i < dataState.data.length; i++) {
+
+                    res_state += '<option value="' + dataState.data[i].Name + '" data-phonecode-val = "' + dataState.data[i].ID + '">' + dataState.data[i].Name + '</option>';
+                }
+
+                $("#ddl_ClassOfflineState").append(res_state);
+                $("#ddl_ClassOfflineState").val(StateClassLocation);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    function ChangeState() {
+
+        StartLoading();
+        var _state_id = $('#ddl_ClassOfflineState').find('option:selected').attr('data-phonecode-val');;
+
+        $("#ddl_ClassOfflineCity").html('');
+        $("#ddl_ClassOfflineCity").append('<option value="0">Select</option>');
+
+        $("#span_CityField_RequiredSign").show();
+
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesListByState?stateId=" + _state_id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    var hasListItem = false;
+                    for (var i = 0; i < dataCity.data.length; i++) {
+                        if (CityClassLocation.toLowerCase() == dataCity.data[i].Name.toLowerCase()) {
+                            hasListItem = true;
+                        }
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#ddl_ClassOfflineCity").append(res_city);
+
+                    if (ClassId_Global != 0 && CityClassLocation != undefined && CityClassLocation != "") {
+                        if (hasListItem) {
+                            $("#ddl_ClassOfflineCity").val(CityClassLocation).trigger('change');
+                        }
+                        else {
+                            $("#ddl_ClassOfflineCity").addClass('d-none');
+                            $("input#ddl_ClassOfflineCity").val(CityClassLocation);
+                            $("input#ddl_ClassOfflineCity").removeClass('d-none');
+                        }
+                    }
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+       function GetCitiesList() {
+
+        StartLoading();
+        $("#ddl_ClassOfflineCity").html('');
+        $("#ddl_ClassOfflineCity").append('<option value="0">Select</option>');
+        $.ajax({
+            type: "GET",
+            url: "/api/Country/GetAllCitiesList",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataCity) {
+
+                //--Check if cities exist related to the selected-state
+                if (dataCity.data.length > 0) {
+                    var res_city = '';
+
+                    for (var i = 0; i < dataCity.data.length; i++) {
+
+                        res_city += '<option value="' + dataCity.data[i].Name + '">' + dataCity.data[i].Name + '</option>';
+                    }
+
+                    $("#ddl_ClassOfflineCity").append(res_city);
+                    $("#ddl_ClassOfflineCity").val(CityClassLocation);
+                }
+                else {
+                    //--Set Province-Type as "state" (means City fields is Optional as there is not city exist related State)
+
+                    $("#span_CityField_RequiredSign").hide();
+                }
+
+                StopLoading();
+            },
+           error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+     function GetActiveParentClassCategoryTypeList() {
+
+         let _url =  "/api/ClassCategoryType/GetAllActiveParentClassCategoryTypes";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            $("#ddlParentClassCategoryType").html('');
+            var _selectList = '<option value="0">Select Class Category</option>';
+            for (var i = 0; i < response.data.length; i++) {
+                _selectList += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+            }
+            $("#ddlParentClassCategoryType").html('').append(_selectList); //.select2();
+            $("#ddlParentClassCategoryType").val(ParentClassCategoryTypeId_Global).trigger('change');
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    let map, infoWindow, marker;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("Classmap"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 6,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        var geocoder = new google.maps.Geocoder();
+        setupInitialLocation(geocoder);
+    }
+    // Initial Map load
+    function setupInitialLocation(geocoder) {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(pos),
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+
+                    });
+                    google.maps.event.addListener(marker, 'dragend', function () {
+                        //console.log(marker.getPosition());
+                        geocodePosition(marker.getPosition());
+                        var lat = marker.getPosition().lat();
+                        var lng = marker.getPosition().lng();
+
+                        // Print the latitude and longitude
+                        $("#LocationLatitude").val(lat);
+                        $("#LocationLongitude").val(lng);
+                    });
+                    map.setCenter(pos);
+
+                    geocodePosition(pos, 1);
+                },
+                () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
+    var city = '';
+    var State = '';
+    var Country = '';
+    var LandMark = '';
+    var FullAddress = '';
+
+    function geocodePosition(pos, pp = 0) {
+
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode
+            ({
+                latLng: pos
+            },
+                function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+
+                        FullAddress = results[0].formatted_address;
+                        console.log(results[0]);
+                        $("#ClassOfflineLandMark").val(LandMarkClassLocation);
+                        LandMark = '';
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+
+                            if (results[0].address_components[i].types[0] == 'locality') {
+                                city = results[0].address_components[i].long_name;
+
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'postal_code') {
+                                postal_code = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                                State = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[0] == 'country') {
+                                Country = results[0].address_components[i].long_name;
+
+                            }
+                            if (results[0].address_components[i].types[2] == 'sublocality_level_2' || results[0].address_components[i].types[2] == 'sublocality_level_1') {
+                                LandMark = results[0].address_components[i].long_name;
+
+                            }
+
+                        }
+
+
+
+                        $("#mapErrorMsg").hide(100);
+                    }
+                    else {
+                        $("#mapErrorMsg").html('Cannot determine address at this location.' + status).show(100);
+                    }
+                }
+            );
+    }
+
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+        );
+        infoWindow.open(map);
+    }
+
+    window.initMap = initMap;
+    $(document).on('click', '#confirmaddress', function () {
+        $(".WithoutMapLocation").addClass('d-none');
+        $(".MapLocation").removeClass('d-none');
+        $("input#ddl_ClassOfflineCity").val(city);
+        $("#ClassOfflinePinCode").val(postal_code);
+        $("input#ddl_ClassOfflineState").val(State);
+        $("input#ddl_ClassOfflineCountry").val(Country);
+        $("#ClassOfflineLandMark").val(LandMark);
+        $("#ClassOfflineAddress").val(FullAddress);
+        LocationChooseMap = 1;
+    })
+</script>

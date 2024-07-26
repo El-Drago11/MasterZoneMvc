@@ -1,0 +1,740 @@
+﻿
+@{
+    ViewBag.Title = "Teacher";
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+    long businessOwnerLoginId = ViewBag.BusinessOwnerLoginId;
+}
+
+
+@section Styles{
+
+    <link rel="stylesheet" href="~/Content/assets/stylesheet-cer.css">
+    <link rel="stylesheet" href="~/Content/assets/education-cer.css">
+    <link rel="stylesheet" href="~/Content/assets/class-stylesheet.css">
+    <link rel="stylesheet" href="~/Content/assets/index-stylesheet.css">
+
+    <link rel="stylesheet" href="~/Content/assets/style_new.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- jquery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"
+            integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;0,700;1,400;1,500;1,700&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+    @*slick slider*@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"
+            integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+          integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+          integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+}
+<input type="hidden" id="hiddenBusinessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId" />
+<body class="education-template">
+    <div id="BindBusinessContentTeacherBannerImage">
+        @*<div class="hero-banner" style="background-image: url('/Content/visitor-panel/image/study-banner.jpg');">*@
+    </div>
+
+
+    <button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+    <div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup">
+        <div class="modal-dialog">
+            <div class="modal-content" style="align-items: center;">
+                <!-- Modal Header -->
+                <div class="modal-header w-100">
+                    <h4 class="modal-title">Please Login</h4>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body text-center pt-5 pb-5">
+                    <p>Please login to your account by click on below button</p>
+
+                    <!-- Modal footer -->
+
+                    <button id="submit" type="button" class="btn btn-outline-dark cstm-btn">
+                        <a href="/Home/Login" class="btn_section">
+                            Login
+                        </a>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="navbar-section">
+        <div class="page-center">
+            <div class="nav-flex">
+                <div class="left-sec">
+                    <div class="profile-img">
+                        <img id="TeacherProfileImage" src="" alt="profile" loading="lazy">
+                    </div>
+                </div>
+                <div class="right-sec">
+                    <div class="nav-content">
+                        <h5 id="TeacherName"></h5>
+                        <p id="TeacherUniqueId">
+                            Referral Code:
+                        </p>
+                    </div>
+
+                    <div class="star-icons" id="InstructorStarDetail">
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+
+                    <div class="icons">
+                        <div class="icon-iner">
+
+                            <a class="icon-link" onclick="AddOrRemoveFavourites();"></a>
+                            <div class="icon-box">
+                                <i id="fa-icn-kjjl" class="heart_icon fa-regular fa-heart fa-solid"></i>
+                            </div>
+                            <span class="likedstatus icon-info"></span>
+
+                        </div>
+                        <div class="icon-iner">
+                            <a class="icon-link" onclick=" ShowAddFollowPopup();"></a>
+                            <div class="icon-box">
+                                <i id="fa-icn-follower" class="fa-solid fa-user-plus"></i>
+                            </div>
+                            <span class="followedstatus icon-info">.</span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- accordion section -->
+    <div class="education-detail">
+        <div class="page-center">
+            <div class="accordion-col">
+                <div class="accordion-left">
+
+                    <ul class="fixed-tab">
+                        <li> <a href="#about_section" id="BindAbout_Section">About</a></li>
+                        <li> <a href="#eduaction_degree" id="BindEducation_section">Education & Degree</a></li>
+                        <li> <a href="#certificate_details" id="BindCertificate_section">Certificate</a></li>
+                        <li><a href="#contact_section" id="BindContactDetail_section">Contact</a></li>
+                        <li><a href="#course_section" id="BindCourse_section">Courses</a></li>
+                        <li><a href="#current_working" id="BindCurrentWorking_section">Current Working</a> </li>
+                        <li><a href="#videos_section" id="BindVideos_Section">Videos</a></li>
+                        <li><a href="#curriculum_section" id="BindCurricullum_section">Curricullum</a></li>
+                    </ul>
+                    <!--  about section-->
+                    <div class="scroll-div" id="aboutdetail_section">
+                        <div class="main-title">About</div>
+                        <div class="about-section-inr" id="BindBusinessContentAboutSectionDetailList">
+
+                            @*<p>Web Designer</p>
+                <h6>HELLO, I’M RAVI</h6>
+                <p>
+                    I am aTEACHER Lorem Ipsum is simply dummy text of the printing and typesetting industry.Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Curabitur non mi ultrices, tincidunt est vitae, porta massa.
+                    Sed quis dictum purus. Nullam iaculis efficitur leo, sit amet efficitur velit sodales eget.
+                    Sed dui odio, posuere nec nunc nec, tempus porta diam.
+                </p>*@
+                        </div>
+                    </div>
+                    <!--education  -->
+                    <div class="scroll-div" id="eduaction_degree">
+                        <div class="main-title">Eduaction and Degree</div>
+                        <div class="container education" id="BindBusinessContentEducationDetailList">
+
+                        </div>
+                    </div>
+                    <div class="scroll-div" id="certificate_details">
+                        <div class="main-title">Certificate</div>
+                        <div class="container" id="BindBusinessCertificateDetail">
+
+                        </div>
+                    </div>
+                    <!-- licenses -->
+                    <!-- <div class="scroll-div" id="licenses_section">
+        <div class="main-title">Licenses</div>
+    <div class="licenses-section">
+        I am the content found under accordion #2.
+        You can't see me while "active" is not present.
+        </div>
+        </div> -->
+                    <!--  contact_info_sec -->
+                    <div class="scroll-div" id="contact_section">
+                        <div class="main-title">Contact</div>
+                        <div class="contact_info_sec">
+
+                            <div class="contact_info_iner" id="BindBusinessContactDetail">
+
+                            </div>
+                            <div class="social-main">
+                                <div class="social-title">
+                                    <h6>Social Follow</h6>
+                                </div>
+                                <div class="social-follow" id="BindBusinessSocialFollowDetail">
+                                    @*<div class="social-icon">
+                            <a href="#"><i class="fa-brands fa-facebook-f"></i>	</a>
+                        </div>
+                        <div class="social-icon">
+                            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                        </div>
+                        <div class="social-icon">
+                            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                        </div>
+                        <div class="social-icon">
+                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                        </div>*@
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- all courses -->
+                    <div class="scroll-div" id="course_section">
+                        <div class="main-title">Course</div>
+                        <div class="all-course-sec">
+                            <div class="subject-flex" id="BindBusinessContentCourseDetailList">
+                                @*<div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Development</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/computer.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>IT & Software</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Designing</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/illustration.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Designing</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Marketing</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Economics</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Business</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Social Science</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Training</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Photography</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/book.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>Development</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subject-item">
+                        <a href="#"></a>
+                        <div class="subject-inr">
+                            <div class="img-subject">
+                                <img src="~/Content/visitor-panel/image/computer.png" alt="img" loading="lazy">
+                            </div>
+                            <div class="subject-name">
+                                <h6>IT & Software</h6>
+                            </div>
+                        </div>
+                    </div>*@
+                            </div>
+                        </div>
+                        <div class="universities-section">
+                            <div class="title">
+                                <h6>Affiliated from the following Universities</h6>
+                            </div>
+                            <div class="universities-logo-flex" id="BindBusinessContentUniversityLogoDetaillist">
+                                @*<div class="logo-iner">
+                        <a href="#"></a>
+                        <img src="~/Content/visitor-panel/image/PTULogo.png" alt="logo" loading="lazy">
+                        <p>Ptu Jalandhar</p>
+                    </div>
+                    <div class="logo-iner">
+                        <a href="#"></a>
+                        <img src="~/Content/visitor-panel/image/PBLogo.png" alt="logo" loading="lazy">
+                        <p>Punjab University</p>
+                    </div>
+                    <div class="logo-iner">
+                        <a href="#"></a>
+                        <img src="~/Content/visitor-panel/image/Tricolor.png" alt="logo" loading="lazy">
+                        <p>Ptu Kapurthala</p>
+                    </div>
+                    <div class="logo-iner">
+                        <a href="#"></a>
+                        <img src="~/Content/visitor-panel/image/newPTUka.png" alt="logo" loading="lazy">
+                        <p>PTU</p>
+                    </div>*@
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="scroll-div" id="current_working">
+                        <div class="main-title">current Working</div>
+                        <div class="certi-main" id="BindBusinessCurrentlyWorkingDetaillst">
+                            @*<div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>
+                <div class="certi-inr">
+                    <a href="#"></a>
+                    <img src="~/Content/visitor-panel/image/AdminLTELogo.png" alt="logo" loading="lazy">
+                    <p>Master Zone</p>
+                </div>*@
+                        </div>
+                    </div>
+                    <!-- videos -->
+                    <div class="scroll-div" id="videos_section">
+                        <div class="main-title">videos</div>
+                        <div class="videos" id="BindBusinessTeacherVideoListDetail">
+                            @*<div class="video-items">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/yAoLSRbwxL8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                <div class="video-items">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/yAoLSRbwxL8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                <div class="video-items">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/yAoLSRbwxL8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                <div class="video-items">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/yAoLSRbwxL8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                <div class="video-items">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/yAoLSRbwxL8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                <div class="video-items">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/yAoLSRbwxL8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>*@
+                        </div>
+                    </div>
+                    <!-- curriculum_section -->
+                    <div class="scroll-div" id="curriculum_section">
+
+                        <div class="main-title">Curriculum</div>
+                        <div class="curriculum-slider" id="BindBusinessContentCurriculumDetailList">
+
+                            @*<div class="curriculum-items">
+                    <div class="img-box">
+                        <img src="~/Content/visitor-panel/image/slide3.jpg" alt="img">
+                    </div>
+                    <div class="box-text">
+                        <h5>Infant</h5>
+                        <ul>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                        </ul>
+                        <a class="simple-cta" href="">Learn More <i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                </div>
+                <div class="curriculum-items">
+                    <div class="img-box">
+                        <img src="~/Content/visitor-panel/image/slide3.jpg" alt="img">
+                    </div>
+                    <div class="box-text">
+                        <h5>Infant</h5>
+                        <ul>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                        </ul>
+                        <a class="simple-cta" href="">Learn More <i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                </div>
+                <div class="curriculum-items">
+                    <div class="img-box">
+                        <img src="~/Content/visitor-panel/image/slide3.jpg" alt="img">
+                    </div>
+                    <div class="box-text">
+                        <h5>Infant</h5>
+                        <ul>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                        </ul>
+                        <a class="simple-cta" href="">Learn More <i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                </div>
+                <div class="curriculum-items">
+                    <div class="img-box">
+                        <img src="~/Content/visitor-panel/image/slide3.jpg" alt="img">
+                    </div>
+                    <div class="box-text">
+                        <h5>Infant</h5>
+                        <ul>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                        </ul>
+                        <a class="simple-cta" href="">Learn More <i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                </div>
+                <div class="curriculum-items">
+                    <div class="img-box">
+                        <img src="~/Content/visitor-panel/image/slide3.jpg" alt="img">
+                    </div>
+                    <div class="box-text">
+                        <h5>Infant</h5>
+                        <ul>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                        </ul>
+                        <a class="simple-cta" href="">Learn More <i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                </div>
+                <div class="curriculum-items">
+                    <div class="img-box">
+                        <img src="~/Content/visitor-panel/image/slide3.jpg" alt="img">
+                    </div>
+                    <div class="box-text">
+                        <h5>Infant</h5>
+                        <ul>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                            <li>Lorem ipsum dolor</li>
+                        </ul>
+                        <a class="simple-cta" href="">Learn More <i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                </div>*@
+                        </div>
+                    </div>
+
+                </div>
+                <div class="accordion-right">
+                    <div class="upcoming-classes">
+                        <ul class="cta-listing">
+                            <li data-tab="#upcoming_classes" id="upcomingclass_section">ALL CLASSES</li>
+                            <li data-tab="#virtual_classes" id="BindVirtualClass_section">VIRTUAL CLASSES </li>
+                            <li data-tab="#in_person_classes" id="BindPersonClasses_section">
+                                IN-PERSON CLASSES
+                            </li>
+                        </ul>
+                        <div class="online-classes-tab">
+                            <!--  upcoming_classes -->
+                            <div class="online-classes-card" id="upcoming_classes">
+
+                            </div>
+                            <!-- virtual_classes -->
+                            <div class="online-classes-card" id="virtual_classes">
+
+                               
+                            </div>
+                            <!-- in_person_classes -->
+                            <div class="online-classes-card" id="in_person_classes">
+
+                            </div>
+                        </div>
+                        @*<a class="simple-cta" href="#ViewReferDetail">View more</a>*@
+                    </div>
+                    <div class="referral-section" id="ViewReferDetail">
+                        @*<div class="title">
+                                <h6>View my Referral</h6>
+                            </div>
+                            <div class="referral-des">
+                                No Referred User Found. Create your team by reffer users.
+                            </div>*@
+
+                    </div>
+
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+    <button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+    <div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup" style="padding: 196px 1px 169px 347px;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="width: 50%; align-items: center;">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">Please Login</h4>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <button id="submitEnquiry" type="button" class="btn btn-outline-dark cstm-btn w-auto">
+                        <a href="/Home/Login">
+                            Login
+                        </a>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+
+
+@section Scripts{
+    <script src="~/Content/assets/main-cer.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <script src="https://kenwheeler.github.io/slick/slick/slick.js"></script>
+
+    <script>
+        // classses tabs
+        //$('.education-template .cta-listing>li').click(function () {
+        //    $('.online-classes-tab .online-classes-card').hide();
+        //    $('.cta-listing>li.active-class').removeClass('active-class');
+        //    $(this).addClass('active-class');
+
+        //    var panel = $(this).attr('data-tab');
+        //    $(panel).fadeIn(1000);
+
+        //    return false;  // prevents link action
+
+        //});  // end click
+        //$('.education-template .cta-listing>li:first').click();
+
+
+        //$('.education-template .subject-flex').slick({
+        //    dots: true,
+        //    infinite: false,
+        //    speed: 300,
+        //    rows: 3,
+        //    arrows: false,
+        //    slidesToShow: 3,
+        //    slidesToScroll: 3,
+        //    responsive: [
+        //        {
+        //            breakpoint: 767,
+        //            settings: {
+        //                dots: true,
+        //                infinite: true,
+        //                rows: 3,
+        //                arrows: false,
+        //                slidesToShow: 2,
+        //                slidesToScroll: 2
+        //            }
+        //        },
+        //        {
+        //            breakpoint: 580,
+        //            settings: {
+        //                dots: true,
+        //                infinite: true,
+        //                rows: 3,
+        //                arrows: false,
+        //                slidesToShow: 1,
+        //                slidesToScroll: 1
+        //            }
+        //        }
+        //    ]
+        //});
+
+        // curriculum
+        //$('.education-template  .curriculum-slider').slick({
+        //    dots: true,
+        //    infinite: false,
+        //    speed: 300,
+        //    arrows: false,
+        //    slidesToShow: 3,
+        //    slidesToScroll: 3,
+        //    responsive: [
+        //        {
+        //            breakpoint: 767,
+        //            settings: {
+        //                dots: true,
+        //                infinite: true,
+        //                arrows: false,
+        //                slidesToShow: 2,
+        //                slidesToScroll: 2
+        //            }
+        //        },
+        //        {
+        //            breakpoint: 580,
+        //            settings: {
+        //                dots: true,
+        //                infinite: true,
+        //                arrows: false,
+        //                slidesToShow: 1,
+        //                slidesToScroll: 1
+        //            }
+        //        }
+        //    ]
+        //});
+
+
+
+    </script>
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_TeacherScriptPartial.cshtml")
+}
+
+

@@ -1,0 +1,336 @@
+﻿<script>
+
+    var UserToken_Global = "";
+    var CustomFormId_Global = $("#hiddenCustomFormId").val();
+    var BusinessSearchLastRecordId_Global = 0;
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                getAllAssignedBusinessOnwersToCustomForm(CustomFormId_Global);
+              
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        getAllAssignedBusinessOnwersToCustomForm(CustomFormId_Global);
+                       
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+
+
+    function resetAssignCertificateSection() {
+        $('#txtSearchBusiness').val('');
+        $('#searchedBusinessOwnersList').html('');
+        $('#btnSearchBusinessShowMore').addClass('d-none');
+    }
+
+      function getBusinessOnwersBySearch(isRefresh = true) {
+        let _url = "/api/Business/GetAllBySearchForSuperAdmin";
+        let _searchKeyword = $('#txtSearchBusiness').val().trim();
+
+        if (isRefresh) {
+            BusinessSearchLastRecordId_Global = 0;
+            $("#searchedBusinessOwnersList").html('');
+        }
+
+        let requestData = {
+            CustomFormId: CustomFormId_Global,
+            SearchKeyword: _searchKeyword,
+            LastRecordId: BusinessSearchLastRecordId_Global
+        };
+
+        $.ajax({
+            type: "POST",
+            url: _url,
+            data: JSON.stringify(requestData),
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var bindedSearchResultHTML = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    bindedSearchResultHTML += getbindedAssignBusinessCards(response.data[i]);
+                }
+
+                if (response.data.length > 0) {
+                    BusinessSearchLastRecordId_Global = response.data[response.data.length - 1].Id;
+                    // display show more button
+                    $('#btnSearchBusinessShowMore').removeClass('d-none');
+                }
+                else {
+                    $('#btnSearchBusinessShowMore').addClass('d-none');
+                }
+
+
+                $("#searchedBusinessOwnersList").append(bindedSearchResultHTML);
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function getbindedAssignBusinessCards(businessVM) {
+
+        var _assignActionBtn = ``;
+        var _assignClass = '';
+        var _unassignClass = '';
+        if (businessVM.IsCertificateAssigned == 0) {
+            _unassignClass = 'd-none';
+        }
+        else {
+            _assignClass = 'd-none';
+        }
+
+        _assignActionBtn += `<a href="javascript:assignCertificate(${businessVM.UserLoginId});" class="text-info ${_assignClass}" id="assign_BC_${businessVM.UserLoginId}"><i class="fas fa-plus"></i> Assign</a>`;
+        _assignActionBtn += `<a href="javascript:unAssignCertificate(${businessVM.UserLoginId});" class="text-danger ${_unassignClass}" id="unassign_BC_${businessVM.UserLoginId}"><i class="fas fa-minus"></i> Un-Assign</a>`;
+        var _businessName = (businessVM.BusinessName == null || businessVM.BusinessName == "") ? "--" : businessVM.BusinessName;
+        return `
+            <div class="col-6 mb-2">
+                <div class="align-items-center border d-flex flex-row p-2 w-100">
+                    <img class="business-logo" src="${businessVM.BusinessLogoWithPath}">
+                    <div class="d-flex flex-column flex-grow-1 mx-3">
+                        <div class="text-bold"><a target="_blank" href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${businessVM.UserLoginId}">${_businessName}</a></div>
+                        <div class="text-muted"><b>Owner:</b> ${businessVM.FirstName} ${businessVM.LastName}</div>
+                        <div class="text-muted"><b>Master ID:</b> ${businessVM.BusinessMasterId}</div>
+                        <div class="text-muted"><b>Category:</b> ${businessVM.BusinessCategoryName}</div>
+                        <div class="text-muted"><b>Sub Category:</b> ${businessVM.BusinessSubCategoryName}</div>
+                    </div>
+                    <div class="">
+                        ${_assignActionBtn}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function assignCertificate(businessOwnerLoginId) {
+        assignOrUnassignBusinessCertificate(businessOwnerLoginId, CustomFormId_Global, 1, function () {
+            $('#assign_BC_' + businessOwnerLoginId).addClass('d-none');
+            $('#unassign_BC_' + businessOwnerLoginId).removeClass('d-none');
+        });
+    }
+
+    function unAssignCertificate(businessOwnerLoginId) {
+        assignOrUnassignBusinessCertificate(businessOwnerLoginId, CustomFormId_Global, 0, function () {
+            $('#assign_BC_' + businessOwnerLoginId).removeClass('d-none');
+            $('#unassign_BC_' + businessOwnerLoginId).addClass('d-none');
+        });
+    }
+
+
+    function assignOrUnassignBusinessCertificate(businessOwnerLoginId, CustomFormId_Global, isAssign, successCallback) {
+        StartLoading();
+        let _url = `/api/CustomForm/AssignOrUnassignBusinessCustomForm?businessOwnerLoginId=${businessOwnerLoginId}&customformId=${CustomFormId_Global}&isAssign=${isAssign}`;
+        //let _url = `/api/Business/AssignOrUnassignBusinessCertificate`;
+
+        $.ajax({
+            type: "POST",
+            url: _url,
+            //data: JSON.stringify({ "businessOwnerLoginId": businessOwnerLoginId, "certificateId": certificateId, "isAssign": isAssign }),
+            //dataType: 'application/json',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                StopLoading();
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "success",
+                    mode: "dark",
+                });
+                successCallback();
+                getAllAssignedBusinessOnwersToCustomForm(CustomFormId_Global);
+            },
+            error: function (result) {
+                StopLoading();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function getAllAssignedBusinessOnwersToCustomForm(CustomFormId_Global) {
+           let _url = "/api/CustomForm/GetAllAssignedBusinessOwnerList?customformId=" + CustomFormId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                //var bindedBOList = '';
+
+                //for (var i = 0; i < response.data.length; i++) {
+                //    bindedBOList += getbindedAssignBusinessCards(response.data[i]);
+                //}
+
+                //if (response.data.length <= 0) {
+                //    bindedBOList = `<div class="w-100 text-center text-muted"><i>No Records<i/></div>`;
+                //}
+
+                //$("#assignedBusinessData").html('').append(bindedBOList);
+
+                var _table = $("#assignedBusinessData > table").DataTable();
+                _table.destroy();
+
+                var sno = 0;
+                var _status = '';
+                var _staffImage = '';
+                var _isApproved = '';
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+
+                    var CustomFormName = '';
+                    if (response.data[i].CustomFormName == null) {
+                        CustomFormName = `<div class="w-100 font-italic text-center text-black-50 py-2">No Custom Form Name </div>`;
+                        $("#FormName").append(CustomFormName);
+                    }
+                    else {
+                        CustomFormName = `<h5 class="mt-4">Title: ${response.data[i].CustomFormName}</h5>`;
+                        $("#FormName").append(CustomFormName);
+                    }
+                    //var _leaveReason = '';
+                    var businessVM = response.data[i];
+                    sno++;
+
+                    var _assignActionBtn = ``;
+                    var _assignClass = '';
+                    var _unassignClass = '';
+                    if (businessVM.IsCertificateAssigned == 0) {
+                        _unassignClass = 'd-none';
+                    }
+                    else {
+                        _assignClass = 'd-none';
+                    }
+
+                    _assignActionBtn += `<a href="javascript:assignCertificate(${businessVM.UserLoginId});" class="text-info ${_assignClass}" id="assign_BC_${businessVM.UserLoginId}"><i class="fas fa-plus"></i> Assign</a>`;
+                    _assignActionBtn += `<a href="javascript:unAssignCertificate(${businessVM.UserLoginId});" class="text-danger ${_unassignClass}" id="unassign_BC_${businessVM.UserLoginId}"><i class="fas fa-minus"></i> Un-Assign</a>`;
+                    var _businessName = (businessVM.BusinessName == null || businessVM.BusinessName == "") ? "--" : businessVM.BusinessName;
+                    var _business = `<div class="d-flex align-items-center">
+                                        <img class="business-logo" src="${businessVM.BusinessLogoWithPath}">
+                                        <a target="_blank" href="/SuperAdmin/BusinessDetail?businessOwnerLoginId=${businessVM.UserLoginId}" class="text-bold">${_businessName}</a></div>
+                                    </div>`;
+                    var _Owner = `${businessVM.FirstName} ${businessVM.LastName}`;
+
+                    data.push([
+                        sno,
+                        businessVM.BusinessMasterId,
+                        _business,
+                        _Owner,
+                       /* businessVM.BusinessCategoryName,*/
+                      /*  businessVM.BusinessSubCategoryName,*/
+                        _assignActionBtn
+                    ]);
+                }
+
+                $("#assignedBusinessData > table").DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+     
+
+</script>

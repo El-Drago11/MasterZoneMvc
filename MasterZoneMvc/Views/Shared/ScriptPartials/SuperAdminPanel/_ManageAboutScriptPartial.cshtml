@@ -1,0 +1,268 @@
+﻿<script>
+    var UserToken_Global = "";
+    var AboutId_Global = 0;
+    var BannerImageType = 1;
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                EditSuperAdminAboutDetail();
+
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        EditSuperAdminAboutDetail();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+   function btnSubmitAboutDetailClick() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+       var _mode =  1;
+
+       let _manageAboutTitle = $("#txtAboutTitle").val().trim();
+       let _manageAboutdescription = $("#txtDescription").val().trim();
+       let _managemissionTitle = $("#txtMissionTitle").val().trim();
+       let _managemissionDescription = $("#txtMissionDescription").val().trim();
+
+
+
+       let _error_manageAboutTitle = $("#error_txtAboutTitle");
+       let _error_manageAboutdescription = $("#error_txtDescription");
+       let _error_managemissionTitle = $("#error_txtMissionTitle");
+       let _error_managemissionDescription = $("#error_txtMissionDescription");
+       let _error_manageaboutImage = $("#error_fileSuperdmin_ManageAboutBannerImage");
+
+       if (validate_IsEmptyStringInputFieldValue(_manageAboutTitle)) {
+            is_valid = false;
+           _error_manageAboutTitle.html('@(Resources.SuperAdminPanel.AboutTitleRequired)');
+         }
+       if (validate_IsEmptyStringInputFieldValue(_manageAboutdescription)) {
+            is_valid = false;
+           _error_manageAboutdescription.html('@(Resources.SuperAdminPanel.AboutDescriptionRequired)');
+        }
+       if (validate_IsEmptyStringInputFieldValue(_managemissionTitle)) {
+            is_valid = false;
+           _error_managemissionTitle.html('@(Resources.SuperAdminPanel.MissionAboutTitleRequired)');
+         }
+       if (validate_IsEmptyStringInputFieldValue(_managemissionDescription)) {
+            is_valid = false;
+           _error_managemissionDescription.html('@(Resources.SuperAdminPanel.MissionAboutDescriptionRequired)');
+       }
+
+       var _aboutImageFile_MS = $("#fileSuperdmin_ManageAboutBannerImage").get(0);
+       var _aboutImageFiles = _aboutImageFile_MS.files;
+       if (BannerImageType == 1 && _aboutImageFiles.length <= 0) {
+            _error_manageaboutImage.html('@(Resources.BusinessPanel.BusinessBannerImageRequired)');
+            return;
+        }
+
+
+       if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", AboutId_Global);
+            data.append("AboutTitle", _manageAboutTitle);
+            data.append("AboutDescription", _manageAboutdescription);
+            data.append("OurMissionTitle", _managemissionTitle);
+            data.append("OurMissionDescription", _managemissionDescription);
+            data.append("Image", _aboutImageFiles[0]);
+            data.append('Mode', _mode);
+
+
+
+            $.ajax({
+                url: '/api/SuperAdmin/AddUpdateAboutDetail',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditSuperAdminAboutDetail() {
+
+        
+        var _url = "/api/SuperAdmin/GetSuperAdminAboutDetail";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            AboutId_Global = response.data.Id;
+            $("#txtAboutTitle").val(response.data.AboutTitle);
+            $("#txtDescription").val(response.data.AboutDescription);
+            $("#txtMissionTitle").val(response.data.OurMissionTitle);
+            $("#txtMissionDescription").val(response.data.OurMissionDescription);
+            $("#fileSuperdmin_ManageAboutBannerImage").val('');
+            if (response.data.AboutImageWithPath != "") {
+                $("#imagePreview").attr('src', response.data.AboutImageWithPath);
+                $("#imagePreview").removeClass('d-none');
+                BannerImageType = 2;
+            }
+
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+
+
+     // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileSuperdmin_ManageAboutBannerImage').addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#imagePreview').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#imagePreview').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('imagePreview').src = event.target.result;
+        $('#imagePreview').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+    }
+
+</script>
+

@@ -1,0 +1,133 @@
+﻿@model MasterZoneMvc.ViewModels.RequestBusinessSearchViewModel
+
+@{
+    ViewBag.Title = "Search Results for: " + Model.SearchKeyword;
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+    string SearchParametersJsonObject = ViewBag.SearchParametersJsonObject;
+}
+
+@section Styles {
+    <style>
+        header.header {
+            position: absolute;
+        }
+
+        .banner-sec {
+            height: 50vh !important;
+        }
+
+        .banner-content {
+            margin: -4rem 0rem 10rem auto !important;
+        }
+
+        @@media(min-width:800px) {
+            .banner-sec {
+                height: 50vh !important;
+                padding: 10rem 0 10rem !important;
+            }
+
+            .banner-sec {
+                background-size: cover !important;
+                background-position: top !important;
+            }
+        }
+    </style>
+}
+
+@*<input type="hidden" id="hiddenCategoryId_CategoryLisitng" value="@ViewBag.CategoryId" />*@
+
+<div class="banner-sec" style="background: url(/Content/visitor-panel/image/taj2.jpg);">
+    <div class="page-center">
+        <div class="banner-content">
+            <p>
+                its originally taken from a Latin
+                text written by a Roman Scholar , Sceptic
+                and philosopher by the name of Marcus
+                Tullius Cicero,whoin fluenced the Latin language hreatly.
+            </p>
+        </div>
+    </div>
+</div>
+
+<section id="section-1ls">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h2 class="ca-hd" id="pageHeading">@*Category Heading*@</h2>
+                <div id="subCategoriesList" class="img-w-txt-outer d-flex pt-4">
+                    @*<div class="img-w-txt">
+                            <a href="listing-page.html">
+                                <img style="width: 60px;" src="image/1670408542539-09e49b.webp" alt="" class="img-tx">
+                                <p class="txt-img text-center">Bestseller packages</p>
+                            </a>
+                        </div>*@
+                </div>
+            </div>
+        </div>
+
+        <div class="row row1ls2 mt-lg-4 mt-2">
+            <div id="businessRecordsList" class="col-sm-12 Srch-r-sc">
+                @*<div class="search-r-outer d-flex justify-content-between align-items-center mt-4 border-bottom pb-3">
+                        <div class="busi-sc d-flex">
+                            <a href="#"> <img src="@Resources.StaticResources.MasterzoneLogo"></a>
+                            <div class="bus-txt-sc">
+                                <div class="bus-head-i ">
+                                    <a href="" class="d-flex align-items-center text-dark">
+                                        <div class="Bus-txt-1 b-title">PACKAGE</div> <i class="fa-regular fa-heart ml-2"><span class="ic-txt-p">1</span></i>
+                                    </a>
+                                </div>
+                                <div class="bus-addr-txt b-addrs">Mumbai, Maharashtra</div>
+                            </div>
+                        </div>
+                        <a class="btn btn-outline-dark btn-sm btn-md-lg cstm-btn w-auto" href="">View Profile</a>
+                    </div>*@
+            </div>
+        </div>
+        <center><button id="btnViewMore" type="button" onclick="btnViewMoreClick()" class="vm-btn btn btn-outline-dark btn-sm btn-md-lg mt-4 mt-lg-5 cstm-btn w-auto d-none">View More</button></center>
+    </div>
+</section>
+
+
+<button class="d-none" id="btnUserLoginPoup" data-toggle="modal" data-target="#LoginPageOptionPopup"></button>
+<div class="modal fade" data-backdrop="static" id="LoginPageOptionPopup" style="padding: 196px 1px 169px 347px;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="width: 50%; align-items: center;">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Please Login</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button id="submitEnquiry" type="button" class="btn btn-outline-dark cstm-btn w-auto">
+                    <a href="/Home/Login">
+                        Login
+                    </a>
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        //var SearchParameters_Global = JSON.parse('@SearchParametersJsonObject');
+        var SearchParameters_Global = {
+            SearchKeyword: "@Model.SearchKeyword",
+            Latitude: "@Model.Latitude",
+            Longitude: "@Model.Longitude",
+            BusinessCategoryId: @(Model.BusinessCategoryId),
+            LastRecordId: @(Model.LastRecordId),
+            SearchBy: '@Model.SearchBy'
+            };
+        console.log(SearchParameters_Global);
+    </script>
+
+    @*<script src="~/Scripts/js/visitor-panel/Search.js"></script>*@
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_SearchScriptPartial.cshtml")
+}
+
+
+
+

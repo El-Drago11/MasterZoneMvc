@@ -1,0 +1,91 @@
+﻿<script>
+    $(document).ready(function () {
+
+        GettAllRecordClassById();
+    });
+
+    function GettAllRecordClassById() {
+        var id = $("#hiddenClassId").val();
+        //StartLoading();
+        $.ajax({
+            type: "GET",
+            url: '/api/Class/GetById/ForVisiotrPanel?id=' + id,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                // $('.error-class').html('');
+
+                var item = response.data;
+                var classType = { "per_class": "Per Class", "per_month": "Per Month", "demo": "Demo" };
+
+                //var formattedStartTime = moment(response.data.ScheduledStartOnTime_24HF, "HH:mm").format("h:mm A");
+                //var formattedEndTime = moment(response.data.ScheduledEndOnTime_24HF, "HH:mm").format("h:mm A");
+                $("#ClassName").html(item.Name);
+
+                //$("#ClassStartToEndTime").html(formattedStartTime + ' - ' + formattedEndTime);
+                $("#ClassDescription").html(item.Description);
+                $("#ClassPriceType").html(classType[item.ClassPriceType]);
+                if (item.Price > 0) {
+                    $("#ClassPrice").html('Rs. ' + item.Price + '/-');
+                }
+                else {
+                    $("#ClassPrice").html('Free');
+                }
+
+                $("#ClassMode").html(item.ClassMode);
+                if (item.ClassMode == "Online") {
+                    $("#ClassOnlineMode").show();
+                    $("#ClassOnlineURLLink").html(item.OnlineClassLink);
+                    $("#ClassOfflineMode").hide();
+                }
+                else {
+                    $("#ClassOfflineMode").show();
+                    $("#ClassOfflineLocation").html(item.Address + ',' + item.LandMark + ',' + item.Country + ',' + item.State + ',' + item.City + ',' + item.Pincode);
+                    $("#ClassOnlineMode").hide();
+                }
+
+                $("#ClassGetDirections").attr('href', item.OnlineClassLink);
+
+                $("#ClassDays").html(item.ClassDays);
+                //$("#StrengthOfStudent").html(item.StudentMaxStrength);
+                $("#ClassBooking").attr('href', '/Booking/Checkout?itemId=' + item.Id + '&itemType=Class');
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+</script>

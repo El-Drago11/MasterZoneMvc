@@ -1,0 +1,213 @@
+﻿
+@{
+    ViewBag.Title = "Student Detail";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .img-small {
+            width: 50px;
+            height: 50px;
+        }
+
+        .card-img-top {
+            height: 250px;
+            object-fit: cover;
+        }
+    </style>
+}
+
+<input type="hidden" id="hiddenStudentLoginId" value="@ViewBag.StudentLoginId"/>
+
+<main>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+
+                <div class="mb-2">
+                    <h1>Student Detail</h1>
+                    @*<div class="text-zero top-right-button-container">
+                        <button type="button"
+                                class="btn btn-lg btn-outline-primary dropdown-toggle dropdown-toggle-split top-right-button top-right-button-single"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            ACTIONS
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="#">Action</a>
+                            <a class="dropdown-item" href="#">Another action</a>
+                        </div>
+                    </div>*@
+                    <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                        <ol class="breadcrumb pt-0">
+                            <li class="breadcrumb-item">
+                                <a href="/">Home</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">Student Detail</li>
+                        </ol>
+                    </nav>
+                </div>
+
+
+                <ul class="nav nav-tabs separator-tabs ml-0 mb-5" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#profile" role="tab"
+                           aria-controls="profile" aria-selected="true">PROFILE</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link " id="plans-tab" data-toggle="tab" href="#plans" role="tab"
+                           aria-controls="plans" aria-selected="false">PLANS</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link " id="classes-tab" data-toggle="tab" href="#classes" role="tab"
+                           aria-controls="classes" aria-selected="false">CLASSES</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link " id="trainings-tab" data-toggle="tab" href="#trainings" role="tab"
+                           aria-controls="trainings" aria-selected="false">TRAININGS</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link " id="events-tab" data-toggle="tab" href="#events" role="tab"
+                           aria-controls="events" aria-selected="false">EVENTS</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane show active" id="profile" role="tabpanel" aria-labelledby="first-tab">
+                        <div class="row">
+                            <div class="col-12 col-lg-5 col-xl-4 col-left">
+                                <div class="card mb-4">
+                                    @*<div class="position-absolute card-top-buttons">
+                                        <button class="btn btn-outline-white icon-button ">
+                                            <i class="simple-icon-pencil"></i>
+                                        </button>
+                                    </div>*@
+                                    <img src="@Resources.StaticResources.DefaultUserImage" id="imgStudentProfile" alt="Picture" class="card-img-top" style="height: 150px; width: 150px; object-fit: cover; border-radius: 50%; display: inline-block;" />
+
+                                    <div class="card-body">
+                                        <div id="studentDetail_Card"></div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="col-12 col-lg-7 col-xl-8 col-right">
+                              
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="plans" role="tabpanel" aria-labelledby="plans-tab">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">PLANS</h5>
+                                        <table id="tblStudentPlans" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th style="width:30%;">Plan</th>
+                                                    <th>Duration Type</th>
+                                                    <th>Date</th>
+                                                    <th>Order</th>
+                                                    <th>Booking Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="classes" role="tabpanel" aria-labelledby="classes-tab">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">CLASSES</h5>
+                                        <table id="tblStudentClasses" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th style="width:30%;">Class</th>
+                                                    <th>Batch</th>
+                                                    <th>Order</th>
+                                                    <th>Date</th>
+                                                    <th>Booking Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="trainings" role="tabpanel" aria-labelledby="trainings-tab">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">TRAININGS</h5>
+                                        <table id="tblStudentTrainings" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th style="width:30%;">Training</th>
+                                                    <th>Date</th>
+                                                    <th>Order</th>
+                                                    <th>Booking Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">EVENTS</h5>
+                                        <table id="tblStudentEvents" class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th style="width:30%;">Name</th>
+                                                    <th>Date</th>
+                                                    <th>Order</th>
+                                                    <th>Booking Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_StudentDetailScriptPartial.cshtml")
+}

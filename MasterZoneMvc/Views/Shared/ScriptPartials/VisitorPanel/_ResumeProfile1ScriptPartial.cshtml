@@ -1,0 +1,460 @@
+﻿<script>
+    var BusinessOwnerLoginId_Global = $("#hiddenbusinessOwnerLoginId").val();
+    var UserToken_Global = "";
+    //$(document).ready(function () {
+    //    $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+    //        if (dataToken != "" && dataToken != null) {
+    //            UserToken_Global = dataToken;
+    //            GetOtherStaffDetail();
+    //        }
+    //        else {
+    //            $.get("/Business/GetStaffToken", null, function (dataToken) {
+    //                if (dataToken != "" && dataToken != null) {
+    //                    UserToken_Global = dataToken;
+    //                    GetOtherStaffDetail();
+    //                }
+    //                else {
+    //                    StopLoading();
+    //                }
+    //            });
+    //        }
+    //    });
+    //});
+
+
+    $(document).ready(function () {
+        GetBusinessCurrentlyWorkingList();
+        GetOtherStaffDetail();
+        GetBusinessEducationDetailList();
+    });
+
+    //Bind Resume Profile Page Detail
+    function GetOtherStaffDetail() {
+
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetStaffUserResumeContentDetail?userLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var DisplayStaffDetaill = '';
+                if (response.data === null) {
+                    DisplayStaffDetaill = '<div class="w-100 font-italic text-center text-black-50 py-2">No Staff  Detail. </div>';
+                    $("#BindUserContentResumeDetail").html(DisplayStaffDetaill);
+                }
+                else {
+                    var BusinessSocial = ''; // Declare BusinessSocial variable
+                    if (response.data.FacebookProfileLink) {
+                        BusinessSocial = `<div class="social-icon">
+                <a href="${response.data.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i>	</a>
+            </div>`;
+                    }
+                    else if (response.data.TwitterProfileLink) {
+                        BusinessSocial = ` <div class="social-icon">
+                <a href="${response.data.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+            </div>`;
+                    }
+                    else if (response.data.LinkedInProfileLink) {
+                        BusinessSocial = ` <div class="social-icon">
+                <a href="${response.data.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>`;
+                    }
+                    var DisplayStaffDetaill = ` <div class="img-profile">
+            <p class="id-text">Id :<span>${response.data.MasterId}</span></p>
+            <img src="${response.data.ProfileImageWithPath}" alt="profile-img">
+        </div>
+        <div class="profile-name">
+            <h3>Master</h3>
+            <p>${response.data.Name}</p>
+        </div>
+        <div class="social-follow">
+            ${BusinessSocial}
+        </div>
+        <div class="cta-inr">
+            <a class="download-cta" href="">Share CV</a>
+        </div>`;
+                }
+
+                $("#BindUserContentResumeDetail").html(DisplayStaffDetaill);
+             
+
+                var DisplayStaffUserDetaill = '';
+                if (response.data === null) {
+                    DisplayStaffUserDetaill = '<div class="w-100 font-italic text-center text-black-50 py-2">No User Detail. </div>';
+                    $("#BindAllUserContentResumeDetail").html(DisplayStaffUserDetaill);
+                }
+                else {
+                    var DisplayStaffUserDetaill = `   <div class="image-pro">
+            <img src="${response.data.ProfileImageWithPath}" alt="profile-img">
+        </div>
+        <div class="des">
+            <p>${response.data.StaffCategoryName} </p>
+            <p>${response.data.Summary}</p>
+            <div class="inr-text-fl">
+                <div class="cta-iner">
+                    <div class="id-text">
+                        <p> ID:<span>  ${response.data.MasterId}</span></p>
+                    </div>
+                </div>
+                <div class="located">
+                    <h5>Location </h5>
+                    <div class="location">
+                        <p>${response.data.State}</p>
+                        <p>${response.data.Country}</p>
+                        <p>${response.data.City}</p>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+                }
+
+                $("#BindAllUserContentResumeDetail").html(DisplayStaffUserDetaill);
+
+                
+                var FreelanceDetail = '';
+                if (response.data.Freelance == 1) {
+                    FreelanceDetail = `Available`;
+                }
+                else if (response.data.Freelance == 2) {
+                    FreelanceDetail = `UnAvailable`;
+                }
+                
+                var DisplyUserContentResumeInfo = '';
+                DisplyUserContentResumeInfo = `  
+                                        <h2> personal information</h2>
+                                        <div class="deatil-inr">
+                                            <div class="title">
+                                                <h6>FULL NAME</h6>
+                                            </div>
+                                            <div class="deatils">
+                                                <p>${response.data.Name}</p>
+                                            </div>
+                                        </div>
+                                        <div class="deatil-inr">
+                                            <div class="title">
+                                                <h6>D.O.B. </h6>
+                                            </div>
+                                            <div class="deatils">
+                                                <p>${response.data.DOB}</p>
+                                            </div>
+                                        </div>
+                                        <div class="deatil-inr">
+                                            <div class="title">
+                                                <h6>
+                                                    ADDRESS
+                                                </h6>
+                                            </div>
+                                            <div class="deatils">
+                                                <p>${response.data.Address}</p>
+                                            </div>
+                                        </div>
+                                        <div class="deatil-inr">
+                                            <div class="title">
+                                                <h6>
+                                                    E-MAIL
+                                                </h6>
+                                            </div>
+                                            <div class="deatils">
+                                                <p>${response.data.Email}</p>
+                                            </div>
+                                        </div>
+                                        <div class="deatil-inr">
+                                            <div class="title">
+                                                <h6>
+                                                    PHONE
+                                                </h6>
+                                            </div>
+                                            <div class="deatils">
+                                                <p>
+                                                    ${response.data.PhoneNumber}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="deatil-inr">
+                                            <div class="title">
+                                                <h6>
+                                                    FREELANCE
+
+                                                </h6>
+                                            </div>
+                                            <div class="deatils">
+                                                <p> ${FreelanceDetail} </p>
+                                            </div>
+                                        </div>
+                            
+                                   `;
+                $("#BindUserContentResumeInfo").html(DisplyUserContentResumeInfo);
+                var BusinessLanguage = '';
+                let languages = response.data.Languages.split(','); // Split the string into an array
+                let progressBarsHTML = '';
+
+                if (Array.isArray(languages) && languages.length > 0) {
+                    languages.forEach(language => {
+                        progressBarsHTML += `
+            <div class="progress-bullets crt-animated">
+                <strong class="progress-title">${language.trim()}</strong>
+            </div>`;
+                    });
+                } else {
+                    console.warn('response.data.Languages is not a non-empty array:', languages);
+
+                    // You can handle this case by displaying a default message or taking other actions
+                    progressBarsHTML = '<div class="progress-bullets crt-animated"><strong class="progress-title">No languages available</strong></div>';
+                }
+
+                BusinessLanguage = `
+
+       
+        <div class="right-left-inr">
+            ${progressBarsHTML}
+
+    </div>`;
+
+                $("#BusinessLanguageBind").html(BusinessLanguage);
+
+
+                var BusinessSkills = '';
+                let skills = response.data.Skills.split(','); // Split the string into an array
+                let progressSkillsHTML = '';
+
+                if (Array.isArray(skills) && skills.length > 0) {
+                    skills.forEach(skill => {
+                        progressSkillsHTML += `
+           <li>${skill.trim()}</li>
+               `;
+                    });
+                } else {
+                    console.warn('response.data.Languages is not a non-empty array:', skills);
+
+                    // You can handle this case by displaying a default message or taking other actions
+                    progressSkillsHTML = '<div class="progress-bullets crt-animated"><strong class="progress-title">No Business Skills available</strong></div>';
+                }
+
+                BusinessSkills = `
+
+     
+        ${progressSkillsHTML}`;
+                $("#BindBusinessUserSkillsDetail").html(BusinessSkills);
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Business Working Detail
+    function GetBusinessCurrentlyWorkingList() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessStaffWorkingDetail?userLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessWorkingDetailList = '';
+
+                if (response.data.BusinessWorkingDetailList.length === 0) {
+                    BusinessWorkingDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No Busines Currently Working Detail.</div>';
+                } else {
+                    for (var i = 0; i < response.data.BusinessWorkingDetailList.length; i++) {
+                        // Create a Business Detail List for each entry in the List
+
+                        var BusinessDetail = `  <div class="certi-inr">
+                                        <img src="${response.data.BusinessWorkingDetailList[i].BusinessLogoImage}" alt="logo" loading="lazy">
+                                        <p>${response.data.BusinessWorkingDetailList[i].BusinessOwnerName}</p>
+                                    </div>`;
+
+                        // Append the Business Detail item to the container
+                        $("#BindBusinessCurrentlyWorkingList").append(BusinessDetail);
+                    }
+                }
+
+                // Append the error message or Business Detail items to the container
+                $("#BindBusinessCurrentlyWorkingList").append(BusinessWorkingDetailList);
+
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+  
+    function GetBusinessEducationDetailList() {
+        //var businessOwnerLoginId = $("#hiddenBusinessOwnerLoginId").val();
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessUserResumeDetail_ForVisitorPanel?userLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessEducationDetailList = '';
+
+                if (response.data.BusinessUserEducationlst.length === 0) {
+                    BusinessEducationDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No Busines Education Detail.</div>';
+                    $("#BindBusinessUserEdducationDetailList").append(BusinessEducationDetailList);
+                } else {
+                    for (var i = 0; i < response.data.BusinessUserEducationlst.length; i++) {
+                        // Create a Business Detail List for each entry in the List
+
+                        var BusinessEducationDetailList = `  <div class="timeline">
+                                            <div class="rt-col">
+                                                <h5 class="item-period">${response.data.BusinessUserEducationlst[i].StartYear}</h5>
+                                                <span class="item-company">${response.data.BusinessUserEducationlst[i].SchoolName}</span>
+                                            </div>
+
+                                            <div class="divder">
+                                            </div>
+                                            <div class="lt-col">
+                                                <div class="title">${response.data.BusinessUserEducationlst[i].Designation}</div>
+                                                <p>
+                                                   ${response.data.BusinessUserEducationlst[i].Description}
+                                                </p>
+                                            </div>
+
+                                        </div>`;
+                        // Append the Business Detail item to the container
+                        $("#BindBusinessUserEdducationDetailList").append(BusinessEducationDetailList);
+                    }
+                }
+
+               
+                
+
+                var BusinessExperienceDetailList = '';
+
+                if (response.data.BusinessUserExperiencelst.length === 0) {
+                    BusinessExperienceDetailList = '<div class="w-100 font-italic text-center text-black-50 py-2">No Busines Course Detail.</div>';
+                    $("#BindBussinessUserExperienceDetailList").append(BusinessExperienceDetailList);
+                } else {
+                    for (var i = 0; i < response.data.BusinessUserExperiencelst.length; i++) {
+                        // Create a Business Detail List for each entry in the List
+
+                        var BusinessExperienceDetailList = ` <div class="timeline">
+                                            <div class="rt-col">
+                                                <h5 class="item-period">${response.data.BusinessUserExperiencelst[i].StartYear} </h5>
+                                                <span class="item-company">
+                                                ${response.data.BusinessUserExperiencelst[i].Title}
+                                                </span>
+                                            </div>
+
+                                            <div class="divder">
+                                            </div>
+                                            <div class="lt-col">
+                                                <div class="title">
+                                                    ${response.data.BusinessUserExperiencelst[i].CompanyName}
+                                                </div>
+                                                <p>
+                                                   ${response.data.BusinessUserExperiencelst[i].Description}
+
+                                                </p>
+                                            </div>
+
+                                        </div>`;
+                        // Append the Business Detail item to the container
+                        $("#BindBussinessUserExperienceDetailList").append(BusinessExperienceDetailList);
+                    }
+                }
+
+                
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+  
+
+</script>

@@ -1,0 +1,410 @@
+﻿<script>
+    var ReviewId_Global = 0;
+
+    var UserLoginId = $("#hiddenUserLoginId").val();
+    var UserToken_Global = "";
+
+    const starValue = 0;
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                InstructorReviewDetail();
+            }
+            else {
+                StopLoading();
+            }
+        });
+    });
+
+    function InstructorReviewDetail() {
+
+        var UserLoginId = $("#hiddenUserLoginId").val();
+        var _url = "/api/Review/InstructorReviewDetailGet?UserLoginId=" + UserLoginId;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+                var WebSite = '';
+                if (response.data.BusinessReviewDetail) {
+                    WebSite = `<div class="website-iner">
+                    <a href=""></a>
+                    <p>${response.data.BusinessReviewDetail.OfficialWebSiteUrl}</p>
+                    <p>Visit This Websites</p>
+                </div>`;
+                }
+                else {
+                    WebSite = ``;
+
+                }
+
+                    var VERIFIED = '';
+                    if (response.data.BusinessReviewDetail.IsCertified == 1) {
+                        VERIFIED = ` <div class="verified">
+                            <img src="/Content/visitor-panel/image/shield.png" alt="shield">
+                            <span>VERIFIED COMPANY</span>
+                        </div>`;
+                    }
+                    else {
+                        VERIFIED = '';
+                    }
+
+                var starIcons = '';
+                var rating = response.data.BusinessReviewDetail.AverageRating;
+
+
+                    for (var j = 1; j <= 5; j++) {
+                        if (j <= rating) {
+                            starIcons += '<i class="fas fa-star" style="color: #f3a762";></i>';
+                        } else {
+                            starIcons += '<i class="fas fa-star"></i>';
+                        }
+                    }
+                    if (response.data.BusinessReviewDetail.BusinessReviewDetail <= 0) {
+                        htmlData1 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Reviews Detail.</div>`;
+                    }
+
+
+                    var RatingReviewImage = '';
+                    if (response.data.BusinessReviewDetail) {
+                        RatingReviewImage = `<div class="review-pro-col"><div class="review-col-lt"><div class="review-details-iner">
+
+                    <div class="profile-review">
+
+                  <img src="${response.data.BusinessReviewDetail.ProfileImageWithPath}" alt="img" loading="lazy">
+
+                    </div>
+                    <div class="review-details">
+                        <h4>${response.data.BusinessReviewDetail.BusinessName}</h4>
+            <div class="star-section">
+              ${starIcons}
+
+                <span>${response.data.BusinessReviewDetail.AverageRating.toFixed(1)}</span>
+            </div>
+            <p>
+                Reviews
+                <span class="typography">
+                      ${response.data.BusinessReviewDetail.TotalRating} -
+                      ${response.data.BusinessReviewDetail.TotalRating >= 1 && response.data.BusinessReviewDetail.TotalRating <= 50
+                                                    ? 'Okay'
+                            : response.data.BusinessReviewDetail.TotalRating >= 50 && response.data.BusinessReviewDetail.TotalRating <= 100
+                                    ? 'Good'
+                                : response.data.BusinessReviewDetail.TotalRating >= 100 && response.data.BusinessReviewDetail.TotalRating <= 200
+                                        ? 'Very Good'
+                                    : response.data.BusinessReviewDetail.TotalRating >= 300 && response.data.BusinessReviewDetail.TotalRating <= 400
+                                            ? 'Excellent'
+                                        : response.data.BusinessReviewDetail.TotalRating >= 400 && response.data.BusinessReviewDetail.TotalRating <= 500
+                                                ? 'Fourteen'
+                                                    : 'Unknown' // In case TotalRating is not between 1 and 15
+  }
+</span>
+
+            </p>
+             ${VERIFIED}
+                    </div>
+                </div></div><div class="review-col-rt">
+
+                ${WebSite}
+            </div></div>`;
+
+                    }
+
+
+
+                $("#Instructor").append(RatingReviewImage);
+
+                var RatingProgressDetail = '';
+                if (response.data.BusinessReviewDetail) {
+                    RatingProgressDetail += `<div class="styles_header">
+                        <div class="review-title">
+                            <h5>Reviews</h5>
+                            <span class="star"><i class="fa-solid fa-star"></i></span>
+                            <span class="rating">${response.data.BusinessReviewDetail.AverageRating.toFixed(1)}</span>
+                        </div>
+                        <p class="typography">${response.data.BusinessReviewDetail.TotalRating} total</p>
+                    </div>
+                    <div class="review-bar">
+                        <div class="checkbox-bar">
+                            <div class="checkbox">
+
+                            </div>
+                            <div class="star-text">
+                                <span>5 Star</span>
+                            </div>
+                            <div class="progress-bar"  style="background-color: initial;"  data-percentage="${response.data.BusinessReviewDetail.PercentageFiveStar}">
+
+                                <div class="progress-content-outter">
+                                    <div class="progress-content" style="color: blue; width: ${response.data.BusinessReviewDetail.PercentageFiveStar
+}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkbox-bar">
+                            <div class="checkbox">
+                            </div>
+                            <div class="star-text">
+                                <span>4 Star</span>
+                            </div>
+                            <div class="progress-bar"  style="background-color: initial;" data-percentage="${response.data.BusinessReviewDetail.PercentageFourStar}">
+
+                                <div class="progress-content-outter">
+                                    <div class="progress-content" style="color: blue;  width: ${response.data.BusinessReviewDetail.PercentageFourStar
+}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkbox-bar">
+                            <div class="checkbox">
+                            </div>
+                            <div class="star-text">
+                                <span>3 Star</span>
+                            </div>
+                            <div class="progress-bar"  style="background-color: initial;" data-percentage="${response.data.BusinessReviewDetail.PercentageThreeStar}">
+
+                                <div class="progress-content-outter">
+                                    <div class="progress-content" style="color: blue; width: ${response.data.BusinessReviewDetail.PercentageThreeStar
+}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkbox-bar">
+                            <div class="checkbox">
+                            </div>
+                            <div class="star-text">
+                                <span>2 Star</span>
+                            </div>
+                            <div class="progress-bar"  style="background-color: initial;" data-percentage="${response.data.BusinessReviewDetail.PercentageTwoStar}">
+
+                                <div class="progress-content-outter">
+                                    <div class="progress-content" style="color: blue; width: ${response.data.BusinessReviewDetail.PercentageTwoStar
+}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkbox-bar">
+                            <div class="checkbox">
+                            </div>
+                            <div class="star-text">
+                                <span>1 Star</span>
+                            </div>
+                            <div class="progress-bar"  style="background-color: initial;" data-percentage="${response.data.BusinessReviewDetail.PercentageOneStar}">
+
+                                <div class="progress-content-outter">
+                                    <div class="progress-content" style="color: blue; width: ${response.data.BusinessReviewDetail.PercentageOneStar
+}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>`;
+                    $("#ReviewProgress").append(RatingProgressDetail);
+                }
+
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ResetReviewbtn() {
+        $(".error-class").html('');
+
+        $("#Reviewdescription").val('');
+        $("#ratingstar").val('0');
+    }
+
+    $(".star-value").click(function () {
+        const starValue = parseInt($(this).attr('data-star-value'));
+
+        // Change the color of the clicked star and all stars with lower values
+        $(".star-value").each(function () {
+            const value = parseInt($(this).attr('data-star-value'));
+            if (value <= starValue) {
+                $(this).css("color", "#f3a762");
+            } else {
+                $(this).css("color", "#D3D3D3");
+            }
+        });
+
+        // Save the starValue to the input field with id "ratingInput"
+        $("#ratingInput").val(starValue);
+    });
+
+
+ 
+
+
+
+    //$(".fa-star").click(function () {
+    //    
+    //    var value = 5;
+    //    const starValue = $(this).attr('data-star-value');
+    //    if (value < starValue) {
+    //        $(this).css("color", "#f3a762");
+    //    }
+    //   // $(this).css("color", "#f3a762");
+
+    //    // Save the starValue to the input field with id "ratingInput"
+    //    $("#ratingInput").val(starValue);
+    //});
+
+
+
+    function btnSubmitToReviewInfo() {
+       
+        
+        let is_valid = true;
+        $(".error-class").html('');
+        var _mode = 1;
+
+         let _reviewdescription = $("#Reviewdescription").val().trim();
+        // let _reviewrating = $("#ratingstar").val();
+
+
+
+         let _error_reviewdescription = $("#error_Reviewdescription");
+         //let _error_reviewrating = $("#error_ratingstar");
+
+
+
+         if (validate_IsEmptyStringInputFieldValue(_reviewdescription)) {
+                is_valid = false;
+             _error_reviewdescription.html('@(Resources.VisitorPanel.RatingDescriptionRequired)');
+
+            }
+
+
+             @*if (_reviewrating <= 0) {
+                is_valid = false;
+                 _error_reviewdescription.html('@(Resources.VisitorPanel.RatingReviewRequired)');
+
+            }*@
+
+
+        
+         if (is_valid) {
+             var data = new FormData();
+             var UserLoginId = $("#hiddenUserLoginId").val();
+             const starValue = $("#ratingInput").val();
+             data.append("Id", ReviewId_Global);
+             data.append("ReviewBody", _reviewdescription);
+             data.append("Rating", starValue);
+            data.append('Mode', _mode);
+
+             if (UserToken_Global == "") {
+                 $("#btnUserLoginPoup").click();
+                 return;
+             }
+             
+             $.ajax({
+                
+                 url: '/api/Review/AddReviewByUser?UserLoginId=' + UserLoginId,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        ResetReviewbtn();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    //StopLoading();
+
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

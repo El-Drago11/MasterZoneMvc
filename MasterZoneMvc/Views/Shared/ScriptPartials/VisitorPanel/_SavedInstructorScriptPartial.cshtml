@@ -1,0 +1,404 @@
+﻿<script>
+     var UserToken_Global = "";
+
+
+    $(document).ready(function () {
+
+    StartLoading();
+    $.get("/Home/GetStudentToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            getAllFavouriteBusinessOwnerLists();
+            //getAllFavouriteInstructorLists();
+            getAllFavouriteBusinessInstructorList();
+        }
+        else {
+            $.iaoAlert({
+                msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                type: "error",
+                mode: "dark",
+            });
+            window.location.href = '/home/login';
+            StopLoading();
+        }
+    });
+});
+
+    function getAllFavouriteBusinessOwnerLists() {
+
+
+        let _url = "/api/Student/GetAllListBusinessFavourites";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+            var favouriteBusinessList = '';
+            $("#fav_business").html('');
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                var businessOwnerName = response.data[i].FirstName + ' ' + response.data[i].LastName;
+
+                var _favouritesCount = `<div class="badge-light like-badge" title="Favourites"><i class='fa-solid fas fa-heart text-danger' title="Favourites"></i> ${response.data[i].FavouritesCount} </div>`;
+                var _verified = (item.Verified == 1) ? '<i class="fas fa-check-circle text-success" title="Verified"></i>' : '';
+                var _certified = (item.IsCertified == 1) ? '<div class="badge badge-success px-3"><i class="fas fa-certificate" title="certified"></i> Certified</div>' : '';
+
+                var ratingStars = '<div class="mr-1">';
+                for (var j = 1; j <= 5; j++) {
+                    if (j <= item.AverageRating) {
+                        ratingStars += '<i class="fa-solid fa-star rating-star-filled"></i>';
+                    } else {
+                        ratingStars += `<i class="fa-solid fa-star rating-star-empty"></i>`;
+                    }
+                }
+                ratingStars += "</div>";
+
+                favouriteBusinessList = `<div class="saved-instructor-cont">
+                                <div class="sicon1">
+                                    <img class="si-img-lgo" src="${item.ImageWithPath}">
+                                </div>
+                                <div class="sicon2 flex-grow-1 ml-3 ">
+                                    <div class="classes-details-8jdgrrfjw">
+                                        <h5 class="si-h1-rujfjfj">${item.BusinessName} ${_verified} ${_certified}</h5>
+                                        <p class="business_sec">${item.BusinessSubCategoryName}</p>
+                                        <div class="d-flex">${ratingStars} ${_favouritesCount}</div>
+                                    </div>
+                                </div>
+                                <div class="sicon3 rmv-btn-dhfj d-flex flex-column">
+                                    <a href="/Home/BusinessProfile?businessOwnerLoginId=${item.FavouriteUserLoginId}" class="btn btn-sm btn-info">View Profile</a>
+                                    <a class="btn btn-sm btn-danger mt-2" href="javascript:;" onclick="ConfirmRemoveFavourite(${item.FavouriteUserLoginId})">Remove</a>
+                                </div>
+                            </div>
+`;
+                $("#fav_business").append(favouriteBusinessList);
+            }
+            if (response.data.length <= 0) {
+                $("#fav_business").append('<div class="w-100 text-muted font-italic p-4 text-center ">No Favourites!</div > ');
+            }
+
+
+           // getAllEnquiries();
+            StopLoading();
+        },
+        error: function (result) {
+            getAllEnquiries();
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+        function getAllFavouriteBusinessInstructorList() {
+
+
+            let _url = "/api/Student/GetAllListFavouriteBusinessInstructors";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+            var favouriteBusinessList = '';
+            $("#fav_instructor").html('');
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                var businessOwnerName = response.data[i].FirstName + ' ' + response.data[i].LastName;
+                var _favouritesCount = `<div class="badge-light like-badge" title="Favourites"><i class='fa-solid fas fa-heart text-danger' title="Favourites"></i> ${response.data[i].FavouritesCount} </div>`;
+               var _verified = (item.Verified == 1) ? '<i class="fas fa-check-circle text-success" title="Verified"></i>' : '';
+                //var _certified = (item.IsCertified == 1) ? '<div class="badge badge-success px-3"><i class="fas fa-certificate" title="certified"></i> Certified</div>' : '';
+                var _certified = (item.IsCertified == 1) ? '<span class="certified-badge"><i class="fas fa-certificate text-success" title="Certified"></i> Certified</span>' : '';
+
+                var ratingStars = '<div class="mr-1">';
+                for (var j = 1; j <= 5; j++) {
+                    if (j <= item.AverageRating) {
+                        ratingStars += '<i class="fa-solid fa-star rating-star-filled"></i>';
+                    } else {
+                        ratingStars += `<i class="fa-solid fa-star rating-star-empty"></i>`;
+                    }
+                }
+                ratingStars += '</div>';
+
+                var _instructorCertifications = response.data[i].Certifications;
+                var certificationsOrExperience = "";
+                if (_instructorCertifications.length > 0) {
+
+                    certificationsOrExperience = `
+                        <div class="d-flex">`;
+
+                    for (var c = 0; c < _instructorCertifications.length; c++) {
+                        if (c >= 5) {
+                            //certificationsOrExperience += `+`;
+                            continue;
+                        }
+                        certificationsOrExperience += `<img src="${_instructorCertifications[c].LicenseLogoWithPath}" alt="License Image" title="${_instructorCertifications[c].LicenseName}" class="m-2 img-size-xs object-fit-contain"/>`;
+                    }
+
+                    certificationsOrExperience += ` </div>`;
+                }
+
+                favouriteBusinessList = `<div class="saved-instructor-cont">
+                                <div class="sicon1">
+                                    <img class="si-img-lgo" src="${item.ImageWithPath}">
+                                </div>
+                                <div class="sicon2 flex-grow-1 ml-3">
+                                    <div class="classes-details-8jdgrrfjw">
+                                        <h5 class="si-h1-rujfjfj">${businessOwnerName} ${_verified} ${_certified}</h5>
+                                        <p class="business_sec">${item.BusinessSubCategoryName} </p>
+                                        <div class="d-flex">${ratingStars} ${_favouritesCount}</div>
+                                        ${certificationsOrExperience}
+                                    </div>
+                                </div>
+                                 <div class="sicon3 rmv-btn-dshfj d-flex flex-column">
+                                     <a href="/Home/BusinessProfile?businessOwnerLoginId=${item.FavouriteUserLoginId}" class="btn btn-sm btn-info">View Profile</a>
+                                     <a class="btn btn-sm btn-danger mt-2" href="javascript:;" onclick="ConfirmRemoveFavourite(${item.FavouriteUserLoginId})">Remove</a>
+                                 </div>
+                            </div>
+`;
+
+                $("#fav_instructor").append(favouriteBusinessList);
+            }
+            if (response.data.length <= 0) {
+                $("#fav_instructor").append('<div class="w-100 text-muted font-italic p-4 text-center ">No Favourites!</div > ');
+            }
+
+
+           // getAllEnquiries();
+            StopLoading();
+        },
+        error: function (result) {
+            getAllEnquiries();
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+    function ConfirmRemoveFavourite(id) {
+        swal({
+            title: "@(Resources.VisitorPanel.ConfirmRemoveFavourite)",
+            text: "@(Resources.VisitorPanel.RemoveFavouriteBusiness)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.VisitorPanel.Yes)",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    RemoveBusinessFavourites(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+
+    function RemoveBusinessFavourites(id) {
+            $.ajax({
+                type: "POST",
+                url: "/api/Student/RemoveBusinessFavourites?favouriteUserLoginId=" + id,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (dataResponse) {
+                    StopLoading();
+
+                    //--Check if Class successfully deleted
+                    if (dataResponse.status == 1) {
+                        setTimeout(function () {
+                             swal("Success!", dataResponse.message);
+
+                            getAllFavouriteBusinessOwnerLists();
+
+                        }, 100);
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+
+
+    }
+
+      function getAllFavouriteInstructorLists() {
+
+
+          let _url = "/api/Student/GetAllFavouritesInstructorList";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+            var favouriteInstructorList = '';
+            $("#home").html('');
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                if (item.ClassName == null) {
+                    var ClassDetails = `
+                                  <div class="sicon2">
+                                    <div class="classes-details-8jdgrrfjw">
+                                        <h5 class="si-h1-rujfjfj">No UpComing Class</h5>
+
+                                        <a href="#" class="v-a-c-guinr v-a-c-guinr2freref ">View All Classes</a>
+                                        <a class="text-dark d-block d-md-none" href="#">Remove</a>
+                                    </div>
+
+                                </div>
+`;
+                }
+                else {
+                    var ClassDetails = `
+                                    <div class="sicon2 flex-grow-1 ml-5">
+                                    <div class="classes-details-8jdgrrfjw">
+                                        <h5 class="si-h1-rujfjfj">${item.ClassName}</h5>
+                                        <h6 class="si-hhfhf">Sat. Mar 18, 2023</h6>
+                                        <h6 class="si-hhfhf">
+                                            5:30 PM (60min) Zoom
+                                        </h6>
+                                        <h6 class="si-hhfhf">*Free * Balla con Kelko y Risako</h6>
+
+                                        <a href="#" class="v-a-c-guinr v-a-c-guinr2freref ">View All Classes</a>
+                                        <a class="text-dark d-block d-md-none" href="#">Remove</a>
+                                    </div>
+
+                                </div>
+`
+                }
+                var businessOwnerName = response.data[i].FirstName + ' ' + response.data[i].LastName;
+                favouriteInstructorList = `<div class="saved-instructor-cont">
+                                <div class="sicon1">
+                                    <img class="si-img-lgo"
+                                         src="${item.BusinessProfileImageWithPath}">
+                                    <p class="si-jdkfd1 mb-0">${businessOwnerName}</p>
+                                    <p class="si-jdkfd2 m-0">Clover, SC</p>
+                                    <p class="si-jdkfd3">Contact</p>
+                                </div>
+                               ${ClassDetails}
+                                <div class="sicon3 rmv-btn-dhfj d-none d-md-block">
+                                    <a class="text-danger" href="#" onclick="ConfirmRemoveFavourite(${item.FavouriteUserLoginId})">Remove</a>
+                                </div>
+                            </div>
+`;
+                $("#home").append(favouriteInstructorList);
+            }
+            if (response.data.length <= 0) {
+                $("#home").append('<div class="w-100 text-muted font-italic p-4 text-center ">No Favourites!</div > ');
+            }
+
+           // getAllEnquiries();
+            StopLoading();
+        },
+        error: function (result) {
+            getAllEnquiries();
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+</script>

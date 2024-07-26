@@ -1,0 +1,925 @@
+﻿
+@{
+    ViewBag.Title = "SearchInstructor";
+    Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+}
+<style>
+    header.header.active-h {
+        background-color: #f3a762;
+        position: inherit;
+    }
+
+    header.header {
+        background-color: #f3a762;
+    }
+
+    header.header {
+        background: #f3a762;
+    }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <!-- font link end -->
+    <link rel="stylesheet" href="~/Content/visitor-panel/css/stylesheet.css">
+
+    <script src="~/Scripts/js/visitor-panel/main.js"></script>
+    <style>
+        :root {
+            --mainColor: #920948;
+        }
+
+        .new-templates .search-banner {
+            padding: 200px 0 300px;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+
+        .new-templates .search-inr {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #920948d1;
+            padding: 40px 0 60px;
+            position: relative;
+            z-index: 1;
+            margin-top: -90px;
+            box-shadow: rgb(0 0 0 / 24%) 0px 3px 8px;
+        }
+
+            .new-templates .search-inr .search {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+        .new-templates .search > div {
+            margin-right: 10px;
+            margin-bottom: 20px;
+        }
+
+        .new-templates .submit-btn {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .new-templates .location-inr > h4, .new-templates .types h4 {
+            margin: 0 0 20px 0;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .new-templates .search-inr .loc-icon {
+            position: relative;
+        }
+
+            .new-templates .search-inr .loc-icon:before {
+                font-family: "Font Awesome 5 Free";
+                font-weight: 900;
+                content: "\f3c5";
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+        .new-templates .search-inr button.search-btn {
+            background-color: #fff;
+            font-size: 16px;
+            padding: 8px 40px;
+            border: 0;
+            border-radius: 10px;
+            height: 50px;
+            cursor: pointer;
+        }
+
+        .new-templates .search-inr input {
+            height: 50px;
+            padding: 10px 10px 10px 30px;
+            outline: 0;
+            width: 100%;
+            background-color: #fff;
+            border: 0;
+        }
+        /* .new-templates .btn-item>a {
+        padding: 10px 40px;
+        border: 1px solid var(--mainColor);
+        color: var(--mainColor);
+        margin: 5px;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: 600;
+        } */
+        /*
+        .new-templates .three-btn {
+        text-align: center;
+        margin: 50px 0;
+        } */
+        /* classes cards */
+        .new-templates .classes-cards .profile-img > img {
+            height: 80px;
+            width: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 5px 10px 10px 0 rgba(0,0,0,50%);
+            object-position: center;
+        }
+
+        .new-templates .koch-profile-iner > img {
+            height: 150px;
+            width: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            box-shadow: 5px 10px 10px 0 rgba(0,0,0,50%);
+        }
+
+        .new-templates .profile-iner {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 550px;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px 0 rgba(0,0,0,20%);
+            border-radius: 5px;
+            justify-content: space-between;
+        }
+
+        .new-templates .class-card-items-in {
+            flex: 1;
+        }
+
+        .new-templates .class-card-items {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 40px;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            box-shadow: 0 0 10px 0 rgba(0, 0,0,20%);
+            margin-bottom: 30px;
+        }
+
+        .new-templates .details-cards > *, .new-templates .day-title, .new-templates .time-title {
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .new-templates .days-time > * {
+            text-transform: uppercase;
+            font-size: 20px;
+        }
+
+        .new-templates .location-iner {
+            display: flex;
+            align-items: center;
+        }
+
+            .new-templates .location-iner i {
+                padding-left: 70px;
+                font-size: 25px;
+            }
+
+        .new-templates .days-time {
+            padding-right: 20px;
+        }
+
+        .new-templates .koch-profile {
+            flex: 0 0 35%;
+            max-width: 35%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .new-templates .profile-main {
+            display: flex;
+            align-items: center;
+        }
+
+        .new-templates .koch-profile-iner {
+            text-align: center;
+        }
+
+        .new-templates .certified-koch > i {
+            color: #00FF00;
+        }
+
+        .new-templates h5.certified-koch {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .new-templates h5.koch-name {
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        .new-templates p.koch-position {
+            font-weight: 500;
+        }
+
+        .new-templates .profile-name > h4 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .new-templates .profile-name {
+            padding-left: 20px;
+        }
+
+        .new-templates p.Certified-text {
+            margin-bottom: 0;
+            font-weight: 400;
+        }
+
+            .new-templates p.Certified-text > i {
+                color: #00FF00;
+            }
+
+        .new-templates .star-iner .color_full {
+            color: var(--mainColor);
+        }
+
+        .new-templates .time-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 35px;
+        }
+
+
+        .new-templates .koch-social-follow > a {
+            color: #000;
+            height: 40px;
+            border: 1px solid #000;
+            border-radius: 2px;
+            margin: 5px;
+            width: 40px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .new-templates .koch-social-follow > a:hover {
+                transform: translateY(-5px);
+            }
+
+        .new-templates .form-section .half-width > input,
+        .new-templates .form-section .half-width > select {
+            padding: 12px 10px;
+            width: 100%;
+            border: 1px solid #e1e1e1;
+            background-color: #fff;
+            color: #000;
+            outline: 0;
+            font-size: 15px;
+            height: 50px;
+        }
+
+        .new-templates .form-section .form-items {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .new-templates .check-box {
+            display: flex;
+            align-items: center;
+            max-width: 800px;
+            margin: 60px auto 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .new-templates input[type=checkbox] {
+            position: relative;
+            border: 4px solid var(--mainColor);
+            border-radius: 2px;
+            background: #fff;
+            cursor: pointer;
+            line-height: 0;
+            outline: 0;
+            padding: 0 !important;
+            vertical-align: text-top;
+            height: 20px;
+            width: 20px;
+        }
+
+        .new-templates .check-box-sec {
+            align-items: center;
+            display: flex;
+            margin: 5px 20px;
+            flex: 1;
+        }
+            /* input[type=checkbox]:before {
+            content: '';
+            position: absolute;
+            right: 50%;
+            top: 50%;
+            width: 4px;
+            height: 10px;
+            border: solid #FFF;
+            border-width: 0 2px 2px 0;
+            margin: -1px -1px 0 -1px;
+            transform: rotate(45deg) translate(-50%, -50%);
+            z-index: 2;
+        } */
+            .new-templates .check-box-sec label {
+                color: #fff;
+                font-size: 20px;
+                font-weight: 500;
+                margin-bottom: 0;
+                padding-left: 20px;
+            }
+
+        .new-templates .classes-cards {
+            padding: 80px 0;
+        }
+
+        .new-templates .form-section .submit-cta > button {
+            height: 50px;
+        }
+
+        .new-templates .form-section .half-width {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .new-templates .form-section {
+            padding: 100px 0;
+            width: 100%;
+        }
+
+            .new-templates .form-section .submit-cta {
+                flex: 0 0 auto;
+                padding-left: 10px;
+            }
+
+        @@media(max-width:1024px) {
+            .new-templates .form-section .submit-cta {
+                flex: 0 0 100%;
+                margin-top: 40px;
+                text-align: center;
+                padding-left: 0;
+            }
+
+            .new-templates .class-card-items-in {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            .new-templates .profile-iner {
+                margin: 0 auto;
+            }
+
+            .new-templates .koch-profile {
+                flex: 0 0 100%;
+                max-width: 100%;
+                justify-content: center;
+                margin-top: 20px;
+            }
+        }
+
+        @@media(max-width:767px) {
+            .new-templates .form-section {
+                padding: 60px 0;
+            }
+
+                .new-templates .form-section .form-items > div {
+                    flex: 0 0 100%;
+                    margin: 0 0 30px 0;
+                }
+
+                .new-templates .form-section .form-items {
+                    justify-content: center;
+                }
+
+            .new-templates .check-box {
+                margin-top: 30px;
+            }
+
+            .new-templates .search-banner {
+                padding: 100px 0;
+            }
+
+            .new-templates .days-time {
+                padding-right: 0;
+                flex: 0 0 100%;
+                text-align: center;
+            }
+
+            .new-templates .details-cards {
+                flex: 0 0 100%;
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .new-templates .location-iner i {
+                padding-left: 10px;
+            }
+
+            .new-templates .location-iner {
+                justify-content: center;
+            }
+
+            .new-templates .koch-profile-iner > img {
+                width: 120px;
+                height: 120px;
+            }
+
+            .new-templates .time-details {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body class="new-templates">
+    <!-- header -->
+    <!-- end header -->
+    <div class="form-section" style="background-image: url('/Content/visitor-panel/image/dark-pattern.png');">
+
+        <div class="page-center">
+
+            <div class="form-iner">
+                <form action="post">
+                    <div class="form-items">
+                        <div class="half-width">
+                            <input type="text" placeholder="Choose your location">
+                        </div>
+                        <div class="half-width">
+                            <select ng-model="training" class="training-iner">
+                                <option value="" disabled="" selected="selected">Training Types</option>
+                                <option label="online" value="online">Online</option>
+                                <option label="offline" value="offline">Offline</option>
+                            </select>
+                        </div>
+                        <div class="half-width">
+                            <input type="text" placeholder="Becomes ?">
+                        </div>
+
+                        <div class="half-width">
+                            <select ng-model="search.language" class="ng-pristine">
+                                <option value="" disabled="" selected="selected">Language</option>
+                                <option label="Arabic" value="string:arabic">Arabic</option>
+                                <option label="Bulgarian" value="string:bulgarian">Bulgarian</option>
+                                <option label="Chinese" value="string:cantonese">Chinese</option>
+                                <option label="Croatian" value="string:croatian">Croatian</option>
+                                <option label="Czech" value="string:czech">Czech</option>
+                                <option label="English" value="string:english">English</option>
+                                <option label="French" value="string:french">French</option>
+                                <option label="German" value="string:german">German</option>
+                                <option label="Greek" value="string:greek">Greek</option>
+                                <option label="Hebrew" value="string:hebrew">Hebrew</option>
+                                <option label="Hindi" value="string:hindi">Hindi</option>
+                                <option label="Indonesian" value="string:indonesian">Indonesian</option>
+                                <option label="Italian" value="string:italian">Italian</option>
+                                <option label="Japanese" value="string:japanese">Japanese</option>
+                                <option label="Korean" value="string:korean">Korean</option>
+                                <option label="Polish" value="string:polish">Polish</option>
+                                <option label="Portuguese" value="string:portuguese">Portuguese</option>
+                                <option label="Pr" value="string:portuguese-br">Pr</option>
+                                <option label="Russian" value="string:russian">Russian</option>
+                                <option label="Spanish" value="string:spanish">Spanish</option>
+                                <option label="Swedish" value="string:swedish">Swedish</option>
+                                <option label="Tagalog" value="string:filipino">Tagalog</option>
+                                <option label="Thai" value="string:thai">Thai</option>
+                                <option label="Turkish" value="string:turkish">Turkish</option>
+                                <option label="Vietnamese" value="string:vietnamese">Vietnamese</option>
+                            </select>
+                        </div>
+                        <div class="submit-cta">
+                            <button class="primary-button ">Search</button>
+                        </div>
+                    </div>
+
+
+                </form>
+            </div>
+            <div class="check-box">
+                <div class="check-box-sec">
+                    <input type="checkbox" name="academy">
+                    <label for="academy">Academy</label>
+                </div>
+
+                <div class="check-box-sec">
+                    <input type="checkbox" name="class">
+                    <label for="class">Class</label>
+                </div>
+                <div class="check-box-sec">
+                    <input type="checkbox" name="instructor">
+                    <label for="instructor">Instructor</label>
+                </div>
+                <div class="check-box-sec">
+                    <input type="checkbox" name="events">
+                    <label for="events">Events</label>
+                </div>
+                <div class="check-box-sec">
+                    <input type="checkbox" name="training">
+                    <label for="training">Training</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- classes cards -->
+    <div class="classes-cards">
+        <div class="page-center">
+            <div class="classes-card-flex">
+
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">Fri</h5>
+                                <h5 class="date-title">Oct 27</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated October 27,2023</h5>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">SAT</h5>
+                                <h5 class="date-title">Oct 28</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated October 28,2023</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">SUN</h5>
+                                <h5 class="date-title">Oct 29</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated October 29,2023</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">MON</h5>
+                                <h5 class="date-title">Oct 30</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated October 30,2023</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">WED</h5>
+                                <h5 class="date-title">Nov 01</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated November 01,2023</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">FRI</h5>
+                                <h5 class="date-title">Nov 02</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated November 02,2023</h5>>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="class-card-items">
+                    <div class="class-card-items-in">
+                        <div class="profile-iner">
+                            <div class="profile-main">
+                                <div class="profile-img">
+                                    <img src="~/Content/visitor-panel/image/riak.jpg" alt="profile" loading="lazy">
+                                </div>
+                                <div class="profile-name">
+                                    <h4>Shikha Gupta</h4>
+                                    <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                </div>
+                            </div>
+                            <div class="star-iner">
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star color_full"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="time-details">
+                            <div class="days-time">
+                                <h5 class="day-title">mon</h5>
+                                <h5 class="date-title">Nov 06</h5>
+                                <h5 class="time-title">12:30am</h5>
+                            </div>
+
+                            <div class="details-cards">
+                                <h5>Gymnastics</h5>
+                                <h5>Weekly(M,T,W,TH,F,Sa) 69 mins</h5>
+                                <div class="location-iner">
+                                    <h5>Marks Required Social Distancing Temperature Checks</h5>
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h5 class="update-text">Updated November 06,2023</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="koch-profile">
+                        <div class="koch-profile-iner">
+                            <img src="~/Content/visitor-panel/image/riak.jpg" alt="koch profile" loading="lazy">
+                            <h5 class="koch-name">RIMA N</h5>
+                            <p class="koch-position"> Sports Koch</p>
+                            <h5 class="certified-koch"> <i class="fa-solid fa-certificate"></i>  Certified Koch</h5>
+                            <div class="koch-social-follow">
+                                <a href="https://www.youtube.com/"><i class="fa-brands fa-youtube"></i></a>
+                                <a href="https://www.facebook.com/login/"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#"><i class="fa-brands fa-google-plus-g"></i></a>
+                                <a href="https://twitter.com/login"><i class="fa-brands fa-twitter"></i></a>
+                                <a href="https://www.instagram.com/accounts/login/"><i class="fa-brands fa-instagram"></i></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

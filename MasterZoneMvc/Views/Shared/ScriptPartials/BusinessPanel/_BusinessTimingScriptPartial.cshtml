@@ -1,0 +1,892 @@
+﻿<script>
+    var UserToken_Global = "";
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetBusinessTimingData();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        GetBusinessTimingData();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+    function BusinessDayStatus_Change(_dayVal) {
+
+
+            //--Sunday
+            if (_dayVal == 1) {
+
+                if ($('#chkSunday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Sunday_BusinessTiming").show();
+                    $("#lblOpenCloseStatus_Sunday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Sunday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Sunday_BusinessTiming").html('Closed');
+
+                    $("#ddlOpeningTime_Sunday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Sunday_BusinessTiming").val('');
+                    $("#ddlOpeningTime2_Sunday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Sunday_BusinessTiming").val('');
+                }
+            }
+            //--Monday
+            else if (_dayVal == 2) {
+
+                if ($('#chkMonday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Monday_BusinessTiming").show();
+
+                    $("#lblOpenCloseStatus_Monday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Monday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Monday_BusinessTiming").html('Closed');
+
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime_Monday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Monday_BusinessTiming").val('');
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime2_Monday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Monday_BusinessTiming").val('');
+                }
+            }
+            //--Tuesday
+            else if (_dayVal == 3) {
+
+                if ($('#chkTuesday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Tuesday_BusinessTiming").show();
+
+                    $("#lblOpenCloseStatus_Tuesday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Tuesday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Tuesday_BusinessTiming").html('Closed');
+
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime_Tuesday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Tuesday_BusinessTiming").val('');
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime2_Tuesday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Tuesday_BusinessTiming").val('');
+                }
+            }
+            //--Wednesday
+            else if (_dayVal == 4) {
+
+                if ($('#chkWednesday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Wednesday_BusinessTiming").show();
+
+                    $("#lblOpenCloseStatus_Wednesday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Wednesday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Wednesday_BusinessTiming").html('Closed');
+
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime_Wednesday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Wednesday_BusinessTiming").val('');
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime2_Wednesday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Wednesday_BusinessTiming").val('');
+
+                }
+            }
+            //--Thursday
+            else if (_dayVal == 5) {
+
+                if ($('#chkThursday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Thursday_BusinessTiming").show();
+
+                    $("#lblOpenCloseStatus_Thursday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Thursday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Thursday_BusinessTiming").html('Closed');
+
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime_Thursday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Thursday_BusinessTiming").val('');
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime2_Thursday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Thursday_BusinessTiming").val('');
+                }
+            }
+            //--Friday
+            else if (_dayVal == 6) {
+
+                if ($('#chkFriday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Friday_BusinessTiming").show();
+
+                    $("#lblOpenCloseStatus_Friday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Friday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Friday_BusinessTiming").html('Closed');
+
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime_Friday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Friday_BusinessTiming").val('');
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime2_Friday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Friday_BusinessTiming").val('');
+                }
+            }
+            //--Saturday
+            else if (_dayVal == 7) {
+
+                if ($('#chkSaturday_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#dv_TimingSection_Saturday_BusinessTiming").show();
+
+                    $("#lblOpenCloseStatus_Saturday_BusinessTiming").html('Open');
+                } else {
+                    // unchecked
+                    $("#dv_TimingSection_Saturday_BusinessTiming").hide();
+                    $("#lblOpenCloseStatus_Saturday_BusinessTiming").html('Closed');
+
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime_Saturday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime_Saturday_BusinessTiming").val('');
+                    //--Set Opening-Time Empty--
+                    $("#ddlOpeningTime2_Saturday_BusinessTiming").val('');
+                    //--Set Closing-Time Empty--
+                    $("#ddlClosingTime2_Saturday_BusinessTiming").val('');
+                }
+            }
+            else if (_dayVal == 0) {
+                if ($('#chkTodayOff_BusinessTiming').is(':checked')) {
+                    // checked
+                    $("#lblOpenCloseStatus_Today_BusinessTiming").html('Closed');
+                } else {
+                    // unchecked
+                    $("#lblOpenCloseStatus_Today_BusinessTiming").html('Open');
+                }
+            }
+        }
+    function Save_BusinessTiming()
+    {
+        let is_valid = true;
+        $(".error-class").html('');
+        var BusinessTimingList = [];
+
+        var _openingTime_Sunday_BT = $("#ddlOpeningTime_Sunday_BusinessTiming").val();
+        var _closingTime_Sunday_BT = $("#ddlClosingTime_Sunday_BusinessTiming").val();
+        var _openingTime2_Sunday_BT = $("#ddlOpeningTime2_Sunday_BusinessTiming").val();
+        var _closingTime2_Sunday_BT = $("#ddlClosingTime2_Sunday_BusinessTiming").val();
+
+        var _openingTime_Monday_BT = $("#ddlOpeningTime_Monday_BusinessTiming").val();
+        var _closingTime_Monday_BT = $("#ddlClosingTime_Monday_BusinessTiming").val();
+        var _openingTime2_Monday_BT = $("#ddlOpeningTime2_Monday_BusinessTiming").val();
+        var _closingTime2_Monday_BT = $("#ddlClosingTime2_Monday_BusinessTiming").val();
+
+        var _openingTime_Tuesday_BT = $("#ddlOpeningTime_Tuesday_BusinessTiming").val();
+        var _closingTime_Tuesday_BT = $("#ddlClosingTime_Tuesday_BusinessTiming").val();
+        var _openingTime2_Tuesday_BT = $("#ddlOpeningTime2_Tuesday_BusinessTiming").val();
+        var _closingTime2_Tuesday_BT = $("#ddlClosingTime2_Tuesday_BusinessTiming").val();
+
+        var _openingTime_Wednesday_BT = $("#ddlOpeningTime_Wednesday_BusinessTiming").val();
+        var _closingTime_Wednesday_BT = $("#ddlClosingTime_Wednesday_BusinessTiming").val();
+        var _openingTime2_Wednesday_BT = $("#ddlOpeningTime2_Wednesday_BusinessTiming").val();
+        var _closingTime2_Wednesday_BT = $("#ddlClosingTime2_Wednesday_BusinessTiming").val();
+
+        var _openingTime_Thursday_BT = $("#ddlOpeningTime_Thursday_BusinessTiming").val();
+        var _closingTime_Thursday_BT = $("#ddlClosingTime_Thursday_BusinessTiming").val();
+        var _openingTime2_Thursday_BT = $("#ddlOpeningTime2_Thursday_BusinessTiming").val();
+        var _closingTime2_Thursday_BT = $("#ddlClosingTime2_Thursday_BusinessTiming").val();
+
+        var _openingTime_Friday_BT = $("#ddlOpeningTime_Friday_BusinessTiming").val();
+        var _closingTime_Friday_BT = $("#ddlClosingTime_Friday_BusinessTiming").val();
+        var _openingTime2_Friday_BT = $("#ddlOpeningTime2_Friday_BusinessTiming").val();
+        var _closingTime2_Friday_BT = $("#ddlClosingTime2_Friday_BusinessTiming").val();
+
+        var _openingTime_Saturday_BT = $("#ddlOpeningTime_Saturday_BusinessTiming").val();
+        var _closingTime_Saturday_BT = $("#ddlClosingTime_Saturday_BusinessTiming").val();
+        var _openingTime2_Saturday_BT = $("#ddlOpeningTime2_Saturday_BusinessTiming").val();
+        var _closingTime2_Saturday_BT = $("#ddlClosingTime2_Saturday_BusinessTiming").val();
+
+        var _todayOffStatus = 0;
+        if ($('#chkTodayOff_BusinessTiming').is(':checked')) {
+            // checked
+            _todayOffStatus = 1;
+        } 
+        var _Notes = $("#Notes_BusinessTiming").val();
+
+
+        var isOpen_Sunday_BT = 0;
+        var isOpen_Monday_BT = 0;
+        var isOpen_Tuesday_BT = 0;
+        var isOpen_Wednesday_BT = 0;
+        var isOpen_Thursday_BT = 0;
+        var isOpen_Friday_BT = 0;
+        var isOpen_Saturday_BT = 0;
+        var SundayName = "Sunday";
+        var MondayName = "Monday";
+        var TuesdayName = "Tuesday";
+        var WednesdayName = "Wednesday";
+        var ThursdayName = "Thursday";
+        var FridayName = "Friday";
+        var SaturdayName = "Saturday";
+
+        //--Sunday
+        if ($('#chkSunday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Sunday_BT = 1;
+            SundayName = "Sunday";
+        }
+        //--Monday
+        if ($('#chkMonday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Monday_BT = 1;
+            MondayName = "Monday";
+        }
+        //--Tuesday
+        if ($('#chkTuesday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Tuesday_BT = 1;
+            TuesdayName = "Tuesday";
+        }
+        //--Wednesday
+        if ($('#chkWednesday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Wednesday_BT = 1;
+            WednesdayName = "Wednesday";
+        }
+        //--Thursday
+        if ($('#chkThursday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Thursday_BT = 1;
+            ThursdayName = "Thursday";
+        }
+        //--Friday
+        if ($('#chkFriday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Friday_BT = 1;
+            FridayName = "Friday";
+        }
+        //--Saturday
+        if ($('#chkSaturday_BusinessTiming').is(':checked')) {
+            // checked
+            isOpen_Saturday_BT = 1;
+            SaturdayName = "Saturday";
+        }
+        //--if today off is checked
+
+        if (isOpen_Sunday_BT == 1 && (_openingTime_Sunday_BT == undefined || _openingTime_Sunday_BT == null || _openingTime_Sunday_BT == '' || _openingTime_Sunday_BT == 0 || _openingTime_Sunday_BT == '0' ||
+            _openingTime2_Sunday_BT == undefined || _openingTime2_Sunday_BT == null || _openingTime2_Sunday_BT == '' || _openingTime2_Sunday_BT == 0 || _openingTime2_Sunday_BT == '0')) {
+            is_valid = false;
+            $("#sunday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "sunday!"))");
+        }
+        //--Sunday Closing-Time
+        else if (isOpen_Sunday_BT == 1 && (_closingTime_Sunday_BT == undefined || _closingTime_Sunday_BT == null || _closingTime_Sunday_BT == '' || _closingTime_Sunday_BT == 0 || _closingTime_Sunday_BT == '0' ||
+            _closingTime2_Sunday_BT == undefined || _closingTime2_Sunday_BT == null || _closingTime2_Sunday_BT == '' || _closingTime2_Sunday_BT == 0 || _closingTime2_Sunday_BT == '0')) {
+            is_valid = false;
+            $("#sunday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "sunday!"))");
+        }
+        else if (isOpen_Sunday_BT == 1 && (_closingTime_Sunday_BT <= _openingTime_Sunday_BT || _closingTime2_Sunday_BT <= _openingTime2_Sunday_BT)) {
+            is_valid = false;
+            $("#sunday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "sunday!"))");
+        }
+
+        //--Monday Opening-Time
+        if (isOpen_Monday_BT == 1 && (_openingTime_Monday_BT == undefined || _openingTime_Monday_BT == null || _openingTime_Monday_BT == '' || _openingTime_Monday_BT == 0 || _openingTime_Monday_BT == '0' ||
+            _openingTime2_Monday_BT == undefined || _openingTime2_Monday_BT == null || _openingTime2_Monday_BT == '' || _openingTime2_Monday_BT == 0 || _openingTime2_Monday_BT == '0')) {
+            is_valid = false;
+            $("#monday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "monday!"))");
+        }
+        //--Monday Closing-Time
+        else if (isOpen_Monday_BT == 1 && (_closingTime_Monday_BT == undefined || _closingTime_Monday_BT == null || _closingTime_Monday_BT == '' || _closingTime_Monday_BT == 0 || _closingTime_Monday_BT == '0' ||
+            _closingTime2_Monday_BT == undefined || _closingTime2_Monday_BT == null || _closingTime2_Monday_BT == '' || _closingTime2_Monday_BT == 0 || _closingTime2_Monday_BT == '0')) {
+            is_valid = false;
+            $("#monday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "monday!"))");
+        }
+        else if (isOpen_Monday_BT == 1 && (_closingTime_Monday_BT <= _openingTime_Monday_BT || _closingTime2_Monday_BT <= _openingTime2_Monday_BT )) {
+            is_valid = false;
+            $("#monday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "monday!"))");
+        }
+
+        //--Tuesday Opening-Time
+        if (isOpen_Tuesday_BT == 1 && (_openingTime_Tuesday_BT == undefined || _openingTime_Tuesday_BT == null || _openingTime_Tuesday_BT == '' || _openingTime_Tuesday_BT == 0 || _openingTime_Tuesday_BT == '0' ||
+            _openingTime2_Tuesday_BT == undefined || _openingTime2_Tuesday_BT == null || _openingTime2_Tuesday_BT == '' || _openingTime2_Tuesday_BT == 0 || _openingTime2_Tuesday_BT == '0')) {
+            is_valid = false;
+            $("#tuesday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "tuesday!"))");
+        }
+        //--Tuesday Closing-Time
+        else if (isOpen_Tuesday_BT == 1 && (_closingTime_Tuesday_BT == undefined || _closingTime_Tuesday_BT == null || _closingTime_Tuesday_BT == '' || _closingTime_Tuesday_BT == 0 || _closingTime_Tuesday_BT == '0' ||
+            _closingTime2_Tuesday_BT == undefined || _closingTime2_Tuesday_BT == null || _closingTime2_Tuesday_BT == '' || _closingTime2_Tuesday_BT == 0 || _closingTime2_Tuesday_BT == '0')) {
+            is_valid = false;
+            $("#tuesday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "tuesday!"))");
+        }
+        else if (isOpen_Tuesday_BT == 1 && (_closingTime_Tuesday_BT <= _openingTime_Tuesday_BT || _closingTime2_Tuesday_BT <= _openingTime2_Tuesday_BT )) {
+            is_valid = false;
+            $("#tuesday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "tuesday!"))");
+        }
+
+        //--Wednesday Opening-Time
+        if (isOpen_Wednesday_BT == 1 && (_openingTime_Wednesday_BT == undefined || _openingTime_Wednesday_BT == null || _openingTime_Wednesday_BT == '' || _openingTime_Wednesday_BT == 0 || _openingTime_Wednesday_BT == '0' || 
+            _openingTime2_Wednesday_BT == undefined || _openingTime2_Wednesday_BT == null || _openingTime2_Wednesday_BT == '' || _openingTime2_Wednesday_BT == 0 || _openingTime2_Wednesday_BT == '0')) {
+            is_valid = false;
+            $("#wedensday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "wednesday!"))");
+        }
+        //--Wednesday Closing-Time
+        else if (isOpen_Wednesday_BT == 1 && (_closingTime_Wednesday_BT == undefined || _closingTime_Wednesday_BT == null || _closingTime_Wednesday_BT == '' || _closingTime_Wednesday_BT == 0 || _closingTime_Wednesday_BT == '0' ||
+            _closingTime2_Wednesday_BT == undefined || _closingTime2_Wednesday_BT == null || _closingTime2_Wednesday_BT == '' || _closingTime2_Wednesday_BT == 0 || _closingTime2_Wednesday_BT == '0')) {
+            is_valid = false;
+            $("#wedensday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "wednesday!"))");
+        }
+        else if (isOpen_Wednesday_BT == 1 && (_closingTime_Wednesday_BT <= _openingTime_Wednesday_BT || _closingTime2_Wednesday_BT <= _openingTime2_Wednesday_BT )) {
+            is_valid = false;
+            $("#wedensday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "wednesday!"))");
+        }
+
+        //--Thursday Opening-Time
+        if (isOpen_Thursday_BT == 1 && (_openingTime_Thursday_BT == undefined || _openingTime_Thursday_BT == null || _openingTime_Thursday_BT == '' || _openingTime_Thursday_BT == 0 || _openingTime_Thursday_BT == '0' ||
+            _openingTime2_Thursday_BT == undefined || _openingTime2_Thursday_BT == null || _openingTime2_Thursday_BT == '' || _openingTime2_Thursday_BT == 0 || _openingTime2_Thursday_BT == '0')) {
+            is_valid = false;
+            $("#thursday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "thursday!"))");
+        }
+        //--Thursday Closing-Time
+        else if (isOpen_Thursday_BT == 1 && (_closingTime_Thursday_BT == undefined || _closingTime_Thursday_BT == null || _closingTime_Thursday_BT == '' || _closingTime_Thursday_BT == 0 || _closingTime_Thursday_BT == '0' ||
+            _closingTime2_Thursday_BT == undefined || _closingTime2_Thursday_BT == null || _closingTime2_Thursday_BT == '' || _closingTime2_Thursday_BT == 0 || _closingTime2_Thursday_BT == '0')) {
+            is_valid = false;
+            $("#thursday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "thursday!"))");
+        }
+        else if (isOpen_Thursday_BT == 1 && (_closingTime_Thursday_BT <= _openingTime_Thursday_BT || _closingTime2_Thursday_BT <= _openingTime2_Thursday_BT)) {
+            is_valid = false;
+            $("#thursday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "thursday!"))");
+        }
+
+        //--Friday Opening-Time
+        if (isOpen_Friday_BT == 1 && (_openingTime_Friday_BT == undefined || _openingTime_Friday_BT == null || _openingTime_Friday_BT == '' || _openingTime_Friday_BT == 0 || _openingTime_Friday_BT == '0' ||
+            _openingTime2_Friday_BT == undefined || _openingTime2_Friday_BT == null || _openingTime2_Friday_BT == '' || _openingTime2_Friday_BT == 0 || _openingTime2_Friday_BT == '0')) {
+            is_valid = false;
+            $("#friday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "friday!"))");
+        }
+        //--Friday Closing-Time
+        else if (isOpen_Friday_BT == 1 && (_closingTime_Friday_BT == undefined || _closingTime_Friday_BT == null || _closingTime_Friday_BT == '' || _closingTime_Friday_BT == 0 || _closingTime_Friday_BT == '0' || 
+            _closingTime2_Friday_BT == undefined || _closingTime2_Friday_BT == null || _closingTime2_Friday_BT == '' || _closingTime2_Friday_BT == 0 || _closingTime2_Friday_BT == '0')) {
+            is_valid = false;
+            $("#friday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "friday!"))");
+        }
+        else if (isOpen_Friday_BT == 1 && (_closingTime_Friday_BT <= _openingTime_Friday_BT || _closingTime2_Friday_BT <= _openingTime2_Friday_BT)) {
+            is_valid = false;
+            $("#friday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "friday!"))");
+        }
+
+        //--Saturday Opening-Time
+        if (isOpen_Saturday_BT == 1 && (_openingTime_Saturday_BT == undefined || _openingTime_Saturday_BT == null || _openingTime_Saturday_BT == '' || _openingTime_Saturday_BT == 0 || _openingTime_Saturday_BT == '0' ||
+            _openingTime2_Saturday_BT == undefined || _openingTime2_Saturday_BT == null || _openingTime2_Saturday_BT == '' || _openingTime2_Saturday_BT == 0 || _openingTime2_Saturday_BT == '0')) {
+            is_valid = false;
+            $("#saturday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_OpeningTimingRequired, "saturday!"))");
+        }
+        //--Saturday Closing-Time
+        else if (isOpen_Saturday_BT == 1 && (_closingTime_Saturday_BT == undefined || _closingTime_Saturday_BT == null || _closingTime_Saturday_BT == '' || _closingTime_Saturday_BT == 0 || _closingTime_Saturday_BT == '0' ||
+            _closingTime2_Saturday_BT == undefined || _closingTime2_Saturday_BT == null || _closingTime2_Saturday_BT == '' || _closingTime2_Saturday_BT == 0 || _closingTime2_Saturday_BT == '0')) {
+            is_valid = false;
+            $("#saturday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingRequired, "saturday!"))");
+        }
+        else if (isOpen_Saturday_BT == 1 && (_closingTime_Saturday_BT <= _openingTime_Saturday_BT || _closingTime2_Saturday_BT <= _openingTime2_Saturday_BT))
+        {
+            is_valid = false;
+            $("#saturday_error_BusinessTiming").html("@(String.Format(Resources.BusinessPanel.BusinessTiming_ClosingTimingLessThanOpening_ErrorMessage, "saturday!"))");
+        }
+
+        if (is_valid) {
+            StartLoading();
+            BusinessTimingList.push({
+                OpeningTime: _openingTime_Sunday_BT,
+                ClosingTime: _closingTime_Sunday_BT,
+                OpeningTime2: _openingTime2_Sunday_BT,
+                ClosingTime2: _closingTime2_Sunday_BT,
+                IsOpen: isOpen_Sunday_BT,
+                DayName: SundayName,
+                TodayOff: _todayOffStatus,
+                Notes: _Notes
+            },
+
+                {
+                    OpeningTime: _openingTime_Monday_BT,
+                    ClosingTime: _closingTime_Monday_BT,
+                    OpeningTime2: _openingTime2_Monday_BT,
+                    ClosingTime2: _closingTime2_Monday_BT,
+                    IsOpen: isOpen_Monday_BT,
+                    DayName: MondayName,
+                    TodayOff: _todayOffStatus,
+                    Notes: _Notes
+                },
+
+                {
+
+                    OpeningTime: _openingTime_Tuesday_BT,
+                    ClosingTime: _closingTime_Tuesday_BT,
+                    OpeningTime2: _openingTime2_Tuesday_BT,
+                    ClosingTime2: _closingTime2_Tuesday_BT,
+                    IsOpen: isOpen_Tuesday_BT,
+                    DayName: TuesdayName,
+                    TodayOff: _todayOffStatus,
+                    Notes: _Notes
+                },
+                {
+                    OpeningTime : _openingTime_Wednesday_BT,
+                    ClosingTime: _closingTime_Wednesday_BT,
+                    OpeningTime2: _openingTime2_Wednesday_BT,
+                    ClosingTime2: _closingTime2_Wednesday_BT,
+                    IsOpen : isOpen_Wednesday_BT,
+                    DayName: WednesdayName,
+                    TodayOff: _todayOffStatus,
+                    Notes: _Notes
+                },
+                {
+                    OpeningTime : _openingTime_Thursday_BT,
+                    ClosingTime: _closingTime_Thursday_BT,
+                    OpeningTime2: _openingTime2_Thursday_BT,
+                    ClosingTime2: _closingTime2_Thursday_BT,
+                    IsOpen : isOpen_Thursday_BT,
+                    DayName: ThursdayName,
+                    TodayOff: _todayOffStatus,
+                    Notes: _Notes
+                },
+                {
+                    OpeningTime : _openingTime_Friday_BT,
+                    ClosingTime: _closingTime_Friday_BT,
+                    OpeningTime2: _openingTime2_Friday_BT,
+                    ClosingTime2: _closingTime2_Friday_BT,
+                    IsOpen : isOpen_Friday_BT,
+                    DayName: FridayName,
+                    TodayOff: _todayOffStatus,
+                    Notes: _Notes
+                    },
+                {
+
+                    OpeningTime : _openingTime_Saturday_BT,
+                    ClosingTime: _closingTime_Saturday_BT,
+                    OpeningTime2: _openingTime2_Saturday_BT,
+                    ClosingTime2: _closingTime2_Saturday_BT,
+                    IsOpen : isOpen_Saturday_BT,
+                    DayName: SaturdayName,
+                    TodayOff: _todayOffStatus,
+                    Notes: _Notes
+                    },
+
+
+            );
+
+             $.ajax({
+                 url: '/api/Business/Timing/AddUpdate',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                //data: data,
+                //processData: false,
+                //mimeType: 'multipart/form-data',
+                //contentType: false,
+                 data: JSON.stringify(BusinessTimingList),
+                 contentType: 'application/json',
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    //dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        StopLoading();
+                        swal("Success!", dataResponse.message, "success");
+                        GetBusinessTimingData();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+    }
+    function GetBusinessTimingData()
+    {
+        $.ajax({
+            type: "GET",
+            url: "/api/Business/Timing/GetBusinessTimingData",
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataBusinessTiming) {
+
+                if (dataBusinessTiming.data.businessTimingData) {
+
+                    if (dataBusinessTiming.data.businessTimingData.length > 0) {
+
+                        for (var i = 0; i < dataBusinessTiming.data.businessTimingData.length; i++) {
+                            if (dataBusinessTiming.data.businessTimingData[i].TodayOff == "1") {
+                                $('#chkTodayOff_BusinessTiming').prop('checked', true);
+                                $("#lblOpenCloseStatus_Today_BusinessTiming").html('Closed');
+                            }
+                            $('#Notes_BusinessTiming').val(dataBusinessTiming.data.businessTimingData[i].Notes)
+                            //--Sunday
+                            if (dataBusinessTiming.data.businessTimingData[i].DayName == "Sunday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Sunday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Sunday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Sunday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Sunday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+
+                                    $('#chkSunday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Sunday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Sunday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Sunday_BusinessTiming").val('');
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Sunday_BusinessTiming").val('');
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Sunday_BusinessTiming").val('');
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Sunday_BusinessTiming").val('');
+
+                                    $('#chkSunday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Sunday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Sunday_BusinessTiming").html('Closed');
+                                }
+                            }
+                            //--Monday
+                            else if (dataBusinessTiming.data.businessTimingData[i].DayName == "Monday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Monday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Monday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Monday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Monday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+                                    $('#chkMonday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Monday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Monday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Monday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Monday_BusinessTiming").val('');
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Monday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Monday_BusinessTiming").val('');
+
+                                    $('#chkMonday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Monday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Monday_BusinessTiming").html('Closed');
+                                }
+                            }
+                            //--Tuesday
+                            else if (dataBusinessTiming.data.businessTimingData[i].DayName == "Tuesday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Tuesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Tuesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Tuesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Tuesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+
+                                    $('#chkTuesday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Tuesday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Tuesday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Tuesday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Tuesday_BusinessTiming").val('');
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Tuesday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Tuesday_BusinessTiming").val('');
+
+                                    $('#chkTuesday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Tuesday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Tuesday_BusinessTiming").html('Closed');
+                                }
+                            }
+                            //--Wednesday
+                            else if (dataBusinessTiming.data.businessTimingData[i].DayName == "Wednesday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Wednesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Wednesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Wednesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Wednesday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+
+                                    $('#chkWednesday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Wednesday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Wednesday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Wednesday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Wednesday_BusinessTiming").val('');
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Wednesday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Wednesday_BusinessTiming").val('');
+
+
+                                    $('#chkWednesday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Wednesday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Wednesday_BusinessTiming").html('Closed');
+                                }
+                            }
+                            //--Thursday
+                            else if (dataBusinessTiming.data.businessTimingData[i].DayName == "Thursday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Thursday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Thursday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Thursday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Thursday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+
+                                    $('#chkThursday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Thursday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Thursday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Thursday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Thursday_BusinessTiming").val('');
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Thursday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Thursday_BusinessTiming").val('');
+
+                                    $('#chkThursday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Thursday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Thursday_BusinessTiming").html('Closed');
+                                }
+                            }
+                            //--Friday
+                            else if (dataBusinessTiming.data.businessTimingData[i].DayName == "Friday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Friday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Friday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Friday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Friday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+
+                                    $('#chkFriday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Friday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Friday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Friday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Friday_BusinessTiming").val('');
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Friday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Friday_BusinessTiming").val('');
+
+                                    $('#chkFriday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Friday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Friday_BusinessTiming").html('Closed');
+                                }
+                            }
+                            //--Saturday
+                            else if (dataBusinessTiming.data.businessTimingData[i].DayName == "Saturday") {
+
+                                //--Check if Is-Opened
+                                if (dataBusinessTiming.data.businessTimingData[i].IsOpened == 1) {
+
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime_Saturday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime_Saturday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime_12HoursFormat);
+                                    //--Set Opening-Time
+                                    $("#ddlOpeningTime2_Saturday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].OpeningTime2_12HoursFormat);
+
+                                    //----------------Set Closing-Time---------------
+                                    $("#ddlClosingTime2_Saturday_BusinessTiming").val(dataBusinessTiming.data.businessTimingData[i].ClosingTime2_12HoursFormat);
+
+
+                                    $('#chkSaturday_BusinessTiming').prop('checked', true);
+                                    $("#dv_TimingSection_Saturday_BusinessTiming").show();
+                                    $("#lblOpenCloseStatus_Saturday_BusinessTiming").html('Open');
+                                }
+                                else {
+
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime_Saturday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime_Saturday_BusinessTiming").val('');
+                                    //--Set Opening-Time Empty--
+                                    $("#ddlOpeningTime2_Saturday_BusinessTiming").val('');
+
+                                    //--Set Closing-Time Empty--
+                                    $("#ddlClosingTime2_Saturday_BusinessTiming").val('');
+
+                                    $('#chkSaturday_BusinessTiming').prop('checked', false);
+                                    $("#dv_TimingSection_Saturday_BusinessTiming").hide();
+                                    $("#lblOpenCloseStatus_Saturday_BusinessTiming").html('Closed');
+                                }
+                            }
+                        }
+                    }
+                }
+
+                StopLoading();
+
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+</script>
+

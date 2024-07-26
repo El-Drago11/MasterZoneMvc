@@ -1,0 +1,411 @@
+﻿<script>
+    var StudentUserId_Global = 0;
+    var UserToken_Global = "";
+    var _studentUserTable;
+    var _BlockUserId_Global = 0;
+
+    function initializeDataTable_StudentUserTable() {
+        _studentUserTable = $("#tblStudentUser").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable_StudentUserTable();
+                GetAllStudentUserDetail();
+
+
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_StudentUserTable();
+                        GetAllStudentUserDetail();
+
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GetAllStudentUserDetail() {
+    // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/StudentUserAccount/GetAllByPagination";
+    _studentUserTable.clear().destroy();
+    _studentUserTable = $("#tblStudentUser").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[4, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            { "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true }
+            , { "data": "Name", "name": "Name", "autoWidth": true }
+            , { "data": "Email", "name": "Email", "autoWidth": true }
+            , {
+                "data": "ProfileImage", "name": "ProfileImage", "autoWidth": true,
+                "render": function (data, type, row) {
+                return `<img src="${row.ProfileImageWithPath}" class="image-small" />`
+            }
+            }
+
+            , {
+                "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                }
+            }
+            , {
+                "data": null, "": "IsBlocked", "autoWidth": true
+                , "render": function (data, type, row) {
+                    //---Check Rating-Status
+                    var _status = '';
+                    if (row.IsBlocked == 0) {
+                        _status = '<a class="btn btn-xs btn-success p-1" onclick="ConfirmBlockStudent(' + row.Id + ');">Un-Blocked</a>';
+                    }
+                    else if (row.IsBlocked == 1) {
+                        _status = '<a class="btn btn-xs btn-danger p-1" onclick="ConfirmUnblockStudent(' + row.Id + ');">Blocked</a>';
+                    }
+
+                    var _blockReason = (row.BlockReason == '') ? '' : `<b>Reason: </b> ${row.BlockReason}`;
+                    var _html = `
+                        <div class="d-flex flex-column">
+                            <div class="p-2">${_status}</div>
+                            <div class="p-2 text-small">${_blockReason}</div>
+                        </div>
+                    `;
+                    return _html;
+                }
+            }
+
+            , {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _view = `<a href="/SuperAdmin/StudentDetail?userLoginId=${row.UserLoginId}"><i class="fas fa-eye p-1" title="View"></i>View </a>`;
+                    var _action = `<div class="edbt">
+                                ${_view}
+
+
+                            </div>`;
+                    return _action;
+                }
+            }
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [0, 6], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblStudentUser_filter input').unbind();
+    $('#tblStudentUser_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _studentUserTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+    }
+
+    $('#StudentUserDetailModal').on('hide.bs.modal', function () {
+        ResetViewStudentUserDetialModal();
+    });
+
+
+    function ResetViewStudentUserDetialModal() {
+        StudentUserId_Global = 0;
+        $('#StudentUserDetail_StudentModal').html('');
+    }
+
+    function ViewStudentUserDetail(Id) {
+
+        StudentUserId_Global = Id;
+        $('#StudentUserDetail_StudentModal').html('');
+        getStudentUserDetail(callbackStudentUserDetailDataModal);
+    }
+
+    function callbackStudentUserDetailDataModal(apiResponse) {
+        StudentUserId_Global = apiResponse.data.Id;
+
+        var _htmlData = ``;
+        _htmlData += `<div class="row"><div class="col-md-6"><span><b>Name :</b></span>&nbsp${apiResponse.data.Name}</div><div class="col-md-6"><span><b>Email :</b></span>&nbsp${apiResponse.data.Email}</div></div></br><div class="row"><div class="col-md-6"><span><b>Profile Image :</b></span>&nbsp<div class="imagePreview"><img src="${apiResponse.data.ProfileImageWithPath}" id="previewImage"></div></div><div class="col-md-6"><span><b>Created On :</b></span>&nbsp${apiResponse.data.CreatedOn_FormatDate}</div></div></br><div class="row"><div class="col-md-6"><span><b>Phone Number :</b></span>&nbsp${apiResponse.data.PhoneNumber}</div><div class="col-md-6"><span><b>Address :</b></span>&nbsp${apiResponse.data.Address}</div><div class="col-md-6"><a href=""${apiResponse.data.Address}</div></div>`;
+
+
+        //if (apiResponse.data.DiscountStudent.length <= 0) {
+        //    _htmlData += `<div class="w-100 font-italic text-center text-black-50 py-2">No Coupon in this Discount.</div>`;
+        //}
+        _htmlData += `</div>`;
+        $('#StudentUserDetail_StudentModal').html(_htmlData);
+        $('#StudentUserDetailModal').modal('show');
+    }
+
+    function getStudentUserDetail(callbackFunction) {
+
+        let _url = "/api/StudentUser/GetUserDetailById?id=" + StudentUserId_Global;
+        StartLoading();
+
+        //showSpinnerInAddMemberModal();
+        //$('#addGroupMemberModal').modal('show');
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+               // $("#ddlSelectedStatus").val(response.data[i].ReviewBody);
+                StudentUserId_Global = response.data.Id;
+
+                callbackFunction(response);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmBlockStudent(sid) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmBlockUserTitle)",
+            text: "@(Resources.SuperAdminPanel.ConfirmBlockUserText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                _BlockUserId_Global = sid;
+                $('#blockUserModal').modal('show');
+
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function ConfirmUnblockStudent(sid) {
+        swal({
+            title: "@(Resources.SuperAdminPanel.ConfirmUnBlockUserTitle)",
+            text: "@(Resources.SuperAdminPanel.ConfirmUnBlockUserText)",
+            type: "warning",
+            buttons: true,
+            cancel: {
+                text: "@(Resources.ErrorMessage.Cancel)",
+                value: null,
+                visible: false,
+                className: "",
+                closeModal: true,
+            }
+        }).then((willDelete) => {
+            if (willDelete) {
+                UnblockStudentUser(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+    }
+
+    function UnblockStudentUser(sid) {
+        StartLoading();
+
+        $.ajax({
+            type: "POST",
+            url: "/api/StudentUser/Unblock/" + sid,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff-status successfully updated
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllStudentUserDetail();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function BlockStudentUser(sid, blockReason) {
+        StartLoading();
+
+        $.ajax({
+            type: "POST",
+            url: `/api/StudentUser/Block?id=${sid}&blockReason=${blockReason}`,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff-status successfully updated
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        ResetBlockForm();
+                        $('#blockUserModal').modal('hide');
+
+                        GetAllStudentUserDetail();
+                    }, 100);
+                }
+                else {
+                    swal("Error!", dataResponse.message, "error");
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function EditAccountUser() {
+
+
+        $('#EditAccount').show();
+        $('#AllAccount').hide();
+
+    }
+
+    $('#AddAccount').click(function () {
+        $('#AddNewAccount').show();
+        $('#AllAccount').hide();
+    });
+
+
+    function AddCreateAccount() {
+        $('#AddNewAccount').show();
+    }
+
+
+    function ResetBlockForm() {
+        $('#txtBlockReason').val('');
+    }
+
+    function submitBlockUser() {
+        var _blockReason = $('#txtBlockReason').val();
+
+        BlockStudentUser(_BlockUserId_Global, _blockReason);
+    }
+
+    $('#blockUserModal').on('hidden.bs.modal', function () {
+        ResetBlockForm();
+    });
+
+</script>

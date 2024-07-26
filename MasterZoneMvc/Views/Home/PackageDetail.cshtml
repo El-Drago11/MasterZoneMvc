@@ -1,0 +1,151 @@
+﻿@{
+    ViewBag.Title = "PackageDetail";
+    //Layout = "~/Views/Shared/_VisitorLayout.cshtml";
+    Layout = null;
+    long packageId = ViewBag.PackageId;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>@ViewBag.Title</title>
+
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- fonts awesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
+          integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Jquery -->
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+            integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <!-- slick cdn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"
+            integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+          integrity="sha512-yHknP1/AwR+yx26cB1y0cjvQUMvEa2PFzt1c9LlS4pRQ5NOTZFWbhBig+X9G9eYW/8m0/4OXNx8pxJ6z57x0dw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+          integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/Content/assets/style.css">
+    <!-- isotop filter -->
+    <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+          integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <!--Stylish Alert-->
+    <link href="~/Content/lib/StylishAlert/iao-alert.css" rel="stylesheet" />
+    <style>
+        .error-class {
+            color: red;
+        }
+    </style>
+
+    <style>
+        #txtCouponCode:valid {
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    @Html.Partial("_LoaderPartial")
+
+    <input type="hidden" id="hiddenPackageId" value="@packageId" />
+
+    <div class="pt-5 text-center">
+        <h2>Checkout</h2>
+    </div>
+
+    <div class="container-fluid my-4 d-none" id="sectionError">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <i class="h1 fas fa-exclamation text-danger"></i>
+            <h4>Invalid Item</h4>
+            <p>Item not found for checkout!</p>
+            <a href="/Home/" class="btn btn-sm btn-success">Go to Home</a>
+        </div>
+    </div>
+
+    <div class="container my-4" id="sectionCheckout">
+        <div class="row">
+            <div class="col-sm-6" id="divItemDetail">
+
+            </div>
+            <div class="col-sm-6">
+                <div class="d-flex flex-column">
+                    @*<div class="text-center h6 p-4" style="background:#f1f1f1">Total: <span id="TotalPrice">Rs. 699</span></div>*@
+                    <div class="text-center h6 p-4" style="background:#f1f1f1" id="divOrderBillingDetail">
+                        @* Append by JS *@
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label for="txtCouponCode" class="h6">Apply Coupon</label>
+                            <div class="input-group">
+                                <input type="text" id="txtCouponCode" class="form-control" placeholder="Coupon Code" />
+                                <button type="button" class="btn btn-success border-0" id="btnApplyCoupon" onclick="ApplyCoupon();">Apply</button>
+                            </div>
+                            <div class="error-class" id="error_txtCouponCode"></div>
+                            <div class="text-success" id="success_txtCouponCode"></div>
+                        </div>
+                        <fieldset class="form-group">
+                            <legend class="form-label h6">Payment Method</legend>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode1" value="1" checked>
+                                <label class="form-check-label" for="paymentMode1">
+                                    Cash
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode2" value="2">
+                                <label class="form-check-label" for="paymentMode2">
+                                    Card
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div>
+                        <button type="button" id="btnPurchasePackage" class="btn btn-primary w-100" onclick="bookPackage();">Purchase</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    @* --------------------------     SCRIPT TAGS ----------------------------------------------*@
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+            crossorigin="anonymous"></script>
+
+    <!--Stylish-ALERT-->
+    <script src="/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+
+    <script>
+        $(function () {
+            $(window).on("scroll", function () {
+                if ($(window).scrollTop() > 50) {
+                    $(".header").addClass("active-h");
+                } else {
+                    //remove the background property so it comes transparent again (defined in your css)
+                    $(".header").removeClass("active-h");
+                }
+            });
+        });
+    </script>
+
+    <script src="/Scripts/js/site.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+
+    <script>
+        $('header').addClass('active-h');
+    </script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_PackageDetailScriptPartial.cshtml")
+
+</body>
+</html>

@@ -1,0 +1,511 @@
+﻿<script>
+    var BusinessOwnerLoginId_Global = $("#hiddenBusinessOwnerLoginId").val();
+
+    $(document).ready(function () {
+        GetAllInstructorBannerDetail();
+        GetAllInstructorAboutDetail();
+        GetBusinessAboutDetail();
+        GetContactInformationDetail();
+        GetAllInstructorDetail();
+
+    });
+
+    // Bind Instructor  Banner Detail
+
+      function GetAllInstructorBannerDetail() {
+          
+
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetInstructorBannerMasterProfileDetailListFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessInstructorBannerDetail = '';
+                if (response.data.length === 0) {
+                    BusinessInstructorBannerDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Instructor Banner Detail. </div>';
+                } else {
+                    for (var i = 0; i < response.data.length; i++) {
+                        var data = response.data[i];
+                        if (data.BannerType === "Instructor") {
+                            BusinessInstructorBannerDetail += `<div class="instructor-banner" style="background-image: url('${data.BannerImageWithPath}'); ">
+                <div class="page-center">
+                    <div class="banner-content">
+                        <div class="heading-title">
+                            <p>${data.Title}</p>
+                        </div>
+                        <h1>${data.SubTitle}</h1>
+                        <p>${data.Description}</p>
+                    </div>
+                </div>
+            </div>`;
+                        }
+                    }
+                }
+
+                if (BusinessInstructorBannerDetail === '') {
+                    BusinessInstructorBannerDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Instructor Banner Detail. </div>';
+                }
+
+                $("#BindBusinessInstructorDetail").append(BusinessInstructorBannerDetail);
+
+
+
+
+              //  $("#tab1").removeClass('d-none');
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    // Bind Instructor About Detail Section
+     function GetAllInstructorAboutDetail() {
+          
+
+        $.ajax({
+            type: "GET",
+            url: '/api/MasterProfile/GetInstructorAboutMasterProfileDetailFor_VisitorPanel?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessInstructorAboutDetail = '';
+                if (response.data.length === 0) {
+                    BusinessInstructorAboutDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Instructor Banner Detail. </div>';
+                } else {
+
+                    BusinessInstructorAboutDetail = ` <div class="image-content-col-lt">
+                    <img src="${response.data.ImageWithPath}" alt="img" loading="lazy">
+                </div>
+                <div class="image-content-col-rt">
+                    <div class="text">
+                        <h2>${response.data.Title}</h2>
+                        <p class="light-style">${response.data.SubTitle}</p>
+                        <p class="small-style">
+                            ${response.data.Description}
+                        </p>
+                        <a class="primary-button " href="${response.data.ButtonLink}">${response.data.ButtonText}</a>
+                    </div>
+                </div>`;
+                        }
+
+
+                $("#BindBusinessInstructorAboutDetail").append(BusinessInstructorAboutDetail);
+
+
+
+
+              //  $("#tab1").removeClass('d-none');
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind Instructor Footer About Detail
+    function GetBusinessAboutDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContentAboutDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var BusinessLogoDetail = '';
+                if (response.data === null) {
+                    BusinessLogoDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Logo   Detail. </div>';
+                }
+                else {
+                    BusinessLogoDetail = ` <a href="index.html">
+                        <img src="${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy">
+                    </a>`;
+                    $("#BusinessLogoDetail").append(BusinessLogoDetail);
+
+                }
+
+                var htmlBusinessAboutDetail = '';
+                if (response.data === null) {
+                    htmlBusinessAboutDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No About  Detail. </div>';
+                } else {
+                    htmlBusinessAboutDetail += `<h3 class="dnc-cl-hd">${response.data.Title}</h3>
+                            <p class="dnc-cl-txt-01">
+                                ${response.data.About}
+                            </p>`;
+                    var fullAbout = response.data.About;
+                    var maxLength = 130;
+                    var truncatedAbout = ``;
+                    if (fullAbout.length > maxLength) {
+                        truncatedAbout = fullAbout.substr(0, maxLength) + '...';
+                    } else {
+                        truncatedAbout = fullAbout + '...';
+
+                    }
+
+                        htmlBusinessAboutDetail = ` <div class="footer-logo">
+                            <a href="index.html">
+                                <img src="  ${response.data.BusinessLogoWithPath}" alt="logo" loading="lazy" style="height: 52px;
+                                width: auto;">
+                            </a>
+                            <div class="logo-title">
+                              <h6>${response.data.BusinessName}</h6>
+                            </div>
+                          </div>
+                        <p class="small">${truncatedAbout}<a href="/Home/MasterProfileAPI?businessOWnerLoginId=${BusinessOwnerLoginId_Global}#BindBusinessAboutDetail">Read More</a</p>`;
+
+                }
+
+                $("#BindBusinessAboutDetail").append(htmlBusinessAboutDetail);
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    //Bind  Footer Business Contact Detail
+    function GetContactInformationDetail() {
+        $.ajax({
+            type: "GET",
+            url: '/api/Business/GetBusinessContactDetail?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+            //headers: {
+            //    "Authorization": "Bearer " + UserToken_Global,
+            //    "Content-Type": "application/json"
+            //},
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var BusinessSocial = ''; // Declare BusinessSocial variable
+
+
+                if (response.data.BusinessTimingDetail.FacebookProfileLink && response.data.BusinessTimingDetail.FacebookProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.FacebookProfileLink}"><i class="fa-brands fa-facebook-f"></i></a>
+    </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.TwitterProfileLink && response.data.BusinessTimingDetail.TwitterProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.TwitterProfileLink}"><i class="fa-brands fa-twitter"></i></a>
+    </div>`;
+                }
+
+                if (response.data.BusinessTimingDetail.LinkedInProfileLink && response.data.BusinessTimingDetail.LinkedInProfileLink !== "") {
+                    BusinessSocial += `<div class="social-icon">
+        <a href="${response.data.BusinessTimingDetail.LinkedInProfileLink}"><i class="fa-brands fa-linkedin-in"></i></a>
+    </div>`;
+                }
+                $("#BusinessSocialDetail_Footer").append(BusinessSocial);
+
+                var htmlBusinessContactDetail = '';
+
+
+                if (response.data === null) {
+                    htmlBusinessContactDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Contact  Detail. </div>';
+                    $("#BindContactDetailInformation").html(htmlBusinessContactDetail);
+                }
+                else {
+                    htmlBusinessContactDetail = `<h5>Contact Us</h5>
+                    <p>
+                         ${response.data.BusinessTimingDetail.Address}
+                    </p>
+                    <a href=" ${response.data.BusinessTimingDetail.PhoneNumber}"> ${response.data.BusinessTimingDetail.PhoneNumber}</a>
+                    <a href="${response.data.BusinessTimingDetail.Email}">${response.data.BusinessTimingDetail.Email}</a>`;
+
+
+                    $("#BindContactDetailInformation").append(htmlBusinessContactDetail);
+                }
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    // Bind Instructor Detail
+
+   function GetAllInstructorDetail() {
+    
+       var centerCount = 2;
+       var startCount = 0;
+       var endCount = 1;
+    $.ajax({
+        type: "GET",
+        url: '/api/Business/GetAllInstructors?businessOwnerLoginId=' + BusinessOwnerLoginId_Global,
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            // $("#BindBusinessOddInstructorDetail").html('');
+            $("#BusinessBindEvenInstructorDetail").html('');
+            var BusinessInstructorDetail = '';
+            var BusinessInstructorDetail_j = '';
+            if (response.data.InstructorDetail.length === 0) {
+                BusinessInstructorDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Instructor Detail. </div>';
+            }
+            else {
+                BusinessInstructorDetail = '';
+
+                for (var i = 0; i < 3; i++) {
+                    var data = response.data.InstructorDetail[i];
+
+                    if(i===2){
+                        BusinessInstructorDetail += `<div class="instructor-single">
+                            <div class="page-center">
+                                <div class="signle-teacher-col">
+                                     <div class="teacher-info">
+                                        <h3>${data.InstructorName}</h3>
+                                        <p class="weight-lt"> ${data.Designation}</p>
+                                        <a class="teacher-link" href="/Home/MasterInstructorDetail?businessOwnerLoginId=${data.UserLoginId}&userLoginId=${BusinessOwnerLoginId_Global}&instructorUserLoginId=${data.InstructorUserLoginId}">Know More<svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z"></path></svg>
+                                        </a>
+                                    </div>
+                                    <div class="teacher-img-iner">
+                                        <div class="teacher-img">
+                                            <img src="${data.InstructorImageWithPath}" alt="teacher01" loading="lazy">
+                                        </div>
+                                    </div>
+                                    <div class="profile-description">
+                                        <p>${data.About}</p>
+                                        <p class="profile-name">${data.InstructorName}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }else {
+                        if (i == startCount) {
+                            BusinessInstructorDetail += ` <div class="instructor-teacher">
+                            <div class="page-center">
+                                <div class="teacher-col">`;
+                            startCount = startCount + 3;
+                        }
+                        
+                       
+                        BusinessInstructorDetail += `<div class="teacher-profile">
+                            <div class="teacher-profile-iner">
+                                <div class="teacher-img">
+                                    <img src="${data.InstructorImageWithPath}" alt="teacher01" loading="lazy">
+                                </div>
+                            </div>
+                            <div class="teacher-info">
+                                <h3>${data.InstructorName}</h3>
+                                <p class="weight-lt"> ${data.Designation}</p>
+                                <a class="teacher-link" href="/Home/MasterInstructorDetail?businessOwnerLoginId=${data.UserLoginId}&userLoginId=${BusinessOwnerLoginId_Global}&instructorUserLoginId=${data.InstructorUserLoginId}">
+                                    Know More<svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z" /></svg>
+                                </a>
+                            </div>
+                        </div>`;
+
+                        if (i == endCount) {
+                             BusinessInstructorDetail += `</div></div></div>`;
+                             endCount = endCount + 3;
+                        }
+                    }
+                }
+
+                BusinessInstructorDetail_j = `<div class="instructor-teacher">
+                            <div class="page-center">
+                                <div class="teacher-col" id="instructor-teacher-list">`;
+                for (var j = 0; j < response.data.InstructorDetail.length; j++) {
+                    var data1 = response.data.InstructorDetail[j];
+                    if(j>2){
+                    BusinessInstructorDetail_j += `<div class="teacher-profile">
+                            <div class="teacher-profile-iner">
+                                <div class="teacher-img">
+                                    <img src="${data1.InstructorImageWithPath}" alt="teacher01" loading="lazy">
+                                </div>
+                            </div>
+                            <div class="teacher-info">
+                                <h3>${data1.InstructorName}</h3>
+                                <p class="weight-lt"> ${data1.Designation}</p>
+                                <a class="teacher-link" href="/Home/MasterInstructorDetail?businessOwnerLoginId=${data1.UserLoginId}&userLoginId=${BusinessOwnerLoginId_Global}&instructorUserLoginId=${data1.InstructorUserLoginId}">
+                                    Know More<svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.707,17.707a1,1,0,0,1-1.414-1.414L19.586,13H2a1,1,0,0,1,0-2H19.586L16.293,7.707a1,1,0,0,1,1.414-1.414l5,5a1,1,0,0,1,0,1.414Z" /></svg>
+                                </a>
+                            </div>
+                        </div>`;
+                    }
+                }
+
+                BusinessInstructorDetail_j += `</div></div></div>`;
+                
+                BusinessInstructorDetail+=BusinessInstructorDetail_j;
+                $("#BusinessBindEvenInstructorDetail").append(BusinessInstructorDetail);
+                $('#instructor-teacher-list').slick({
+                    arrows: true,
+                    dots: false,
+                    infinite: true,
+                    mobileFirst: true,
+                    responsive: [
+                        {
+                            breakpoint: 1024,
+                            settings: {
+                                slidesToShow: 2,
+                                slidesToScroll: 2,
+                            }
+                        },
+                        {
+                            breakpoint: 767,
+                            settings: {
+                                slidesToShow: 2,
+                                slidesToScroll: 2,
+                            }
+                        },
+                        {
+                            breakpoint: 580,
+                            settings: {
+                                slidesToShow: 1,
+                                slidesToScroll: 1,
+                            }
+                        }
+
+                    ]
+                });
+            }
+        },
+        error: function(result) {
+            // Handle error
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: 'Unauthorized! Invalid Token!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: 'There is some technical error, please try again!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+</script>

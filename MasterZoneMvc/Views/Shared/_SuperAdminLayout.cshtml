@@ -1,0 +1,756 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    string UserRole = Context.Items["UserRole"] as string; ;
+
+    bool IsSuperAdminRole = UserRole == "SuperAdmin" ? true : false;
+    string ControllerName = UserRole == "SuperAdmin" ? "SuperAdmin" : "SubAdmin";
+    List<PermissionHierarchy_VM> permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<string> permissionKeys = new List<string>();
+    if (permissions != null && permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/select2/css/select2.min.css">
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/dist/css/adminlte.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/summernote/summernote-bs4.min.css">
+
+    <!--Stylish Alert-->
+    <link href="/Content/lib/StylishAlert/iao-alert.css" rel="stylesheet" />
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/Content/superadmin-panel/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+
+    <link rel="stylesheet" href="~/Content/superadmin-panel/dist/css/custom.css">
+    <link href="/Content/custom/css/common.css" rel="stylesheet" />
+
+    <style>
+        .error-class {
+            color: red;
+        }
+
+        table.table thead, table.table tfoot {
+            background: #424141;
+            color: #fff;
+        }
+    </style>
+
+    @*----------------------- RENDER Styles ---------------------------------*@
+    @RenderSection("Styles", false)
+    @*----------------------- RENDER Styles ---------------------------------*@
+
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    @Html.Partial("_LoaderPartial")
+    <div class="wrapper">
+
+        <!-- Preloader -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            @*<img class="animation__shake" src="@Resources.StaticResources.MasterzoneLogo" alt="MASTER ZONE" height="80" width="80">*@
+        </div>
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <!-- <li class="nav-item d-none d-sm-inline-block">
+                  <a href="index3.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                  <a href="#" class="nav-link">Contact</a>
+                </li> -->
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Navbar Search -->
+                <li class="nav-item">
+                    <!-- <a class="nav-link" data-widget="navbar-search" href="#" role="button">
+                      <i class="fas fa-search"></i>
+                    </a> -->
+                    <div class="navbar-search-block">
+                        <form class="form-inline">
+                            <div class="input-group input-group-sm">
+                                <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
+                                <div class="input-group-append">
+                                    <button class="btn btn-navbar" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button class="btn btn-navbar" type="button" data-widget="navbar-search">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
+
+                <!-- Messages Dropdown Menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="far fa-comments"></i>
+                        <span class="badge badge-danger navbar-badge">3</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <a href="#" class="dropdown-item">
+                            <!-- Message Start -->
+                            <div class="media">
+                                <img src="~/Content/superadmin-panel/dist/img/user1-128x128.jpg" alt="User Avatar" class="img-size-50 mr-3 img-circle">
+                                <div class="media-body">
+                                    <h3 class="dropdown-item-title">
+                                        Brad Diesel
+                                        <span class="float-right text-sm text-danger"><i class="fas fa-star"></i></span>
+                                    </h3>
+                                    <p class="text-sm">Call me whenever you can...</p>
+                                    <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
+                                </div>
+                            </div>
+                            <!-- Message End -->
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <!-- Message Start -->
+                            <div class="media">
+                                <img src="~/Content/superadmin-panel/dist/img/user8-128x128.jpg" alt="User Avatar" class="img-size-50 img-circle mr-3">
+                                <div class="media-body">
+                                    <h3 class="dropdown-item-title">
+                                        John Pierce
+                                        <span class="float-right text-sm text-muted"><i class="fas fa-star"></i></span>
+                                    </h3>
+                                    <p class="text-sm">I got your message bro</p>
+                                    <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
+                                </div>
+                            </div>
+                            <!-- Message End -->
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <!-- Message Start -->
+                            <div class="media">
+                                <img src="~/Content/superadmin-panel/dist/img/user3-128x128.jpg" alt="User Avatar" class="img-size-50 img-circle mr-3">
+                                <div class="media-body">
+                                    <h3 class="dropdown-item-title">
+                                        Nora Silvester
+                                        <span class="float-right text-sm text-warning"><i class="fas fa-star"></i></span>
+                                    </h3>
+                                    <p class="text-sm">The subject goes here</p>
+                                    <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
+                                </div>
+                            </div>
+                            <!-- Message End -->
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
+                    </div>
+                </li>
+
+                <!-- Notifications Dropdown Menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="far fa-bell"></i>
+                        <span class="badge badge-warning navbar-badge">15</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <span class="dropdown-item dropdown-header">15 Notifications</span>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-envelope mr-2"></i> 4 new messages
+                            <span class="float-right text-muted text-sm">3 mins</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-users mr-2"></i> 8 friend requests
+                            <span class="float-right text-muted text-sm">12 hours</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-file mr-2"></i> 3 new reports
+                            <span class="float-right text-muted text-sm">2 days</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>
+                <!-- <li class="nav-item">
+                  <a class="nav-link" data-widget="control-sidebar" data-controlsidebar-slide="true" href="#" role="button">
+                    <i class="fas fa-th-large"></i>
+                  </a>
+                </li> -->
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar elevation-4">
+            <!-- Brand Logo -->
+            <a href="/SuperAdmin/Dashboard" class="brand-link">
+                <img src="@Resources.StaticResources.MasterzoneLogo" alt="MASTER ZONE" class="brand-image img-circle"
+                     style="opacity: .8">
+                <span class="brand-text font-weight-light">MASTER ZONE</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel (optional) -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+
+                    @if (IsSuperAdminRole)
+                    {
+                        <div class="image">
+                            <img id="loginsuperadmin_profileImage" src="" alt="User Image">
+                        </div>
+                        <div class="info">
+                            <a href="#" class="d-block">Super Admin</a>
+                            <span id="loginsuperadmin_userName" class="name"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="image">
+                            <img id="loginsubadmin_profileImage" alt="Profile Picture" src="" />
+                        </div>
+                        <div class="info">
+                            <span id="loginsubadmin_userName" class="name"></span>
+                        </div>
+                    }
+                </div>
+
+                <!-- SidebarSearch Form -->
+                <!-- <div class="form-inline">
+                  <div class="input-group" data-widget="sidebar-search">
+                    <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                    <div class="input-group-append">
+                      <button class="btn btn-sidebar">
+                        <i class="fas fa-search fa-fw"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div> -->
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Add icons to the links using the .nav-icon class
+    with font-awesome or any other icon font library -->
+                        @if (IsSuperAdminRole)
+                        {
+                            <li class="nav-item menu-open">
+                                <a id="a_Dashboard_Sidebar" href="/@ControllerName/Dashboard" class="nav-link active commonNavLinkClass">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>
+                                        Dashboard
+                                        <!-- <i class="right fas fa-angle-left"></i> -->
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageBusiness")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageBusiness_Sidebar" href="/@ControllerName/ManageBusiness" class="nav-link commonNavLinkClass">
+                                    <!-- <i class="nav-icon fas fa-copy"></i> -->
+                                    <i class="nav-icon fa fa-briefcase"></i>
+                                    <p>
+                                        Manage Businesses
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageUserAccount")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageUser_Sidebar" href="/@ControllerName/UserAccount" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fa fa-users"></i>
+                                    <p>
+                                        Manage User Accounts
+                                        @*<i class="right fas fa-angle-left"></i>*@
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole)
+                        {
+
+
+                            <li class="nav-item">
+                                <a id="a_ManageSubAdmin_Sidebar" href="/@ControllerName/ManageSubAdmin" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Sub-admins
+                                        @*<i class="fas fa-angle-left right"></i>*@
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("PaymentTransactions")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_Payments_Sidebar" href="/@ControllerName/Payment" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-money-check-alt"></i>
+                                    <p>
+                                        Payments/Transactions
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageCertificate")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageCertificates_Sidebar" href="/@ControllerName/ManageCertificate" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Certificates
+                                        @*<i class="fas fa-angle-left right"></i>*@
+                                    </p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a id="a_ManageLicenseBookings_Sidebar" href="/@ControllerName/ManageLicenseBookings" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        License Requests
+                                        @*<i class="fas fa-angle-left right"></i>*@
+                                    </p>
+                                </a>
+                            </li>
+
+                            @*<ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="/SuperAdmin/ManageCertificate" class="nav-link commonSubNavLinkClass">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p> View All</p>
+                    </a>
+                </li>
+            </ul>*@
+
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageAdvertisement")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageAdvertisements_Sidebar" href="/@ControllerName/ManageAdvertisement/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Advertisements
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageVideo")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageVideo_Sidebar" href="/@ControllerName/ManageVideo/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Video
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageLanguage")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageLanguage_Sidebar" href="/@ControllerName/ManageLanguage/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Language
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageClassCategory")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageClassCategory_Sidebar" href="/@ControllerName/ManageClassCategory/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Class Category
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageSponsors")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageSponsors_Sidebar" href="/@ControllerName/ManageSponsors/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Sponsors
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageUniversity")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageUniversity_Sidebar" href="/@ControllerName/ManageUniversity/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage University
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageCourseCategory")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageCourseCategory_Sidebar" href="/@ControllerName/ManageCourseCategory/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Course
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageCategories")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageCategories_Sidebar" href="/@ControllerName/ManageCategory/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Categories
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageMenu")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageMenu_Sidebar" href="/@ControllerName/ManageMenu/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Menu
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("CustomForm")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_CustomForm_Sidebar" href="/@ControllerName/CustomForm/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Custom Form
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ViewCustomForm")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ViewCustomForm_Sidebar" href="/@ControllerName/ViewCustomForm/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        View CustomForm
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("TransferForm")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_TransferForm_Sidebar" href="/@ControllerName/TransferForm/" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        TransferForm
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("AccountSettings")))
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageAccountSettings_Sidebar" href="/@ControllerName/AccountSetting" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-user-cog"></i>
+                                    <p>
+                                        Account Settings
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (!IsSuperAdminRole)
+                        {
+
+                            <li class="nav-item">
+                                <a id="a_ManageAccountSettings_Sidebar" href="/@ControllerName/SubAdminAccountSetting" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-user-cog"></i>
+                                    <p>
+                                        Account Settings
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("Plans_Package")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_Packages_Sidebar" href="/@ControllerName/ManagePackage" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Plans/Packages
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageAllClasses")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageAllClasses_Sidebar" href="/@ControllerName/ManageAllClasses" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Manage Classes
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageAllTrainings")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageAllTrainings_Sidebar" href="/@ControllerName/ManageAllTrainings" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Manage Trainings
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageAllEvents")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageAllEvents_Sidebar" href="/@ControllerName/ManageAllEvents" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Manage Events
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageAllInstructors")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageAllInstructors_Sidebar" href="/@ControllerName/ManageAllInstructors" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Manage Instructors
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageHomePage")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageHomePage_Sidebar" href="/@ControllerName/ManageHomePage" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-cog"></i>
+                                    <p>
+                                        Manage Home Page
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageEventCategory")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_Sidebar_manageEventCategory" href="/@ControllerName/ManageEventCategory" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Manage Event Category
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("ManageStaffCategory")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_Sidebar_manageStaffCategory" href="/@ControllerName/ManageStaffCategory" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>
+                                        Manage Staff Category
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("About")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageAbout_Sidebar" href="/@ControllerName/About" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-cog"></i>
+                                    <p>
+                                        About
+                                    </p>
+                                </a>
+                            </li>
+                        }
+                        @if (IsSuperAdminRole || (!IsSuperAdminRole && permissionKeys.Contains("Backup")))
+                        {
+                            <li class="nav-item">
+                                <a id="a_ManageBackup_Sidebar" href="/@ControllerName/Backup" class="nav-link commonNavLinkClass">
+                                    <i class="nav-icon fas fa-cloud-upload-alt"></i>
+                                    <p>
+                                        Backup
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <a href="/SuperAdmin/Logout" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <p>
+                                    Logout
+                                </p>
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        @*----------------------- RENDER BODY ---------------------------------*@
+        @RenderBody()
+        @*----------------------- RENDER BODY ---------------------------------*@
+
+
+        <!-- /.content-wrapper -->
+        <footer class="main-footer">
+            <strong>Copyright &copy; 2023 <a href="/">Master Zone.</a></strong>
+            All rights reserved.
+            <div class="float-right d-none d-sm-inline-block">
+                <a target="_blank" href="https://protolabzit.com/">
+                    <p id="ftxt" style="color: #869099;
+      font-size: 1rem;"> Developed & Designed by: Protolabz eServices</p>
+                </a>
+            </div>
+        </footer>
+
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+    </div>
+    <!-- ./wrapper -->
+    <!-- jQuery -->
+    <script src="/Content/superadmin-panel/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="/Content/superadmin-panel/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="/Content/superadmin-panel/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- ChartJS -->
+    <script src="/Content/superadmin-panel/plugins/chart.js/Chart.min.js"></script>
+    <!-- Sparkline -->
+    <script src="/Content/superadmin-panel/plugins/sparklines/sparkline.js"></script>
+    <!-- JQVMap -->
+    <script src="/Content/superadmin-panel/plugins/jqvmap/jquery.vmap.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
+    <!-- jQuery Knob Chart -->
+    <script src="~/Content/superadmin-panel/plugins/jquery-knob/jquery.knob.min.js"></script>
+    <!-- daterangepicker -->
+    <script src="/Content/superadmin-panel/plugins/moment/moment.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="~/Content/superadmin-panel/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+    <!-- Summernote -->
+    <script src="/Content/superadmin-panel/plugins/summernote/summernote-bs4.min.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="~/Content/superadmin-panel/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="/Content/superadmin-panel/dist/js/adminlte.js"></script>
+    <!-- AdminLTE for demo purposes -->
+    <script src="/Content/superadmin-panel/dist/js/demo.js"></script>
+    <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+    <script src="/Content/superadmin-panel/dist/js/pages/dashboard.js"></script>
+    <!-- DataTables  & Plugins -->
+    <script src="/Content/superadmin-panel/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/jszip/jszip.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/pdfmake/pdfmake.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/pdfmake/vfs_fonts.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+    <script src="/Content/superadmin-panel/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <!--Stylish-ALERT-->
+    <script src="/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+
+    <script src="/Scripts/js/site.js"></script>
+    <script src="/Scripts/js/loader.js"></script>
+    <script src="/Scripts/js/superadmin-panel/CommonLogin.js"></script>
+
+    @*----------------------- RENDER SCRIPTS ---------------------------------*@
+    @RenderSection("Scripts", false)
+    @*----------------------- RENDER SCRIPTS ---------------------------------*@
+
+
+</body>
+</html>

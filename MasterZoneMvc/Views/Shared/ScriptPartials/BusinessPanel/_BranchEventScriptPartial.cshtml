@@ -1,0 +1,161 @@
+﻿<script>
+    var UserToken_Global = "";
+    var BusinessBranchLoginId_Global = $("#hiddenBusinessbranchLoginId").val();
+    var _branchesEventTable;
+
+    function initializeDataTable_BranchEvent() {
+        _branchesEventTable = $("#tblBranchesEventView").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                initializeDataTable_BranchEvent();
+                UserToken_Global = dataToken;
+                GetAllStafEventBranchesForBusinessPagination();
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_BranchEvent();
+                        GetAllStafEventBranchesForBusinessPagination();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+     function GetAllStafEventBranchesForBusinessPagination() {
+        // ---------------- Pagination Data Table --------------------
+         var _url_val = "/api/Business/GetAllBranchEventDetailByPagination?branchBusinessLoginId=" + BusinessBranchLoginId_Global;
+         _branchesEventTable.clear().destroy();
+         _branchesEventTable = $("#tblBranchesEventView").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true
+                }
+                , {
+                    "data": null, "name": "Title", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Branches-Status
+                        var _EventImage = (row.EventFeaturedImageWithPath == '') ? '' : '<img src="' + row.EventFeaturedImageWithPath + '" class="Image" />';
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                            ${_EventImage}
+                                        </div>
+                                        <a href="/Business/Event?businessOwnerLoginId=${row.UserloginId}">${row.Title}</a>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+
+                , {
+                    "data": null, "name": "StartDate", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                          ${row.StartDate}
+                                        </div>
+                                        <div class="mb-2">
+                                         ${row.StartTime_24HF}</div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+
+
+                , {
+                    "data": null, "name": "EndDate", "autoWidth": true, "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                           ${row.EndDate}
+                                        </div>
+                                        <div class="mb-2">
+                                             ${row.EndTime_24HF}
+                                        </div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+                , {
+                    "data": "PaymentStatus", "name": "PaymentStatus", "autoWidth": true
+                }
+                , {
+                    "data": null, "name": "ShortDescription", "autoWidth": true, "render": function (data, type, row) {
+                        var _data = `<div class="d-flex flex-column">
+                                        <div class="mb-2">
+                                            ${row.ShortDescription}
+                                        </div>
+                                        <div class="mb-2">
+                                             ${row.EventLocationURL}
+                                        </div>
+                                    </div>`;
+                        return _data;
+                    }
+                }
+               
+              
+
+               
+
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            "columnDefs": [{
+                "targets": [0,5], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+         $('#tblBranchesEventView_filter input').unbind();
+         $('#tblBranchesEventView_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _branchesEventTable.search(this.value).draw();
+            }
+        });
+
+        // ----------------  Pagination Data Table ------------------
+    }
+
+</script>
+

@@ -1,0 +1,180 @@
+﻿<script>
+    var StudentId_Global = 0;
+    var UserToken_Global = "";
+
+    $(document).ready(function () {
+        StartLoading();
+        $.get("/SuperAdmin/GetSuperAdminToken", null, function (dataAdminToken) {
+            if (dataAdminToken != "" && dataAdminToken != null) {
+                UserToken_Global = dataAdminToken;
+                GeUserVedioDetailById();
+
+                StopLoading();
+            }
+            else {
+                $.get("/SuperAdmin/GetSubAdminToken", null, function (dataAdminToken) {
+                    if (dataAdminToken != "" && dataAdminToken != null) {
+                        UserToken_Global = dataAdminToken;
+                        GeUserVedioDetailById();
+
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+    function GeUserVedioDetailById() {
+        
+        var _userLoginId = $("#userLoginId").val();
+        var _url = "/api/StudentUser/GetUserDetailById?id=" + _userLoginId;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var htmlData2 = '';
+                for (var i = 0; i < response.data.UserVedioDetailResponse.length; i++) {
+                    
+
+                    htmlData2 += `
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <img class="img-circle img-bordered-sm mr-3" style="height:40px; width:40px;" src="${response.data.UserVedioDetailResponse[i].VideoThumbNailImageWithPath}" alt="Video Thumbnail Image" title="Video Thumbnail Image">
+                                            <a href="#" class="font-weight-bold">${response.data.UserVedioDetailResponse[i].VideoTitle}</a>
+                                        </div>
+                                        <iframe width="100%" height="240" src="${response.data.UserVedioDetailResponse[i].VideoLink}">
+                                        </iframe>
+                                        <a class="btn btn-xs btn-danger mt-2" onclick="ConfirmUserVedioDelete(${_userLoginId},${response.data.UserVedioDetailResponse[i].Id})">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (response.data.UserVedioDetailResponse.length <= 0) {
+                    htmlData2 += `<div class="w-100 font-italic text-center text-black-50 py-2">No Videos</div>`;
+                }
+                $('#ViewUserVedioDetail').append(htmlData2);
+
+
+            },
+
+            error: function(result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmUserVedioDelete(UserLoginId, Id) {
+        
+    swal({
+        title: "@(Resources.SuperAdminPanel.ConfirmDeleteUserVideoTitle)",
+        text: "@(Resources.SuperAdminPanel.ConfirmDeleteUserVideoText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    }).then((willDelete) => {
+        if (willDelete) {
+            ChangeUserVedioDetail(UserLoginId, Id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+    function ChangeUserVedioDetail(UserLoginId, Id) {
+        
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/StudentUser/DeleteUser?id=" + Id + "&&UserLoginId=" + UserLoginId,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get AllActiveAdvertisementListsSuperAdmin List
+
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+</script>
+
+

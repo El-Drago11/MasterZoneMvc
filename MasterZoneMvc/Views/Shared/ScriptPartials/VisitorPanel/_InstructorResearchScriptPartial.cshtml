@@ -1,0 +1,3551 @@
+﻿<script>
+    var UserToken_Global = "";
+    var MenuTag_Global = $("#hdn_businessMenuTag").val();
+    MenuTag_Global = MenuTag_Global == "" ? "all" : MenuTag_Global;
+
+    var UpcomingSportsList_LastRecordId_Global = 0;
+    var UpcomingClassList_LastRecordedId_Global = 0;
+    var UpcomingTrainingList_LastRecordedId_Global = 0;
+    var UpcomingEventList_LastRecordId_Global = 0;
+    var UpcomingInstructorList_LastRecordedId_Global = 0;
+    var recordLimit = 10;
+    var lat_Global = "";
+    var long_Global = "";
+
+    var hdn_itemType_Global = $('#hdn_itemType').val();
+    var hdn_latitude_Global = $('#hdn_latitude').val();
+    var hdn_longitude_Global = $('#hdn_longitude').val();
+    var hdn_location_Global = $('#hdn_location').val();
+    var hdn_categoryId_Global = $('#hdn_categoryId').val();
+    var hdn_days_Global = $('#hdn_days').val();
+    var hdn_userloginid_Global = $('#hdn_userloginid').val();
+
+    var newPage = 1;
+
+    const itemTypesEnum_Global = Object.freeze({
+        academies: 'academies',
+        classes: 'classes',
+        instructors: 'instructors',
+        events: 'events',
+        trainings: 'trainings',
+    });
+
+    const filterParams = {
+        MenuTag: MenuTag_Global,
+        Location: '',
+        Latitude: '',
+        Longitude: '',
+        SearchText: '',
+        CategoryId: 0,
+        ItemMode: '', // Online, Offline
+        PriceType: '', // Free,Paid
+        ItemType: itemTypesEnum_Global.academies,
+        PageSize: recordLimit,
+        Page: 0,
+        UserLoginId: hdn_userloginid_Global
+    };
+
+    function resetFilterParams() {
+        filterParams.MenuTag = '';
+        filterParams.Location = '';
+        filterParams.Latitude = '';
+        filterParams.Longitude = '';
+        filterParams.SearchText = '';
+        filterParams.CategoryId = 0;
+        filterParams.ItemMode = ''; // Online, Offline
+        filterParams.PriceType = ''; // Free,Paid
+        filterParams.ItemType = itemTypesEnum_Global.academies;
+        filterParams.PageSize = recordLimit;
+        filterParams.Page = 0;
+        filterParams.UserLoginId = hdn_userloginid_Global;
+    }
+
+    $(document).ready(function () {
+
+        $.get("/Home/GetStudentToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+
+                //initMap();
+
+            }
+            else {
+                /* UserToken_Global = "";*/
+                StopLoading();
+               // initMap();
+
+            }
+        });
+
+    });
+
+    $(document).ready(function () {
+        // for test working on without GPS
+        lat_Global = '31.31235400098023';
+        long_Global = '75.59806711787776';
+
+        // hide all filter items and show according to the selection.
+        hideAllFilterItems();
+        //var hdn_businessMenuTag = $('#hdn_businessMenuTag').val();
+
+        //$("input[name='filter-item-type'][data-name='academies']").prop('checked', 'true').trigger('change');
+
+        $('#txtFilterTypeLocation').val(hdn_location_Global);
+        //$('#ddlFilterTypeCategory').val(hdn_categoryId_Global);
+        $('#ddlFilterTypeDays').val(hdn_days_Global).trigger('change');
+
+        $("input[name='filter-item-type'][data-name='" + hdn_itemType_Global + "']").prop('checked', 'true').trigger('change');
+
+        //GetAllBusinessSportsDetailList();
+
+       // GetAllClassesByBusinessOwnerLoginIdSearchFilter();
+
+    });
+
+    function hideAllListSections() {
+        $('.filtered-records-section').addClass('d-none');
+    }
+
+    function hideAllFilterItems() {
+        $(".filter-form-items .half-width").hide();
+    }
+
+    function resetFilterItems() {
+        $('#txtFilterTypeName').val('');
+        $('#txtFilterTypeLocation').val('');
+        $('#ddlFilterTypeCategory').val('0');
+        $('#ddlFilterTypeMode').val('');
+        $('#ddlFilterTypePrice').val('');
+        $('#txtFilterStartDate').val('');
+        $('#ddlFilterTypeDays').val('');
+    }
+
+        $(document).on('change', "input[name='filter-item-type']", function () {
+            var selectedValue = $(this).data('name');
+
+            hideAllFilterItems();
+            hideAllListSections();
+
+            // reset to initial values to all filter items
+            resetFilterItems();
+
+            filterParams.Page = 0; // set page to initial on type-change
+            $('#txtFilterTypeLocation').val(hdn_location_Global);
+            //$('#ddlFilterTypeCategory').val(hdn_categoryId_Global);
+            $('#ddlFilterTypeDays').val(hdn_days_Global).trigger('change');
+            hdn_days_Global = "";
+            hdn_location_Global = "";
+
+            // show only
+            if (selectedValue == 'academies') {
+                GetAllActiveB2BSubCategoriesList();
+
+                $('.filter-type-location').show();
+                $('.filter-type-name').show();
+                $('.filter-type-category').show();
+
+                $('#sectionAcademies').removeClass('d-none');
+
+                GetAllAcademiesBySearchFilter();
+            }
+            else if (selectedValue == 'classes') {
+                GetAllClassCategoryTypeList();
+
+                $('.filter-type-location').show();
+                $('.filter-type-name').show();
+                $('.filter-type-category').show();
+                $('.filter-type-mode').show();
+                $('.filter-type-price').show();
+                $('.filter-type-days').show();
+                $('#sectionClasses').removeClass('d-none');
+
+                GetAllClassesBySearchFilter();
+            }
+            else if (selectedValue == 'instructors') {
+                GetAllInstructorBusinessCategories();
+
+                $('.filter-type-location').show();
+                $('.filter-type-name').show();
+                $('.filter-type-category').show();
+                $('#sectionInstructors').removeClass('d-none');
+
+                GetAllInstructorBySearchFilter();
+            }
+            else if (selectedValue == 'events') {
+                GetAllEventCategoryTypeList();
+
+                $('.filter-type-location').show();
+                $('.filter-type-name').show();
+                $('.filter-type-price').show();
+                $('.filter-type-startdate').show();
+                $('.filter-type-category').show();
+                $('#sectionEvents').removeClass('d-none');
+
+                GetAllBusinessEventsBySearchFilter();
+            }
+            else if (selectedValue == 'trainings') {
+                GetAllLicenseCategoryTypeList();
+
+                $('.filter-type-location').show();
+                $('.filter-type-name').show();
+                $('.filter-type-category').show();
+                $('.filter-type-price').show();
+                $('.filter-type-startdate').show();
+                $('#sectionTrainings').removeClass('d-none');
+
+                GetAllBusinessTrainingBySearchFilter();
+            }
+        });
+
+    function onClickSearch() {
+        var selectedValue = $("input[name='filter-item-type']:checked").data('name');
+        if (selectedValue == 'academies') {
+            GetAllAcademiesBySearchFilter();
+        }
+        else if (selectedValue == 'classes') {
+            GetAllClassesBySearchFilter();
+        }
+        else if (selectedValue == 'instructors') {
+            GetAllInstructorBySearchFilter();
+        }
+        else if (selectedValue == 'events') {
+            GetAllBusinessEventsBySearchFilter();
+        }
+        else if (selectedValue == 'trainings') {
+            GetAllBusinessTrainingBySearchFilter();
+        }
+    }
+
+    // Bind Business Sports Detail (Academy)
+
+    function GetAllBusinessSportsDetailList() {
+        var data = {
+            MenuTag: MenuTag_Global,
+            Latitude: lat_Global,
+            Longitude: long_Global,
+            LastRecordedId: 0
+        };
+        //$(".new-class-template .classes-cards").addClass('d-none');
+        //$(".new-templates .classes-cards").removeClass('d-none');
+        //$(".training-main").addClass('d-none');
+        //$(".events-section").addClass('d-none');
+        //$("#BindBusinessContentSportsDetail").html('');
+        //$("#BindBusinessContentSportsDetail").removeClass('d-none');
+        //  $("#BindBusinessInstructorDetailList").addClass('d-none');
+        //  $("#BindBusinessContentEventDetail").addClass('d-none');
+        //  $("#BindBusinessTrainingList").addClass('d-none');
+        //  $("#BindBusinessClassesDetailList").addClass('d-none');
+        $.ajax({
+            type: "POST",
+            url: '/api/Business/GetAllSportsBusinessList',
+
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            processData: false,
+            dataType: 'json',
+            //dataType: 'json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                var res_content = '';
+                if (response.data.length <= 0) {
+                    $('#BindBusinessContentSportsDetail').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Academy!</i></div>');
+                    $('#BtnViewMoreUpcomingSports').addClass('d-none');
+                    StopLoading();
+                    return;
+                }
+
+                if (response.data.length <= 0) {
+                    $('#BtnViewMoreUpcomingSports').addClass('d-none');
+                }
+                else {
+                    UpcomingSportsList_LastRecordId_Global = response.data[response.data.length - 1].Id;
+                    $('#BtnViewMoreUpcomingSports').removeClass('d-none');
+                }
+                var showingButton = '';
+                if (response.data.length < recordLimit) {
+                    showingButton = 'd-none';
+                }
+
+                for (var i = 0; i < response.data.length; i++) {
+
+                    var favClass = "/Content/visitor-panel/image/like_dark.png";
+                    if (response.data[i].IsFavourite == 1) {
+                        favClass = "/Content/visitor-panel/image/like_dark.png";
+                    } else {
+                        favClass = "/Content/visitor-panel/image/like1.png";
+                    }
+                        //var favClass = `<img src="/Content/visitor-panel/image/like1.png" alt="imge" loading="lazy" class="thumbupimg_sec">`;
+                        //if (response.data[i].IsFavourite == 1) {
+                        //    favClass = `<img src="/Content/visitor-panel/image/like1.png" alt="imge" loading="lazy" class="thumbupimg_sec">`;
+                        //} else {
+                        //    favClass = `<img src="/Content/visitor-panel/image/like_dark.png" alt="imge" loading="lazy" class="thumbupimg_sec">`;
+                        //}
+                        var BusinessContentElseDetail = '';
+
+                        if (typeof response.data[i].Description === 'string') {
+                            // Split the response data into an array
+
+                            var optionsArray = response.data[i].Description;
+                            var Testing = optionsArray.split(',');
+
+                            // Create a list of items
+                            //BusinessContentWorldClassProgramListDetail = '<ul>';
+
+                            for (var j = 0; j < Testing.length; j++) {
+                                // Add each item as a list item (li)
+                                if (Testing[j]) {
+                                    BusinessContentElseDetail += `/ ${Testing[j]}`;
+                                }
+
+                            }
+
+
+
+                            // Close the unordered list
+                            //BusinessContentWorldClassProgramListDetail += '</ul>';
+                        } else  {
+                            // Handle the case where CurriculumOptions is not a string
+                            BusinessContentElseDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Else Detail.</div>';
+                        }
+
+                        var DistanceInKilometers = response.data[i].DistanceInKilometers;
+                        var roundedNumber = Math.round(DistanceInKilometers);
+
+                        var Verifiedimg = '';
+                        if (response.data[i].Verified == 1) {
+                            Verifiedimg = `<img src="/Content/visitor-panel/image/quality1.png" alt="img" loading="lazy" class="img_sec">`;
+                        }
+                        else {
+                            Verifiedimg = '';
+                        }
+                        var Verifying = '';
+                        if (response.data[i].Verified == 1) {
+                            Verifying = `<img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy" class="Mask">
+                                <h5 class="verifying_sec">VERIFIED</h5>`;
+                        }
+                        else if (response.data[i].Verified == 2) {
+                            Verifying = `<img src="/Content/visitor-panel/image/trademark.png" alt="img" loading="lazy" class="trademark">
+                                <h5 class="verifying_sec">BOLLYFIT</h5>`;
+                        }
+                        else if (response.data[i].Verified == 3) {
+                            Verifying = `<img src="/Content/visitor-panel/image/trademark1.png" alt="img" loading="lazy" class="trandmark1">
+                                <h5 class="verifying_sec">BOKWA</h5>`;
+                        }
+                        var starIcons = '';
+
+                        if (response.data[i].AverageRating) {
+                            rating = response.data[i].AverageRating;
+
+                            for (var j = 1; j <= 5; j++) {
+                                if (j <= rating) {
+                                    starIcons += ' <i class="fa-solid fa-star color_full transform_section"></i>';
+                                } else {
+                                    starIcons += `<i class="fa-solid fa-star color_full trans_sec"></i>`;
+
+                                }
+                            }
+                        }
+                        else {
+                            for (var j = 1; j <= 5; j++) {
+                                    starIcons += `<i class="fa-solid fa-star color_full trans_sec"></i>`;
+                            }
+                        }
+
+                        var res_Key = '';
+                        if (response.data[i].Key == "sports") {
+                            res_Key = ` <a class="buttons" href="/Home/Sports?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "dance_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Dance?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "gym_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Gym?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "music_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Music?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "yoga_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Yoga?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "education_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Education?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "event_organisation") {
+                            res_Key = ` <a class="buttons" href="/Home/EventOrganisation?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "teacher") {
+                            res_Key = ` <a class="buttons" href="/Home/Teacher?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "instructor") {
+                            res_Key = ` <a class="buttons" href="/Home/Instructor?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+
+                        res_content = `    <div class="user_profile2" >
+
+                        <div class="row user_profilecontentouter">
+                            <div class="col-md-12">
+                                <div class="row quality">
+                                    <div class="col-md-2">
+                                        <div class="img-container">
+                                        <img src="${response.data[i].BusinessLogoWithPath}" alt="img" loading="lazy">
+                                           ${Verifiedimg}
+                                        <h2 class="copy">
+                                            Id  ${response.data[i].UniqueUserId} <!--<img src="/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_sec">-->
+                                        </h2>
+                                        <h6 class="headingthree">${response.data[i].BusinessCategoryName}</h6>
+                                       </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <h4 class="Academyname">${response.data[i].BusinessName}</h4>
+                                        <h6 class="academyaddress">${response.data[i].Address}</h6>
+                                        <h6 style="color: white"> Distance From You ${roundedNumber} Km<img src="/Content/visitor-panel/image/location1.png" alt="imge" loading="lazy" class="location_sec"}></h6>
+
+                                    </div>
+                                    <div class="col-md-5" style="text-align: end;">
+                                        <div class="cta" style="margin-top: 22px;">
+                                            ${res_Key}
+
+                                            <div class="primary-button thumbupimg">
+
+                         <a href="javascript:AddOrRemoveFavourites(${response.data[i].UserLoginId});">
+                    <img src="${favClass}" alt="imge" loading="lazy" class="thumbupimg_sec" id="ImageTest${response.data[i].UserLoginId}">
+                </a>
+
+                                            </div>
+                                            <div class="primary-button shareimg">
+                                                <img src="/Content/visitor-panel/image/share.png" alt="img" loading="lazy"  class="share_sec">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                        <div class="row star_iner_row">
+
+                            <div class="col-md-2 starsection">
+                                <div class="star-iner star_inner_secdetail">
+                                    ${starIcons}
+                                </div>
+                            </div>
+
+                        <div class="col-md-10 instructorcategoryname">
+                            <div class="row">
+                                <div class="col-md-10 box_sec">
+                                    <h5 class="box_else_sec m-1">  ${BusinessContentElseDetail} </h5>
+                                </div>
+                                <div class="col-md-2">
+
+                                    ${Verifying}
+
+                                </div>
+                            </div>
+
+                        </div>
+                        </div>
+
+                    </div>`;
+
+                        $("#BindBusinessContentSportsDetail").append(res_content);
+                        /*AddOrRemoveCheckingFollowersDetail(response.data[i].UserLoginId);*/
+                    }
+
+                ViewMoreSportsbutton = ` <div class="btn-outtrkjkd text-center ${showingButton}">
+                        <a  href ="javascript:ViewMoreUpcomingSports(); "id="BtnViewMoreUpcomingSports"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+
+                $("#BindBusinessContentSportsDetail").append(ViewMoreSportsbutton);
+
+                StopLoading();
+            },
+            error: function (result) {
+                // StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ViewMoreUpcomingSports() {
+        var data = {
+            MenuTag: MenuTag_Global,
+            Latitude: lat_Global,
+            Longitude: long_Global,
+            LastRecordedId: UpcomingSportsList_LastRecordId_Global
+        };
+        $.ajax({
+            type: "Post",
+            url: '/api/Business/GetAllSportsBusinessList',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            processData: false,
+            dataType: 'json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+                var res_content = '';
+
+                    for (var i = 0; i < response.data.length; i++) {
+
+                        //var favClass = `<img src="/Content/visitor-panel/image/like1.png" alt="imge" loading="lazy" class="thumbupimg_sec">`;
+                        //if (response.data[i].IsFavourite == 1) {
+                        //    favClass = `<img src="/Content/visitor-panel/image/like1.png" alt="imge" loading="lazy" class="thumbupimg_sec">`;
+                        //} else {
+                        //    favClass = `<img src="/Content/visitor-panel/image/like_dark.png" alt="imge" loading="lazy" class="thumbupimg_sec">`;
+                        //}
+                        var BusinessContentElseDetail = '';
+
+                        if (typeof response.data[i].Description === 'string') {
+                            // Split the response data into an array
+
+                            var optionsArray = response.data[i].Description;
+                            var Testing = optionsArray.split(',');
+
+                            // Create a list of items
+                            //BusinessContentWorldClassProgramListDetail = '<ul>';
+
+                            for (var j = 0; j < Testing.length; j++) {
+                                // Add each item as a list item (li)
+                                if (Testing[j]) {
+                                    BusinessContentElseDetail += `/ ${Testing[j]}`;
+                                }
+
+                            }
+
+
+
+                            // Close the unordered list
+                            //BusinessContentWorldClassProgramListDetail += '</ul>';
+                        } else {
+                            // Handle the case where CurriculumOptions is not a string
+                            BusinessContentElseDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Else Detail.</div>';
+                        }
+
+                        var DistanceInKilometers = response.data[i].DistanceInKilometers;
+                        var roundedNumber = Math.round(DistanceInKilometers);
+
+                        var Verifiedimg = '';
+                        if (response.data[i].Verified == 1) {
+                            Verifiedimg = `<img src="/Content/visitor-panel/image/quality1.png" alt="img" loading="lazy" class="img_sec">`;
+                        }
+                        else {
+                            Verifiedimg = '';
+                        }
+                        var Verifying = '';
+                        if (response.data[i].Verified == 1) {
+                            Verifying = `<img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy" class="Mask">
+                                <h5 class="verifying_sec">VERIFIED</h5>`;
+                        }
+                        else if (response.data[i].Verified == 2) {
+                            Verifying = `<img src="/Content/visitor-panel/image/trademark.png" alt="img" loading="lazy" class="trademark">
+                                <h5 class="verifying_sec">BOLLYFIT</h5>`;
+                        }
+                        else if (response.data[i].Verified == 3) {
+                            Verifying = `<img src="/Content/visitor-panel/image/trademark1.png" alt="img" loading="lazy" class="trandmark1">
+                                <h5 class="verifying_sec">BOKWA</h5>`;
+                        }
+                        var starIcons = '';
+
+                        if (response.data[i].AverageRating) {
+                            rating = response.data[i].AverageRating;
+
+                            for (var j = 1; j <= 5; j++) {
+                                if (j <= rating) {
+                                    starIcons += ' <i class="fa-solid fa-star color_full transform_section"></i>';
+                                } else {
+                                    starIcons += `<i class="fa-solid fa-star color_full trans_sec"></i>`;
+
+                                }
+                            }
+                        }
+                        else {
+                            for (var j = 1; j <= 5; j++) {
+                                starIcons += `<i class="fa-solid fa-star color_full trans_sec"></i>`;
+                            }
+                        }
+
+                        var res_Key = '';
+                        if (response.data[i].Key == "sports") {
+                            res_Key = ` <a class="buttons" href="/Home/Sports?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "dance_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Dance?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "gym_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Gym?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "music_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Music?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "yoga_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Yoga?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "education_web") {
+                            res_Key = ` <a class="buttons" href="/Home/Education?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "event_organisation") {
+                            res_Key = ` <a class="buttons" href="/Home/EventOrganisation?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "teacher") {
+                            res_Key = ` <a class="buttons" href="/Home/Teacher?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+                        else if (response.data[i].Key == "instructor") {
+                            res_Key = ` <a class="buttons" href="/Home/Instructor?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+                        }
+
+                        res_content = `    <div class="user_profile2" >
+
+                        <div class="row user_profilecontentouter">
+                            <div class="col-md-12">
+                                <div class="row quality">
+                                    <div class="col-md-2">
+                                        <div class="img-container">
+                                        <img src="${response.data[i].BusinessLogoWithPath}" alt="img" loading="lazy">
+                                           ${Verifiedimg}
+                                        <h2 class="copy">
+                                            Id  ${response.data[i].UniqueUserId} <!-- <img src="/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_sec"> -->
+                                        </h2>
+                                        <h6 class="headingthree">${response.data[i].BusinessCategoryName}</h6>
+                                       </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <h4 class="Academyname">${response.data[i].BusinessName}</h4>
+                                        <h6 class="academyaddress">${response.data[i].Address}</h6>
+                                        <h6 style="color: white"> Distance From You ${roundedNumber} Km<img src="/Content/visitor-panel/image/location1.png" alt="imge" loading="lazy" class="location_sec"}></h6>
+
+                                    </div>
+                                    <div class="col-md-5" style="text-align: end;">
+                                        <div class="cta" style="margin-top: 22px;">
+                                            ${res_Key}
+
+                                            <div class="primary-button thumbupimg">
+
+                         <a href="javascript:AddOrRemoveFavourites(${response.data[i].UserLoginId});">
+                    <img src="/Content/visitor-panel/image/like1.png" alt="imge" loading="lazy" class="thumbupimg_sec" id="ImageTest${response.data[i].UserLoginId}">
+                </a>
+
+                                            </div>
+                                            <div class="primary-button shareimg">
+                                                <img src="/Content/visitor-panel/image/share.png" alt="img" loading="lazy"  class="share_sec">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                        <div class="row star_iner_row">
+
+                            <div class="col-md-2 starsection">
+                                <div class="star-iner star_inner_secdetail">
+                                    ${starIcons}
+                                </div>
+                            </div>
+
+                        <div class="col-md-10 instructorcategoryname">
+                            <div class="row">
+                                <div class="col-md-10 box_sec">
+                                    <h5 class="box_else_sec m-1">  ${BusinessContentElseDetail} </h5>
+                                </div>
+                                <div class="col-md-2">
+
+                                    ${Verifying}
+
+                                </div>
+                            </div>
+
+                        </div>
+                        </div>
+
+                    </div>`;
+
+                        $("#BindBusinessContentSportsDetail").append(res_content);
+                        AddOrRemoveCheckingFollowersDetail(response.data[i].UserLoginId);
+                    }
+
+                // Check if there is more data to load
+                if (response.data.length > recordLimit) {
+                    UpcomingSportsList_LastRecordId_Global = response.data[response.data.length - 1].Id;
+
+                    // Remove existing "View More" button before appending a new one
+                    $('#BtnViewMoreUpcomingSports').remove();
+
+                    // Append the "View More" button after checking for more data
+                    var ViewMoreSportsbutton = '';
+
+
+                        ViewMoreSportsbutton = ` <div class="btn-outtrkjkd text-center">
+                        <a  href ="javascript:ViewMoreUpcomingSports(); "id="BtnViewMoreUpcomingSports"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+                        $("#BindBusinessContentSportsDetail").append(ViewMoreSportsbutton);
+
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingSports').addClass('d-none');
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+      function AddOrRemoveFavourites(id) {
+        if (UserToken_Global == "") {
+            $("#btnUserLoginPoup").click();
+        }
+        else {
+
+            $.ajax({
+                type: "POST",
+                url: "/api/Student/AddOrRemoveStudentFavourites?favouriteUserLoginId=" + id,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (dataResponse) {
+                    StopLoading();
+
+                    //--Check if Class successfully deleted
+                    if (dataResponse.status > 0) {
+                        //setTimeout(function () {
+                            /* swal("Success!", dataResponse.message);*/
+                            if (dataResponse.status == 1) {
+                                $("#ImageTest" +id).attr('src', '/Content/visitor-panel/image/like_dark.png');
+                            } else if (dataResponse.status == 2) {
+                                $("#ImageTest" +id).attr('src', '/Content/visitor-panel/image/like1.png');
+                            }
+
+
+                        //}, 100);
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+
+    function AddOrRemoveInstructorFavourites(id) {
+        if (UserToken_Global == "") {
+            $("#btnUserLoginPoup").click();
+        }
+        else {
+
+            $.ajax({
+                type: "POST",
+                url: "/api/Student/AddOrRemoveStudentFavourites?favouriteUserLoginId=" + id,
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+                    "Content-Type": "application/json"
+                },
+                contentType: 'application/json',
+                success: function (dataResponse) {
+                    StopLoading();
+
+                    //--Check if Class successfully deleted
+                    if (dataResponse.status > 0) {
+                        //setTimeout(function () {
+                            /* swal("Success!", dataResponse.message);*/
+                            if (dataResponse.status == 1) {
+                                $("#InstructorImageLike" +id).attr('src', '/Content/visitor-panel/image/like_dark.png');
+                            } else if (dataResponse.status == 2) {
+                                $("#InstructorImageLike" +id).attr('src', '/Content/visitor-panel/image/like1.png');
+                            }
+
+
+                        //}, 100);
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: 'There is some technical error, please try again!',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    //var recordLimit = 10;
+    //Bind Business Event Detail
+    function GetAllBusinessEventDetail() {
+    //    $(".new-templates .classes-cards").addClass('d-none');
+    //    $(".training-main").addClass('d-none');
+    //    $(".events-section").removeClass('d-none');
+    //    $("#BindBusinessContentEventDetail").html('');
+    //    $("#BindBusinessContentSportsDetail").addClass('d-none');
+    //    $("#BindBusinessTrainingList").addClass('d-none');
+    //    $("#BindBusinessInstructorDetailList").addClass('d-none');
+    //    $("#BindBusinessClassesDetailList").addClass('d-none');
+    //    $("#BindBusinessContentEventDetail").removeClass('d-none');
+        var _url = "/api/Event/GetAllEventDetail?menuTag=" + MenuTag_Global + '&lastRecordId=0';
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            // Clear existing content
+            $("#BindBusinessContentEventDetail").html('');
+
+            var EventDetailList = '';
+            if (response.data.length <= 0) {
+                // No data, show a message
+                $('#BindBusinessContentEventDetail').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Event!</i></div>');
+                $('#BtnViewMoreUpcomingEvents').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+
+
+
+            for (var i = 0; i < response.data.length; i++) {
+                if (response.data.length < recordLimit) {
+                    showingButton = 'd-none';
+                }
+                    // Create a Business Detail List for each entry in the List
+                var EventDetailList = `   <div class="event-container-section">
+
+                               <div class="row">
+                                   <div class="event-image-container col-sm-4">
+                                       <img src="${response.data[i].EventImageWithPath}" alt="img" loading="lazy">
+                                   </div>
+                                   <div class="event-content-container col-sm-6">
+                                       <div class="row">
+
+                                               <div class="col-sm-4 text-center">
+                                                   <div class="date-time">
+                                                       <h6>${response.data[i].StartDay}</h6>
+                                                       <p>${response.data[i].StartMonth},${response.data[i].StartYear}</p>
+                                                   </div>
+                                               </div>
+                                               <div class="col-sm-8">
+                                                   <div class="details">
+                                                       <h5>${response.data[i].Title}</h5>
+                                                       <p>${response.data[i].Address}</p>
+                                                   </div>
+
+                                           </div>
+                                       </div>
+
+
+
+                                   </div>
+                                   <div class="event-cta-container col-sm-2" style="">
+                                       <a href="/Home/Event?eventId=${response.data[i].Id}">TICKETS</a>
+                                   </div>
+
+                               </div>
+
+                               </div>`;
+
+
+
+
+       $("#BindBusinessContentEventDetail").append(EventDetailList);
+            }
+
+            // Check if there is more data to load
+            if (response.data.length > 0) {
+                UpcomingEventList_LastRecordId_Global = response.data[response.data.length - 1].Id;
+                $('#BtnViewMoreUpcomingEvents').removeClass('d-none');
+            } else {
+                // No more data, hide the "View More" button
+                $('#BtnViewMoreUpcomingEvents').addClass('d-none');
+            }
+            var ViewMoreEventButton = '';
+            ViewMoreEventButton = `<div class="btn-outtrkjkd text-center mb-5 ${showingButton}">
+                        <a  href= "javascript:ViewMoreUpcomingEvents();" id="BtnViewMoreUpcomingEvents"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+            $("#BindBusinessContentEventDetail").append(ViewMoreEventButton);
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    // Bind Business Event LastRecordId Detail
+    function ViewMoreUpcomingEvents() {
+
+        $.ajax({
+            type: "Get",
+            url: '/api/Event/GetAllEventDetail?menuTag=' + MenuTag_Global + ' &lastRecordId=' + UpcomingEventList_LastRecordId_Global,
+            // data: JSON.stringify(data),
+            contentType: 'application/json',
+            processData: false,
+            // dataType: 'json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+                var EventDetailList = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    // Create a Business Detail List for each entry in the List
+
+                    var EventDetailList = `  <div class="event-container-section">
+
+                               <div class="row">
+                                   <div class="event-image-container col-sm-4">
+                                       <img src="${response.data[i].EventImageWithPath}" alt="img" loading="lazy">
+                                   </div>
+                                   <div class="event-content-container col-sm-6">
+                                       <div class="row">
+
+                                               <div class="col-sm-4 text-center">
+                                                   <div class="date-time">
+                                                       <h6>${response.data[i].StartDay}</h6>
+                                                       <p>${response.data[i].StartMonth},${response.data[i].StartYear}</p>
+                                                   </div>
+                                               </div>
+                                               <div class="col-sm-8">
+                                                   <div class="details">
+                                                       <h5>${response.data[i].Title}</h5>
+                                                       <p>${response.data[i].Address}</p>
+                                                   </div>
+
+                                           </div>
+                                       </div>
+
+
+
+                                   </div>
+                                   <div class="event-cta-container col-sm-2" style="">
+                                       <a href="/Home/Event?eventId=${response.data[i].Id}">TICKETS</a>
+                                   </div>
+
+                               </div>
+
+                               </div>`;
+
+                    $("#BindBusinessContentEventDetail").append(EventDetailList);
+                    }
+
+                // Check if there is more data to load
+                if (response.data.length > 0) {
+                    UpcomingEventList_LastRecordId_Global = response.data[response.data.length - 1].Id;
+
+                    // Remove existing "View More" button before appending a new one
+                    $('#BtnViewMoreUpcomingEvents').remove();
+
+                // Append the "View More" button after checking for more data
+                var ViewMoreEventButton = `<div class="btn-outtrkjkd text-center mb-5">
+                    <a href="javascript:ViewMoreUpcomingEvents();" id="BtnViewMoreUpcomingEvents"
+                        class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                        View More
+                    </a>
+                </div>`;
+                $("#BindBusinessContentEventDetail").append(ViewMoreEventButton);
+            } else {
+                // No more data, hide the "View More" button
+                $('#BtnViewMoreUpcomingEvents').addClass('d-none');
+            }
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    // Bind BusinessTrainingDetail
+    function GetAllBusinessTrainingDetail() {
+        //$(".new-templates .classes-cards").addClass('d-none');
+        //$(".training-main").removeClass('d-none');
+        //$("#BindBusinessTrainingList").html('');
+        //$("#BindBusinessContentSportsDetail").addClass('d-none');
+        //$("#BindBusinessContentEventDetail").addClass('d-none');
+        //$("#BindBusinessInstructorDetailList").addClass('d-none');
+        //$("#BindBusinessClassesDetailList").addClass('d-none');
+        //$("#BindBusinessTrainingList").removeClass('d-none');
+
+        var _url = "/api/Training/TrainingDetailGet?menuTag=" + MenuTag_Global +'&lastRecordId=0';
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var TrainingDetailList = '';
+            if (response.data.length <= 0) {
+                $('#BindBusinessTrainingList').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Training Detail</i></div>');
+                $('#BtnViewMoreUpcomingTrainings').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+            if (response.data.length <= 0) {
+                $('#BtnViewMoreUpcomingTrainings').addClass('d-none');
+            }
+            else {
+                UpcomingTrainingList_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+                $('#BtnViewMoreUpcomingTrainings').removeClass('d-none');
+            }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    // Create a Business Detail List for each entry in the List
+
+                    if (response.data.length < recordLimit) {
+                        showingButton = 'd-none';
+                    }
+
+                    var TrainingDetailList = `  <div class="cards-items">
+            <div class="date-year">
+                <img src="${response.data[i].TrainingImageWithPath}" alt="main-logo">
+            </div>
+            <div class="time">
+             <h6 class="date">${response.data[i].StartMonth} ${response.data[i].StartDay} </h6>
+ <h6 class="year">${response.data[i].StartYear} </h6>
+            </div>
+
+            <div class="address-cta">
+            <div class="info-sec">
+               <h4>${response.data[i].TrainingName}</h4>
+               <h6 class="loc-text">${response.data[i].City},${response.data[i].State}</h6>
+               <h6>${response.data[i].InstructorName}</h6>
+            </div>
+            <div class="cta">
+                <a class="primary-button" href="">Learn More</a>
+            </div>
+            </div>
+                </div>`;
+
+
+                    $("#BindBusinessTrainingList").append(TrainingDetailList);
+                }
+            var ViewMoreTrainingButton = '';
+            ViewMoreTrainingButton = `<div class="btn-outtrkjkd text-center ${showingButton}">
+                    <a  href="javascript:ViewMoreUpcomingTrainings();"id="BtnViewMoreUpcomingTrainings"
+                       class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                        View
+                        More
+                    </a>
+                </div>`;
+            $("#BindBusinessTrainingList").append(ViewMoreTrainingButton);
+
+
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+     // Bind Business LastRecordedId Training Detail
+    function ViewMoreUpcomingTrainings() {
+
+        $.ajax({
+            type: "Get",
+            url: '/api/Training/TrainingDetailGet?menuTag=' + MenuTag_Global + ' &lastRecordId=' + UpcomingTrainingList_LastRecordedId_Global,
+            // data: JSON.stringify(data),
+            contentType: 'application/json',
+            processData: false,
+            // dataType: 'json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+                var TrainingDetailList = '';
+
+
+                for (var i = 0; i < response.data.length; i++) {
+                    // Create a Business Detail List for each entry in the List
+
+
+
+                    var TrainingDetailList = `  <div class="cards-items">
+            <div class="date-year">
+                <img src="${response.data[i].TrainingImageWithPath}" alt="main-logo">
+
+
+            </div>
+                       <div class="time">
+            <h6 class="date">${response.data[i].StartMonth} ${response.data[i].StartDay} </h6>
+<h6 class="year">${response.data[i].StartYear} </h6>
+           </div>
+
+            <div class="address-cta">
+            <div class="info-sec">
+               <h4>${response.data[i].TrainingName}</h4>
+               <h6 class="loc-text">${response.data[i].City},${response.data[i].State}</h6>
+               <h6>${response.data[i].InstructorName}</h6>
+            </div>
+            <div class="cta">
+                <a class="primary-button" href="">Learn More</a>
+            </div>
+            </div>
+                </div>`;
+
+
+                    $("#BindBusinessTrainingList").append(TrainingDetailList);
+                }
+
+                // Check if there is more data to load
+                if (response.data.length > 0) {
+                    UpcomingTrainingList_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+
+                    // Remove existing "View More" button before appending a new one
+                    $('#BtnViewMoreUpcomingTrainings').remove();
+
+                    // Append the "View More" button after checking for more data
+                    var ViewMoreTrainingButton = '';
+                    ViewMoreTrainingButton = `<div class="btn-outtrkjkd text-center">
+                    <a  href="javascript:ViewMoreUpcomingTrainings();"id="BtnViewMoreUpcomingTrainings"
+                       class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                        View
+                        More
+                    </a>
+                </div>`;
+                    $("#BindBusinessTrainingList").append(ViewMoreTrainingButton);
+
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingTrainings').addClass('d-none');
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    // Bind Business Classes Detail
+    function GetAllBusinessClassesDetail() {
+
+        //$(".new-templates .classes-cards").addClass('d-none');
+        //$(".new-class-template .classes-cards").removeClass('d-none');
+        //$(".training-main").addClass('d-none');
+        //$(".events-section").addClass('d-none');
+        //$("#BindBusinessClassesDetailList").html('');
+        //$("#BindBusinessContentSportsDetail").addClass('d-none');
+        //$("#BindBusinessInstructorDetailList").addClass('d-none');
+        //$("#BindBusinessContentEventDetail").addClass('d-none');
+        //$("#BindBusinessTrainingList").addClass('d-none');
+        //$("#BindBusinessClassesDetailList").removeClass('d-none');
+        var _url = "/api/Class/GetAllClassesCategoryList?menuTag=" + MenuTag_Global + '&lastRecordId=0';
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var ClassDetailList = '';
+
+
+            if (response.data.ClassListDetail.length <= 0) {
+                $('#BindBusinessClassesDetailList').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Class Detail!</i></div>');
+                $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+                StopLoading();
+                return;
+            }
+            if (response.data.ClassListDetail.length <= 0) {
+                $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+            }
+            else {
+                UpcomingClassList_LastRecordedId_Global = response.data.ClassListDetail[response.data.ClassListDetail.length - 1].Id;
+                $('#BtnViewMoreUpcomingClasses').removeClass('d-none');
+            }
+
+            for (var i = 0; i < response.data.ClassListDetail.length; i++) {
+                if (response.data.length < recordLimit) {
+                    showingButton = 'd-none';
+                }
+                    var starIcons = '';
+
+                    if (response.data.ClassListDetail[i].AverageRating) {
+                        rating = response.data.ClassListDetail[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full" style="transform: skewX(-176deg);"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>';
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>`;
+                        }
+                }
+
+                var IsVerified = '';
+                if (response.data.ClassListDetail[i].Verified == "Verified") {
+                    IsVerified = ` <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>`;
+                }
+
+
+                    var ClassDetailList = `   <div class="classes-card-flex">
+                    <div class="class-title-iner">
+                        <h5 class="class-title">${response.data.ClassListDetail[i].BusinessSubCategoryName}</h5>
+                    </div>
+                    <div class="class-card-items">
+
+                        <div class="class-card-items-in">
+                            <div class="koch-profile">
+
+                                <div class="koch-profile-iner">
+                                    <img src="${response.data.ClassListDetail[i].ClassImageWithPath}" alt="koch profile" loading="lazy">
+                                </div>
+                                <div class="days-time">
+                                    <h5 class="date-title">${response.data.ClassListDetail[i].ScheduledDay}</h5>
+                                    <h5 class="text-month">${response.data.ClassListDetail[i].ScheduledMonth}</h5>
+
+                                </div>
+                            </div>
+                            <div class="time-details">
+                                <div class="details-cards">
+                                    <h5>${response.data.ClassListDetail[i].Name} <span class="time">${response.data.ClassListDetail[i].ScheduledStartOnTime_24HF}</span></h5>
+                                    <h5 class="center-text">${response.data.ClassListDetail[i].BusinessName}</h5>
+                                    <h5>${response.data.ClassListDetail[i].ClassType}(${response.data.ClassListDetail[i].ClassDays_ShortForm}) ${response.data.ClassListDetail[i].HoursDifference}</h5>
+                                    <div class="location-iner">
+                                        <h5>${response.data.ClassListDetail[i].Address}</h5>
+                                        <i class="fa-solid fa-map-location-dot" style="color: orange;"></i>
+                                    </div>
+                                    <h5 class="update-text">Update 27 Mar</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="side-profile">
+                            <div class="profile-iner">
+                                <div class="profile-main">
+                                    <div class="profile-img">
+                                        <img src="${response.data.ClassListDetail[i].BusinessProfileImage}" alt="profile" loading="lazy">
+                                    </div>
+                                    <div class="profile-name">
+                                        <h4>${response.data.ClassListDetail[i].BusinessOwnerName}</h4>
+                                        ${IsVerified}
+                                    </div>
+                                </div>
+                                <div class="star-iner">
+                                   ${starIcons}
+                                </div>
+                            </div>
+                            <div class="cta-iner">
+                                <a href="/Home/ClassDetail?classId= ${response.data.ClassListDetail[i].Id}&businessOwnerLoginId=${response.data.ClassListDetail[i].BusinessOwnerLoginId}" class="primary-button" style="padding: 14px 40px;">Book now</a>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                </div>`;
+                    $("#BindBusinessClassesDetailList").append( ClassDetailList);
+
+
+
+            }
+
+            ViewMoreClassButton = ` <div class="btn-outtrkjkd text-center ${showingButton}">
+                        <a  href="javascript:ViewMoreUpcomingClasses(); " id="BtnViewMoreUpcomingClasses"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+            $("#BindBusinessClassesDetailList").append(ViewMoreClassButton);
+
+
+
+
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+    //Bind Class Last RecordedId
+    function ViewMoreUpcomingClasses() {
+
+        $.ajax({
+            type: "Get",
+            url : '/api/Class/GetAllClassesCategoryList?menuTag=' + MenuTag_Global + '&lastRecordId=' + UpcomingClassList_LastRecordedId_Global,
+           // data: JSON.stringify(data),
+            contentType: 'application/json',
+            processData: false,
+           // dataType: 'json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+                var ClassDetailList = '';
+
+
+                for (var i = 0; i < response.data.ClassListDetail.length; i++) {
+                    var starIcons = '';
+
+                    if (response.data.ClassListDetail[i].AverageRating) {
+                        rating = response.data.ClassListDetail[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full" style="transform: skewX(-176deg);"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>';
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>`;
+                        }
+                    }
+
+                    var ClassDetailList = `   <div class="classes-card-flex">
+                    <div class="class-title-iner">
+                        <h5 class="class-title">${response.data.ClassListDetail[i].BusinessSubCategoryName}</h5>
+                    </div>
+                    <div class="class-card-items">
+
+                        <div class="class-card-items-in">
+                            <div class="koch-profile">
+
+                                <div class="koch-profile-iner">
+                                    <img src="${response.data.ClassListDetail[i].ClassImageWithPath}" alt="koch profile" loading="lazy">
+                                </div>
+                                <div class="days-time">
+                                    <h5 class="date-title">${response.data.ClassListDetail[i].ScheduledDay}</h5>
+                                    <h5 class="text-month">${response.data.ClassListDetail[i].ScheduledMonth}</h5>
+
+                                </div>
+                            </div>
+                            <div class="time-details">
+                                <div class="details-cards">
+                                    <h5>${response.data.ClassListDetail[i].Name} <span class="time">${response.data.ClassListDetail[i].ScheduledStartOnTime_24HF}</span></h5>
+                                    <h5 class="center-text">${response.data.ClassListDetail[i].BusinessName}</h5>
+                                    <h5>${response.data.ClassListDetail[i].ClassType}(${response.data.ClassListDetail[i].ClassDays_ShortForm}) ${response.data.ClassListDetail[i].HoursDifference}</h5>
+                                    <div class="location-iner">
+                                        <h5>${response.data.ClassListDetail[i].Address}</h5>
+                                        <i class="fa-solid fa-map-location-dot" style="color: orange;"></i>
+                                    </div>
+                                    <h5 class="update-text">Update 27 Mar</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="side-profile">
+                            <div class="profile-iner">
+                                <div class="profile-main">
+                                    <div class="profile-img">
+                                        <img src="${response.data.ClassListDetail[i].BusinessProfileImage}" alt="profile" loading="lazy">
+                                    </div>
+                                    <div class="profile-name">
+                                        <h4>${response.data.ClassListDetail[i].BusinessOwnerName}</h4>
+                                        <p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>
+                                    </div>
+                                </div>
+                                <div class="star-iner">
+                                   ${starIcons}
+                                </div>
+                            </div>
+                            <div class="cta-iner">
+                                <a href="/Home/ClassDetail?classId= ${response.data.ClassListDetail[i].Id}&businessOwnerLoginId=${response.data.ClassListDetail[i].BusinessOwnerLoginId}" class="primary-button" style="padding: 14px 40px;">Book now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                    $("#BindBusinessClassesDetailList").append(ClassDetailList);
+
+                }
+
+
+                // Check if there is more data to load
+                if (response.data.ClassListDetail.length > 0) {
+                    UpcomingClassList_LastRecordedId_Global = response.data.ClassListDetail[response.data.ClassListDetail.length - 1].Id;
+
+                    // Remove existing "View More" button before appending a new one
+                    $('#BtnViewMoreUpcomingClasses').remove();
+
+                    // Append the "View More" button after checking for more data
+                    var ViewMoreClassButton = '';
+                    ViewMoreClassButton = ` <div class="btn-outtrkjkd text-center">
+                        <a  href="javascript:ViewMoreUpcomingClasses(); " id="BtnViewMoreUpcomingClasses"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+                    $("#BindBusinessClassesDetailList").append(ViewMoreClassButton);
+
+
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+                }
+
+
+
+
+
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    //Bind Business Instructor Detail
+    function GetAllBusinessInstructorDetail() {
+        //$(".new-templates .classes-cards").removeClass('d-none');
+        //$("#BindBusinessInstructorDetailList").html('');
+        //$("#BindBusinessContentEventDetail").addClass('d-none');
+        //$("#BindBusinessTrainingList").addClass('d-none');
+        //$("#BindBusinessContentSportsDetail").addClass('d-none');
+        //$("#BindBusinessClassesDetailList").addClass('d-none');
+        //$("#BindBusinessInstructorDetailList").removeClass('d-none');
+        var _url = "/api/Business/GetAllInstructorDetail?menuTag=" + MenuTag_Global +'&lastRecordId=0';
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            // Clear existing content
+            $("#BindBusinessInstructorDetailList").html('');
+
+
+            var InstructorDetailList = '';
+            if (response.data.length <= 0) {
+                $('#BindBusinessInstructorDetailList').html('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Instructor Detail</i></div>');
+                $('#BtnViewMoreUpcomingInstructors').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+            if (response.data.length <= 0) {
+                $('#BtnViewMoreUpcomingInstructors').addClass('d-none');
+            }
+            else {
+                UpcomingInstructorList_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+                $('#BtnViewMoreUpcomingInstructors').removeClass('d-none');
+            }
+
+
+            for (var i = 0; i < response.data.length; i++) {
+
+                var favInstrcutorClass = "/Content/visitor-panel/image/like_dark.png";
+                if (response.data[i].IsFavourite == 1) {
+                    favInstrcutorClass = "/Content/visitor-panel/image/like_dark.png";
+                } else {
+                    favInstrcutorClass = "/Content/visitor-panel/image/like1.png";
+                }
+                    if (response.data.length < recordLimit) {
+                        showingButton = 'd-none';
+                    }
+                    var BusinessContentElseDetail = '';
+
+                        if (typeof response.data[i].Description === 'string') {
+                            // Split the response data into an array
+
+                            var optionsArray = response.data[i].InstructorContentDescription;
+                            var Testing = optionsArray.split(',');
+
+                            // Create a list of items
+                            //BusinessContentWorldClassProgramListDetail = '<ul>';
+
+                            for (var j = 0; j < Testing.length; j++) {
+                                // Add each item as a list item (li)
+                                if (Testing[j]) {
+                                    BusinessContentElseDetail += `/ ${Testing[j]}`;
+                                }
+
+                            }
+
+                            // Close the unordered list
+                            //BusinessContentWorldClassProgramListDetail += '</ul>';
+                        } else {
+                            // Handle the case where CurriculumOptions is not a string
+                            BusinessContentElseDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Else Detail.</div>';
+                        }
+
+
+
+                    var starIcons = '';
+
+                    if (response.data[i].AverageRating) {
+                        var rating = response.data[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star star_color"></i>';
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star star_color"></i>`;
+                        }
+                    }
+
+                    var Privacy_UniqueId = '';
+                    if (response.data[i].Privacy_UniqueId == 1) {
+                        Privacy_UniqueId = `<h2 class="instructor_id_sec">Id ${response.data[i].InstructorUserLoginId}<img src="~/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_img_sec"></h2>`;
+                    } else if (response.data[i].Privacy_UniqueId == 2) {
+                        Privacy_UniqueId = `
+                <h2 class="instructor1_id_sec"><img src="/Content/visitor-panel/image/MaskSecurity.png" alt="img" loading="lazy" class="masklock_img_sec"></h2>
+            `;
+                    }
+                    else{
+                        Privacy_UniqueId = `<h2 class="instructor_id_sec">Id ${response.data[i].InstructorUserLoginId}<img src="/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_img_sec"></h2>`;
+                    }
+
+                    var verified = '';
+                    if (response.data[i].Verified == 1) {
+                        verified = `<div class="col-md-8 pr-0 pb-3 text_sec">
+                <img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy"class="verified_img_sec_mask"> </div><div class="col-md-2 pl-2"><h6  class="experenice_sec">EXPERIENCE ${response.data[i].Experience}</h6></div>`;
+                    } else {
+                        verified = `<div class="col-md-12"><div class="text-certificate-col mb-5">
+                <img src="/Content/visitor-panel/image/security.png" alt="img" loading="lazy" class="security_img_sec">
+                <img src="${response.data[i].CertificateIconWithPath}" alt="Rounded circle Image" loading="lazy" class="rounded-circle img-fluid m-2">
+            </div></div>`;
+                    }
+
+                    var VerifiedName = '';
+                    if (response.data[i].Verified == 1) {
+                        VerifiedName = `<img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy" class="MaskGroup_img_sec" ><br><h6  class="verified_sec">VERIFIED</h6>`;
+                    } else {
+                        VerifiedName = `<img src="/Content/visitor-panel/image/security.png" alt="img" loading="lazy" class="security_img"><h4 class="security_name_sec">Master</h4><br><h6 class="certificate_sec">Certified</h6>`;
+                    }
+
+                    var InstructorDetailList = ` <div class="user_profile1">
+            <div class="row instructor_row_sec">
+                <div class="col-md-12 mb-lg-n2">
+                    ${Privacy_UniqueId}
+                </div>
+            </div>
+
+            <div class="row user_profilecontentouter1">
+                <div class="col-md-7">
+                    <div class="row">
+                        <div class="col-md-3 img_sec_instructor">
+                            <img src="${response.data[i].ProfileImageWithPath}" alt="img" loading="lazy"  class="instructor_img_sec">
+                        </div>
+                        <div class="col-md-4 instructor_info">
+                            <h4 class="instructor_name_sec">${response.data[i].InstructorName}</h4>
+                            <h6 class="category_sec"> ${response.data[i].BusinessCategoryName}</h6>
+                            ${VerifiedName}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 text_sec">
+                   <div class="row">
+                <div class="col-md-12">
+                    <div class="cta view">
+                        <a class="primary-button viewprofile_sec" href="/Home/Instructor?businessOwnerLoginId=${response.data[i].InstructorUserLoginId}">View Profile</a>
+
+
+
+                        <div class="primary-button imgthumbsup">
+                           <a href="javascript:AddOrRemoveInstructorFavourites(${response.data[i].InstructorUserLoginId});">
+                    <img src="${favInstrcutorClass}"alt="imge" loading="lazy"  class="like1_sec" id="InstructorImageLike${response.data[i].InstructorUserLoginId}">
+                </a>
+                        </div>
+                        <div class="primary-button imgshare_sec">
+                            <img src="/Content/visitor-panel/image/share.png" alt="img" loading="lazy" class="shareimg_section">
+                        </div>
+                    </div>
+            </div></div>
+            <div class="row experience_sec">
+                ${verified}</div>
+                </div>
+
+            </div>
+            <div class="row staring_sec_row">
+                <div class="col-md-2 star_transform_sec">
+                    <div class="star-iner star_sec_inner_icon">
+                        ${starIcons}
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <h5 class="box m-1"> what else I can Teach  ${BusinessContentElseDetail}</h5>
+                </div>
+            </div>
+        </div>`;
+
+                    $("#BindBusinessInstructorDetailList").append(InstructorDetailList);
+
+                }
+
+            var ViewMoreInstructorButton = '';
+            ViewMoreInstructorButton = ` <div class="btn-outtrkjkd text-center ${showingButton}">
+                        <a  href="javascript:ViewMoreUpcomingInstructor(); " id="BtnViewMoreUpcomingInstructors"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+            $("#BindBusinessInstructorDetailList").append(ViewMoreInstructorButton);
+
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    //Bind Business Instructor LastRecordedId Detail
+    function ViewMoreUpcomingInstructor() {
+
+        $.ajax({
+            type: "Get",
+            url: '/api/Business/GetAllInstructorDetail?menuTag=' + MenuTag_Global + '&lastRecordId=' + UpcomingInstructorList_LastRecordedId_Global,
+            // data: JSON.stringify(data),
+            contentType: 'application/json',
+            processData: false,
+            // dataType: 'json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+                var InstructorDetailList = '';
+
+                for (var i = 0; i < response.data.length; i++) {
+
+                    var BusinessContentElseDetail = '';
+
+                    if (typeof response.data[i].Description === 'string') {
+                        // Split the response data into an array
+
+                        var optionsArray = response.data[i].Description;
+                        var Testing = optionsArray.split(',');
+
+                        // Create a list of items
+                        //BusinessContentWorldClassProgramListDetail = '<ul>';
+
+                        for (var j = 0; j < Testing.length; j++) {
+                            // Add each item as a list item (li)
+                            if (Testing[j]) {
+                                BusinessContentElseDetail += `/ ${Testing[j]}`;
+                            }
+
+                        }
+
+                        // Close the unordered list
+                        //BusinessContentWorldClassProgramListDetail += '</ul>';
+                    } else {
+                        // Handle the case where CurriculumOptions is not a string
+                        BusinessContentElseDetail = '<div class="w-100 font-italic text-center text-black-50 py-2">No Business Else Detail.</div>';
+                    }
+
+
+
+                    var starIcons = '';
+
+                    if (response.data[i].AverageRating) {
+                        var rating = response.data[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star star_color"></i>';
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star star_color"></i>`;
+                        }
+                    }
+
+                    var Privacy_UniqueId = '';
+                    if (response.data[i].Privacy_UniqueId == 1) {
+                        Privacy_UniqueId = `<h2 class="instructor_id_sec">Id ${response.data[i].InstructorUserLoginId}<img src="~/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_img_sec"></h2>`;
+                    } else if (response.data[i].Privacy_UniqueId == 2) {
+                        Privacy_UniqueId = `
+                <h2 class="instructor1_id_sec"><img src="/Content/visitor-panel/image/MaskSecurity.png" alt="img" loading="lazy" class="masklock_img_sec"></h2>
+            `;
+                    }
+                    else {
+                        Privacy_UniqueId = `<h2 class="instructor_id_sec">Id ${response.data[i].InstructorUserLoginId}<img src="/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_img_sec"></h2>`;
+                    }
+
+                    var verified = '';
+                    if (response.data[i].Verified == 1) {
+                        verified = `<div class="col-md-8 pr-0 pb-3 text_sec">
+                <img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy"class="verified_img_sec_mask"> </div><div class="col-md-2 pl-2"><h6  class="experenice_sec">EXPERIENCE ${response.data[i].Experience}</h6></div>`;
+                    } else {
+                        verified = `<div class="col-md-12"><div class="text-certificate-col mb-5">
+                <img src="/Content/visitor-panel/image/security.png" alt="img" loading="lazy" class="security_img_sec">
+                <img src="${response.data[i].CertificateIconWithPath}" alt="Rounded circle Image" loading="lazy" class="rounded-circle img-fluid m-2">
+            </div></div>`;
+                    }
+
+                    var VerifiedName = '';
+                    if (response.data[i].Verified == 1) {
+                        VerifiedName = `<img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy" class="MaskGroup_img_sec" ><br><h6  class="verified_sec">VERIFIED</h6>`;
+                    } else {
+                        VerifiedName = `<img src="/Content/visitor-panel/image/security.png" alt="img" loading="lazy" class="security_img"><h4 class="security_name_sec">Master</h4><br><h6 class="certificate_sec">Certified</h6>`;
+                    }
+
+                    var InstructorDetailList = ` <div class="user_profile1">
+            <div class="row instructor_row_sec">
+                <div class="col-md-12 mb-lg-n2">
+                    ${Privacy_UniqueId}
+                </div>
+            </div>
+
+            <div class="row user_profilecontentouter1">
+                <div class="col-md-7">
+                    <div class="row">
+                        <div class="col-md-3 img_sec_instructor">
+                            <img src="${response.data[i].ProfileImageWithPath}" alt="img" loading="lazy"  class="instructor_img_sec">
+                        </div>
+                        <div class="col-md-4 instructor_info">
+                            <h4 class="instructor_name_sec">${response.data[i].InstructorName}</h4>
+                            <h6 class="category_sec"> ${response.data[i].BusinessCategoryName}</h6>
+                            ${VerifiedName}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 text_sec">
+                   <div class="row">
+            <div class="col-md-12">
+                    <div class="cta view">
+                        <a class="primary-button viewprofile_sec" href="/Home/Instructor?businessOwnerLoginId=${response.data[i].InstructorUserLoginId}">View Profile</a>
+
+
+
+                        <div class="primary-button imgthumbsup">
+                           <a href="javascript:AddOrRemoveFavourites(${response.data[i].InstructorUserLoginId});">
+                    <img src="/Content/visitor-panel/image/like1.png"alt="imge" loading="lazy"  class="like1_sec" id="ImageTest${response.data[i].InstructorUserLoginId}">
+                </a>
+                        </div>
+                        <div class="primary-button imgshare_sec">
+                            <img src="/Content/visitor-panel/image/share.png" alt="img" loading="lazy" class="shareimg_section">
+                        </div>
+                    </div>
+            </div></div>
+            <div class="row experience_sec">
+                ${verified}</div>
+                </div>
+
+            </div>
+            <div class="row staring_sec_row">
+                <div class="col-md-2 star_transform_sec">
+                    <div class="star-iner star_sec_inner_icon">
+                        ${starIcons}
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <h5 class="box m-1"> what else I can Teach  ${BusinessContentElseDetail}</h5>
+                </div>
+            </div>
+        </div>`;
+
+                    $("#BindBusinessInstructorDetailList").append(InstructorDetailList);
+                    AddOrRemoveCheckingFollowersDetail(response.data[i].InstructorUserLoginId);
+                }
+
+                // Check if there is more data to load
+                if (response.data.length > 0) {
+                    UpcomingInstructorList_LastRecordedId_Global = response.data[response.data.length - 1].Id;
+
+                    // Remove existing "View More" button before appending a new one
+                    $('#BtnViewMoreUpcomingInstructors').remove();
+
+                    // Append the "View More" button after checking for more data
+                    var ViewMoreInstructorButton = '';
+
+                    ViewMoreInstructorButton = ` <div class="btn-outtrkjkd text-center ">
+                        <a  href="javascript:ViewMoreUpcomingInstructor(); " id="BtnViewMoreUpcomingInstructors"
+                           class="vmbtnjfdsklfj text-center mt-5 btn btn-outline-dark csbttnm">
+                            View
+                            More
+                        </a>
+                    </div>`;
+                    $("#BindBusinessInstructorDetailList").append(ViewMoreInstructorButton);
+
+
+
+                } else {
+                    // No more data, hide the "View More" button
+                    $('#BtnViewMoreUpcomingInstructors').addClass('d-none');
+                }
+
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                //getAllBusinessOwnerLists();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: 'Unauthorized! Invalid Token!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    /*document.querySelector('.thumbupimg_sec').addEventListener('click', ShowAddLikePopup);*/
+
+
+    //$(document).ready(function () {
+    //    $('.thumbupimg_sec').click(ShowAddLikePopup);
+    //});
+    ////$(document).ready(function () {
+    ////    $('#thumbupimg_link').on('click', function () {
+    ////        ShowAddLikePopup();
+    ////    });
+    ////});
+
+
+
+    //function ShowAddLikePopup() {
+    //    if (UserToken_Global == "") {
+    //        $("#btnUserLoginPoup").click();
+    //    }
+
+
+    //    else {
+    //        AddOrRemoveFavourites(0);
+
+    //    }
+
+    //}
+
+
+       function GetAllActiveB2BSubCategoriesList() {
+
+           let _url = "/api/BusinessCategory/GetAllActiveB2BSubCategories";
+
+     $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var res_Categories = '<option value="0">Select Category</option>';
+
+            for (var i = 0; i < response.data.length; i++) {
+                    res_Categories += '<option value="' + response.data[i].Id + '">' + response.data[i].Name + '</option>';
+            }
+
+            $("#ddlFilterTypeCategory").html('').append(res_Categories);
+
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function GetAllClassCategoryTypeList() {
+
+    let _url = "/api/ClassCategoryType/GetAllClasssCategoryDetailDropDown";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var res_Categories = '<option value="0">Select Class category</option>';
+
+            for (var parentCategoryId in response.data) {
+                res_Categories += '<optgroup label="' + response.data[parentCategoryId].Name + '">';
+
+                response.data[parentCategoryId].SubClassCategory.forEach(function (item) {
+                    res_Categories += '<option value="' + item.Id + '">' + item.Name + '</option>';
+                });
+
+                res_Categories += '</optgroup>';
+            }
+
+            $("#ddlFilterTypeCategory").html('').append(res_Categories);
+            $("#ddlFilterTypeCategory").val(hdn_categoryId_Global).trigger('change');
+            hdn_categoryId_Global = "0";
+
+        },
+        error: function (result) {
+            if (result.status == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    function GetAllLicenseCategoryTypeList() {
+
+        let _url = "/api/License/GetAllLicensesListByCertificatesForDropDown";
+        $("#ddlFilterTypeCategory").html('');
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var res_Categories = '<option value="0">Select License category</option>';
+
+            for (var parentCategoryId in response.data) {
+                res_Categories += '<optgroup label="' + response.data[parentCategoryId].Name + '">';
+
+                response.data[parentCategoryId].Licenses.forEach(function (item) {
+                    res_Categories += '<option value="' + item.Id + '">' + item.Title + '</option>';
+                });
+
+                res_Categories += '</optgroup>';
+            }
+
+            $("#ddlFilterTypeCategory").html('').append(res_Categories);
+            $("#ddlFilterTypeCategory").val(hdn_categoryId_Global).trigger('change');
+            hdn_categoryId_Global = "0";
+
+        },
+        error: function (result) {
+            if (result.status == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+ function GetAllInstructorBusinessCategories() {
+     let _url = "/api/BusinessCategory/GetAllInstructorBusinessCategories";
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        contentType: 'application/json',
+        success: function (response) {
+            StopLoading();
+
+            var res_Categories = '<option value="0">Select Instructor Category</option>';
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            } else if (response.data) {
+                for (var i = 0; i < response.data.length; i++) {  // Adjusted to response.data instead of response.data.SubCategories
+                    var item = response.data[i];
+                    res_Categories += '<option value="' + item.Id + '">' + item.Name + '</option>';
+                }
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.CategoryData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            $("#ddlFilterTypeCategory").html('').append(res_Categories);
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result.status == 401) {  // Adjusted to result.status instead of result["status"]
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            } else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+function GetAllEventCategoryTypeList() {
+
+    let _url = "/api/EventCategory/GetAllActiveEventCategoryDetail";
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            //"Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var res_Categories = '<option value="0">Select Event category</option>';
+
+            for (var i = 0; i<response.data.length; i++) {
+                    var item = response.data[i];
+                    res_Categories += '<option value="' + item.Id + '">' + item.CategoryName + '</option>';
+            }
+
+            $("#ddlFilterTypeCategory").html('').append(res_Categories);
+
+        },
+        error: function (result) {
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: 'Unauthorized! Invalid Token!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: 'There is some technical error, please try again!',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+/// -----------------------------------------------------------------------------------------------------------------------------
+
+function GetAllAcademiesBySearchFilter(page = 0) {
+    filterParams.ItemType = itemTypesEnum_Global.academies;
+    filterParams.Location = $('#txtFilterTypeLocation').val();
+    filterParams.Latitude = lat_Global;
+    filterParams.Longitude = long_Global;
+    filterParams.SearchText = $('#txtFilterTypeName').val();
+    filterParams.CategoryId = $('#ddlFilterTypeCategory').val();
+    filterParams.Page = page;
+
+    if (page == 0) {
+        $("#BindBusinessContentSportsDetail").html('');
+    }
+
+    $.ajax({
+        type: "POST",
+        url: '/api/Business/GetAllAcademiesBySearchFilter',
+
+        data: JSON.stringify(filterParams),
+        contentType: 'application/json',
+        processData: false,
+        dataType: 'json',
+        //dataType: 'json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+
+            var res_content = '';
+            if (response.data.length <= 0) {
+                $('#BindBusinessContentSportsDetail').append('<div class="w-100 text-black-50 text-center mt-4"><i>Academies not Found!</i></div>');
+                $('#BtnViewMoreAcademies').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+            // Show-Hide View More button
+            if (response.data.length <= 0 || response.data.length < recordLimit) {
+                $('#BtnViewMoreAcademies').addClass('d-none');
+            } else {
+                $('#BtnViewMoreAcademies').attr('href', 'javascript:GetAllAcademiesBySearchFilter(' + (page + 1) +');');
+                $('#BtnViewMoreAcademies').removeClass('d-none');
+            }
+
+            for (var i = 0; i < response.data.length; i++) {
+
+                var favClass = "/Content/visitor-panel/image/like_dark.png";
+                if (response.data[i].IsFavourite == 1) {
+                    favClass = "/Content/visitor-panel/image/like_dark.png";
+                } else {
+                    favClass = "/Content/visitor-panel/image/like1.png";
+                }
+
+
+                    //if (typeof response.data[i].Description === 'string') {
+                    //    // Split the response data into an array
+
+                    //    var optionsArray = response.data[i].Description;
+                    //    var Testing = optionsArray.split(',');
+
+                    //    // Create a list of items
+                    //    //BusinessContentWorldClassProgramListDetail = '<ul>';
+
+                    //    for (var j = 0; j < Testing.length; j++) {
+                    //        // Add each item as a list item (li)
+                    //        if (Testing[j]) {
+                    //            BusinessContentElseDetail += `/ ${Testing[j]}`;
+                    //        }
+
+                    //    }
+
+                        var BusinessContentElseDetail = 'What else I do';
+
+                if (response.data[i].Description != '') {
+
+                    var optionsArray = response.data[i].Description;
+                    var Testing = optionsArray.split(',');
+
+                    for (var j = 0; j < Testing.length; j++) {
+                        if (Testing[j]) {
+                            BusinessContentElseDetail += ` / ${Testing[j]}`;
+                        }
+                    }
+                }
+                         else {
+                            BusinessContentElseDetail = '';
+
+                        // Close the unordered list
+                        //BusinessContentWorldClassProgramListDetail += '</ul>';
+                    }
+
+                    var DistanceInKilometers = response.data[i].DistanceInKilometers;
+                    var roundedNumber = Math.round(DistanceInKilometers);
+
+                    var Verifiedimg = '';
+                    if (response.data[i].Verified == 1) {
+                        Verifiedimg = `<img src="/Content/visitor-panel/image/quality1.png" alt="img" loading="lazy" class="img_sec">`;
+                    }
+                    else {
+                        Verifiedimg = '';
+                    }
+                    var Verifying = '';
+                    if (response.data[i].Verified == 1) {
+                        Verifying = `<img src="/Content/visitor-panel/image/MaskGroup.png" alt="img" loading="lazy" class="Mask">
+                            <h5 class="verifying_sec">VERIFIED</h5>`;
+                    }
+                    else if (response.data[i].Verified == 2) {
+                        Verifying = `<img src="/Content/visitor-panel/image/trademark.png" alt="img" loading="lazy" class="trademark">
+                            <h5 class="verifying_sec">BOLLYFIT</h5>`;
+                    }
+                    else if (response.data[i].Verified == 3) {
+                        Verifying = `<img src="/Content/visitor-panel/image/trademark1.png" alt="img" loading="lazy" class="trandmark1">
+                            <h5 class="verifying_sec">BOKWA</h5>`;
+                    }
+                    var starIcons = '';
+
+                    if (response.data[i].AverageRating) {
+                        rating = response.data[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full transform_section"></i>';
+                            } else {
+                                starIcons += `<i class="fa-solid fa-star color_full trans_sec"></i>`;
+
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                                starIcons += `<i class="fa-solid fa-star color_full trans_sec"></i>`;
+                        }
+                    }
+
+                    var res_Key = `<a class="buttons" href="/Home/BusinessProfile?businessOwnerLoginId=${response.data[i].UserLoginId}"><h6 style="color: darkred;">Visit Us</h6></a>`;
+
+                res_content = `    <div class="user_profile2 academies-section" >
+
+                    <div class="row user_profilecontentouter">
+                        <div class="col-md-12">
+                            <div class="row quality">
+                                <div class="col-md-2">
+                                    <div class="img-container">
+                                        <img src="${response.data[i].BusinessLogoWithPath}" alt="img" loading="lazy">
+                                       ${Verifiedimg}
+                                    </div>
+                                    <div class="acd-info text-center">
+                                        <h2 class="copy">
+                                        Id  ${response.data[i].UniqueUserId} <!-- <img src="/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_sec"> -->
+                                        </h2>
+                                        <h6 class="headingthree">${response.data[i].BusinessCategoryName}</h6>
+                                   </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <h4 class="Academyname">${response.data[i].BusinessName}</h4>
+                                    <h6 class="academyaddress">${response.data[i].Address}</h6>
+                                    <h6 style="color: white"> Distance From You ${roundedNumber} Km<img src="/Content/visitor-panel/image/location1.png" alt="imge" loading="lazy" class="location_sec"}></h6>
+
+                                </div>
+                                <div class="col-md-5 cta_btn_section" style="text-align: end;">
+                                    <div class="cta" style="margin-top: 22px;">
+                                        ${res_Key}
+
+                                        <div class="primary-button thumbupimg">
+
+                     <a href="javascript:AddOrRemoveFavourites(${response.data[i].UserLoginId});">
+                <img src="${favClass}" alt="imge" loading="lazy" class="thumbupimg_sec" id="ImageTest${response.data[i].UserLoginId}">
+            </a>
+
+                                        </div>
+                                        <div class="primary-button shareimg">
+                                            <img src="/Content/visitor-panel/image/share.png" alt="img" loading="lazy"  class="share_sec">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="row star_iner_row">
+
+                        <div class="col-md-2 starsection">
+                            <div class="star-iner star_inner_secdetail">
+                                ${starIcons}
+                            </div>
+                        </div>
+
+                    <div class="col-md-10 instructorcategoryname">
+                        <div class="row">
+                            <div class="col-md-10 box_sec">
+                                <h5 class="box_else_sec m-1">  ${BusinessContentElseDetail} </h5>
+                            </div>
+                            <div class="col-md-2 text-center">
+
+                                ${Verifying}
+
+                            </div>
+                        </div>
+
+                    </div>
+                    </div>
+
+                </div>`;
+
+                    $("#BindBusinessContentSportsDetail").append(res_content);
+                }
+
+            StopLoading();
+        },
+        error: function (result) {
+            // StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    //Instructors list by search filter
+    function GetAllInstructorBySearchFilter(page = 0) {
+
+        filterParams.ItemType = itemTypesEnum_Global.instructors;
+        filterParams.Location = $('#txtFilterTypeLocation').val();
+        filterParams.Latitude = lat_Global;
+        filterParams.Longitude = long_Global;
+        filterParams.SearchText = $('#txtFilterTypeName').val();
+        filterParams.CategoryId = $('#ddlFilterTypeCategory').val();
+        filterParams.Page = page;
+        filterParams.UserLoginId = hdn_userloginid_Global;
+        
+        if (filterParams.UserLoginId > 0) {
+            $('.viewmore_btn').addClass('d-none');
+        }
+        if (page == 0) {
+            // Clear existing content
+            $("#BindBusinessInstructorDetailList").html('');
+        }
+
+        var _url = "/api/Business/GetAllInstructorsBySearchFilter";
+
+    $.ajax({
+        type: "POST",
+        url: _url,
+        data: JSON.stringify(filterParams),
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var InstructorDetailList = '';
+            if (response.data.length <= 0) {
+                $('#BindBusinessInstructorDetailList').append('<div class="w-100 text-black-50 text-center mt-4"><i>Instructors not Found!</i></div>');
+                $('#BtnViewMoreUpcomingInstructors').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+            // Show-Hide View More button
+            if (response.data.length <= 0 || response.data.length < recordLimit) {
+                $('#BtnViewMoreUpcomingInstructors').addClass('d-none');
+            } else {
+                $('#BtnViewMoreUpcomingInstructors').attr('href', 'javascript:GetAllInstructorBySearchFilter(' + (page + 1) + ');');
+                $('#BtnViewMoreUpcomingInstructors').removeClass('d-none');
+            }
+
+            for (var i = 0; i < response.data.length; i++) {
+
+                var favInstrcutorClass = "/Content/visitor-panel/image/like_dark.png";
+                if (response.data[i].IsFavourite == 1) {
+                    favInstrcutorClass = "/Content/visitor-panel/image/like_dark.png";
+                } else {
+                    favInstrcutorClass = "/Content/visitor-panel/image/like1.png";
+                }
+
+                var BusinessContentElseDetail = 'What else I do';
+
+                if (response.data[i].InstructorContentDescription != '') {
+
+                    var optionsArray = response.data[i].InstructorContentDescription;
+                            var Testing = optionsArray.split(',');
+
+                            for (var j = 0; j < Testing.length; j++) {
+                                if (Testing[j]) {
+                                    BusinessContentElseDetail += ` / ${Testing[j]}`;
+                                }
+                            }
+                        } else {
+                            BusinessContentElseDetail = '';
+                        }
+
+
+                    var starIcons = '';
+
+                    if (response.data[i].AverageRating) {
+                        var rating = response.data[i].AverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star star_color"></i>';
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star star_color"></i>`;
+                        }
+                    }
+
+                    var Privacy_UniqueId = '';
+                    if (response.data[i].Privacy_UniqueId == 1) {
+                        Privacy_UniqueId = `<h2 class="instructor_id_sec">Id ${response.data[i].UniqueUserId} <!-- <img src="~/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_img_sec"> --></h2>`;
+                    } else if (response.data[i].Privacy_UniqueId == 2) {
+                        Privacy_UniqueId = `
+                <h2 class="instructor1_id_sec"><img src="/Content/visitor-panel/image/MaskSecurity.png" alt="img" loading="lazy" class="masklock_img_sec"></h2>
+            `;
+                    }
+                    else{
+                        Privacy_UniqueId = `<h2 class="instructor_id_sec">Id ${response.data[i].UniqueUserId} <!-- <img src="/Content/visitor-panel/image/copy.png" alt="img" loading="lazy"  class="copy_img_sec"> --> </h2>`;
+                    }
+
+                var certificationsOrExperience = '';
+
+                if (response.data[i].Experience != '') {
+                        certificationsOrExperience = `<div class="col-md-12 pb-3 text_sec">
+                <h6  class="experenice_sec"><span><img src="/Content/visitor-panel/image/verifiycertificate.png" alt="img" class="badge-icon"></span>EXPERIENCE: ${response.data[i].Experience}</h6></div>`;
+                }
+
+                var _instructorCertifications = response.data[i].Certifications;
+
+                if (_instructorCertifications.length > 0) {
+
+                    certificationsOrExperience = `<div class="col-md-12">
+                        <div class="text-certificate-col  float-right">`;
+
+                    for (var c = 0; c < _instructorCertifications.length; c++) {
+                        if (c >= 3)
+                            continue;
+                        certificationsOrExperience += `<span class="certified_image"><img src="${_instructorCertifications[c].CertificateIconWithPath}" alt="License Image" title="${_instructorCertifications[c].CertificateName}" class="img-fluid m-2 img-size-sm object-fit-contain"></span> <span class="certified_icon">
+                                 <img src="/Content/visitor-panel/image/verifiycertificate.png" alt="img" class="badge-icon">
+                                  </span>`;
+                    }
+
+                    certificationsOrExperience += `    </div>
+                        </div>`;
+                }
+
+                var VerifiedName = '';
+                var _certifiedHTML = '';
+                    if (response.data[i].Verified == 1) {
+                        VerifiedName = `<div class="d-flex align-items-center"><img src="/Content/visitor-panel/image/social-media verified.png" alt="img" class="badge-icon" ><span class="font-weight-bold">Verified</span></div>`;
+                    }
+
+                    if (response.data[i].InstructorIsCertified == 1) {
+                        _certifiedHTML = `<div class="d-flex align-items-center"><img src="/Content/visitor-panel/image/verifiycertificate.png" alt="img" class="badge-icon"><span class="font-weight-bold"> Certified</span></div>`;
+                }
+                if (response.data[i].MasterPro == 1) {
+                    _certifiedHTML = `<div class="align-items-center"><img src="/Content/visitor-panel/image/security.png" alt="img" class="badge-icon"><span class="font-weight-bold">MasterCertified</span></div>`;
+
+                }
+
+                    var InstructorDetailList = ` <div class="user_profile1">
+            <div class="row instructor_row_sec">
+                <div class="col-md-12 mb-lg-n2">
+                    ${Privacy_UniqueId}
+                </div>
+            </div>
+
+            <div class="row user_profilecontentouter1">
+                <div class="col-md-7">
+                    <div class="row">
+                        <div class="col-md-3 img_sec_instructor">
+                            <img src="${response.data[i].ProfileImageWithPath}" alt="img" loading="lazy"  class="instructor_img_sec">
+                        </div>
+                        <div class="col-md-4 instructor_info">
+                            <h4 class="instructor_name_sec">${response.data[i].InstructorName}</h4>
+                            <h6 class="category_sec"> ${response.data[i].BusinessCategoryName}</h6>
+                            ${_certifiedHTML}
+                            ${VerifiedName}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 text_sec">
+                   <div class="row">
+                        <div class="col-md-12">
+                    <div class="cta view">
+                        <a class="primary-button viewprofile_sec" href="/Home/BusinessProfile?businessOwnerLoginId=${response.data[i].InstructorUserLoginId}">View Profile</a>
+
+
+                            <div class="primary-button imgthumbsup">
+                           <a href="javascript:AddOrRemoveInstructorFavourites(${response.data[i].InstructorUserLoginId});">
+                         <img src="${favInstrcutorClass}"alt="imge" loading="lazy"  class="like1_sec" id="InstructorImageLike${response.data[i].InstructorUserLoginId}">
+                               </a>
+                        </div>
+                        <div class="primary-button imgshare_sec">
+                            <img src="/Content/visitor-panel/image/share.png" alt="img" loading="lazy" class="shareimg_section">
+                        </div>
+                    </div>
+            </div>
+            </div>
+            <div class="row experience_sec">
+                ${certificationsOrExperience}</div>
+                </div>
+
+            </div>
+            <div class="row staring_sec_row">
+                <div class="col-md-2 star_transform_sec">
+                    <div class="star-iner star_sec_inner_icon">
+                        ${starIcons}
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <h5 class="box m-2">${BusinessContentElseDetail}</h5>
+                </div>
+            </div>
+        </div>`;
+
+                    $("#BindBusinessInstructorDetailList").append(InstructorDetailList);
+
+                }
+
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    //Bind Events list by Search filter
+    function GetAllBusinessEventsBySearchFilter(page = 0) {
+
+        filterParams.ItemType = itemTypesEnum_Global.events;
+        filterParams.Location = $('#txtFilterTypeLocation').val();
+        filterParams.Latitude = lat_Global;
+        filterParams.Longitude = long_Global;
+        filterParams.SearchText = $('#txtFilterTypeName').val();
+        filterParams.CategoryId = $('#ddlFilterTypeCategory').val();
+        filterParams.Page = page;
+        filterParams.StartDate = $('#txtFilterStartDate').val();
+        filterParams.PriceType = $('#ddlFilterTypePrice').val();
+
+        if (page == 0) {
+            // Clear existing content
+            $("#BindBusinessContentEventDetail").html('');
+        }
+
+        var _url = "/api/Event/GetEventsBySearchFilter";
+
+    $.ajax({
+        type: "POST",
+        url: _url,
+        data: JSON.stringify(filterParams),
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var EventDetailList = '';
+            if (response.data.length <= 0) {
+                // No data, show a message
+                $('#BindBusinessContentEventDetail').append('<div class="w-100 text-black-50 text-center mt-4"><i>Events not Found!</i></div>');
+                $('#BtnViewMoreUpcomingEvents').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+            // Show-Hide View More button
+            if (response.data.length <= 0 || response.data.length < recordLimit) {
+                $('#BtnViewMoreUpcomingEvents').addClass('d-none');
+            } else {
+                $('#BtnViewMoreUpcomingEvents').attr('href', 'javascript:GetAllBusinessEventsBySearchFilter(' + (page + 1) + ');');
+                $('#BtnViewMoreUpcomingEvents').removeClass('d-none');
+            }
+
+            for (var i = 0; i < response.data.length; i++) {
+
+                    // Create a Business Detail List for each entry in the List
+
+                var EventDetailList = `  <div class="event-container-section">
+
+                               <div class="row">
+                                   <div class="event-image-container col-sm-4">
+                                       <img src="${response.data[i].EventImageWithPath}" alt="img" loading="lazy">
+                                   </div>
+                                   <div class="event-content-container col-sm-6">
+                                       <div class="row">
+
+                                               <div class="col-sm-4 text-center">
+                                                   <div class="date-time">
+                                                       <h6>${response.data[i].StartDay}</h6>
+                                                       <p>${response.data[i].StartMonth},${response.data[i].StartYear}</p>
+                                                   </div>
+                                               </div>
+                                               <div class="col-sm-8">
+                                                   <div class="details">
+                                                       <h5>${response.data[i].Title}</h5>
+                                                       <p>${response.data[i].Address}</p>
+                                                   </div>
+
+                                           </div>
+                                       </div>
+
+
+
+                                   </div>
+                                   <div class="event-cta-container col-sm-2" style="">
+                                       <a href="/Home/Event?eventId=${response.data[i].Id}">TICKETS</a>
+                                   </div>
+
+                               </div>
+
+                               </div>`;
+
+                $("#BindBusinessContentEventDetail").append(EventDetailList);
+            }
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+        // Bind BusinessTrainingDetail
+    function GetAllBusinessTrainingBySearchFilter(page = 0) {
+
+        filterParams.ItemType = itemTypesEnum_Global.trainings;
+        filterParams.Location = $('#txtFilterTypeLocation').val();
+        filterParams.Latitude = lat_Global;
+        filterParams.Longitude = long_Global;
+        filterParams.SearchText = $('#txtFilterTypeName').val();
+        filterParams.CategoryId = $('#ddlFilterTypeCategory').val();
+        filterParams.Page = page;
+        filterParams.UserLoginId = hdn_userloginid_Global;
+        filterParams.StartDate = $('#txtFilterStartDate').val();
+        filterParams.PriceType = $('#ddlFilterTypePrice').val();
+        if (filterParams.UserLoginId > 0) {
+            $('.viewmore_btn').addClass('d-none');
+        }
+        if (page == 0) {
+            $('#BindBusinessTrainingList').html('');
+        }
+
+        var _url = "/api/Training/GetTrainingsBySearchFilter";
+
+    $.ajax({
+        type: "POST",
+        url: _url,
+        data: JSON.stringify(filterParams),
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var TrainingDetailList = '';
+            if (response.data.length <= 0) {
+                $('#BindBusinessTrainingList').append('<div class="w-100 text-black-50 text-center mt-4"><i>Trainings not Found!</i></div>');
+                $('#BtnViewMoreUpcomingTrainings').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+
+            // Show-Hide View More button
+            if (response.data.length <= 0 || response.data.length < recordLimit) {
+                $('#BtnViewMoreUpcomingTrainings').addClass('d-none');
+            } else {
+                $('#BtnViewMoreUpcomingTrainings').attr('href', 'javascript:GetAllBusinessTrainingBySearchFilter(' + (page + 1) + ');');
+                $('#BtnViewMoreUpcomingTrainings').removeClass('d-none');
+            }
+
+                for (var i = 0; i < response.data.length; i++) {
+                    // Create a Business Detail List for each entry in the List
+
+
+                    var TrainingDetailList = `  <div class="cards-items">
+            <div class="date-year">
+                <img src="${response.data[i].TrainingImageWithPath}" alt="main-logo">
+
+                    <h6 class="date">${response.data[i].StartMonth} ${response.data[i].StartDay}</h6>
+                    <h6 class="year">${response.data[i].StartYear}</h6>
+
+            </div>
+
+
+            <div class="address-cta">
+            <div class="info-sec mb-3">
+               <h4>${response.data[i].TrainingName}</h4>
+               <h6 class="loc-text">${response.data[i].City},${response.data[i].State}</h6>
+               <h6>${response.data[i].InstructorName}</h6>
+            </div>
+            <div class="cta">
+                <a class="primary-button" href="/Home/Certification?id=${response.data[i].Id}">Learn More</a>
+            </div>
+            </div>
+                </div>`;
+
+
+                    $("#BindBusinessTrainingList").append(TrainingDetailList);
+                }
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+
+    // Bind Classes List By Search-Filter
+    function GetAllClassesBySearchFilter(page = 0) {
+
+        filterParams.ItemType = itemTypesEnum_Global.classes;
+        filterParams.Location = $('#txtFilterTypeLocation').val();
+        filterParams.Latitude = lat_Global;
+        filterParams.Longitude = long_Global;
+        filterParams.SearchText = $('#txtFilterTypeName').val();
+        filterParams.CategoryId = $('#ddlFilterTypeCategory').val();
+        filterParams.Page = page;
+        filterParams.UserLoginId = hdn_userloginid_Global;
+        //filterParams.StartDate = $('#txtFilterStartDate').val();
+        filterParams.ItemMode = $('#ddlFilterTypeMode').val();
+        filterParams.PriceType = $('#ddlFilterTypePrice').val();
+        filterParams.PriceType = $('#ddlFilterTypePrice').val();
+        filterParams.Days = $('#ddlFilterTypeDays').val();
+
+        if (filterParams.UserLoginId > 0) {
+            $('.viewmore_btn').addClass('d-none');
+        }
+        if (newPage == 1) {
+            filterParams.CategoryId = $('#hdn_categoryId').val();
+            newPage = 0;
+        }
+
+        if (page == 0) {
+            // Clear existing content
+            $("#BindBusinessClassesDetailList").html('');
+        }
+        var _url = "/api/Class/GetAllClassesBySearchFilter";
+
+    $.ajax({
+        type: "POST",
+        url: _url,
+        data: JSON.stringify(filterParams),
+        headers: {
+           "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+
+            var ClassDetailList = '';
+
+
+            if (response.data.ClassListDetail.length <= 0) {
+                $('#BindBusinessClassesDetailList').append('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Class Detail!</i></div>');
+                $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+                StopLoading();
+                return;
+            }
+
+            // Show-Hide View More button
+            if (response.data.length <= 0 || response.data.length < recordLimit) {
+                $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+            } else {
+                $('#BtnViewMoreUpcomingClasses').attr('href', 'javascript:GetAllClassesBySearchFilter(' + (page + 1) + ');');
+                $('#BtnViewMoreUpcomingClasses').removeClass('d-none');
+            }
+
+            for (var i = 0; i < response.data.ClassListDetail.length; i++) {
+                    var starIcons = '';
+
+                if (response.data.ClassListDetail[i].InstructorAverageRating) {
+                    rating = response.data.ClassListDetail[i].InstructorAverageRating;
+
+                        for (var j = 1; j <= 5; j++) {
+                            if (j <= rating) {
+                                starIcons += ' <i class="fa-solid fa-star color_full" style="transform: skewX(-176deg);"></i>';
+                            } else {
+                                starIcons += ' <i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>';
+                            }
+                        }
+                    }
+                    else {
+                        for (var j = 1; j <= 5; j++) {
+                            starIcons += `<i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>`;
+                        }
+                }
+
+                var _classDuration = Math.ceil(response.data.ClassListDetail[i].ClassDurationSeconds / 60);
+
+                var _certifiedHTML = (response.data.ClassListDetail[i].InstructorIsCertified == 1) ? '<p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>' : '';
+
+                var _classLocation = '';
+                if (response.data.ClassListDetail[i].ClassMode == 'Offline') {
+                    _classLocation = `
+                        <p>${response.data.ClassListDetail[i].Address}</p>
+                        <a href="${response.data.ClassListDetail[i].OnlineClassLink}"><i class="fa-solid fa-map-location-dot" style="color: orange;"></i></a>
+                    `;
+                }
+                else if (response.data.ClassListDetail[i].ClassMode == 'Online') {
+                    _classLocation = `
+                            <p>Online</p>
+                        `;
+                }
+
+                var ClassDetailList = `<div class="classes-card-flex">
+
+
+                        <div class="class-card-items">
+
+                            <div class="class-card-items-in">
+                                <div class="koch-profile">
+
+                                    <div class="koch-profile-iner">
+                                        <img src="${response.data.ClassListDetail[i].ClassCategoryImageWithPath}" alt="Class Image">
+                                    </div>
+                                    <div class="days-time">
+                                        <h5 class="date-title">${response.data.ClassListDetail[i].NextClassDay}</h5>
+                                        <h5 class="text-month">${response.data.ClassListDetail[i].NextClassMonth}</h5>
+                                    </div>
+                                </div>
+                                <div class="time-details">
+                                    <div class="details-cards">
+                                        <h5 class="center-text">${response.data.ClassListDetail[i].ClassName}</h5>
+                                         <h3 class="center-text category">${response.data.ClassListDetail[i].ClassCategoryTypeName}</h3>
+                                            <h3 class="center-text category">${response.data.ClassListDetail[i].ParentClassCategoryTypeName}</h3>
+                                        <h5>${response.data.ClassListDetail[i].BatchName} <span class="time">${response.data.ClassListDetail[i].ScheduledStartOnTime_24HF}-${response.data.ClassListDetail[i].ScheduledEndOnTime_24HF}</span></h5>
+                                        <h5>${response.data.ClassListDetail[i].BusinessName} (${response.data.ClassListDetail[i].BusinessSubCategoryName})</h5>
+
+                                        <h5>${response.data.ClassListDetail[i].ClassType} (${response.data.ClassListDetail[i].ClassDays_ShortForm}) ${_classDuration} min</h5>
+                                        <div class="location-iner">
+                                            ${_classLocation}
+                                        </div>
+                                        <h5 class="update-text"><!--Update 27 Mar--></h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="side-profile">
+                                <div class="profile-iner">
+                                    <div class="profile-main">
+                                        <div class="profile-img">
+                                            <img src="${response.data.ClassListDetail[i].InstructorProfileImageWithPath}" alt="profile">
+                                        </div>
+                                        <div class="profile-name">
+                                            <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${response.data.ClassListDetail[i].InstructorLoginId}"><h4>${response.data.ClassListDetail[i].InstructorName}</h4></a>
+                                            ${_certifiedHTML}
+                                        <h6 class="profile-name">${response.data.ClassListDetail[i].BusinessCategoryName}</h6>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="star-iner">
+                                       ${starIcons}
+
+                                    </div>
+
+                                </div>
+                                <div class="cta-iner">
+                                    <a href="/Home/ClassDetail?classId= ${response.data.ClassListDetail[i].Id}&businessOwnerLoginId=${response.data.ClassListDetail[i].BusinessOwnerLoginId}" class="primary-button" style="padding: 14px 40px;">Book now</a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>`;
+                    $("#BindBusinessClassesDetailList").append( ClassDetailList);
+
+            }
+
+            StopLoading();
+
+        },
+        error: function (result) {
+            StopLoading();
+
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+
+
+    function initMap() {
+
+        const input = document.getElementById("txtFilterTypeLocation");
+        const options = {
+            types: ["(regions)"],
+            //fields: ["formatted_address", "geometry", "name"],
+            strictBounds: false,
+        };
+
+        const autocomplete = new google.maps.places.Autocomplete(input, options);
+
+        const infowindow = new google.maps.InfoWindow();
+        const infowindowContent = document.getElementById("infowindow-content");
+
+        infowindow.setContent(infowindowContent);
+
+        autocomplete.addListener("place_changed", () => {
+            infowindow.close();
+
+            const place = autocomplete.getPlace();
+
+            //if (!place.geometry || !place.geometry.location) {
+            //    // User entered the name of a Place that was not suggested and
+            //    // pressed the Enter key, or the Place Details request failed.
+            //    window.alert("No details available for input: '" + place.name + "'");
+            //    return;
+            //}
+
+            //infowindowContent.children["place-name"].textContent = place.name;
+            //infowindowContent.children["place-address"].textContent =
+            //    place.formatted_address;
+            console.log(place);
+        });
+
+        //// Sets a listener on a radio button to change the filter type on Places
+        //// Autocomplete.
+        //function setupClickListener(id, types) {
+        //    const radioButton = document.getElementById(id);
+
+        //    radioButton.addEventListener("click", () => {
+        //        autocomplete.setTypes(types);
+        //        input.value = "";
+        //    });
+        //}
+
+        //setupClickListener("changetype-all", []);
+        //setupClickListener("changetype-address", ["address"]);
+        //setupClickListener("changetype-establishment", ["establishment"]);
+        //setupClickListener("changetype-geocode", ["geocode"]);
+        //setupClickListener("changetype-cities", ["(cities)"]);
+        //setupClickListener("changetype-regions", ["(regions)"]);
+
+    }
+
+    window.initMap = initMap;
+
+
+
+          @*// Bind Classes List By Search-Filter
+        function GetAllClassesByBusinessOwnerLoginIdSearchFilter() {
+
+     
+            var _url = "/api/Class/GetAllClassesByBusinessOwnerLoginIdSearchFilter?businessOwnerLoginIdGlobal=" + id;
+
+      $.ajax({
+          type: "Get",
+          url: _url,
+         // data: JSON.stringify(filterParams),
+          headers: {
+             "Authorization": "Bearer " + UserToken_Global,
+              "Content-Type": "application/json"
+          },
+          contentType: 'application/json',
+          success: function (response) {
+              if (response.status < 1) {
+                  $.iaoAlert({
+                      msg: response.message,
+                      type: "error",
+                      mode: "dark",
+                  });
+                  return;
+              }
+
+              var ClassDetailList = '';
+
+
+              if (response.data.ClassListDetail.length <= 0) {
+                  $('#BindBusinessClassesDetailList').append('<div class="w-100 text-black-50 text-center mt-4"><i>You don\'t have any Class Detail!</i></div>');
+                  $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+                  StopLoading();
+                  return;
+              }
+
+              // Show-Hide View More button
+              if (response.data.length <= 0 || response.data.length < recordLimit) {
+                  $('#BtnViewMoreUpcomingClasses').addClass('d-none');
+              } else {
+                  $('#BtnViewMoreUpcomingClasses').attr('href', 'javascript:GetAllClassesBySearchFilter(' + (page + 1) + ');');
+                  $('#BtnViewMoreUpcomingClasses').removeClass('d-none');
+              }
+
+              for (var i = 0; i < response.data.ClassListDetail.length; i++) {
+                      var starIcons = '';
+
+                  if (response.data.ClassListDetail[i].InstructorAverageRating) {
+                      rating = response.data.ClassListDetail[i].InstructorAverageRating;
+
+                          for (var j = 1; j <= 5; j++) {
+                              if (j <= rating) {
+                                  starIcons += ' <i class="fa-solid fa-star color_full" style="transform: skewX(-176deg);"></i>';
+                              } else {
+                                  starIcons += ' <i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>';
+                              }
+                          }
+                      }
+                      else {
+                          for (var j = 1; j <= 5; j++) {
+                              starIcons += `<i class="fa-solid fa-star" style="color: lightgrey;transform: skewX(-176deg);"></i>`;
+                          }
+                  }
+
+                  var _classDuration = Math.ceil(response.data.ClassListDetail[i].ClassDurationSeconds / 60);
+
+                  var _certifiedHTML = (response.data.ClassListDetail[i].InstructorIsCertified == 1) ? '<p class="Certified-text"> <i class="fa-solid fa-certificate"></i> Certified Trainer</p>' : '';
+
+                  var _classLocation = '';
+                  if (response.data.ClassListDetail[i].ClassMode == 'Offline') {
+                      _classLocation = `
+                          <p>${response.data.ClassListDetail[i].Address}</p>
+                          <a href="${response.data.ClassListDetail[i].OnlineClassLink}"><i class="fa-solid fa-map-location-dot" style="color: orange;"></i></a>
+                      `;
+                  }
+                  else if (response.data.ClassListDetail[i].ClassMode == 'Online') {
+                      _classLocation = `
+                              <p>Online</p>
+                          `;
+                  }
+
+                  var ClassDetailList = `<div class="classes-card-flex">
+
+
+                          <div class="class-card-items">
+
+                              <div class="class-card-items-in">
+                                  <div class="koch-profile">
+
+                                      <div class="koch-profile-iner">
+                                          <img src="${response.data.ClassListDetail[i].ClassCategoryImageWithPath}" alt="Class Image">
+                                      </div>
+                                      <div class="days-time">
+                                          <h5 class="date-title">${response.data.ClassListDetail[i].NextClassDay}</h5>
+                                          <h5 class="text-month">${response.data.ClassListDetail[i].NextClassMonth}</h5>
+                                      </div>
+                                  </div>
+                                  <div class="time-details">
+                                      <div class="details-cards">
+                                          <h5 class="center-text">${response.data.ClassListDetail[i].ClassName}</h5>
+                                           <h3 class="center-text category">${response.data.ClassListDetail[i].ClassCategoryTypeName}</h3>
+                                              <h3 class="center-text category">${response.data.ClassListDetail[i].ParentClassCategoryTypeName}</h3>
+                                          <h5>${response.data.ClassListDetail[i].BatchName} <span class="time">${response.data.ClassListDetail[i].ScheduledStartOnTime_24HF}-${response.data.ClassListDetail[i].ScheduledEndOnTime_24HF}</span></h5>
+                                          <h5>${response.data.ClassListDetail[i].BusinessName} (${response.data.ClassListDetail[i].BusinessSubCategoryName})</h5>
+
+                                          <h5>${response.data.ClassListDetail[i].ClassType} (${response.data.ClassListDetail[i].ClassDays_ShortForm}) ${_classDuration} min</h5>
+                                          <div class="location-iner">
+                                              ${_classLocation}
+                                          </div>
+                                          <h5 class="update-text"><!--Update 27 Mar--></h5>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="side-profile">
+                                  <div class="profile-iner">
+                                      <div class="profile-main">
+                                          <div class="profile-img">
+                                              <img src="${response.data.ClassListDetail[i].InstructorProfileImageWithPath}" alt="profile">
+                                          </div>
+                                          <div class="profile-name">
+                                              <a target="_blank" href="/Home/BusinessProfile?businessOwnerLoginId=${response.data.ClassListDetail[i].InstructorLoginId}"><h4>${response.data.ClassListDetail[i].InstructorName}</h4></a>
+                                              ${_certifiedHTML}
+                                          <h6 class="profile-name">${response.data.ClassListDetail[i].BusinessCategoryName}</h6>
+
+                                          </div>
+
+                                      </div>
+
+                                      <div class="star-iner">
+                                         ${starIcons}
+
+                                      </div>
+
+                                  </div>
+                                  <div class="cta-iner">
+                                      <a href="/Home/ClassDetail?classId= ${response.data.ClassListDetail[i].Id}&businessOwnerLoginId=${response.data.ClassListDetail[i].BusinessOwnerLoginId}" class="primary-button" style="padding: 14px 40px;">Book now</a>
+                                  </div>
+                              </div>
+
+                          </div>
+
+
+                      </div>`;
+                      $("#BindBusinessClassesDetailList").append( ClassDetailList);
+
+              }
+
+              StopLoading();
+
+          },
+          error: function (result) {
+              StopLoading();
+
+
+              if (result["status"] == 401) {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+              }
+              else {
+                  $.iaoAlert({
+                      msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                      type: "error",
+                      mode: "dark",
+                  });
+              }
+          }
+      });
+      }*@
+
+
+</script>

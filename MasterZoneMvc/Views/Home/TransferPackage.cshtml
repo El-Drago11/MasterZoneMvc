@@ -1,0 +1,201 @@
+﻿
+@{
+    ViewBag.Title = "Transfer Package";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+}
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/dataTables.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/datatables.responsive.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+
+        .cstm-btn1 {
+            width: 30%;
+            /*font-size: 1.1rem;*/
+            font-weight: 400;
+        }
+    </style>
+}
+
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+                @Html.Partial("_VisitorPanelSidebarPartial")
+            </div>
+            <div class="col-sm-9">
+                <div class="card-body">
+                    <div class="row rewrsfjdkslfjalksj">
+                        <div class="col-6">
+                            <h2 class="mk-hdffjsdkfj-enq">Transfer Package</h2>
+                        </div>
+                        <div class="col-6 text-right">
+                            <a id="ToTransferRequest"
+                               class="nwe-fjdkfj btn btn-outline-dark cstm-btn1 w-auto">
+                                Transfer Request
+                            </a>
+                        </div>
+                    </div>
+                    <div id="sectionViewPackage">
+                        <div class="row mb-4">
+                            <div class="col-12 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <table id="ViewPackageNotification" class="table data-table" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Type</th>
+                                                    <th>TransferTo</th>
+                                                    <th>Academy</th>
+                                                    <th>Package</th>
+                                                    <th>Transfer Date</th>
+                                                    <th>Created On</th>
+                                                    <th>Status</th>
+                                                    @*<th class="text-center">Action</th>*@
+                                                </tr>
+                                            </thead>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="ViewRequestTransferPackage" style="display: none;">
+                        <form>
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <div id="SelectBusinessType">
+                                        <div class="form-group">
+                                            <label>Transfer Type</label>
+                                            <select id="ddlSelectTransferPackageType" class="form-control select2-multiple" data-width="100%" onChange="onChangeTransferStudentForField()" ;>
+                                                <option value="0">Select Type</option>
+                                                <option value="1">Select Same Business</option>
+                                                <option value="2">Select Another Business</option>
+                                            </select>
+                                            <div class="error-class" id="error_ddlSelectTransferPackageType"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row ">
+                                <div class="col-md-6">
+                                    <div class="form-group " id="StudentList">
+                                        <label>Transfer To (Search By MasterId)</label>
+                                        <div class="d-flex">
+                                            <input id="Searchbymasterid" class="form-control select2-multiple " data-width="100%" />
+                                            <button type="button" class="btn btn-primary mb-0 ml-2" id="SearchText" onclick="SearchByMasterId()">Search</button>
+                                        </div>
+                                    </div>
+                                    <div id="BusinessList" style="display: none;">
+                                        <label>Business List (Search By MasterId)</label>
+                                        <div class="d-flex">
+                                            <input id="SearchBusinessbymasterid" class="form-control select2-multiple " data-width="100%" />
+                                            <button type="button" class="btn btn-primary mb-0 ml-2" id="SearchTexts" onclick="SearchBusinessListByMasterId()">Search</button>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div id="SelectBusinessType">
+                                        <div class="form-group">
+                                            <div id="UserDetailsCard">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="StartDate">Transfer Date</label>
+                                        <input type="date" id="txtStartDate" class="form-control" />
+                                        <div class="error-class" id="error_txtStartDate"></div>
+
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Business Package Transfer</label>
+                                        <select id="ddlSelectedPlansForTransferPackage" class="form-control select2-multiple" data-width="100%">
+
+                                            @*<option label="&nbsp;">&nbsp;</option>*@
+                                        </select>
+                                        <div class="error-class" id="error_ddlSelectedPlansForPackage"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="BusinessPackage" style="display: none">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="country">Country</label>
+                                            <select name="country" id="country" class="form-control" onchange="ChangeCountry()">
+                                                <option value="0">Select</option>
+                                            </select>
+                                            <div class="error-class" id="error_country"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="state">State</label>
+                                            <select name="state" id="state" class="form-control" onchange="ChangeState()">
+                                                <option value="0">Select</option>
+                                            </select>
+                                            <div class="error-class" id="error_state"></div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="txt_City">City</label>
+                                            <select name="txt_City" id="txt_City" class="form-control">
+                                                <option value="0">Select</option>
+                                            </select>
+                                            <div class="error-class" id="error_txt_City"></div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="TransferReasonDescription">Transfer Reason</label>
+                                        <textarea name="description" class="form-control" rows="2" id="txtTransferReasonDescription"></textarea>
+                                        <div class="error-class" id="error_txtTransferReasonDescription"></div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSubmitToStudentPackage()">Request</button>
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="ResetbtnTransferPackage()">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+@section Scripts{
+
+    <script src="~/Content/business-panel/js/vendor/datatables.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_TransferPackageScriptPartial.cshtml")
+}
+

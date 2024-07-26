@@ -1,0 +1,168 @@
+﻿@using MasterZoneMvc.ViewModels;
+@{
+    ViewBag.Title = "ManageSalary";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Salaries</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/ManageStaff">Manage Staff</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Salaries</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewStaff">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblStaff_ManageSalary" class="data-table" @*class="data-table data-table-feature"*@>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Category</th>
+                                        <th>Name</th>
+                                        <th>Basic Salary</th>
+                                        <th>HRA</th>
+                                        <th>TA</th>
+                                        <th>DA</th>
+                                        <th>Remarks</th>
+                                        @if (permissionKeys.Contains("ManageStaff_StaffSalary_AddSalary"))
+                                        {
+                                            <th class="text-center">Action</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*<div id="sectionAddStaff" Style="display: none">
+                <div class="row mb-4">
+                    <div class="col-12 mb-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4" id="EditText"> Add Salaries</h5>
+                                <form>
+                                    <div class="form-group">
+                                        <label for="Category">Category</label>
+                                        <select name="ddlManageSalary" id="ddlManageSalary" form="carform" default="unslected" class="form-control">
+                                            <option value="none" selected disabled hidden>Select a Category</option>
+                                            <option value="1">Instructor</option>
+                                            <option value="2">HouseKeeping</option>
+                                            <option value="3">Watchman</option>
+                                            <option value="4">Teacher</option>
+                                        </select>
+                                    </div>
+                                    <div class="error-class" id="error_ddlManageSalary"></div>
+                                    <div class="form-group">
+                                        <label for="MonthlyIncome">MonthlyIncome</label>
+                                        <input type="text" class="form-control" id="txtMonthlyIncome"
+                                               aria-describedby="MonthlyIncome">
+                                        <div class="error-class" id="error_txtMonthlyIncome"></div>
+                                    </div>
+
+
+                                    <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="btnSalarySubmitManage()">Submit</button>
+                                    <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetSalariesView()">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>*@
+
+        @*------------------------------------- Modal ------------------------------------------------------ *@
+        <button type="button" id="btnOpenSalaryModal" class="btn btn-outline-primary mb-2 d-none" data-toggle="modal" data-target="#salaryModal">Edit Salary</button>
+        <div class="modal fade" id="salaryModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="salaryModalLabel">Edit Salary</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="txtStaff_SalaryModal" class="col-form-label">Staff:</label>
+                                <input type="text" class="form-control" id="txtStaff_SalaryModal" disabled>
+                                <div class="error-class error-SalaryModal" id="error_txtStaff_SalaryModal"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtSalary_SalaryModal" class="col-form-label">Basic Salary:</label>
+                                <input type="number" class="form-control" id="txtSalary_SalaryModal" min="0">
+                                <div class="error-class error-SalaryModal" id="error_txtSalary_SalaryModal"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtHRA_SalaryModal" class="col-form-label">HRA (House Rent Allowance):</label>
+                                <input type="number" class="form-control" id="txtHRA_SalaryModal" min="0">
+                                <div class="error-class error-SalaryModal" id="error_txtHRA_SalaryModal"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtTA_SalaryModal" class="col-form-label">TA (Travelling Allowance):</label>
+                                <input type="number" class="form-control" id="txtTA_SalaryModal" min="0">
+                                <div class="error-class error-SalaryModal" id="error_txtTA_SalaryModal"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtDA_SalaryModal" class="col-form-label">DA (Dearness Allowance):</label>
+                                <input type="number" class="form-control" id="txtDA_SalaryModal" min="0">
+                                <div class="error-class error-SalaryModal" id="error_txtDA_SalaryModal"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtRemarks_SalaryModal" class="col-form-label">Remarks:</label>
+                                <textarea class="form-control" id="txtRemarks_SalaryModal"></textarea>
+                                <div class="error-class error-SalaryModal" id="error_txtRemarks_SalaryModal"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="btnCancel_SalaryModal" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="btnUpdate_SalaryModal()">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*------------------------------------- Modal ------------------------------------------------------ *@
+
+    </div>
+</main>
+
+@section Scripts{
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_ManageSalaryScriptPartial.cshtml")
+
+}

@@ -1,0 +1,260 @@
+﻿<script>
+    var UserToken_Global = "";
+    var InstructorImage = 1;
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+
+                UserToken_Global = dataToken;              
+                EditBusinessContentInstructorBanner();
+               
+                StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        EditBusinessContentInstructorBanner();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+
+
+      var MasterInstructorId_Global = 0;
+    function btnSubmitInstructorBannerClick() {
+        
+        let is_valid = true;
+        $(".error-class").html('');
+       var _mode =  1;
+
+         let _manageTitle = $("#txtTitle").val().trim();
+       let _manageSubTitle = $("#txtSubTitle").val().trim();
+       let _managedescription = $("#gym_description").val().trim();
+
+
+         let _error_manageTitle = $("#error_txtTitle");
+       let _error_manageSubTitle = $("#error_txtSubTitle");
+       let _error_managedescription = $("#error_gym_description");
+        let _error_managebannerImage = $("#error_fileProfileImage_ManageInstrcutorBannerImage");
+
+         if (validate_IsEmptyStringInputFieldValue(_manageTitle)) {
+            is_valid = false;
+             _error_manageTitle.html('@(Resources.BusinessPanel.TitleRequired)');
+         }
+         if (validate_IsEmptyStringInputFieldValue(_manageSubTitle)) {
+            is_valid = false;
+             _error_manageSubTitle.html('@(Resources.BusinessPanel.SubTitleRequired)');
+        }
+         
+       if (validate_IsEmptyStringInputFieldValue(_managedescription)) {
+            is_valid = false;
+           _error_managedescription.html('@(Resources.BusinessPanel.DescriptionRequired)');
+        }
+        var _instructorbannerImageFile_MS = $("#fileProfileImage_ManageInstrcutorBannerImage").get(0);
+        var _instructorbannerImageFiles = _instructorbannerImageFile_MS.files;
+        if (InstructorImage == 1 && _instructorbannerImageFiles.length <= 0) {
+           is_valid = false;
+           _error_managebannerImage.html('@(Resources.BusinessPanel.BusinessBannerImageRequired)');
+           return;
+       }
+
+        if (is_valid) {
+
+            var data = new FormData();
+
+            data.append("Id", MasterInstructorId_Global);
+            data.append("Title", _manageTitle);
+            data.append("SubTitle", _manageSubTitle);
+            data.append("Description", _managedescription);
+            data.append('Mode', _mode);
+            data.append('BannerImage', _instructorbannerImageFiles[0]);
+
+
+
+            $.ajax({
+                url: '/api/Business/AddUpdateBusinessBanner',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                data: data,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllBusinessContentBannerPagination();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+                   // EditBusinessProfile();
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    StopLoading();
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+        }
+
+    }
+
+    function EditBusinessContentInstructorBanner() {
+
+        
+        var _url = "/api/Business/BannerDetail/Get/";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            GymId_Global = response.data.Id;
+        $("#txtTitle").val(response.data.Title);
+        $("#txtSubTitle").val(response.data.SubTitle);
+        $("#txtButtonText").val(response.data.ButtonText);
+            $("#txtButtonLink").val(response.data.ButtonLink);
+            $("#gym_description").val(response.data.Description);
+            $("#fileProfileImage_ManageInstrcutorBannerImage").val('');
+        if (response.data.BannerImageWithPath != "") {
+            $("#previewInstructorImage").attr('src', response.data.BannerImageWithPath);
+            $("#previewInstructorImage").removeClass('d-none');
+            InstructorImage = 2;
+        }
+
+
+
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+    // Image File Preview -------------------------------------------------------------
+    document.getElementById('fileProfileImage_ManageInstrcutorBannerImage').addEventListener('change', handleInstructorImageUpload);
+
+    function handleInstructorImageUpload(event) {
+    const file = event.target.files[0];
+    const fileSize = file.size / 1024; // size in kilobytes
+    const maxSize = 10*1024*1024; // maximum size in kilobytes
+    const fileType = file.type;
+    const validImageTypes = ['image/jpeg', 'image/png'];
+
+    if (!validImageTypes.includes(fileType)) {
+        $.iaoAlert({
+            msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewInstructorImage').addClass('d-none'); // hide the preview image
+        return;
+    }
+    if (fileSize > maxSize) {
+        $.iaoAlert({
+            msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+            type: "error",
+            mode: "dark",
+        });
+        event.target.value = null; // clear the file input element
+        $('#previewInstructorImage').addClass('d-none'); // hide the preview image
+
+        return;
+    }
+
+    // image size is within the limit, display the preview image
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('previewInstructorImage').src = event.target.result;
+        $('#previewInstructorImage').removeClass('d-none');
+    }
+
+    reader.readAsDataURL(file);
+    }
+
+</script>

@@ -1,0 +1,218 @@
+﻿
+@{
+    ViewBag.Title = "ManageVedios";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+    // long UserLoginId = ViewBag.UserLoginId;
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/video-style.css">
+    <link rel="stylesheet" href="~/Content/assets/style_new1.css">
+    <link href="~/Content/assets/Common_Popuphover.css" rel="stylesheet" />
+
+    <style>
+        /* Hide the original file input */
+        input[type="file"] {
+            display: none;
+        }
+
+        .vd-title-in {
+            background: var(--mainColor);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 10px 20px;
+            margin-top: 15px;
+        }
+
+        /* Style the anchor tag to look like a button */
+        .custom-file-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+    </style>
+}
+<input type="hidden" id="hiddenUserLoginId" value="@ViewBag.UserLoginId" />
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+                @Html.Partial("_VisitorPanelSidebarPartial")
+            </div>
+            <div class="col-sm-9">
+                <div class="vd-title-in">
+                    <div class="video-heading">
+                        All Videos
+                    </div>
+                    <div class="vd-edit-in">
+                        Video Edit
+                    </div>
+                </div>
+                <div class="video-mange" id="ContentVedioDetail" style="display: flex; flex-wrap: wrap">
+
+                    @*<div class="video-in-text" >
+                                        <div class="manage-vd">
+                                <div class="edit-icon">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </div>
+                                <div class="delete-icon">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </div>
+                                <iframe width="420" height="345" src="https://www.youtube.com/embed/-YpRYNREDV8">
+                                </iframe>
+                                <div class="sidebar">
+                                    <div class="cross-icon">
+                                      <i class="fa-solid fa-xmark"></i>
+                                    </div>
+                                    <p>Video Thumbnail</p>
+                                    <a href="">
+                                      select Your Profile
+                                    </a>
+                                    <div class="textarea-inr">
+                                      <h6>Video Title</h6>
+                                      <textarea>Fitness</textarea>
+                                    </div>
+                                    <div class="textarea-inr">
+                                      <h6>Video Youtube Url</h6>
+                                      <textarea placeholder="Enter Video Youtube URL" >https://youtu.be/-YpRYNREDV8 </textarea>
+                                    </div>
+                                    <div class="textarea-inr">
+                                      <h6>Video Description</h6>
+                                      <textarea placeholder="Enter Video Description">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</textarea>
+                                    </div>
+                                    <div class="btn-iner">
+                        <a href="">Save</a>
+                        <a href="">Cancel</a>
+                                    </div>
+
+                                  </div>
+                            </div>
+                          <h6 class="title">Fitness</h6>
+
+                                    </div></div>*@
+
+                    <div id="addUpdateSection" class="video-add-sec">
+
+
+                        <div class="ad-vd-sidebar">
+                            <div class="cross-icon">
+                                <i class="fa-solid fa-xmark"></i>
+                            </div>
+                            <p>Video Thumbnail</p>
+
+                            <a class="custom-file-button" id="contentVediothumbnailimage" href="javascript:;" onclick="openFileInput()">
+                                Select Your Profile
+                            </a>
+                            <input type="file" id="Manageuser_vediothumbnailimage" class="form-control"  accept="image/*" style="display: none;" />
+                            <img id="thumbnailImage" src="" alt="Thumbnail Image">
+                            <div class="error-class" id="error_Manageuser_vediothumbnailimage"></div>
+
+                            <div class="textarea-inr">
+                                <h6>Video Title</h6>
+                                <input type="text" class="form-control " placeholder="Enter Video Title" id="textuser_vediotitle" required />
+
+                                <div class="error-class" id="error_textuser_vediotitle"></div>
+                            </div>
+                            <div class="textarea-inr">
+                                <h6>Video Youtube Url</h6>
+                                <input type="text" class="form-control" placeholder="Enter Video Youtube Url" id="user_youtubeurlvedio" required />
+
+                                <div class="error-class" id="error_user_youtubeurlvedio"></div>
+                            </div>
+                            <div class="textarea-inr">
+                                <h6>Video Description</h6>
+                                <textarea placeholder="Enter Video Description" id="user_vediodescription">  
+                      </textarea>
+
+                                <div class="error-class" id="error_user_vediodescription"></div>
+                            </div>
+                            <div class="btn-iner">
+
+                                <a href="javascript:;" onclick="AddbtnUserVideo()">Save</a>
+                                <a href="javascript:;" id="Toclosethepopup" onclick="ResetAddViewUserVideo()"> Cancel</a>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+
+
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<style>
+    header.header.active-h {
+        position: unset;
+    }
+
+    a:hover {
+        color: #f3a762;
+        text-decoration: underline;
+    }
+
+    header.header.active-h div#navbarTogglerDemo03 {
+        width: unset;
+    }
+</style>
+<script>
+
+
+
+    //// edit click open
+    //$('.video-mange .manage-vd .edit-icon').click(function () {
+    //    $(this).parent().addClass('open-edit');
+    //    $("body").addClass('overflow');
+    //});
+
+    //$('.sidebar .cross-icon>*').click(function () {
+    //    $('.manage-vd').removeClass('open-edit');
+    //    $("body").removeClass('overflow');
+    //});
+
+
+
+
+
+    ////
+    //$(".vd-edit-in").click(function () {
+    //    console.log('click---');
+    //    $(".manage-vd").toggleClass('show-icon');
+    //});
+
+
+</script>
+
+@Html.Partial("~/Views/Shared/ScriptPartials/VisitorPanel/_ManageVedioScriptPartial.cshtml")
+<script src="~/Content/lib/StylishAlert/iao-alert.jquery.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+

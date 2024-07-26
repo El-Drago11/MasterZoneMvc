@@ -1,0 +1,707 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var UserToken_Global = "";
+    var RatingId_Global = 0;
+    var _ratingTable;
+
+    function initializeDataTable_rating() {
+        _ratingTable = $("#ViewForRatingReview").DataTable();
+    }
+
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+
+                initializeDataTable_rating();
+                GetAllViewRating();
+
+                StopLoading();
+            }
+
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable_rating();
+                        GetAllViewRating();
+
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+
+      function GetAllViewRating() {
+
+        // ---------------- Pagination Data Table --------------------
+        var _url_val = "/api/Review/GetAllByPagination";
+          _ratingTable.clear().destroy();
+          _ratingTable = $("#ViewForRatingReview").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "filter": true,
+            "orderMulti": false,
+            "ordering": true,
+            "paginate": true,
+            "order": [[5, "desc"]],
+            "ajax": {
+                "headers": {
+                    "Authorization": "Bearer " + UserToken_Global
+                },
+                "url": _url_val,
+                "type": "POST",
+                //"data": { "_Params": JSON.stringify(_Params) },
+                //"datatype": "json",
+                "error": function (result) {
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            },
+            "columns": [
+                {
+                    "data": "SerialNumber", "name": "CreatedOn", "autoWidth": true
+                }
+                , {
+                    "data": "StudentName", "name": "StudentName", "autoWidth": true
+                }
+                , {
+                    "data": "Rating", "name": "Rating", "autoWidth": true,
+                    "render": function (data, type, row) {
+                        var RatingStar = '';
+                        var Rating = parseInt(row.Rating); // Assuming 'Rating' is a property in the 'row' object
+
+                        for (var i = 1; i <= 5; i++) {
+                            if (i <= Rating) {
+                                RatingStar += '<i class="fas fa-star star-icon rating-star-active text-warning"></i>';
+                            } else {
+                                RatingStar += '<i class="fas fa-star star-icon"></i>';
+                            }
+                        }
+                        return RatingStar;
+                    }
+                }
+                , {
+                    "data": "ReviewBody", "name": "ReviewBody", "autoWidth": true,
+                            "render": function (data, type, row) {
+                        if (type === 'display' && data.length > 50) {
+                            return data.substring(0, 50) + '...';
+                        } else {
+                            return data;
+                        }
+                    }
+
+                }
+                , {
+                    "data": null, "": "Status", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        //---Check Rating-Status
+                        var _status = '';
+                        @if (permissionKeys.Contains("Miscellaneous_ManageReviews_ChangeStatusReviews"))
+                        {
+                            <text>
+                                if (row.Status == 1) {
+                                    _status = '<a class="btn btn-sm btn-success text-white" style="width:max-content;" onclick="ConfirmChangeStatusRating(' + row.Id + ');">Visible</a>';
+                                }
+                                else {
+                                    _status = '<a class="btn btn-sm btn-danger text-white " style="width:max-content;" onclick="ConfirmChangeStatusRating(' + row.Id + ');">Not Visible</a>';
+                                }
+                            </text>
+                        }
+                        else
+                        {
+                            <text>
+                                if (row.Status == 1) {
+                                    _status = '<a class="badge badge-success" style="width:max-content;cursor: text;">Visible</a>';
+                                }
+                                else {
+                                    _status = '<a class="badge badge-danger" style="width:max-content;cursor: text;">Not Visible</a>';
+                                }
+                            </text>
+                        }
+                        return _status;
+                    }
+                }
+                , {
+                    "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                    , "render": function (data, type, row) {
+                        return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                    }
+                }
+                , {
+                    "data": null, "": "action", "autowidth": true,
+                    "render": function (data, type, row) {
+
+                        var _view = `<a href="javascript:viewRatingdetail(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;
+
+                        var _edit = `<a href="javascript:EditRatingReview(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+
+                        var _delete = `<a href="javascript:confirmdeletedrating(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+
+                        var _action = `<div class="edbt">
+
+                        @if (permissionKeys.Contains("Miscellaneous_ManageReviews_ViewReviews"))
+                        {
+                            <text>
+                               ${_view}
+                            </text>
+                        }
+                         @if (permissionKeys.Contains("Miscellaneous_ManageReviews_EditReviews"))
+                        {
+                            <text>
+                               ${_edit}
+                            </text>
+                        }
+                          @if (permissionKeys.Contains("Miscellaneous_ManageReviews_DeleteReviews"))
+                        {
+                            <text>
+                                ${_delete}
+                            </text>
+                        }
+
+                                </div>`;
+                        return _action;
+                    }
+                }
+            ],
+
+            "responsive": true,
+            "autoWidth": false,
+            //"dom": "<'row my-3'<'col-sm-12'B>><'row'<'col-sm-6'l><'col-sm-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "columnDefs": [{
+                "targets": [0,6], // column index (start from 0)
+                "orderable": false, // set orderable false for selected columns
+            }]
+        });
+
+        // for enabling search box only send requet on pressing enter
+          $('#ViewForRatingReview_filter input').unbind();
+          $('#ViewForRatingReview_filter input').bind('keyup', function (e) {
+            if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+                _ratingTable.search(this.value).draw();
+            }
+        });
+
+
+    }
+    // ----------------  Pagination Data Table End ------------------
+    $('#ReviewDetails_ViewRatingDetialsModal').on('hide.bs.modal', function () {
+        ResetViewReViewDetialModal();
+    });
+
+    function ResetViewReViewDetialModal() {
+        RatingId_Global = 0;
+        $('#ReviewRatingDetailModal').html('');
+    }
+    function viewRatingdetail(Id) {
+        RatingId_Global = Id;
+        $('#ReviewRatingDetailModal').html('');
+        getViewReviewDetail(callbackReviewDataModal);
+    }
+
+    function callbackReviewDataModal(apiResponse) {
+        RatingId_Global = apiResponse.data.RatingreviewDetail.Id;
+
+
+
+        var starIcons = '';
+        var rating = apiResponse.data.RatingreviewDetail.Rating;
+
+        for (var i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                starIcons += '<i class="fas fa-star star-icon rating-star-active"></i>';
+            } else {
+                starIcons += '<i class="fas fa-star star-icon"></i>';
+            }
+        }
+
+        $('#rating-container').html(starIcons);
+
+
+        var name = apiResponse.data.RatingreviewDetail.StudentName;
+
+        // Set the name value to the 'name' element
+        $('#name').text(name);
+
+        var _htmlData = ``;
+        _htmlData += `<div class="row">
+            <div class="col-sm-8">
+
+                         <h4>Rating Star</h4>
+                        <p>${starIcons}</p></div>
+      <div class="col-sm-4">
+
+   <p>${name}</p>
+
+
+ <h4>${apiResponse.data.RatingreviewDetail.CreatedOn_FormatDate}</h4>
+                    </div></div><div class="row"><div class="col-md-8"><div class="d-flex align-items-center">
+                    <div></div>
+                </div></div></div><div class="d-flex align-items-center">
+                            <div></div>
+                            <div class="flex-grow-1 p-3 font-weight-bold">
+<h4>Review Message</h4>${apiResponse.data.RatingreviewDetail.ReviewBody}</div>
+                        </div>`;
+
+
+
+        _htmlData += `</div>`;
+        $('#ReviewDetails_ViewRatingDetialsModal').html(_htmlData);
+        $('#ViewRatingDetialsModal').modal('show');
+    }
+
+    function getViewReviewDetail(callbackFunction) {
+        let _url = "/api/Review/GetById?id=" + RatingId_Global;
+        StartLoading();
+        //showSpinnerInAddMemberModal();
+        //$('#addGroupMemberModal').modal('show');
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                RatingId_Global = response.data.Id;
+
+                callbackFunction(response);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+
+    //--------------------End Second View Modal
+
+    $('#EditRatingReviewModal').on('hide.bs.modal', function () {
+        ResetViewRatingDetialModal();
+    });
+
+
+    function ResetViewRatingDetialModal() {
+        RatingId_Global = 0;
+        $('#ReviewDetails_EditRatingReviewModal').html('');
+    }
+
+    function EditRatingReview(Id) {
+        RatingId_Global = Id;
+        $('#ReviewDetails_EditRatingReviewModal').html('');
+        getRatingDetail(callbackRatingDetailDataModal);
+    }
+
+    function callbackRatingDetailDataModal(apiResponse) {
+        RatingId_Global = apiResponse.data.RatingreviewDetail.Id;
+
+            // Generate the star icons based on the rating value
+        //    var starIcons = '';
+        //for (var i = 0; i < apiResponse.data.RatingreviewDetail.Rating; i++) {
+        //        starIcons += '<i class="fas fa-star star-icon  rating-star-active"></i>';
+        //    }
+
+        //    // Append the star icons to the rating-container element
+        //    $('#rating-container').html(starIcons);
+
+        var starIcons = '';
+        var rating = apiResponse.data.RatingreviewDetail.Rating;
+
+        for (var i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                starIcons += '<i class="fas fa-star star-icon rating-star-active"></i>';
+            } else {
+                starIcons += '<i class="fas fa-star star-icon"></i>';
+            }
+        }
+
+        $('#rating-container').html(starIcons);
+
+
+        var name = apiResponse.data.RatingreviewDetail.StudentName;
+
+        // Set the name value to the 'name' element
+        $('#name').text(name);
+
+        var _htmlData = ``;
+        _htmlData += `<div class="row">
+            <div class="col-sm-8">
+
+                         <h4>Rating Star</h4>
+                        <p>${starIcons}</p></div>
+      <div class="col-sm-4">
+
+   <p>${name}</p>
+
+
+
+ <h4>${apiResponse.data.RatingreviewDetail.CreatedOn_FormatDate}</h4>
+                    </div></div><div class="row"><div class="col-md-8"><div class="d-flex align-items-center">
+                    <div></div>
+                </div></div></div>`;
+
+
+        //if (apiResponse.data.DiscountStudent.length <= 0) {
+        //    _htmlData += `<div class="w-100 font-italic text-center text-black-50 py-2">No Coupon in this Discount.</div>`;
+        //}
+        _htmlData += `</div>`;
+        $('#ReviewDetails_EditRatingReviewModal').html(_htmlData);
+        $('#EditRatingReviewModal').modal('show');
+    }
+
+    function getRatingDetail(callbackFunction) {
+        let _url = "/api/Review/GetById?id=" + RatingId_Global;
+        StartLoading();
+        //showSpinnerInAddMemberModal();
+        //$('#addGroupMemberModal').modal('show');
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+                $("#text_Reviewbody").val(response.data.RatingreviewDetail.ReviewBody);
+                RatingId_Global = response.data.Id;
+
+                callbackFunction(response);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+     function AddUpdate_ManageRating() {
+
+    var is_valid = true;
+    $(".error-class").html('');
+         var _mode = (RatingId_Global > 0) ? 2 : 1;
+
+
+         let _ratingReview = $("#text_Reviewbody").val().trim();
+
+         let _error_ratingReview = $("#error_text_Reviewbody");
+
+         if (validate_IsEmptyStringInputFieldValue(_ratingReview)) {
+        is_valid = false;
+             _error_ratingReview.html('@(Resources.BusinessPanel.ReviewBodyRequired)');
+         }
+
+
+    if (is_valid) {
+        StartLoading();
+        var formdata = new FormData();
+
+        formdata.append("Id", RatingId_Global);
+        formdata.append("ReviewBody", _ratingReview);
+        formdata.append("Mode", _mode);
+
+
+          $.ajax({
+              url: '/api/Review/AddUpdateByBusiness',
+                headers: {
+                    "Authorization": "Bearer " + UserToken_Global,
+
+                },
+              data: formdata,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                contentType: false,
+                //contentType: 'application/json',
+                type: 'POST',
+                success: function (dataResponse) {
+
+                    //--Parse into Json of response-json-string
+                    dataResponse = JSON.parse(dataResponse);
+
+                    //--If successfully added/updated
+                    if (dataResponse.status === 1) {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllViewRating();
+                       // resetAddUpdateForm();
+                        StopLoading();
+                    }
+                    else {
+                        swal({
+                            title: 'Error!',
+                            icon: 'error',
+                            text: dataResponse.message
+                        });
+                        StopLoading();
+
+                        return;
+                    }
+
+
+                    StopLoading();
+
+                },
+                error: function (result) {
+                    //StopLoading();
+
+
+                    if (result["status"] == 401) {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                    else {
+                        $.iaoAlert({
+                            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                            type: "error",
+                            mode: "dark",
+                        });
+                    }
+                }
+            });
+
+    }
+}
+
+
+     function ConfirmChangeStatusRating(id) {
+
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmChangeStatusReviewTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmChangeStatusReviewText)",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: '@(Resources.ErrorMessage.Yes)',
+        cancelButtonText: "@(Resources.ErrorMessage.No)"
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusRating(id);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+function ChangeStatusRating(id) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/Review/ChangeStatus/" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                swal("Success!", dataResponse.message, "success");
+                GetAllViewRating();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+ function confirmdeletedrating(id) {
+
+        swal({
+            title: "@(Resources.BusinessPanel.ConfirmDeleteReviewTitle)",
+            text: "@(Resources.BusinessPanel.ConfirmDeleteReviewText)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    Deletedrating(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+
+    function Deletedrating(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Review/DeleteById/" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        GetAllViewRating();
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+
+</script>

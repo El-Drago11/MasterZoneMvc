@@ -1,0 +1,737 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    ViewData["Title"] = "Event";
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.snow.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/quill.bubble.css" />
+    @Html.Partial("/Views/Shared/ScriptPartials/_GoogleMapsScriptPartial.cshtml");
+
+    <style>
+        .image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .imagePreview {
+            border: 2px dashed #cecece;
+            height: 75px;
+            width: 75px;
+            margin: 5px 0px;
+            padding: 5px;
+        }
+
+
+        .EventCountryState {
+            cursor: no-drop;
+        }
+    </style>
+}
+
+<main>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="pageHeadingText" id="pageTextchange">Event</h1>
+                        <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                            <ol class="breadcrumb pt-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/Business/Event">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Event</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    @if (permissionKeys.Contains("ManageEvents_AddEvents"))
+                    {
+                        <div class="col-4 text-right">
+                            <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEvent">Add Event</a>
+                        </div>
+                    }
+                </div>
+                <div class="separator mb-5"></div>
+            </div>
+        </div>
+
+        @* <div id="sectionViewStaff" class="d-none">*@
+        <div id="sectionViewEvent">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="tblEvent" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Title</th>
+                                        <th>Start Date Time</th>
+                                        <th>End Date Time</th>
+                                        <th>Price</th>
+                                        <th>Archive</th>
+                                        @*<th>Start date</th>*@
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAddEvent" Style="display: none">
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4" id="myText">Add Event</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="txtTitle_Event">Title</label>
+                                        <input type="text" id="txtTitle_Event" class="form-control" />
+                                        <div class="error-class" id="error_txtTtile_Event"></div>
+
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label for="txtLocationURL_Event">Event Location URL</label>
+                                        <input type="text" id="txtLocationURL_Event" class="form-control" />
+                                        <div class="error-class" id="error_txtLocationURL_Event"></div>
+
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="ddlEventCategory">Event Category</label>
+                                        <select id="ddlEventCategory" class="form-control" data-width="100%">
+                                            <option value="0">Select Category</option>
+                                        </select>
+                                        <div class="error-class" id="error_ddlEventCategory"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div id="EventMap" style="width: 100%; height: 400px;"></div>
+                                    <input type="hidden" id="LocationLatitude" value="" />
+                                    <input type="hidden" id="LocationLongitude" value="" />
+                                    <div class="col-12 from-group text-center mt-4 mb-4">
+                                        <input type="button" class="btn btn-primary mb-0" id="confirmaddress" value="Confirm Address" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="description">Address</label>
+                                            <textarea name="description" class="form-control" rows="6" id="Event_Address"></textarea>
+                                            <div class="error-class" id="error_Event_Address"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="country">Country</label>
+                                            @*<input type="text" class="form-control" id="country" readonly />*@
+                                            <select id="country" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeCountry();">
+                                            </select>
+                                            <input type="text" id="country" class="form-control EventCountryState MapLocation d-none" readonly />
+                                            <div class="error-class" id="error_txtCountry"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="state">State</label>
+                                            @*<input type="text" class="form-control" id="state" readonly />*@
+                                            <select id="state" class="form-control WithoutMapLocation" data-width="100%" onchange="ChangeState();">
+                                            </select>
+                                            <input type="text" id="state" class="form-control EventCountryState  MapLocation d-none" readonly />
+
+                                            <div class="error-class" id="error_state"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="city">City</label>
+                                            @*<input type="text" class="form-control" id="txt_City" required />*@
+                                            <select id="txt_City" class="form-control WithoutMapLocation" data-width="100%">
+                                            </select>
+                                            <input type="text" id="txt_City" class="form-control MapLocation d-none" value="" />
+                                            <div class="error-class" id="error_txt_City"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="txt_PinCode">PinCode</label>
+                                            <input type="text" class="form-control" id="txt_PinCode" required />
+                                            <div class="error-class" id="error_txt_PinCode"></div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="Landmark">Please Enter Location Landmark</label>
+                                            <input type="text" class="form-control" id="Landmark_name" required />
+                                            <div class="error-class" id="error_Landmark_name"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="StartDate_Event">Start Date</label>
+                                        <div class="input-group">
+                                            <input type="date" class="form-control" id="StartDate_Event" onchange="StartDateChange();" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="error-class" id="error_EventStartDate"></div>
+
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label for="EndDate_Event">End Date</label>
+                                        <div class="input-group">
+                                            <input type="date" class="form-control" id="EndDate_Event" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="error-class" id="error_EventEndDate"></div>
+
+                                    </div>
+
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="StartTime_Event">Start Time</label>
+                                        <div class='input-group'>
+                                            <input type="time" class="form-control datetimepickerClass" id="StartTime_Event" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="error-class" id="error_EventStartTime"></div>
+
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label for="EndTime_Event">End Time</label>
+                                        <div class='input-group'>
+                                            <input type="time" class="form-control datetimepickerClass" id="EndTime_Event" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="error-class" id="error_EventEndTime"></div>
+
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="IsPaid">Is Paid</label>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="IsPaidRadioYes_Event" name="IsPaidRadio_Event" class="custom-control-input" value="1">
+                                            <label class="custom-control-label" for="IsPaidRadioYes_Event">Yes</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="IsPaidRadioNo_Event" name="IsPaidRadio_Event" class="custom-control-input" value="0" checked>
+                                            <label class="custom-control-label" for="IsPaidRadioNo_Event">No</label>
+                                        </div>
+                                        <div class="error-class" id="error_IsPaid_Event"></div>
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label for="EndTime">Walkings</label>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="WalkingRadioYes_Event" name="WalkingRadio_Event" class="custom-control-input" value="1" checked>
+                                            <label class="custom-control-label" for="WalkingRadioYes_Event">Yes</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="WalkingRadioNo_Event" name="WalkingRadio_Event" class="custom-control-input" value="0">
+                                            <label class="custom-control-label" for="WalkingRadioNo_Event">No</label>
+                                        </div>
+                                        <div class="error-class" id="error_Walking_Event"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 form-group">
+                                        <label for="ShortDecription_Event">Short Description</label>
+                                        <input type='text' id="ShortDecription_Event" class="form-control datetimepickerClass" />
+                                        <div class="error-class" id="error_EventShortDecription"></div>
+
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label for="Price_Event">Price</label>
+                                        <input type="text" id="Price_Event" class="form-control" disabled />
+                                        <div class="error-class" id="error_Price_Event"></div>
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12 form-group">
+                                        <label for="FeaturedImage_Event">Featured Image</label>
+                                        <div class="imagePreview">
+                                            <img id="previewEventImage" class="d-none" style="width:100%; height:100%;">
+                                        </div>
+                                        <input type="file" id="FeaturedImage_Event" class="form-control" accept="image/*" />
+                                        <div class="error-class" id="error_FeaturedImage_Event"></div>
+
+                                    </div>
+                                    <div class="col-12 form-group">
+                                        <label for="About_Event">About Event</label>
+                                        <div class="html-editor form-control" id="About_Event" style="height:auto"></div>
+                                        <div class="error-class" id="error_About_Event"></div>
+
+                                    </div>
+                                    <div class="col-12 form-group">
+                                        <label for="AdditonalInforamtion_Event">Additional Information</label>
+                                        <div class="html-editor form-control" id="AdditonalInforamtion_Event" style="height:auto"></div>
+                                        <div class="error-class" id="error_AdditonalInforamtion_Event"></div>
+
+                                    </div>
+                                    <div class="col-12 form-group">
+                                        <label for="TicketInformation_Event">Ticket Information</label>
+                                        <input type="text" class="form-control" id="TicketInformation_Event" />
+                                        <div class="error-class" id="error_TicketInformation_Event"></div>
+                                    </div>
+                                </div>
+
+
+                                <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText" onclick="AddUpdateEvent()">Save</button>
+                                <a href="javascript:;" class="btn btn-primary mb-0" onclick="ResetAddEventView()">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        @*All List Event Spomsor*@
+        <div id="sectionViewEventSponsor">
+
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="mb-4">Event Sponsor</h5>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventSponsor" onclick="ShowAddUpdateEventSponsor();">Add Event Sponsor</a>
+                                </div>
+                            </div>
+
+                            <table id="tblEventSponsor" class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th> Sponsor Title</th>
+                                        <th>Sponsor Link</th>
+                                        <th>Sponsor Iocn</th>
+                                        @*<th>End Da</th>
+                                            <th>Price</th>*@
+                                        @*<th>Start date</th>*@
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*------------------------------------- Add Update Event Sponsor Model ------------------------------------------------------ *@
+        <div class="modal fade" id="AddUpdateEventSponsorModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="Modal_Title" class="modal-title"> Add Event Sponsor</h5>
+                        <button type="button" class="close" id="clsEventSponsorButton" data-dismiss="modal" onclick="ResetAddViewEventSponsor()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="txtTitle_EventSponsor"> Sponsor Title</label>
+                                    <input type="text" id="txtTitle_EventSponsor" class="form-control" />
+                                    <div class="error-class" id="error_txtTtile_EventSponsor"></div>
+
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="EventSponsorLink">Sponsor Link</label>
+                                    <input type="text" id="EventSponsorLink" class="form-control" />
+                                    <div class="error-class" id="error_EventSponsorLink"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="Icon_EventSponsor">Sponsor Icon</label>
+                                    <div class="imagePreview">
+                                        <img id="previewSponsorEventImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="Icon_EventSponsor" class="form-control" accept="image/*" />
+                                    <div class="error-class" id="error_Icon_EventSponsor"></div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_EventSponsor" onclick="AddUpdateEventSponor()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewEventSponsor()">Cancel</a>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                            data-dismiss="modal">Save</button>*@
+                        @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*------------------------------------- Add Update Event Sponsor Model ------------------------------------------------------ *@
+
+        @*-----------------------------------Event Organizer table-----------------------------------------------------------*@
+        <div id="sectionViewEventOrganizer">
+
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="mb-4">Event Organizer</h5>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventOrganizer" onclick="ShowAddUpdateEventOrganizer();">Add Event Organizer</a>
+                                </div>
+                            </div>
+
+                            <table id="tblEventOrganizer" class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Name</th>
+                                        <th>Image</th>
+                                        <th>Link</th>
+                                        @*<th>Price</th>*@
+                                        @*<th>Start date</th>*@
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*-----------------------------------Event Organizer table-----------------------------------------------------------*@
+
+        @*------------------------------------- Add Update Event Organizer Modal ------------------------------------------------------ *@
+        <div class="modal fade" id="AddUpdateEventOrganizerModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="EventOrganizer_Modal_Title" class="modal-title">Add Event Organizer</h5>
+                        <button type="button" class="close" data-dismiss="modal" onclick="ResetAddViewEventOrganizer()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="txtName_EventOrganizer">Name</label>
+                                    <input type="text" id="txtName_EventOrganizer" class="form-control txtNameEventDetail" />
+                                    <div class="error-class error_txtNameEventDetail" id="error_txtName_EventOrganizer"></div>
+
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="EventOrganizerLink">Link</label>
+                                    <input type="text" id="EventOrganizerLink" class="form-control txtLinkEventDetail" />
+                                    <div class="error-class error_txtLinkEventDetail" id="error_EventOrganizerLink"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="Image_EventOrganizer">Image</label>
+                                    <div class="imagePreview">
+                                        <img id="previewOrganizerEventImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="Image_EventOrganizer" class="form-control imageEventDetails" accept="image/*" />
+                                    <div class="error-class error_imageEventDetails" id="error_Image_EventOrganizer"></div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_EventOrganizer" onclick="AddUpdateEventOrganizer()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewEventOrganizer()">Cancel</a>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                            data-dismiss="modal">Save</button>*@
+                        @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*------------------------------------- Add Update Event Organizer Modal ------------------------------------------------------ *@
+
+        @*-----------------------------------Event Host table-----------------------------------------------------------*@
+        <div id="sectionViewEventHost">
+
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="mb-4">Event Host</h5>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventHost" onclick="ShowAddUpdateEventHost();">Add Event Host</a>
+                                </div>
+                            </div>
+
+                            <table id="tblEventHost" class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Name</th>
+                                        <th>Image</th>
+                                        <th>Link</th>
+                                        <th>Designation</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*-----------------------------------Event Host table-----------------------------------------------------------*@
+
+        @*------------------------------------- Add Update Event Host Modal ------------------------------------------------------ *@
+        <div class="modal fade" id="AddUpdateEventHostModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="EventHost_Modal_Title" class="modal-title">Add Event Host</h5>
+                        <button type="button" class="close" data-dismiss="modal" onclick="ResetAddViewEventHost()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="txtName_EventHost">Name</label>
+                                    <input type="text" id="txtName_EventHost" class="form-control txtNameEventDetail" />
+                                    <div class="error-class error_txtNameEventDetail" id="error_txtName_EventHost"></div>
+
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="EventHostLink">Link</label>
+                                    <input type="text" id="EventHostLink" class="form-control txtLinkEventDetail" />
+                                    <div class="error-class error_txtLinkEventDetail" id="error_EventHostLink"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="Image_EventHost">Image</label>
+                                    <div class="imagePreview">
+                                        <img id="previewHostEventImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="Image_EventHost" class="form-control imageEventDetails" accept="image/*" />
+                                    <div class="error-class error_imageEventDetails" id="error_Image_EventHost"></div>
+
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="EventHostDesignation">Designation</label>
+                                    <input type="text" id="EventHostDesignation" class="form-control txtDesignationEventDetails" />
+                                    <div class="error-class error_txtDesignationEventDetails" id="error_EventHostDesignation"></div>
+                                </div>
+
+                            </div>
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_EventHost" onclick="AddUpdateEventHost()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewEventHost()">Cancel</a>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                            data-dismiss="modal">Save</button>*@
+                        @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*------------------------------------- Add Update Event Host Modal ------------------------------------------------------ *@
+
+        @*-----------------------------------Event Special Guest table-----------------------------------------------------------*@
+        <div id="sectionViewEventSpecialGuest">
+
+            <div class="row mb-4">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="mb-4">Event Special Guest</h5>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a href="javascript:;" class="btn btn-primary btn-lg top-right-button mr-1" id="btnAddEventSpecialGuest" onclick="ShowAddUpdateEventSpecialGuest();">Add Event Special Guest</a>
+                                </div>
+                            </div>
+
+                            <table id="tblEventSpecialGuest" class="mt-5">
+                                <thead>
+                                    <tr>
+                                        <th>SNo.</th>
+                                        <th>Name</th>
+                                        <th>Image</th>
+                                        <th>Link</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*-----------------------------------Event Special Guest table-----------------------------------------------------------*@
+
+        @*------------------------------------- Add Update Event Special Guest Modal ------------------------------------------------------ *@
+        <div class="modal fade" id="AddUpdateEventSpecialGuestModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-0">
+                        <h5 id="EventSpecialGuest_Modal_Title" class="modal-title">Add Event Special Guest</h5>
+                        <button type="button" class="close" data-dismiss="modal" onclick="ResetAddViewEventSpecialGuest()">&times;</button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form>
+                            <div class="row">
+                                <div class="col-6 form-group">
+                                    <label for="txtName_EventSpecialGuest">Name</label>
+                                    <input type="text" id="txtName_EventSpecialGuest" class="form-control txtNameEventDetail" />
+                                    <div class="error-class error_txtNameEventDetail" id="error_txtName_EventSpecialGuest"></div>
+
+                                </div>
+                                <div class="col-6 form-group">
+                                    <label for="EventSpecialGuestLink">Link</label>
+                                    <input type="text" id="EventSpecialGuestLink" class="form-control txtLinkEventDetail" />
+                                    <div class="error-class error_txtLinkEventDetail" id="error_EventSpecialGuestLink"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 form-group">
+                                    <label for="Image_EventSpecialGuest">Image</label>
+                                    <div class="imagePreview">
+                                        <img id="previewSpecialGuestEventImage" class="d-none" style="width:100%; height:100%;">
+                                    </div>
+                                    <input type="file" id="Image_EventSpecialGuest" class="form-control imageEventDetails" accept="image/*" />
+                                    <div class="error-class error_imageEventDetails" id="error_Image_EventSpecialGuest"></div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <button type="button" class="btn btn-primary mb-0" id="ChangeUpdateText_EventSpecialGuest" onclick="AddUpdateEventSpecialGuest()">Save</button>
+                            <a href="javascript:;" class="btn btn-primary mb-0" data-dismiss="modal" onclick="ResetAddViewEventSpecialGuest()">Cancel</a>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        @*<button type="button" class="btn btn-outline-dark cstm-btn w-auto"
+                            data-dismiss="modal">Save</button>*@
+                        @*<button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*------------------------------------- Add Update Event Special Guest Modal ------------------------------------------------------ *@
+
+    </div>
+</main>
+
+
+
+@section Scripts{
+    <script src="~/Content/business-panel/js/vendor/quill.min.js"></script>
+
+    @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_EventScriptPartial.cshtml")
+
+    <script>
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+
+            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+        ];
+
+        var quillAbout = new Quill('#About_Event', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+        var quillAdditionalInformation = new Quill('#AdditonalInforamtion_Event', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+
+    </script>
+}

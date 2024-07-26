@@ -1,0 +1,141 @@
+﻿
+@{
+    ViewBag.Title = "Checkout";
+    Layout = "~/Views/Shared/_BusinessAdminLayout.cshtml";
+    int IsItemAlreadyPurchased = ViewBag.IsItemAlreadyPurchased;
+    string alreadyPurchasedMessage = ViewBag.AlreadyPurchasedMessage;
+}
+
+@section Styles {
+    <style>
+        .error-class {
+            color: red;
+        }
+
+        #txtCouponCode:valid {
+            text-transform: uppercase;
+        }
+
+        .image-small {
+            width: 50px;
+            height: 50px;
+        }
+    </style>
+}
+
+
+    @Html.Partial("_LoaderPartial")
+
+    <input type="hidden" id="hiddenCheckoutId" value="@ViewBag.ItemId" />
+    <input type="hidden" id="hiddenCheckoutType" value="@ViewBag.ItemType" />
+    <input type="hidden" id="hiddenStudentLoginId" value="@ViewBag.StudentLoginId" />
+
+    <main>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col-8">
+                            <h1 class="pageHeadingText" id="pageTextchange">Student Booking</h1>
+                            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                                <ol class="breadcrumb pt-0">
+                                    <li class="breadcrumb-item">
+                                        <a href="/Business/Student">Manage Student</a>
+                                    </li>
+                                    <li class="breadcrumb-item active pageHeadingText" aria-current="page" id="pageStageChange"> Booking Checkout</li>
+                                </ol>
+                            </nav>
+                        </div>
+                        <div class="col-4 text-right">
+                            <a href="/Business/Student" class="btn btn-primary btn-lg top-right-button mr-1">Back</a>
+                        </div>
+                    </div>
+                    <div class="separator mb-5"></div>
+                </div>
+            </div>
+
+            <div class="row d-none" id="sectionError">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column justify-content-center align-items-center">
+                            <i class="h1 fas fa-exclamation text-danger"></i>
+                            <h4>Invalid Item</h4>
+                            <p>Item not found for checkout!</p>
+                            <a href="/Business/Student" class="btn btn-sm btn-primary">Manage Student</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sectionCheckout">
+                <div class="row">
+                    <div class="col-sm-6" id="divItemDetail">
+
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <img id="studentProfileImage" class="image-small rounded mr-3" src="/Content/Uploads/Images/BusinessProfile/l-2_404df5b35aa24dc882988823586ebffb.jpg" />
+                                    <h4 id="studentName">Student Name</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column">
+                            @*<div class="text-center h6 p-4" style="background:#f1f1f1">Total: <span id="TotalPrice">Rs. 699</span></div>*@
+                            <div class="text-center h6 p-4" style="background:#f1f1f1" id="divOrderBillingDetail">
+                                @* Append by JS *@
+                            </div>
+                            @if (IsItemAlreadyPurchased == 1)
+                            {
+                                <div class="w-100 text-center text-success">@alreadyPurchasedMessage</div>
+                            }
+                            else
+                            {
+
+                                <div>
+                                    <div class="form-group">
+                                        <div id="divAppliedCoupons">
+
+                                        </div>
+                                        <label for="txtCouponCode" class="h6">Apply Coupon</label>
+                                        <div class="input-group">
+                                            <input type="text" id="txtCouponCode" class="form-control" placeholder="Coupon Code" />
+                                            <button type="button" class="btn btn-success border-0 rounded-0" id="btnApplyCoupon" onclick="ApplyCoupon();">Apply</button>
+                                        </div>
+                                        <div class="error-class" id="error_txtCouponCode"></div>
+                                        <div class="text-success" id="success_txtCouponCode"></div>
+                                    </div>
+                                    <fieldset class="form-group">
+                                        <legend class="form-label h6">Payment Method</legend>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode1" value="1" checked>
+                                            <label class="form-check-label" for="paymentMode1">
+                                                Cash
+                                            </label>
+                                        </div>
+                                        @*<div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="paymentMode" id="paymentMode2" value="2">
+                                        <label class="form-check-label" for="paymentMode2">
+                                            Card
+                                        </label>
+                                    </div>*@
+                                    </fieldset>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary w-100" onclick="verifyPurchase();">Purchase</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    @section Scripts{
+        @Html.Partial("/Views/Shared/ScriptPartials/BusinessPanel/_CheckoutScriptsPartial.cshtml")
+    }
+

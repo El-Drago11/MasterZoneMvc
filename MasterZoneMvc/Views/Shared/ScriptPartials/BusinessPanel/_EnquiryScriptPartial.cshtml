@@ -1,0 +1,1214 @@
+﻿@using MasterZoneMvc.ViewModels;
+
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>;
+    List<PermissionHierarchy_VM> permissions = Permissions;
+    List<string> permissionKeys = new List<string>();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+
+<script>
+    var EnquiryId_Global = 0;
+var UserToken_Global = "";
+var _enquiryTable;
+
+function initializeDataTable_Enquiry() {
+    _enquiryTable = $("#tblEnquiry").DataTable();
+}
+
+$(document).ready(function () {
+    $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            initializeDataTable_Enquiry();
+            GetAllBusinessEnquiries();
+            GetAllActiveBusinessPlans();
+            GetAllScheduleClasses();
+            GetAllBusinessStaff();
+            ExpenseDate();
+
+            StopLoading();
+        }
+        else {
+            $.get("/Business/GetStaffToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                    initializeDataTable_Enquiry();
+                    GetAllBusinessEnquiries();
+                    GetAllActiveBusinessPlans();
+                    GetAllScheduleClasses();
+                    GetAllBusinessStaff();
+                    ExpenseDate();
+
+                    StopLoading();
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+
+    $('#btnAddEnquiry').click(function () {
+        $('#sectionAddUpdateEnquiry').show();
+        $('#btnAddEnquiry').hide();
+        $('#sectionViewEnquiry').hide();
+        document.getElementById("pageTextchange").innerHTML = "Add Enquiry";
+        document.getElementById("pageStageChange").innerHTML = "Add Enquiry";
+    });
+});
+
+
+
+    function ExpenseDate() {
+        // Get the current date
+        const currentDate = new Date().toISOString().split("T")[0];
+
+        // Get the input element
+        var endDateInput = document.getElementById("txtFollowUpDateStaff");
+
+        // Set the max attribute to the current date
+        endDateInput.min = currentDate;
+    }
+
+    function cancelAddUpdateForm() {
+        ResetEnquiryForm();
+
+        $('#sectionAddUpdateEnquiry').hide();
+        $('#btnAddEnquiry').show();
+        $('#sectionViewEnquiry').show();
+        document.getElementById("pageTextchange").innerHTML = "Enquiries";
+        document.getElementById("pageStageChange").innerHTML = "Enquiries";
+        document.getElementById("btnSubmitEnquiry").innerHTML = "Submit";
+    }
+
+$("#enquiryReplyModal").on('hide.bs.modal', function () {
+    ResetReplyModal();
+});
+
+    function showEditEnquiryView() {
+        $('#sectionAddUpdateEnquiry').show();
+        $('#btnAddEnquiry').hide();
+        $('#sectionViewEnquiry').hide();
+        document.getElementById("pageTextchange").innerHTML = "Edit Enquiry";
+        document.getElementById("pageStageChange").innerHTML = "Edit Enquiry";
+        document.getElementById("btnSubmitEnquiry").innerHTML = "Update";
+    }
+
+function GetAllBusinessEnquiries() {
+    // ---------------- Pagination Data Table --------------------
+    var _url_val = "/api/Enquiry/Business/GetAllByPagination";
+    _enquiryTable.clear().destroy();
+    _enquiryTable = $("#tblEnquiry").DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "orderMulti": false,
+        "ordering": true,
+        "paginate": true,
+        "order": [[4, "desc"]],
+        "ajax": {
+            "headers": {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            "url": _url_val,
+            "type": "POST",
+            "error": function (result) {
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        },
+        "columns": [
+            { "data": "SerialNumber", "name": "SerialNumber", "autoWidth": true }
+            , { "data": "Name", "name": "Name", "autoWidth": true }
+            , { "data": "Email", "name": "Email", "autoWidth": true }
+            , {
+                "data": "Notes", "name": "Notes", "autoWidth": true,
+                "render": function (data, type, row) {
+                    if (row.Notes.length > 100) { return row.Notes.substr(0, 100) + '...'; }
+                    else { return row.Notes; }
+                }
+            }
+            , { "data": "StaffName", "name": "StaffName", "autoWidth": true }
+            , {
+                "data": "CreatedOn", "name": "CreatedOn", "autoWidth": true
+                , "render": function (data, type, row) {
+                    return `<span style="display:none;">${moment(row.CreatedOn_FormatDate).format('YYYY-MM-DD')}</span> ${row.CreatedOn_FormatDate}`;
+                }
+            }
+            , {
+                "data": null, "": "EnquiryStatus", "autoWidth": true
+                , "render": function (data, type, row) {
+                    //---Check Rating-Status
+                    var _status = '';
+                    if (row.EnquiryStatus == 0) {
+                        _status = '<span class="badge badge-warning text-white px-1 py-1" style="width:max-content;">Pending</span>';
+                    }
+                    else if (row.EnquiryStatus == 1) {
+                        _status = '<span class="badge badge-success text-white px-1 py-1" style="width:max-content;">Open</span>';
+                    }
+                    else if (row.EnquiryStatus == 2) {
+                        _status = '<span class="badge badge-danger text-white px-1 py-1" style="width:max-content;">Close</span>';
+                    }
+
+                    return _status;
+                }
+            }
+            , {
+                "data": null, "": "Action", "autoWidth": true,
+                "render": function (data, type, row) {
+                    var _view = `<a href="javascript:getEnquiryDetailById(${row.Id});"><i class="fas fa-eye" title="View"></i></a>`;
+                    var _edit = `<a href="javascript:EditEnquiryById(${row.Id});"><i class="fas fa-edit" title="Edit"></i></a>`;
+                    var _delete = `<a href="javascript:ConfirmDeleteEnquiry(${row.Id});"><i class="fas fa-trash" title="Delete"></i></a>`;
+                    var _close = (row.EnquiryStatus == 2) ? '' : `<a href="javascript:ConfirmChangeEnquiry(${row.Id});"><i class="fas fa-times" title="Close Enquiry"></i></a>`;
+                    var _follow = '';
+
+                    if (row.EnquiryStatus == 1 || row.EnquiryStatus == 2) {
+                        _follow = `<a href="javascript:;" style="width:max-content;" class="disabled-text-selection"><i class="fas fa-user text-black-50" title="Asign Staff"></i></a></br>`;
+                    } else {
+                        _follow = `<a href="javascript:ViewEnquiryDetail(${row.Id});"><i class="fas fa-user" p-1" title="Asign Staff"></i></a>`;
+                    }
+
+                    var _action = `<div class="edbt">
+                                ${_follow}
+                                @if (permissionKeys.Contains("ManageEnquiries_ViewEnquiries"))
+                                 {
+                                      <text>
+                                          ${_view}
+                                      </text>
+                                 }
+                                @if (permissionKeys.Contains("ManageEnquiries_ViewEnquiries_EditEnquiries"))
+                                 {
+                                      <text>
+                                          ${_edit}
+                                      </text>
+                                 }
+                                @if (permissionKeys.Contains("ManageEnquiries_ViewEnquiries_DeleteEnquiries"))
+                                 {
+                                      <text>
+                                          ${_delete}
+                                      </text>
+                                 }
+                                ${_close}
+                            </div>`;
+                    return _action;
+                }
+            }
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "columnDefs": [{
+            "targets": [0, 6,7], // column index (start from 0)
+            "orderable": false, // set orderable false for selected columns
+        }]
+    });
+
+    // for enabling search box only send requet on pressing enter
+    $('#tblEnquiry_filter input').unbind();
+    $('#tblEnquiry_filter input').bind('keyup', function (e) {
+        if (e.keyCode == 13 || (e.keyCode == 8 && $(this).val() == '')) {
+            _enquiryTable.search(this.value).draw();
+        }
+    });
+
+    // ----------------  Pagination Data Table ------------------
+}
+
+function btnSubmitFormClick() {
+
+    let is_valid = true;
+    $("#sectionAddUpdateEnquiry .error-class").html('');
+
+    var _name = $('#txtName').val().trim();
+    var _gender = $('#ddlGender').val();
+    var _email = $('#txtEmail').val().trim();
+    var _DOB = $('#txtDOB').val().trim();
+    var _phoneNumber = $('#txtPhoneNumber').val().trim();
+    var _alternatePhoneNumber = $('#txtAlternatePhoneNumber').val().trim();
+    var _address = $('#txtAddress').val().trim();
+    var _activity = $('#txtActivity').val().trim();
+    var _levelId = $('#ddlLevel').val();
+    var _classId = $('#ddlClass').val();
+    var _status = $('#ddlStatus').val();
+    var _startFromDate = $('#txtStartFrom').val().trim();
+    //var _staffId = $('#ddlStaff').val();
+    //var _followUpDate = $('#txtFollowUpDate').val().trim();
+    var _notes = $('#txtNote').val().trim();
+    var _planId = $('#ddlPlan').val();
+
+    var _error_name = $('#error_txtName');
+    var _error_gender = $('#error_ddlGender');
+    var _error_email = $('#error_txtEmail');
+    var _error_DOB = $('#error_txtDOB');
+    var _error_phoneNumber = $('#error_txtPhoneNumber');
+    var _error_alternatePhoneNumber = $('#error_txtAlternatePhoneNumber');
+    var _error_address = $('#error_txtAddress');
+    var _error_activity = $('#error_txtActivity');
+    var _error_levelId = $('#error_ddlLevel');
+    var _error_classId = $('#error_ddlClass');
+    var _error_status = $('#error_ddlStatus');
+    var _error_startFromDate = $('#error_txtStartFrom');
+    //var _error_staffId = $('#error_ddlStaff');
+    //var _error_followUpDate = $('#error_txtFollowUpDate');
+    var _error_notes = $('#error_txtNote');
+    var _error_planId = $('#error_ddlPlan');
+
+
+    var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    var phone_test = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+
+    if (validate_IsEmptyStringInputFieldValue(_name)) {
+        is_valid = false;
+        _error_name.html('@(Resources.BusinessPanel.Enquiry_NameRequird)');
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_gender)) {
+        is_valid = false;
+        _error_gender.html('@(Resources.BusinessPanel.Enquiry_GenderRequird)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.BusinessPanel.EmailRequired)');
+    }
+
+     else if (!TestEmail.test(_email)) {
+        is_valid = false;
+        _error_email.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+    }
+
+
+    if (validate_IsEmptyStringInputFieldValue(_DOB)) {
+        is_valid = false;
+        _error_DOB.html('@(Resources.BusinessPanel.Enquiry_DOBRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_phoneNumber)) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.PhoneNumberRequired)');
+    }
+     else if (_phoneNumber.indexOf(' ') >= 0) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.PhoneNumberNotEmptySpaceRequired)');
+    }
+    else if (!phone_test.test(_phoneNumber)) {
+        is_valid = false;
+        _error_phoneNumber.html('@(Resources.BusinessPanel.ValidPhoneNumberRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_address)) {
+        is_valid = false;
+        _error_address.html('@(Resources.BusinessPanel.AddressRequired)');
+    }
+
+    if (validate_IsEmptyStringInputFieldValue(_activity)) {
+        is_valid = false;
+        _error_activity.html('@(Resources.BusinessPanel.Enquiry_ActivityRequired)');
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_levelId)) {
+        is_valid = false;
+        _error_levelId.html('@(Resources.BusinessPanel.Enquriy_LevelRequired)');
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_classId) && validate_IsEmptySelectInputFieldValue(_planId)) {
+        is_valid = false;
+        _error_classId.html('@(Resources.BusinessPanel.Enquiry_EnquiredForSelectionRequired)');
+    }
+
+    if (validate_IsEmptySelectInputFieldValue(_status)) {
+        is_valid = false;
+        _error_status.html('@(Resources.BusinessPanel.Enquiry_StatusRequired)');
+    }
+
+    @*if (validate_IsEmptySelectInputFieldValue(_staffId)) {
+        is_valid = false;
+        _error_staffId.html('@(Resources.BusinessPanel.Enquiry_StaffRequired)');
+    }*@
+
+    if (validate_IsEmptyStringInputFieldValue(_startFromDate)) {
+        is_valid = false;
+        _error_startFromDate.html('@(Resources.BusinessPanel.Enquiry_StartFromDateRequired)');
+    }
+
+    @*if (validate_IsEmptyStringInputFieldValue(_followUpDate)) {
+        is_valid = false;
+        _error_followUpDate.html('@(Resources.BusinessPanel.Enquiry_FollowUpDateRequired)');
+    }*@
+
+    if (validate_IsEmptyStringInputFieldValue(_notes)) {
+        is_valid = false;
+        _error_notes.html('@(Resources.BusinessPanel.Enquiry_NotesRequired)');
+    }
+
+    if (is_valid) {
+        var _mode = (EnquiryId_Global > 0) ? 2 : 1;
+
+        var data = new FormData();
+        data.append("Id", EnquiryId_Global);
+        data.append("Name", _name);
+        data.append("Gender", _gender);
+        data.append("Email", _email);
+        data.append("DOB", _DOB);
+        data.append("PhoneNumber", _phoneNumber);
+        data.append("AlternatePhoneNumber", _alternatePhoneNumber);
+        data.append("Address", _address);
+        data.append("Activity", _activity);
+        data.append("LevelId", _levelId);
+        data.append("ClassId", _classId);
+        data.append("BusinessPlanId", _planId);
+        data.append("Status", _status);
+        data.append("StartFromDate", _startFromDate);
+        //data.append("StaffId", _staffId);
+        //data.append("FollowUpDate", _followUpDate);
+        data.append("Notes", _notes);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/Enquiry/AddUpdateEnquiry',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    $('#enquiryReplyModal').modal('hide');
+                    cancelAddUpdateForm();
+                    GetAllBusinessEnquiries();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+
+function getEnquiryDetailById(id) {
+    StartLoading();
+    let _url = "/api/Enquiry/GetById?id=" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+                var item = response.data.EnquiryDetail;
+                var modalBody = `<div class="row">`;
+                modalBody += generateDetailViewRowData('Name', item.Name);
+                modalBody += generateDetailViewRowData('Email', item.Email);
+                modalBody += generateDetailViewRowData('Phone Number', item.PhoneNumber);
+                modalBody += generateDetailViewRowData('Alternate Number', item.AlternatePhoneNumber);
+                modalBody += generateDetailViewRowData('Gender', item.Gender);
+                modalBody += generateDetailViewRowData('DOB', item.DOB);
+                modalBody += generateDetailViewRowData('Address', item.Address);
+                modalBody += generateDetailViewRowData('Activity', item.Activity);
+                modalBody += generateDetailViewRowData('Level', item.LevelId);
+                modalBody += generateDetailViewRowData('Plan', item.BusinessPlanName);
+                modalBody += generateDetailViewRowData('Class', item.ClassName);
+                modalBody += generateDetailViewRowData('Status', item.Status);
+                modalBody += generateDetailViewRowData('Start From Date', item.StartFromDate);
+                modalBody += generateDetailViewRowData('Staff', item.StaffName);
+                modalBody += generateDetailViewRowData('Follow Up Date', item.FollowUpDate);
+                modalBody += generateDetailViewRowData('Notes', item.Notes);
+                modalBody += "</div>";
+                modalBody += `<hr/>`;
+
+                var commentsData = ``;
+                for (var i = 0; i < response.data.EnquiryComments.length; i++) {
+                    commentsData += `<div class="p-2 previousComments mb-3">`;
+                    commentsData += `<div><strong>Followed On:</strong> ${response.data.EnquiryComments[i].CreatedOn_FormatDate}</div><div> ${response.data.EnquiryComments[i].Comments}</div>`;
+                    commentsData += `</div>`;
+                }
+
+                if (response.data.EnquiryComments.length <= 0) {
+                    commentsData = `<div class="w-100 font-italic text-center text-black-50 py-2">No Comments in this Enquiry.</div>`;
+                }
+
+                modalBody += `
+                    <div class="row">
+                        <strong>Previous Comments</strong> <br />
+                        <div class="col-md-12 manageComments">
+                            <div id="CommentsList">
+                                ${commentsData}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $('#enquiryDetailModal .modal-title').html(response.data.Title);
+                $('#enquiryDetailModal .modal-body').html(modalBody);
+                $('#enquiryDetailModal').modal('show');
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.EnquiryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    function generateDetailViewRowData(key, value) {
+        if (value == null || value == "")
+            return ``;
+
+        //return `
+        //        <div class="col-md-6">
+        //           <h4 class="text-primary">${key}</h4> <h6> ${value}</h6>
+        //           <hr/>
+        //        </div>
+        //`;
+
+        return `
+                <div class="col-md-4">
+                   <div class="d-flex justify-content-between"><span class="font-weight-bold">${key} : </span> <soan> ${value}</span></div>
+                </div>
+        `;
+    }
+
+function EditEnquiryById(id) {
+    //$('#btnOpenEnquiryReplyModal').click();
+    StartLoading();
+    let _url = "/api/Enquiry/GetById?id=" + id;
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+
+                return;
+            }
+
+            if (response.data && response.data != null) {
+
+                EnquiryId_Global = response.data.EnquiryDetail.Id;
+                var item = response.data.EnquiryDetail;
+                $('#txtName').val(item.Name);
+                $('#ddlGender').val(item.Gender);
+                $('#txtEmail').val(item.Email);
+                $('#txtDOB').val(item.DOB);
+                $('#txtPhoneNumber').val(item.PhoneNumber);
+                $('#txtAlternatePhoneNumber').val(item.AlternatePhoneNumber);
+                $('#txtAddress').val(item.Address);
+                $('#txtActivity').val(item.Activity);
+                $('#ddlLevel').val(item.LevelId);
+                $('#ddlClass').val(item.ClassId);
+                $('#ddlStatus').val(item.Status);
+                $('#txtStartFrom').val(item.StartFromDate);
+                $('#ddlStaff').val(item.StaffId);
+                $('#txtFollowUpDate').val(item.FollowUpDate);
+                $('#txtNote').val(item.Notes);
+                $('#ddlPlan').val(item.BusinessPlanId);
+
+                showEditEnquiryView();
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.BusinessPanel.EnquiryNotGetData_ErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+            StopLoading();
+        },
+        error: function (result) {
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+function ResetEnquiryForm() {
+    EnquiryId_Global = 0;
+
+    $('#sectionAddUpdateEnquiry .error-class').html('');
+
+    $('#txtName').val('');
+    $('#ddlGender').val('0');
+    $('#txtEmail').val('');
+    $('#txtDOB').val('');
+    $('#txtPhoneNumber').val('');
+    $('#txtAlternatePhoneNumber').val('');
+    $('#txtAddress').val('');
+    $('#txtActivity').val('');
+    $('#ddlLevel').val('0');
+    $('#ddlClass').val('0');
+    $('#ddlStatus').val('0');
+    $('#txtStartFrom').val('');
+    $('#ddlStaff').val('0');
+    $('#txtFollowUpDate').val('');
+    $('#txtNote').val('');
+    $('#ddlPlan').val('0');
+}
+
+
+function ConfirmDeleteEnquiry(id) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteEnquiryTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteEnquiryText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteEnquiry(id);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+}
+
+function DeleteEnquiry(id) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/Enquiry/Delete?id=" + id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if group successfully deleted
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    //--Get group List
+                    GetAllBusinessEnquiries();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+    }
+
+    @*function GetAllActiveBusinessPlans() {
+        var _url = "/api/BusinessPlan/GetAllForUser";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('#ddlPlan').html('');
+                var optionData = `<option value="0">Select Plan</option>`;
+                for (var i = 0; i < response.data.length; i++) {
+                    optionData += `<option value="${response.data[i].Id}">${response.data[i].Name}</option>`;
+                }
+
+                $('#ddlPlan').append(optionData);
+
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }*@
+
+function GetAllScheduleClasses() {
+        let _url = "/api/Class/GetAllList";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var classHtml = '<option value="0">Select Class</option>';
+
+                for (var i = 0; i < response.data.ClassList.length; i++) {
+                    var Class = response.data.ClassList[i];
+                    classHtml += `<option value="${Class.Id}">${Class.Name}</option>`;
+                }
+                $("#ddlClass").html(classHtml);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+function GetAllBusinessStaff() {
+        let _url = "/api/Staff/GetAll";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionHtml = '<option value="0">Select Staff</option>';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var staff = response.data[i];
+                    optionHtml += `<option value="${staff.Id}">${staff.FirstName + ' ' + staff.LastName + ' (' + staff.StaffCategoryName + ')'}</option>`;
+                }
+                $("#ddlStaff").html(optionHtml);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+   $('#EditBusinessEnquiryModal').on('hide.bs.modal', function () {
+        ResetViewBusinessEnquiryDetialModal();
+    });
+
+
+    function ResetViewBusinessEnquiryDetialModal() {
+        EnquiryId_Global = 0;
+        $('#BusinessDetails_EditBusinessEnquiryModal').html('');
+    }
+
+    function ViewEnquiryDetail(Id) {
+
+        GetAllBusinessStaffList();
+
+        EnquiryId_Global = Id;
+        $('#BusinessDetails_EditBusinessEnquiryModal').html('');
+        getBusinessEnquiryDetail(callbackBusinessEnquiryDetailDataModal);
+    }
+
+    function callbackBusinessEnquiryDetailDataModal(apiResponse) {
+        EnquiryId_Global = apiResponse.data.EnquiryDetail.Id;
+
+        var _htmlData = ``;
+        _htmlData += `<div class="row"><div class="col-md-4"><span><b>Name :</b></span>&nbsp${apiResponse.data.EnquiryDetail.Name}</div><div class="col-md-4"><span><b>Email :</b></span>&nbsp${apiResponse.data.EnquiryDetail.Email}</div><div class="col-md-4"><span><b>Address :</b></span>&nbsp${apiResponse.data.EnquiryDetail.Address}</div></div></br><div class="row"><div class="col-md-4"><span><b>Gender :</b></span>&nbsp${apiResponse.data.EnquiryDetail.Gender}</div><div class="col-md-4"><span><b>PhoneNumber :</b></span>&nbsp${apiResponse.data.EnquiryDetail.PhoneNumber}</div><div class="col-md-4"><span><b>Activity :</b></span>&nbsp${apiResponse.data.EnquiryDetail.Activity}</div></div></br><div class="row"><div class="col-md-4"><span><b>Alternate Number :</b></span>&nbsp${apiResponse.data.EnquiryDetail.AlternatePhoneNumber}</div><div class="col-md-4"><span><b>Start Date :</b></span>&nbsp${apiResponse.data.EnquiryDetail.StartFromDate}</div><div class="col-md-4"><span><b>Notes :</b></span>&nbsp${apiResponse.data.EnquiryDetail.Notes}</div></div></div></br>`;
+
+
+        //if (apiResponse.data.DiscountStudent.length <= 0) {
+        //    _htmlData += `<div class="w-100 font-italic text-center text-black-50 py-2">No Coupon in this Discount.</div>`;
+        //}
+        _htmlData += `</div>`;
+        $('#BusinessDetails_EditBusinessEnquiryModal').html(_htmlData);
+        $('#EditBusinessEnquiryModal').modal('show');
+    }
+
+    function getBusinessEnquiryDetail(callbackFunction) {
+
+        let _url = "/api/FollowUp/EnquiryDetailGetById?id=" + EnquiryId_Global;
+        StartLoading();
+
+        //showSpinnerInAddMemberModal();
+        //$('#addGroupMemberModal').modal('show');
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+
+               // $("#ddlSelectedStatus").val(response.data[i].ReviewBody);
+                EnquiryId_Global = response.data.EnquiryDetail.Id;
+
+                callbackFunction(response);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.UnAuthorizedErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@Resources.ErrorMessage.TechincalErrorMessage',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+function GetAllBusinessStaffList() {
+        let _url = "/api/Staff/GetAll";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var optionHtml = '<option value="0">Select Staff</option>';
+
+                for (var i = 0; i < response.data.length; i++) {
+                    var staff = response.data[i];
+                    optionHtml += `<option value="${staff.Id}">${staff.FirstName + ' ' + staff.LastName + ' (' + staff.StaffCategoryName + ')'}</option>`;
+                }
+                $("#ddlStaffList").html(optionHtml);
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    function btnSubmitFormStaffClick() {
+
+    let is_valid = true;
+  //  $("#sectionAddUpdateEnquiry .error-class").html('');
+
+
+        var _staffId = $('#ddlStaffList').val();
+        var _followUpDate = $('#txtFollowUpDateStaff').val().trim();
+
+
+        var _error_staffId = $('#error_ddlStaffList');
+        var _error_followUpDate = $('#error_txtFollowUpDateStaff');
+
+
+
+    if (validate_IsEmptySelectInputFieldValue(_staffId)) {
+        is_valid = false;
+        _error_staffId.html('@(Resources.BusinessPanel.Enquiry_StaffRequired)');
+    }
+
+
+    if (validate_IsEmptyStringInputFieldValue(_followUpDate)) {
+        is_valid = false;
+        _error_followUpDate.html('@(Resources.BusinessPanel.Enquiry_FollowUpDateRequired)');
+    }
+
+
+
+    if (is_valid) {
+
+        var _mode =  4 ;
+
+
+        var data = new FormData();
+        data.append("Id", EnquiryId_Global);
+        data.append("StaffId", _staffId);
+        data.append("FollowUpDate", _followUpDate);
+        data.append("Mode", _mode);
+
+        $.ajax({
+            url: '/api/Enquiry/UpdateEnquiryDetail',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    $('#enquiryReplyModal').modal('hide');
+                    ResetBusinessView();
+                    cancelAddUpdateForm();
+                    GetAllBusinessEnquiries();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+}
+    function ResetBusinessView() {
+        $('#EditBusinessEnquiryModal').modal('hide');
+    }
+    function ConfirmChangeEnquiry(sid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmChangeStatusEnquiryTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmChangeStatusEnquiryText)",
+        type: "warning",
+        confirmButtonColor: '#DD6B55',
+        buttons: {
+            cancel: '@(Resources.ErrorMessage.Cancel)',
+            confirm: '@(Resources.ErrorMessage.Yes)',
+        }
+    })
+        .then((willDelete) => {
+            if (willDelete) {
+                ChangeStatusEnquiry(sid);
+            } else {
+                //swal("Your imaginary file is safe!");
+            }
+        });
+}
+
+function ChangeStatusEnquiry(sid) {
+    StartLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/api/Enquiry/ChangeStatus/" + sid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if staff-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllBusinessEnquiries();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+    $('#enquiryDetailModal').on('hide.bs.modal', function () {
+        ResetViewEnquiryDetialModal();
+    });
+
+
+    function ResetViewEnquiryDetialModal() {
+        EnquiryId_Global = 0;
+        $('#BusinessDetails_BusinessEnquiryModal').html('');
+    }
+
+
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+        return true;
+    return false;
+}
+
+const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+    if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+        return true;
+    return false;
+}
+////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+</script>

@@ -1,0 +1,138 @@
+﻿
+<script>
+    var UserToken_Global = "";
+    var TrainingBookingId_Global = "0";
+
+
+    $(document).ready(function () {
+        TrainingBookingId_Global = $('#hidden_TrainingBookingId').val();
+
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                GetTrainingBookingDetailById();
+                StopLoading();
+            }
+            else {
+                $.get("/Staff/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        GetTrainingBookingDetailById();
+                        StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+
+    });
+
+
+    function GetTrainingBookingDetailById() {
+        StartLoading();
+        let _url = "/api/Training/TrainingBookingDetailById?trainingBookingId=" + TrainingBookingId_Global;
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                }
+
+                if (response.data && response.data != null) {
+
+                    var _trainingBookingDetail = response.data.TrainingBookingDetail;
+                    var _orderDetail = response.data.OrderDetail;
+                    var _paymentResponseDetail = response.data.PaymentResponseDetail;
+                    var _trainingDetail = response.data.TrainingDetail;
+                    var orderListItems = ``; 
+                    var trainingBookingListItems = ``;
+                    var trainingBlockHTML = `
+                        <a target="_blank" href="/Home/Certification?id=${_trainingDetail.Id}">
+                        <div class="d-flex align-items-center my-4">
+                            <div class="">
+                                <img src="${_trainingDetail.TrainingImageWithPath}" class="img-size-sm object-fit-cover mr-2" />
+                            </div>
+                            <div>
+                                <h5>${_trainingDetail.TrainingName}</h5>
+                            </div>
+                        </div>
+                        </a>
+                    `;
+
+                    trainingBookingListItems += trainingBlockHTML;
+                    trainingBookingListItems += bindFlexListItemHTML("Booking Price", _trainingBookingDetail.Price);
+                    trainingBookingListItems += bindFlexListItemHTML("Start Date", _trainingBookingDetail.StartDate);
+                    trainingBookingListItems += bindFlexListItemHTML("End Date", _trainingBookingDetail.EndDate);
+                    trainingBookingListItems += bindFlexListItemHTML("Training Completed", (_trainingBookingDetail.IsCompleted) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+
+                    orderListItems += bindFlexListItemHTML("Order #", _orderDetail.Id);
+                    orderListItems += bindFlexListItemHTML("Date", _orderDetail.CreatedOn_FormatDate);
+                    orderListItems += bindFlexListItemHTML("Discount", _orderDetail.TotalDiscount);
+                    orderListItems += bindFlexListItemHTML("GST", _orderDetail.GST);
+                    orderListItems += bindFlexListItemHTML("<b>Total Amount</b>", `<b>${_orderDetail.TotalAmount}</b>`);
+                    orderListItems += `<br/><div class="w-100" style="border-bottom:3px dashed #cecece;"></div><br>`;
+                    //orderListItems += bindFlexListItemHTML("Order Status", _orderDetail.Status);
+                    orderListItems += bindFlexListItemHTML("Payment Method", _orderDetail.PaymentMethod);
+                    orderListItems += bindFlexListItemHTML("Payment Approved", (_paymentResponseDetail.IsApproved) ? `<span class="badge badge-success">Yes</span>` : `<span class="badge badge-danger">No</span>`);
+                    orderListItems += bindFlexListItemHTML("Transaction ID", _paymentResponseDetail.TransactionID);
+
+                    $('#sectionBookingDetail').html(trainingBookingListItems);
+                    $('#sectionOrderDetails').html(orderListItems);
+                    $('#linkTrainingBooking').attr('href', `/Business/ViewTrainingBookings?trainingId=${_trainingBookingDetail.TrainingId}`);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.BusinessPanel.QueryNotGetData_ErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function bindFlexListItemHTML(key, value) {
+        return `
+            <div class="d-flex d-flex h6 justify-content-between w-100">
+                <div><b>${key}: </b></div>
+                <div>${value}</div>
+            </div>
+            <hr class="mt-0 mb-0" />
+        `;
+    }
+
+</script>

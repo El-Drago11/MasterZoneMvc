@@ -1,0 +1,289 @@
+﻿
+@{
+    ViewBag.Title = "My Purchase";
+    Layout = "~/Views/Shared/VistiorHomeLayout.cshtml";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/dataTables.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/Content/business-panel/css/vendor/datatables.responsive.bootstrap4.min.css" />
+
+    <style>
+        .Commontable {
+            width: 100%;
+        }
+
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+
+        .si-h1-rujfjfj {
+            margin-bottom: inherit !important;
+        }
+
+        .business_sec {
+            margin-bottom: 2px;
+        }
+
+
+        @@media screen and (max-width: 414px) {
+            div#tblClassBookingDetails_wrapper {
+                width: 100%;
+                overflow-x: scroll; 
+            }
+
+            div#tblEventBookingDetails_wrapper {
+                width: 100%;
+                overflow-x: scroll;
+            }
+
+            div#tblTrainingBookingDetails_wrapper {
+                width: 100%;
+                overflow-x: scroll;
+            }
+
+            div#tblPlanBookingDetails_wrapper {
+                width: 100%;
+                overflow-x: scroll;
+            }
+        }
+        a.btn.btn-sm.ml-4.ViewMoreDetail {
+            color: white;
+            background-color: #f3a762;
+        }
+       /* a.btn.btn-sm.ml-4 .ViewMoreDetail:hover {
+            background-color: white;
+            color: #f3a762;
+           
+        }*/
+      
+    </style>
+    <link rel="stylesheet" href="~/Content/assets/conatiner-style.css">
+    <link rel="stylesheet" href="~/Content/assets/Style_myBooking.css">
+    <style>
+        img.ls-p-lg.mblg-ls {
+            box-shadow: none !important;
+        }
+        p.successbtn {
+            text-align: center;
+            padding: 4px;
+            font-size: 14px;
+            background-color: green;
+            color: #fff;
+            width: 75%;
+            margin-top: 12px;
+        }
+        p.expirebtn {
+            text-align: center;
+            padding: 4px;
+            font-size: 14px;
+            background-color: red;
+            color: #fff;
+            width: 75%;
+            margin-top: 12px;
+        }
+
+        p.pendingbtn {
+            text-align: center;
+            padding: 4px;
+            font-size: 14px;
+            background-color: orange;
+            color: #fff;
+            width: 75%;
+            margin-top: 12px;
+        }
+
+        p.upcomingbtn {
+            text-align: center;
+            padding: 5px;
+            font-size: 14px;
+            background-color: #6eadfb;
+            color: white;
+        }
+        .edbt{
+            display :flex;
+        }
+        a.btn.btn-sm.ml-4.buyagainbtn {
+            color: #fff;
+            background-color: #007bff;
+        }
+    </style>
+
+
+}
+<input type="hidden" id="hidden_businessOwnerLoginId" value="@ViewBag.BusinessOwnerLoginId">
+
+<section id="section-mc1" class="section-mk1">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-sm-3">
+                @Html.Partial("_VisitorPanelSideBarPartial")
+            </div>
+
+            <div class="col-sm-9">
+
+                <!-- My-classes-section -->
+
+                <div id="My-Classes-i" class="section-1-my-classes inrsection-mltp">
+                    <h2 class="mk-hdffjsdkfj">My Purchase</h2>
+
+                    <ul class="nav nav-tabs custom-tab-bar mtab-3jrjfj">
+                        <li id="upc-fhgjfie" class="nav-item">
+                            <a class="nav-link text-dark active" data-toggle="tab" data-target="#fav_Classes" role="tab">Classes</a>
+                        </li>
+                        <li id="pst-jgmkjs" class="nav-item">
+                            <a class="nav-link text-dark" data-toggle="tab" data-target="#fav_Event" role="tab">Event</a>
+                        </li>
+                        <li id="pst-jgmkjs" class="nav-item">
+                            <a class="nav-link text-dark" data-toggle="tab" data-target="#fav_Training" role="tab">Training</a>
+                        </li>
+                        <li id="pst-jgmkjs" class="nav-item">
+                            <a class="nav-link text-dark" data-toggle="tab" data-target="#fav_Plan" role="tab">Plan/Package</a>
+                        </li>
+                    </ul>
+                    @*----------------------classes booking---------------------------*@
+
+                    <div class="tab-content">
+                        <div id="fav_Classes" class="tab-pane  fade active show p-3" role="tabpanel">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblClassBookingDetails" class="Commontable table-bordered" data-order='[[ 0, "desc" ]]'>
+                                                <thead>
+                                                    <tr>
+                                                        <th>OrederId</th>
+                                                        <th>Class Name</th>
+                                                        <th>Price</th>
+                                                        <th>Date</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*----------------------Event booking---------------------------*@
+
+                        <div id="fav_Event" class="tab-pane fade p-3" role="tabpanel">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblEventBookingDetails" class="Commontable table-bordered"  data-order='[[ 0, "desc" ]]'>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sno.</th>
+                                                        <th>OrderId</th>
+                                                        <th>Name</th>
+                                                        <th>Price</th>
+                                                        <th>Date</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*----------------------Training booking---------------------------*@
+
+                        <div id="fav_Training" class="tab-pane fade p-3" role="tabpanel">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblTrainingBookingDetails" class="Commontable table-bordered" data-order='[[ 0, "desc" ]]'>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sno.</th>
+                                                        <th>OrederId</th>
+                                                        <th>Name</th>
+                                                        <th>Price</th>
+                                                        <th>Date</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @*----------------------Plan/Packages booking---------------------------*@
+
+                        <div id="fav_Plan" class="tab-pane fade  p-3" role="tabpanel">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblPlanBookingDetails" class="Commontable table-bordered" data-order='[[ 0, "desc" ]]'>
+                                                <thead>
+                                                    <tr>
+                                                        <th>OrederId</th>
+                                                        <th> Name</th>
+                                                        <th>Plan Type</th>
+                                                        <th> Price</th>
+                                                        <th>Date</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*----------------------Plan/Packages booking---------------------------*@
+
+                        <!--<div id="fav_Plan" class="tab-pane fade p-3" role="tabpanel">
+                            <div class="row mb-4">
+                                <div class="col-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <table id="tblPlanBookingDetails" class="Commontable table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sno.</th>
+                                                        <th>OrederId</th>
+                                                        <th> Name</th>
+                                                       
+                                                        <th> Price</th>
+                                                        <th>Date</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@section Scripts{
+
+
+    <script src="~/Content/business-panel/js/vendor/datatables.min.js"></script>
+
+
+    @Html.Partial("/Views/Shared/ScriptPartials/VisitorPanel/_ManageMyBookingScriptPartial.cshtml")
+
+}

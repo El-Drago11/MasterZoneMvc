@@ -1,0 +1,861 @@
+﻿
+@using MasterZoneMvc.Common;
+@using MasterZoneMvc.ViewModels;
+@{
+    var UserRole = Context.Items["UserRole"] as string;
+
+    string ControllerNameForLinks = (UserRole == "BusinessAdmin") ? "Business" : "Staff";
+    var Permissions = Context.Items["Permissions"] as List<PermissionHierarchy_VM>
+    ;
+    List<PermissionHierarchy_VM>
+        permissions = Permissions;
+    List<string>
+        permissionKeys = new List<string>
+            ();
+    if (permissions.Count() > 0)
+    {
+        permissionKeys = permissions.Select(p => p.KeyName).ToList();
+    }
+}
+<script>
+    var UserToken_Global = "";
+    var ExamId_Global = 0;
+    function initializeDataTable() {
+        $("#tblExamForms").DataTable();
+    }
+    $(document).ready(function () {
+        $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+            if (dataToken != "" && dataToken != null) {
+                UserToken_Global = dataToken;
+                initializeDataTable();
+                GetAllExamForm();
+                GetAllMasterIdDetails();
+                //StopLoading();
+            }
+            else {
+                $.get("/Business/GetStaffToken", null, function (dataToken) {
+                    if (dataToken != "" && dataToken != null) {
+                        UserToken_Global = dataToken;
+                        initializeDataTable();
+                        GetAllExamForm();
+                        GetAllMasterIdDetails();
+                        //StopLoading();
+                    }
+                    else {
+                        StopLoading();
+                    }
+                });
+            }
+        });
+    });
+
+        $(document).ready(function () {
+            $('#btnAddExamForm').click(function () {
+                $('#sectionAddExamForm').show();
+                $('#btnAddExamForm').hide();
+                $('#sectionViewExamFrom').hide();
+
+                document.getElementById("pageTextchange").innerHTML = "Add Exam Form";
+                document.getElementById("pageStageChange").innerHTML = "Add Exam Form";
+
+            });
+        });
+    function btnSubmitExamForm()
+    {
+        var is_valid = true;
+        $(".error-class").html('');
+        var _mode = (ExamId_Global <= 0) ? 1 : 2;
+
+        var _isActiveExam = 0;
+        if ($('#chkIsActive_ManageExam').is(':checked')) {
+            // checked
+            _isActiveExam = 1;
+        }
+        var _titleExamForm = $("#txtExamFromTitle").val().trim();
+        var _establishedYearExamForm = $("#EstablishedYear_ExamForm").val();
+        var _startDateExamForm = $("#StartDate_ExamForm").val();
+        var _endDateExamForm = $("#EndDate_ExamForm").val();
+        var _secretaryNumber = $("#SecretaryNumber_ExamForm").val();
+        var _registrarNumber = $("#RegistrarNumber_ExamForm").val();
+        var _websiteLinkExamForm = $("#WebsiteLink_ExamForm").val();
+        var _emailExamForm = $("#Email_ExamForm").val();
+        var _importantInstructonExamForm = $("#ImportantInstruction_ExamForm .ql-editor").html();
+        var _examFormLogo_MS = $("#BusinessLogo_ExamForm").get(0);
+        var _examFormLogo = _examFormLogo_MS.files;
+        var _nameWithAddressExamForm = $("#NameWithAddress_ExamForm").val();
+        var _businessMasterId = $("#BusinessMasterId").val();
+        var _businessId = $("#BusinessId").val();
+        var _centerNo = $("#CenterNo").val();
+
+
+        var _errorTitleExamForm = $("#error_txtExamFromTitle");
+        var _errorEstablishedYear = $("#error_EstablishedYear_ExamForm");
+        var _errorStartDate = $("#error_StartDate_ExamForm");
+        var _errorEndDate = $("#error_EndDate_ExamForm");
+        var _errorSecretaryNumber = $("#error_SecretaryNumber_ExamForm");
+        var _errorRegistrarNumber = $("#error_RegistrarNumber_ExamForm");
+        var _errorWebsiteLink = $("#error_WebsiteLink_ExamForm");
+        var _errorEmail = $("#error_Email_ExamForm");
+        var _errorImprtantInstruction = $("#error_ImportantInstruction_ExamForm");
+        var _errorExamFormLogo = $("#error_BusinessLogo_ExamForm");
+        var _errorNameWithAddress = $("#error_NameWithAddress_ExamForm");
+        var _errorBusinessMasterId = $("#error_BusinessMasterId");
+
+        var TestEmail = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+
+        if (validate_IsEmptyStringInputFieldValue(_nameWithAddressExamForm))
+        {
+            is_valid = false;
+            _errorNameWithAddress.html('@(Resources.BusinessPanel.ExamForm_NameWithAdddressRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_businessMasterId))
+        {
+            is_valid = false;
+            _errorBusinessMasterId.html('@(Resources.BusinessPanel.ExamForm_BusinessMasterIdRequired)');
+        }
+
+        if (_mode == 1 && _examFormLogo.length <= 0)
+        {
+            is_valid = false;
+            _errorExamFormLogo.html('@(Resources.BusinessPanel.ExamForm_LogoRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_titleExamForm))
+        {
+            is_valid = false;
+            _errorTitleExamForm.html('@(Resources.BusinessPanel.ExamForm_TitleRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_establishedYearExamForm))
+        {
+            is_valid = false;
+            _errorEstablishedYear.html('@(Resources.BusinessPanel.ExamForm_EstablishedYearRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_startDateExamForm))
+        {
+            is_valid = false;
+            _errorStartDate.html('@(Resources.BusinessPanel.ExamForm_StartDateRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_endDateExamForm)) {
+            is_valid = false;
+            _errorEndDate.html('@(Resources.BusinessPanel.ExamForm_EndDateRequired)');
+        }
+        else if (_endDateExamForm < _startDateExamForm)
+        {
+            is_valid = false;
+            _errorEndDate.html('@(Resources.BusinessPanel.EndDateDoesNotLessThanStartDateRequired)')
+        }
+        if (validate_IsEmptyStringInputFieldValue(_secretaryNumber))
+        {
+            is_valid = false;
+            _errorSecretaryNumber.html('@(Resources.BusinessPanel.ExamForm_SecretaryNumberRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_registrarNumber))
+        {
+            is_valid = false;
+            _errorRegistrarNumber.html('@(Resources.BusinessPanel.ExamForm_RegistrarNumberRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_websiteLinkExamForm))
+        {
+            is_valid = false;
+            _errorWebsiteLink.html('@(Resources.BusinessPanel.ExamForm_WebsiteLinkRequired)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_emailExamForm))
+        {
+            is_valid = false;
+            _errorEmail.html('@(Resources.BusinessPanel.ExamForm_EmailRequired)');
+
+        }
+        else if (!TestEmail.test(_emailExamForm)) {
+             is_valid = false;
+            _errorEmail.html('@(Resources.BusinessPanel.ValidEmailRequired)');
+         }
+        if ($("#ImportantInstruction_ExamForm .ql-editor").text() == ""){
+            is_valid = false;
+            _errorImprtantInstruction.html('@(Resources.BusinessPanel.ExamForm_ImportantInstructionRequired)');
+        }
+
+        if (validate_IsEmptyStringInputFieldValue(_businessId)) {
+            is_valid = false;
+            $('#error_BusinessId').html('@(Resources.BusinessPanel.ExamForm_BusinessId_ErrorMessage)');
+        }
+        if (validate_IsEmptyStringInputFieldValue(_centerNo)) {
+            is_valid = false;
+            $('#error_CenterNo').html('@(Resources.BusinessPanel.ExamForm_CenterNo_ErrorMessage)');
+        }
+
+        if (is_valid)
+        {
+            var encodedImportantInstructonExamForm = encodeURIComponent(_importantInstructonExamForm);
+
+            var data = new FormData();
+            data.append("Id", ExamId_Global);
+            data.append("Title", _titleExamForm);
+            data.append("EstablishedYear", _establishedYearExamForm);
+            data.append("StartDate", _startDateExamForm);
+            data.append("EndDate", _endDateExamForm);
+            data.append("SecretaryNumber", _secretaryNumber);
+            data.append("RegistrarNumber", _registrarNumber);
+            data.append("WebsiteLink", _websiteLinkExamForm);
+            data.append("Email", _emailExamForm);
+            data.append("ImportantInstruction", encodedImportantInstructonExamForm);
+            data.append("ExamFormLogo", _examFormLogo[0]);
+            data.append("NameWithAddress", _nameWithAddressExamForm);
+            data.append("BusinessMasterId", _businessMasterId);
+            data.append("BusinessId", _businessId);
+            data.append("CenterNo", _centerNo);
+            data.append("Status", _isActiveExam);
+            data.append("Mode", _mode);
+              $.ajax({
+                  url: '/api/Exam/AddUpdateExamForm',
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global
+            },
+            data: data,
+            processData: false,
+            mimeType: 'multipart/form-data',
+            contentType: false,
+            //contentType: 'application/json',
+            type: 'POST',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Parse into Json of response-json-string
+                dataResponse = JSON.parse(dataResponse);
+
+                //--If successfully added/updated
+                if (dataResponse.status === 1) {
+                    swal("Success!", dataResponse.message, "success");
+                    ResetAddUpdateExamForm();
+                    GetAllExamForm();
+                }
+                else {
+                    swal({
+                        title: 'Error!',
+                        icon: 'error',
+                        text: dataResponse.message
+                    });
+                }
+
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+        }
+
+    }
+    function ResetAddUpdateExamForm()
+    {
+        $("#txtExamFromTitle").val('');
+        $("#EstablishedYear_ExamForm").val('');
+        $("#StartDate_ExamForm").val('');
+        $("#EndDate_ExamForm").val('');
+        $("#SecretaryNumber_ExamForm").val('');
+        $("#RegistrarNumber_ExamForm").val('');
+        $("#WebsiteLink_ExamForm").val('');
+        $("#Email_ExamForm").val('');
+        $("#ImportantInstruction_ExamForm .ql-editor").html('');
+        $('#sectionAddExamForm').hide();
+        $('#btnAddExamForm').show();
+        $('#sectionViewExamFrom').show();
+        $("#BusinessLogo_ExamForm").val('');
+        $("#previewBusinessLogo_ExamForm").attr('src', '');
+        ExamId_Global = 0;
+        $(".error-class").html('');
+        $("#previewBusinessLogo_ExamForm").addClass('d-none');
+        $("#BusinessMasterId").val('');
+        $("#NameWithAddress_ExamForm").val('');
+        $('#chkIsActive_ManageExam').prop('checked', true);
+
+        document.getElementById("pageTextchange").innerHTML = "Exam";
+        document.getElementById("pageStageChange").innerHTML = "List";
+    }
+
+    function GetAllExamForm() {
+        let _url = API_Base_URL + "/api/Exam/GetExamFormByBusinessId";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblExamForms').DataTable();
+                _table.destroy();
+
+                var sno = 0;
+                var _formTitle = '';
+                var _startDate = '';
+                var _endDate = '';
+                var _logo = '';
+                var _status = '';
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+                    _formTitle = response.data[i].Title;
+                    _startDate = response.data[i].StartDate;
+                    _endDate = response.data[i].EndDate;
+                    _logo = (response.data[i].ExamFormLogoWithPath == "") ? '' : '<img src="' + response.data[i].ExamFormLogoWithPath + '" class="image" />';
+                    _action = '<div class="edbt">';
+                    @if (permissionKeys.Contains("ManageExams_EditExam"))
+                    {
+                         <text>
+                    _action += `<a href="javascript:EditExamForm(${response.data[i].Id});"><i Title="Edit form" class="fas fa-edit"></i></a>`;
+                         </text>
+                     }
+                    @if (permissionKeys.Contains("ManageExams_DeleteExam"))
+                     {
+                        <text>
+                    _action += `<a href="javascript:ConfirmDeleteExamForm(${response.data[i].Id});"><i Title="Delete form" class="fas fa-trash "></i></a>`;
+                        </text>
+                     }
+                    @if (permissionKeys.Contains("ManageExamsForm_ViewSubmitExamForm"))
+                     {
+                        <text>
+                    _action += `<a href="/Business/ViewSubmitExamForm?examId=${response.data[i].Id}"><i Title="View All Candidate who Filled form" class="fab fa-wpforms"></i></a>`;
+                        </text>
+                     }
+                    @if (permissionKeys.Contains("ManageExamsForm_ChangeStatus")) {
+                         <text>
+                         if (response.data[i].Status == 1) {
+                             _status = '<button class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStatusExamForm(' + response.data[i].Id + ');">Active</button>';
+                         }
+                         else {
+                             _status = '<button class="btn btn-danger text-white btn-sm" style="width:80px;" onclick="ConfirmChangeStatusExamForm(' + response.data[i].Id + ');">Inactive</button>';
+                         }
+                         </text>
+                      }
+                    _action += '</div>';
+                    data.push([
+                        sno,
+                        _formTitle,
+                        _startDate,
+                        _endDate,
+                        _logo,
+                        _status,
+                        _action
+
+                    ]);
+
+                }
+
+                $('#tblExamForms').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmChangeStatusExamForm(fid) {
+    swal({
+        title: "@(Resources.BusinessPanel.ExamForm_ConfirmChangeStatusTitle)",
+        text: "@(Resources.BusinessPanel.ExamForm_ConfirmChangeStatusText)",
+        type: "warning",
+        buttons: true,
+        cancel: {
+            text: "@(Resources.ErrorMessage.Cancel)",
+            value: null,
+            visible: false,
+            className: "",
+            closeModal: true,
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            ChangeStatusExamForm(fid);
+        } else {
+            //swal("Your imaginary file is safe!");
+        }
+    });
+    }
+    function ChangeStatusExamForm(fid) {
+    StartLoading();
+    $.ajax({
+        type: "POST",
+        url: "/api/Exam/ChangeStatus/" + fid,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (dataResponse) {
+            StopLoading();
+
+            //--Check if Exam Form-status successfully updated
+            if (dataResponse.status == 1) {
+                setTimeout(function () {
+                    swal("Success!", dataResponse.message, "success");
+                    GetAllExamForm();
+                }, 100);
+            }
+            else {
+                $.iaoAlert({
+                    msg: dataResponse.message,
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+
+    function EditExamForm(id)
+    {
+        $('#sectionAddExamForm').show();
+        $('#btnAddExamForm').hide();
+        $('#sectionViewExamFrom').hide();
+
+        document.getElementById("pageTextchange").innerHTML = "Edit Exam Form";
+        document.getElementById("pageStageChange").innerHTML = "Edit Exam Form";
+        EditExamFormById(id);
+    }
+    function EditExamFormById(id)
+    {
+        var _url = "/api/Exam/GetEditExamFormById?id=" + id;
+
+        StartLoading();
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                $('.error-class').html('');
+                if (response.data.Status == 1) {
+                    $('#chkIsActive_ManageExam').prop('checked', true);
+                }
+                else {
+                    $('#chkIsActive_ManageExam').prop('checked', false);
+                }
+                var item = response.data;
+                $("#CenterNo").val(item.CenterNo);
+                $("#BusinessId").val(item.BusinessId);
+                $("#txtExamFromTitle").val(item.Title);
+                $("#EstablishedYear_ExamForm").val(item.EstablishedYear);
+                $("#StartDate_ExamForm").val(item.StartDate);
+                $("#EndDate_ExamForm").val(item.EndDate);
+                $("#SecretaryNumber_ExamForm").val(item.SecretaryNumber);
+                $("#RegistrarNumber_ExamForm").val(item.RegistrarOfficeNumber);
+                $("#WebsiteLink_ExamForm").val(item.WebsiteLink);
+                $("#Email_ExamForm").val(item.Email);
+                $("#ImportantInstruction_ExamForm .ql-editor").html(item.ImportantInstruction);
+
+                $("#BusinessLogo_ExamForm").val('');
+                if (item.ExamFormLogoWithPath != "") {
+                    $("#previewBusinessLogo_ExamForm").attr('src', item.ExamFormLogoWithPath);
+                    $("#previewBusinessLogo_ExamForm").removeClass('d-none');
+                }
+                $("#BusinessMasterId").val(item.BusinessMasterId);
+                $("#NameWithAddress_ExamForm").val(item.NameWithAddress);
+
+                ExamId_Global = item.Id;
+
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+    function ConfirmDeleteExamForm(id) {
+        swal({
+            title: "@(Resources.BusinessPanel.ExamForm_ConfirmDeleteTitle)",
+            text: "@(Resources.BusinessPanel.ExamForm_ConfirmDeleteText)",
+            type: "warning",
+            buttons: {
+                cancel: true,
+                confirm: "@(Resources.ErrorMessage.Yes)",
+            }
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    DeleteExamFormById(id);
+                } else {
+                    //swal("Your imaginary file is safe!");
+                }
+            });
+    }
+    function DeleteExamFormById(id) {
+        StartLoading();
+        $.ajax({
+            type: "POST",
+            url: "/api/Exam/DeleteExamFormById?id=" + id,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (dataResponse) {
+                StopLoading();
+
+                //--Check if staff successfully deleted
+                if (dataResponse.status == 1) {
+                    setTimeout(function () {
+                        swal("Success!", dataResponse.message, "success");
+                        //--Get Event  List
+                        GetAllExamForm();
+
+                    }, 100);
+                }
+                else {
+                    $.iaoAlert({
+                        msg: 'There is some technical error, please try again!',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            },
+            error: function (result) {
+                StopLoading();
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
+
+
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    const validate_IsEmptyStringInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == '' || inputFieldValue.replace(/\s/g, "") == "")
+            return true;
+        return false;
+    }
+
+    const validate_IsEmptySelectInputFieldValue = function (inputFieldValue) {
+        if (inputFieldValue == undefined || inputFieldValue == null || inputFieldValue == '' || inputFieldValue == 0)
+            return true;
+        return false;
+    }
+    ////// -----------    FIELD VALIDATION HANDLER FUNCTIONS  --------------------------
+
+    // Event Special Guest Image File Preview -------------------------------------------------------------
+    document.getElementById('BusinessLogo_ExamForm').addEventListener('change', handleImageUpload);
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size / 1024; // size in kilobytes
+        const maxSize = 10 * 1024 * 1024; // maximum size in kilobytes
+        const fileType = file.type;
+        const validImageTypes = ['image/jpeg', 'image/png'];
+
+        if (!validImageTypes.includes(fileType)) {
+            $.iaoAlert({
+                msg: '@(Resources.BusinessPanel.ValidImageTypesRequired)',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewBusinessLogo_ExamForm').addClass('d-none'); // hide the preview image
+            return;
+        }
+        if (fileSize > maxSize) {
+            $.iaoAlert({
+                msg: '@(String.Format(Resources.BusinessPanel.FileSizeRequired, "10 MB"))',
+                type: "error",
+                mode: "dark",
+            });
+            event.target.value = null; // clear the file input element
+            $('#previewBusinessLogo_ExamForm').addClass('d-none'); // hide the preview image
+
+            return;
+        }
+
+        // image size is within the limit, display the preview image
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('previewBusinessLogo_ExamForm').src = event.target.result;
+            $('#previewBusinessLogo_ExamForm').removeClass('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+
+    function ViewSubmitExamFrom(id) {
+        if (id>0) {
+            let _url = API_Base_URL + "/api/Exam/GetSubmitExamForm";
+
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+                    return;
+                }
+
+                var _table = $('#tblExamForms').DataTable();
+                _table.destroy();
+
+                var sno = 0;
+                var _formTitle = '';
+                var _startDate = '';
+                var _endDate = '';
+                var _logo = '';
+                var _status = '';
+
+                var data = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    sno++;
+                    _formTitle = response.data[i].Title;
+                    _startDate = response.data[i].StartDate;
+                    _endDate = response.data[i].EndDate;
+                    _logo = (response.data[i].ExamFormLogoWithPath == "") ? '' : '<img src="' + response.data[i].ExamFormLogoWithPath + '" class="image" />';
+                    _action = '<div class="edbt">';
+                    @if (permissionKeys.Contains("ManageExams_EditExam"))
+                    {
+                         <text>
+                            _action += `<a href="javascript:EditExamForm(${response.data[i].Id});"><i class="fas fa-edit"></i></a>`;
+                         </text>
+                     }
+                    @if (permissionKeys.Contains("ManageExams_DeleteExam"))
+                     {
+                        <text>
+                    _action += `<a href="javascript:ConfirmDeleteExamForm(${response.data[i].Id});"><i class="fas fa-trash "></i></a>`;
+                        </text>
+                     }
+                    @if (permissionKeys.Contains("ManageExamsForm_ViewSubmitExamForm"))
+                     {
+                        <text>
+                    _action += `<a href="javascript:VewSubmitExamFrom(${response.data[i].Id});"><i class="fab fa-wpforms"></i></a>`;
+                        </text>
+                     }
+                    @if (permissionKeys.Contains("ManageExamsForm_ChangeStatus")) {
+                         <text>
+                     
+                         if (response.data[i].Status == 1) {
+                             _status = '<button class="btn btn-success btn-sm" style="width:80px;" onclick="ConfirmChangeStatusExamForm(' + response.data[i].Id + ');">Active</button>';
+                         }
+                         else {
+                             _status = '<button class="btn btn-danger text-white btn-sm" style="width:80px;" onclick="ConfirmChangeStatusExamForm(' + response.data[i].Id + ');">Inactive</button>';
+                         }
+                         </text>
+                      }
+                    _action += '</div>';
+                    data.push([
+                        sno,
+                        _formTitle,
+                        _startDate,
+                        _endDate,
+                        _logo,
+                        _status,
+                        _action
+
+                    ]);
+
+                }
+
+                $('#tblExamForms').DataTable({
+                    "data": data,
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                });
+                StopLoading();
+            },
+            error: function (result) {
+                StopLoading();
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+        }
+        else {
+                $.iaoAlert({
+                    msg: "Exam from id is not be Zero or less then zero",
+                    type: "error",
+                    mode: "dark",
+                });
+        }
+    }
+
+    function GetAllMasterIdDetails() {
+
+    var _url = "/api/Business/GetAllMasterIdDetail";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            $("#BusinessMasterId").val(response.data.BusinessMasterId);
+            $("#BusinessId").val(response.data.BusinessOwnerLoginId);
+        
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+}
+
+</script>
+
