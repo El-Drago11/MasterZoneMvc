@@ -4,6 +4,9 @@
     var _sportsTable;
     var _aboutserviceTable;
     var _tennisImage = 1;
+    var Id = 0;
+    var RoomId_Global = 0;
+
 
     function initializeDataTable_Sports() {
         _sportsTable = $("#tblSportsBannerDetailView").DataTable();
@@ -28,6 +31,7 @@
                 initializeDataTable_AboutService();
                 GetAllBusinessContentAboutServicePagination();
                 initializeDataTable_Tennis();
+                GetAllApartmentAreaTime(Id);
                 GetAllBusinessContentTennisPagination();
                 EditBusinessContentPackage();
                 EditBusinessContentAbout();
@@ -51,6 +55,7 @@
                         GetAllBusinessContentAboutServicePagination();
                         initializeDataTable_AboutService();
                         EditBusinessContentAbout();
+                        GetAllApartmentAreaTime(Id);
                         initializeDataTable_Tennis();
                         GetAllBusinessContentTennisPagination();
                         EditBusinessContentPackage();
@@ -1421,7 +1426,6 @@ function handleImageUpload(event) {
         $(".error-class").html('');
 
     }
-    var RoomId_Global = 0;
     function btnSubmitBusinessEventDescriptionClick() {
         let is_valid = true;
         $(".error-class").html('');
@@ -1694,7 +1698,9 @@ function handleImageUpload(event) {
 
     function ClickBusinessTimeSlot(Id) {
         $("#AddBusinessTimeSlot").modal('show');
-         SlotId_Global = Id;
+        $("#addmoretimingdetail").empty();
+        SlotId_Global = Id;
+        GetAllApartmentAreaTime(Id);
     }
     function ResetAddTimingDetail() {
         $("#AddBusinessTimeSlot").modal('hide');
@@ -1718,6 +1724,139 @@ function handleImageUpload(event) {
     `;
         $("#addmoretimingdetail").append(htmlContent);
     }
+
+      function GetAllApartmentAreaTime(Id) {
+    $.ajax({
+        type: "GET",
+        url: '/api/Business/GetBusinessTennisTimingDetailForBusiness?&slotId=' + Id,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+
+        contentType: 'application/json',
+        success: function (response) {
+
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+
+            }
+
+            for (var i = 0; i < response.data.Tennistimelist.length; i++) {
+
+                var htmlContent = `
+                      <div class="timing-detail">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label> Time </label><br>
+                            <div>${response.data.Tennistimelist[i].Time}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-danger mb-0  mt-4" onclick="confrimDeleteAreaTime(${response.data.Tennistimelist[i].Id})">Delete</button>
+                        </div>
+                    </div>
+                   </div>
+                   `;
+                $("#addmoretimingdetail").append(htmlContent);
+            }
+            StopLoading();
+        },
+
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
+
+  }
+
+    function confrimDeleteAreaTime(id) {
+        debugger
+    swal({
+        title: "@(Resources.BusinessPanel.ConfirmDeleteAreaTitle)",
+        text: "@(Resources.BusinessPanel.ConfirmDeleteAreaText)",
+        type: "warning",
+        buttons: {
+            cancel: true,
+            confirm: "@(Resources.ErrorMessage.Yes)",
+        }
+    })
+    .then((willDelete) => {
+        if (willDelete) {
+            DeleteAreaTime(id);
+        } else {
+
+        }
+    });
+}
+
+    function DeleteAreaTime(id) {
+        debugger
+     StartLoading();
+     $.ajax({
+         type: "POST",
+         url: "/api/Business/DeleteApartmentAreaTime?id=" + id,
+         headers: {
+             "Authorization": "Bearer " + UserToken_Global,
+             "Content-Type": "application/json"
+         },
+         contentType: 'application/json',
+         success: function (dataResponse) {
+             if (dataResponse.status == 1) {
+                 setTimeout(function () {
+                     swal("Success!", dataResponse.message, "success");
+                     GetAllApartmentAreaTime(Id);
+                     ResetAddTimingDetail();
+                     $('.form-group[data-block-id="' + id + '"]').remove();
+                 }, 100);
+             }
+             else {
+                 $.iaoAlert({
+                     msg: dataResponse.message,
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         },
+         error: function (result) {
+             StopLoading();
+
+             if (result["status"] == 401) {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+             else {
+                 $.iaoAlert({
+                     msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                     type: "error",
+                     mode: "dark",
+                 });
+             }
+         }
+     });
+ }
 
     function ResetAddViewBusinessTiming() {
         $("#StaffAttendanceInTime").val('');
@@ -1812,7 +1951,7 @@ function handleImageUpload(event) {
     var TennisId_Global = 0;
 
     function btnSubmitSportsTennisClick() {
-         
+
         ;
         let is_valid = true;
         $(".error-class").html('');

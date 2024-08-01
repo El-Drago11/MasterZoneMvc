@@ -34,5 +34,25 @@ namespace MasterZoneMvc.ViewModels
         public string CoursePriceType { get; set; }
         public string Startdate_FormatDates { get; set; }
         public string Enddate_FormatDates { get; set; }
+
+        //get the exam form details
+        public long? examFormId { get; set; }
+        public string CandidateName { get; set; }
+        public string CandidateFather { get; set; }
+        public string CandidateMother { get; set; }
+        public string CandidateProfileImageWithPath { get; set; }
+        public string CurrentRollNo { get; set; }
+        public string SessionYear { get; set; }
+        public string EstablishedYear { get; set; }
+        public string ExamFormLogo { get; set; }
+        public string CurrentSubject { get; set; }
+        public string CurrentClass { get; set; }
+        public string CurrentCenterCity { get; set; }
+        public string Title { get; set; }
+        public string SecretaryNumber { get; set; }
+        public string RegistrarOfficeNumber { get; set; }
+        public string WebsiteLink { get; set; }
+        public string examEmail { get; set; }
+        public long? CenterNo { get; set; }
     }
 }

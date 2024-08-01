@@ -23,6 +23,8 @@ using MasterZoneMvc.Common.Filters;
 using MasterZoneMvc.Repository;
 using MasterZoneMvc.ViewModels.StoredProcedureParams;
 using System.Net;
+using System.Configuration;
+using System.Data;
 
 namespace MasterZoneMvc.Controllers
 {
@@ -1412,6 +1414,80 @@ namespace MasterZoneMvc.Controllers
 
             SetSidebarCookieInfo("tennisBooking");
             return View();
+        }
+
+        [BusinessPanelPermissionActionFilter]
+        public ActionResult BackupDatabase(long userLoginId, string type = "bak")
+        {
+            if (!ValidateBusinessAdminCookie())
+            {
+                return RedirectToAction("Login");
+            }
+            ViewBag.Status = 0;
+
+            try
+            {
+                string connectionString = ConfigurationManager.ConnectionStrings["MasterZoneDbContext"].ConnectionString;
+                //long userLoginId = 130;
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string databaseName = connection.Database;
+                    string tempDatabaseName = $"UserBackup_{userLoginId}_{DateTime.Now.ToString("yyyy_MM_dd")}";
+                    string backupName = tempDatabaseName + ".bak";
+                    string backupPath = Path.Combine(Server.MapPath("~/Content/Uploads/Backups"), backupName);
+
+                    //Create a temporary database
+                    using (SqlCommand command = new SqlCommand("BackupUserAllData", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@UserLoginId", userLoginId);
+                        command.Parameters.AddWithValue("@BackupPath", backupPath);
+                        command.Parameters.AddWithValue("@mode", 1);
+
+                        command.ExecuteNonQuery();
+                    }
+
+                    // Backup the new database
+                    string backupDbQuery = $"BACKUP DATABASE {tempDatabaseName} TO DISK='{backupPath}';";
+                    using (SqlCommand backupDbCommand = new SqlCommand(backupDbQuery, connection))
+                    {
+                        backupDbCommand.ExecuteNonQuery();
+                    }
+
+                    // Read the backup file and return it
+                    byte[] fileBytes = System.IO.File.ReadAllBytes(backupPath);
+
+                    
+
+                    var fileResult = new FileContentResult(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet)
+                    {
+                        FileDownloadName = backupName
+                    };
+
+                    //delete the temporary database
+                    using (SqlCommand command = new SqlCommand("BackupUserAllData", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@UserLoginId", userLoginId);
+                        command.Parameters.AddWithValue("@BackupPath", backupPath);
+                        command.Parameters.AddWithValue("@mode", 2);
+
+                        command.ExecuteNonQuery();
+                    }
+
+                    // Return the backup file as a result
+                    return fileResult;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception (e.g., log it)
+                return new HttpStatusCodeResult(500, "An error occurred while processing your request: " + ex.Message);
+            }
+
+            //return View("Backup");
         }
     }
 }

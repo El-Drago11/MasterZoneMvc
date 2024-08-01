@@ -167,7 +167,7 @@ namespace MasterZoneMvc.Services
 
             return storedProcedureRepository.SP_ManageBusinessTennisTiming_GetAll<TennisAreaTimeSlot_VM>(new SP_ManageTennisTiming_Params_VM
             {
-
+                
                 BusinessOwnerLoginId = BusinessOwnerLoginId,
                 slotId = slotId,
                 Mode = 1
@@ -183,14 +183,15 @@ namespace MasterZoneMvc.Services
         /// </summary>
         /// <param name="BusinessOwnerLoginId"></param>
         /// <returns></returns>
-        public List<TennisAreaTimeSlot_VM> GetTennisTimingList(long BusinessOwnerLoginId, long slotId)
+        public List<TennisAreaTimeSlot_VM> GetTennisTimingList(long BusinessOwnerLoginId, long slotId, string bookDate)
         {
             storedProcedureRepository = new StoredProcedureRepository(db);
 
             return storedProcedureRepository.SP_ManageBusinessTennisTiming_GetAll<TennisAreaTimeSlot_VM>(new SP_ManageTennisTiming_Params_VM
             {
-
+                
                 BusinessOwnerLoginId = BusinessOwnerLoginId,
+                BookDate = bookDate,
                 slotId = slotId,
                 Mode = 2
 
@@ -308,6 +309,23 @@ namespace MasterZoneMvc.Services
 
             });
 
+        }
+
+        /// <summary>
+        /// delete time of slot 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="businessOwnerLoginId"></param>
+        /// <returns></returns>
+        public SPResponseViewModel DeleteApartmentAreaTimeById(long id, long userloginId)
+        {
+
+            return storedProcedureRepository.SP_InsertUpdateTennisTimeSlot_Get<SPResponseViewModel>(new SP_InsertUpdateTennisAreaTimeSlot_Param_VM()
+            {
+                Id = id,
+                UserLoginId = userloginId,
+                Mode = 2
+            });
         }
     } 
 }

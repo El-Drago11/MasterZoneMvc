@@ -124,6 +124,14 @@ namespace MasterZoneMvc.ViewModels
         public string ShortDescription { get; set; }
         public int ServiceType { get; set; }
     }
+    public class AdminDashBoard_VM
+    {
+        public long TotalEnrolledStudents { get; set; }
+        public long TotalCourseBuyed { get; set; }
+        public long TotalRevenueGenrated { get; set; }
+        public long OnGoingCourse { get; set; }
+        public long CurrYearEnrolledStudent { get; set; }
 
+    }
 
 }

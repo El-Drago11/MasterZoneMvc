@@ -48,6 +48,13 @@
     <link rel="stylesheet" href="~/Content/assets/sports-page.css">
     <script src="~/Content/assets/sports-main.js"></script>
     <style>
+        td.date-picker.selected.currentdate {
+            background: #f3a762;
+        }
+        td.date-picker.currentdate {
+            background: #29d078;
+        }
+
         .price span.time {
             color: #fff;
         }
@@ -332,7 +339,7 @@
                                 <h6>Players</h6>
                                 <div class="number">
                                     <span class="plus" >+</span>
-                                    <input type="text" id="player_vals" value="1">
+                                    <input type="text" id="player_vals" value="1" disabled>
                                     <span class="minus" >-</span>
                                 </div>
 
@@ -340,7 +347,7 @@
                             <div class="player-lt">
                                 <div class="day-inr currnet">
                                     <span></span>
-                                    <p>Currnet Day</p>
+                                    <p>Current Day</p>
                                 </div>
                                 <div class="day-inr selected">
                                     <span></span>
@@ -348,7 +355,7 @@
                                 </div>
                                 <div class="day-inr availabel">
                                     <span></span>
-                                    <p>Not Availabel</p>
+                                    <p>Not Available</p>
                                 </div>
                                 @*<div class="day-inr currnet">
                                         <input type="radio" id="currentRadio" name="day" class="radio-custom">
@@ -540,6 +547,7 @@
                         <button type="button" class="primary-button d-none" id="submitbtn" value="Checkout" onclick="btnSubmitUser();">Checkout</button>
                         <button type="button" class="primary-button" id="loginpopup" value="Checkout" onclick="ShowloginPopup();">Checkout</button>
                         <p class="errormessage" id="errormessage"></p>
+                        <p class="errormessage" id="errormessageforService"></p>
                     </form>
                 </div>
             </div>
@@ -777,6 +785,7 @@
                 } else {
                     if (date === currentDay && month === currentMonth && year === currentYear) {
                         cell.classList.add('selected');
+                        cell.classList.add('currentdate');
                     }
 
                     cell.addEventListener('click', function () {
@@ -788,6 +797,7 @@
                         this.classList.add('selected');
                         // Call GetRoomBookDetail function
                         GetRoomBookDetail();
+                        GetAllTennisTimingDetail();
                     });
                 }
                 row.appendChild(cell);

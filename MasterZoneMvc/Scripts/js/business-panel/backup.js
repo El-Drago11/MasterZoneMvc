@@ -1,5 +1,24 @@
-﻿$(document).ready(function () {
-    console.log(API_Base_URL);
+﻿var global_AdminUserId='';
+var UserToken_Global = '';
+$(document).ready(function () {
+
+    $.get("/Business/GetBusinessAdminToken", null, function (dataToken) {
+        if (dataToken != "" && dataToken != null) {
+            UserToken_Global = dataToken;
+            GetAllMasterIdDetails();
+        }
+        else {
+            $.get("/Business/GetStaffToken", null, function (dataToken) {
+                if (dataToken != "" && dataToken != null) {
+                    UserToken_Global = dataToken;
+                }
+                else {
+                    StopLoading();
+                }
+            });
+        }
+    });
+    StopLoading();
 });
 
 function btnSubmitFormClick() {
@@ -308,4 +327,65 @@ function swl01() {
             }
         });
 
+}
+
+
+function getBusinessBackup() {
+    //$('#dnwBackup').prop('disabled', true);
+    if (global_AdminUserId !== undefined && global_AdminUserId !== null && !isNaN(global_AdminUserId)) {
+        window.location.href = "/Business/BackupDatabase?userLoginId=" + encodeURIComponent(global_AdminUserId);
+    } else {
+        $.iaoAlert({
+            msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+            type: "error",
+            mode: "dark",
+        });
+    }
+    //$('#dnwBackup').prop('disabled', false);
+}
+function GetAllMasterIdDetails() {
+
+    var _url = "/api/Business/GetAllMasterIdDetail";
+
+    StartLoading();
+
+    $.ajax({
+        type: "GET",
+        url: _url,
+        headers: {
+            "Authorization": "Bearer " + UserToken_Global,
+            "Content-Type": "application/json"
+        },
+        contentType: 'application/json',
+        success: function (response) {
+            if (response.status < 1) {
+                $.iaoAlert({
+                    msg: response.message,
+                    type: "error",
+                    mode: "dark",
+                });
+                return;
+            }
+            global_AdminUserId = response.data.BusinessOwnerLoginId;
+            StopLoading();
+        },
+        error: function (result) {
+            StopLoading();
+
+            if (result["status"] == 401) {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+            else {
+                $.iaoAlert({
+                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
+                    type: "error",
+                    mode: "dark",
+                });
+            }
+        }
+    });
 }

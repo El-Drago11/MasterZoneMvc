@@ -2183,6 +2183,19 @@ namespace MasterZoneMvc.Services
             });
 
         }
+        /// <summary>
+        /// to get business details for dashboard
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public AdminDashBoard_VM GetBusinessDetailsDashboard(long id)
+        {
+            SqlParameter[] quereyParameter = new SqlParameter[] {
+             new SqlParameter("userLoginId", id)
+             };
+             var resp = db.Database.SqlQuery<AdminDashBoard_VM>("exec sp_AdminDashBoardDetails @userLoginId", quereyParameter).FirstOrDefault();
+            return resp;
+        }
 
     }
 }

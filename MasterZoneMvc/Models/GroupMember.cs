@@ -13,9 +13,7 @@ namespace MasterZoneMvc.Models
         public long Id { get; set; }
 
         public long GroupId { get; set; }
-        //public Group Group { get; set; }
 
         public long UserLoginId { get; set; }
-        //public UserLogin UserLogin { get; set; }
     }
 }

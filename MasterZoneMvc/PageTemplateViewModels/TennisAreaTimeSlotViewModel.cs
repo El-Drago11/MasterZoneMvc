@@ -45,6 +45,8 @@ namespace MasterZoneMvc.PageTemplateViewModels
         public long SlotId { get; set; }
         public long UserLoginId { get; set; }
         public string Time { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public string SelectDate { get; set; }
         public int Mode { get; set; }
 
     }

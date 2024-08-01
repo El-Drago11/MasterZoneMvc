@@ -12,6 +12,8 @@ namespace MasterZoneMvc.PageTemplateViewModels
         public long BusinessOwnerLoginId { get; set; }
         public long UserLoginId { get; set; }
         public long slotId { get; set; }
+        public string BookDate { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
         public int Mode { get; set; }
     }
 }

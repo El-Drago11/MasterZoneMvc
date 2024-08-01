@@ -505,8 +505,6 @@ namespace MasterZoneMvc.WebAPIs
         /// </summary>
         /// <param name="businessOwnerLoginId"></param>
         /// <returns></returns>
-
-
         [HttpGet]
         [Route("api/Business/GetBusinessTennisTimingDetail")]
         public HttpResponseMessage GetBusinessTennisTimingDetail(long businessOwnerLoginId,long slotId)
@@ -516,14 +514,11 @@ namespace MasterZoneMvc.WebAPIs
             {
 
                 List<TennisAreaTimeSlot_VM> tennisTiminglst = businessContentTennisService.GetBusinessTennisTiming_List(businessOwnerLoginId, slotId);
-                List<TennisAreaTimeSlot_VM> tennistimelist = businessContentTennisService.GetTennisTimingList(businessOwnerLoginId, slotId);
                 apiResponse.status = 1;
                 apiResponse.message = Resources.BusinessPanel.Success;
                 apiResponse.data = new
                 {
-                    BusinessTennisTimingList = tennisTiminglst,
-                    Tennistimelist = tennistimelist
-
+                    TennisTimingSlotList = tennisTiminglst,
                 };
 
 
@@ -536,6 +531,39 @@ namespace MasterZoneMvc.WebAPIs
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
             }
         }
+
+        /// <summary>
+        /// to get business tennis timing
+        /// </summary>
+        /// <param name="businessOwnerLoginId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("api/Business/GetBookingTimeList")]
+        public HttpResponseMessage GetBookingTimeList(long businessOwnerLoginId, long slotId, string BookDate)
+        {
+            ApiResponse_VM apiResponse = new ApiResponse_VM();
+            try
+            {
+
+                List<TennisAreaTimeSlot_VM> _BookingTimeList = businessContentTennisService.GetTennisTimingList(businessOwnerLoginId, slotId, BookDate);
+                apiResponse.status = 1;
+                apiResponse.message = Resources.BusinessPanel.Success;
+                apiResponse.data = new
+                {
+                    BookingTimeList = _BookingTimeList
+                };
+
+
+                return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = -500;
+                apiResponse.message = Resources.ErrorMessage.InternalServerErrorMessage;
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
+            }
+        }
+
         /// <summary>
         /// to get timing for business
         /// </summary>
@@ -606,14 +634,14 @@ namespace MasterZoneMvc.WebAPIs
 
                 //--Create object of HttpRequest
                 var HttpRequest = HttpContext.Current.Request;
-                BusinessContentTennis_VM businessContentTennis_VM = new BusinessContentTennis_VM();
+                BusinessMasterProfileRoomDetails_VM businessContentTennis_VM = new BusinessMasterProfileRoomDetails_VM();
 
                 // Parse and assign values from HTTP request parameters
                 businessContentTennis_VM.Id = Convert.ToInt64(HttpRequest.Params["Id"]);
                 businessContentTennis_VM.Title = HttpRequest.Params["Title"].Trim();
                 businessContentTennis_VM.SubTitle = HttpRequest.Params["SubTitle"].Trim();
                 businessContentTennis_VM.Description = HttpRequest.Params["Description"].Trim();
-                businessContentTennis_VM.Price = Convert.ToDecimal(HttpRequest.Params["Price"]);
+                businessContentTennis_VM.Price = Convert.ToInt32(HttpRequest.Params["Price"]);
                 businessContentTennis_VM.Mode = Convert.ToInt32(HttpRequest.Params["Mode"]);
 
                 // Get Attatched Files
@@ -877,6 +905,48 @@ namespace MasterZoneMvc.WebAPIs
             }
         }
 
+        /// <summary>
+        /// Delete Apartment-Area By Area-Id
+        /// </summary>
+        /// <param name="areaId">Area Id</param>
+        /// <returns>Status 1 if deleted else -ve value with error message</returns>
+        [HttpPost]
+        [Authorize(Roles = "BusinessAdmin,Staff")]
+        [Route("api/Business/DeleteApartmentAreaTime")]
+        public HttpResponseMessage DeleteApartmentAreaTime(long id)
+        {
+            ApiResponse_VM apiResponse = new ApiResponse_VM();
+            try
+            {
+                var validateResponse = ValidateLoggedInUser();
+                if (validateResponse.ApiResponse_VM.status < 0)
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized, validateResponse);
+                }
+                else if (id <= 0)
+                {
+                    apiResponse.status = -1;
+                    apiResponse.message = Resources.ErrorMessage.InvalidIdErrorMessage;
+                    return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
+                }
 
+                var _BusinessOwnerLoginId = validateResponse.BusinessAdminLoginId;
+
+                // Delete Apartment-Area by Id
+                SPResponseViewModel respDeleteMenu = businessContentTennisService.DeleteApartmentAreaTimeById(id, _BusinessOwnerLoginId);
+
+                apiResponse.status = respDeleteMenu.ret;
+                apiResponse.message = ResourcesHelper.GetResourceValue(respDeleteMenu.resourceFileName, respDeleteMenu.resourceKey);
+                apiResponse.data = new { };
+
+                return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = -500;
+                apiResponse.message = Resources.ErrorMessage.InternalServerErrorMessage;
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
+            }
+        }
     }
 }

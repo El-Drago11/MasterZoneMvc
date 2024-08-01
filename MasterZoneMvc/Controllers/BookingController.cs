@@ -191,6 +191,7 @@ namespace MasterZoneMvc.Controllers
 
             itemType = itemType.ToLower();
             TrainingService trainingService = new TrainingService(db);
+            CourseService courseService = new CourseService(db); //added
             if (itemType == "event" && eventService.IsAlreadyEventPurchased(itemId, userLoginId))
             {
                 IsItemAlreadyPurchased = 1;
@@ -215,15 +216,12 @@ namespace MasterZoneMvc.Controllers
                 AlreadyPurchasedMessage = Resources.ErrorMessage.PlanAlreadyPurchased;
                 //return RedirectToAction("AlreadyPurchased", "Booking");
             }
-            else if (itemType == "course")
+            else if (itemType == "course" && courseService.IsAlreadyCoursePurchased(itemId, userLoginId, "")) //added
             {
-                IsItemAlreadyPurchased = 0;
+                IsItemAlreadyPurchased = 1;
                 AlreadyPurchasedMessage = Resources.ErrorMessage.CourseAlreadyPurchased;
                 //return RedirectToAction("AlreadyPurchased", "Booking");
             }
-
-
-
 
             ViewBag.ItemId = itemId;
             ViewBag.ItemType = itemType;

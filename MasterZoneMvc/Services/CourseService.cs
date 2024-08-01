@@ -245,6 +245,7 @@ namespace MasterZoneMvc.Services
             {
                 StudentUserLoginId = userLoginId,
                 CourseId = courseId,
+                UserLoginId = userLoginId, //added
                 Mode = 1
             });
 
@@ -257,30 +258,43 @@ namespace MasterZoneMvc.Services
                 //DateTime _CourseJoinDate = DateTime.ParseExact(joinDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
                 // check if same data exists in already purchased course.
-                if (response[0].CoursePriceType == "per_course" || response[0].CoursePriceType == "demo")
+                //if (response[0].CoursePriceType == "per_course" || response[0].CoursePriceType == "demo")
+                //{
+                //    foreach (var item in response)
+                //    {
+                //        if (item.CourseId == courseId)
+                //        {
+                //            return true;
+                //        }
+                //    };
+                //}
+                //else if (response[0].CoursePriceType == "per_month")
+                //{
+                //    foreach (var item in response)
+                //    {
+                //        if (courseId <= item.CourseId)
+                //        {
+                //            return true;
+                //        }
+                //    }
+                //}
+                //else if (response[0].CoursePriceType == "0") //added
+                //{
+                //    foreach (var item in response)
+                //    {
+                //        if (courseId <= item.CourseId)
+                //        {
+                //            return true;
+                //        }
+                //    }
+                //}
+                foreach (var item in response)
                 {
-                    foreach (var item in response)
+                    if (item.CourseId == courseId)
                     {
-                        if (item.CourseId == courseId)
-                        {
-                            return true;
-                        }
-                    };
-                }
-                else if (response[0].CoursePriceType == "per_month")
-                {
-                    foreach (var item in response)
-                    {
-                        if (courseId <= item.CourseId)
-                        {
-                            return true;
-                        }
+                        return true;
                     }
-                }
-
-
-
-
+                };
             }
 
             return false;
@@ -444,6 +458,21 @@ namespace MasterZoneMvc.Services
             {
                 UserLoginId = userloginid,
                 Mode = 4
+            });
+        }
+        /// <summary>
+        /// to get admit card
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="userloginid"></param>
+        /// <returns></returns>
+        public CourseBooking_ViewModel GetCourseAdmitCardServicebyId(long id, long userloginid)
+        {
+            return storedPorcedureRepository.SP_ManageCourseBooking_GetById<CourseBooking_ViewModel>(new SP_ManageCourseBooking_Params_VM()
+            {
+                Id = id,
+                StudentUserLoginId = userloginid,
+                Mode = 10
             });
         }
     }

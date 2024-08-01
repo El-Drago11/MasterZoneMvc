@@ -7335,11 +7335,12 @@ namespace MasterZoneMvc.Repository
                             new SqlParameter("id", params_VM.Id),
                             new SqlParameter("businessOwnerLoginId", params_VM.BusinessOwnerLoginId),
                             new SqlParameter("userLoginId", params_VM.UserLoginId),
+                            new SqlParameter("BookDate", params_VM.BookDate),
                             new SqlParameter("slotId", params_VM.slotId),
                             new SqlParameter("mode", params_VM.Mode),
                             };
 
-              return _dbContext.Database.SqlQuery<T>("exec sp_ManageTennisTimeSlotDetail @id,@businessOwnerLoginId,@userLoginId,@slotId,@mode", queryParams).ToList();
+              return _dbContext.Database.SqlQuery<T>("exec sp_ManageTennisTimeSlotDetail @id,@businessOwnerLoginId,@userLoginId,@BookDate,@slotId,@mode", queryParams).ToList();
 
         }
 

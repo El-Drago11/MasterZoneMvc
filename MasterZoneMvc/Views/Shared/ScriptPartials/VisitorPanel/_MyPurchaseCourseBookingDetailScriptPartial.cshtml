@@ -9,6 +9,7 @@
                if (dataToken != "" && dataToken != null) {
                    UserToken_Global = dataToken;
                    getCourseBookingViewDetailById();
+                   getAdmitCardDetails();
                }
                else {
                    $.iaoAlert({
@@ -20,6 +21,24 @@
                    StopLoading();
                }
            });
+            document.getElementById('printDiv').addEventListener('click', function () {
+                var content = document.getElementById('sectionAdmitCard');
+
+                if (typeof jsPDF !== 'undefined') {
+                    var pdf = new jsPDF();
+
+                    // Get the HTML content of #content
+                    const contentData = content.innerHTML;
+
+                    // Generate the PDF
+                    pdf.text(contentData, 10, 10);
+
+                    // Download the PDF
+                    pdf.save('div_content_as_pdf.pdf');
+                } else {
+                    alert('jsPDF library is not loaded or accessible');
+                }
+            });
         });
 
 
@@ -54,7 +73,7 @@
                 var _courseBookingDetail = response.data.CourseBookingDetail;
                 var _orderDetail = response.data.OrderDetail;
                 var _paymentResponseDetail = response.data.PaymentResponseDetail;
-             
+
                 var orderListItems = ``;
                 var courseBookingListItems = ``;
 
@@ -160,6 +179,24 @@
                 $('#sectionBookingDetail').html(courseBookingListItems);
                 $('#sectionOrderDetails').html(orderListItems);
 
+                //$("#AdmitCardprofileImage").attr("src", '/Content/Uploads/Images/SubmitExamFormProfileImage/'+_courseBookingDetail.CandidateProfileImageWithPath);
+                //$('#AdmitCardName').html(_courseBookingDetail.CandidateName);
+                //$('#AdmitCardClass').html(_courseBookingDetail.CurrentClass);
+                //$('#AdmitCardSubject').html(_courseBookingDetail.CurrentSubject);
+                //$('#AdmitCardCenterName').html(_courseBookingDetail.CurrentCenterCity);
+                //$('#AdmitCardRollNo').html(_courseBookingDetail.CurrentRollNo);
+                //$('#admitEstablishYear').html('ESTD.'+_courseBookingDetail.EstablishedYear);
+                //$('#admitExamFormLogoWithPath').attr("src", '/Content/Uploads/Images/ExamFormLogo/'+_courseBookingDetail.ExamFormLogo)
+                //$('#admitExamFromTitle').html('Valid for' + _courseBookingDetail.Title);
+                //$('#exampage-top-Secretary-number').html(_courseBookingDetail.SecretaryNumber);
+                //$('#exampage-top-Registrar-number').html(_courseBookingDetail.RegistrarOfficeNumber);
+                //$('#exampage-top-website').html(_courseBookingDetail.WebsiteLink)
+                //$('#exampage-top-email').html(_courseBookingDetail.examEmail)
+                //$('#AdmitCardCenterNo').html(_courseBookingDetail.CenterNo)
+                //$('#examFormTitle').html('Examination Year:-&nbsp;' + _courseBookingDetail.SessionYear);
+                //if (_courseBookingDetail.CurrentRollNo == null || 0) {
+                //    $('#sectionAdmitCard').addClass('d-none');
+                //}
             }
             else {
                 $.iaoAlert({
@@ -203,6 +240,82 @@
     `;
     }
 
+    function getAdmitCardDetails() {
+        StartLoading();
+        let _url = "/api/Course/GetCourseAdmitCardbyId?id=" + CourseBookingId_Global;
+        $.ajax({
+            type: "GET",
+            url: _url,
+            headers: {
+                "Authorization": "Bearer " + UserToken_Global,
+                "Content-Type": "application/json"
+            },
+            contentType: 'application/json',
+            success: function (response) {
+
+                if (response.status < 1) {
+                    $.iaoAlert({
+                        msg: response.message,
+                        type: "error",
+                        mode: "dark",
+                    });
+
+                    return;
+                } else {
+                    console.log(response);
+                }
+
+                if (response.data && response.data.CourseBookingDetail != null) {
+                    let _courseBookingDetail = response.data.CourseBookingDetail;
+                    $("#AdmitCardprofileImage").attr("src", '/Content/Uploads/Images/SubmitExamFormProfileImage/'+_courseBookingDetail.CandidateProfileImageWithPath);
+                    $('#AdmitCardName').html(_courseBookingDetail.CandidateName);
+                    $('#AdmitCardClass').html(_courseBookingDetail.CurrentClass);
+                    $('#AdmitCardSubject').html(_courseBookingDetail.CurrentSubject);
+                    $('#AdmitCardCenterName').html(_courseBookingDetail.CurrentCenterCity);
+                    $('#AdmitCardRollNo').html(_courseBookingDetail.CurrentRollNo);
+                    $('#admitEstablishYear').html('ESTD.'+_courseBookingDetail.EstablishedYear);
+                    $('#admitExamFormLogoWithPath').attr("src", '/Content/Uploads/Images/ExamFormLogo/'+_courseBookingDetail.ExamFormLogo)
+                    $('#admitExamFromTitle').html('Valid for' + _courseBookingDetail.Title);
+                    $('#exampage-top-Secretary-number').html(_courseBookingDetail.SecretaryNumber);
+                    $('#exampage-top-Registrar-number').html(_courseBookingDetail.RegistrarOfficeNumber);
+                    $('#exampage-top-website').html(_courseBookingDetail.WebsiteLink)
+                    $('#exampage-top-email').html(_courseBookingDetail.examEmail)
+                    $('#AdmitCardCenterNo').html(_courseBookingDetail.CenterNo)
+                    $('#examFormYear').html(_courseBookingDetail.SessionYear);
+                    if (_courseBookingDetail.CurrentRollNo == null || 0) {
+                        $('#sectionAdmitCard').addClass('d-none');
+                        $('#printDiv').addClass('d-none')
+                    } else {
+                        $('#sectionAdmitCard').removeClass('d-none');
+                        $('#sectionAdmitCard').removeClass('d-none');
+                    }
+                }
+                else {
+                    $('#sectionAdmitCard').addClass('d-none');
+                    $('#printDiv').addClass('d-none')
+                }
+
+                StopLoading();
+            },
+            error: function (result) {
+
+                if (result["status"] == 401) {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+                else {
+                    $.iaoAlert({
+                        msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
+                        type: "error",
+                        mode: "dark",
+                    });
+                }
+            }
+        });
+    }
 
 
 </script>

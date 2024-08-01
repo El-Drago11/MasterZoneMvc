@@ -34,6 +34,7 @@ namespace MasterZoneMvc.Models
         public string SelectDate { get; set; }
         public string RoomService { get; set; }
         public int PlayerCount { get; set; }
+        public decimal Price { get; set; }
         public int Request { get; set; }
 
     }

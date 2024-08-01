@@ -930,5 +930,53 @@ namespace MasterZoneMvc.WebAPIs
                 return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
             }
         }
+
+        /// <summary>
+        /// to get course admit card by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize(Roles = "Student")]
+        [Route("api/Course/GetCourseAdmitCardbyId")]
+        public HttpResponseMessage GetCourseAdmitCardbyId(long id)
+        {
+            ApiResponse_VM apiResponse = new ApiResponse_VM();
+            try
+            {
+                var validateResponse = ValidateLoggedInUser();
+                if (validateResponse.ApiResponse_VM.status < 0)
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized, validateResponse.ApiResponse_VM);
+                }
+                else if (id <= 0)
+                {
+                    apiResponse.status = -1;
+                    apiResponse.message = Resources.ErrorMessage.InvalidIdErrorMessage;
+                    return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
+                }
+
+                long _LoginID_Exact = validateResponse.UserLoginId;
+                long _BusinessOwnerLoginId = validateResponse.BusinessAdminLoginId;
+
+                // Get Course-Booking-Detail
+                var courseBookingDetail = courseService.GetCourseAdmitCardServicebyId(id, _LoginID_Exact);
+
+                apiResponse.status = 1;
+                apiResponse.message = Resources.BusinessPanel.Success;
+                apiResponse.data = new
+                {
+                    CourseBookingDetail = courseBookingDetail,
+                };
+
+                return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = -500;
+                apiResponse.message = ex.Message;
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
+            }
+        }
     }
 }

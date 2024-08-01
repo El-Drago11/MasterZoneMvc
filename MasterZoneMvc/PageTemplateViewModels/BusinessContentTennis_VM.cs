@@ -87,6 +87,7 @@ namespace MasterZoneMvc.PageTemplateViewModels
         public decimal OtherPrice { get; set; }
         public decimal CommercialPrice { get; set; }
         public decimal BasicPrice { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 
     public class TennisDetail_Pagination_VM
@@ -129,6 +130,7 @@ namespace MasterZoneMvc.PageTemplateViewModels
         public string Description { get; set; }
         public string TennisImage { get; set; }
         public string TennisImageWithPath { get; set; }
+        public decimal Price { get; set; }
         public int Request { get; set; }
 
     }

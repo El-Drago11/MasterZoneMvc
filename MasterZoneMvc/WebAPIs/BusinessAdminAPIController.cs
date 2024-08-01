@@ -9325,8 +9325,40 @@ namespace MasterZoneMvc.WebAPIs
             }
         }
 
+        [HttpGet]
+        [Authorize(Roles = "BusinessAdmin")]
+        [Route("api/Business/DashboardData/Get")]
+        public HttpResponseMessage GetAdminDashboardDetails()
+        {
+            ApiResponse_VM apiResponse = new ApiResponse_VM();
+            try
+            {
+                var validateResponse = ValidateLoggedInUser();
+                if (validateResponse.ApiResponse_VM.status < 0)
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized, validateResponse.ApiResponse_VM);
+                }
 
-       
+                long _LoginID_Exact = validateResponse.UserLoginId;
+                long _BusinessOwnerLoginId = validateResponse.BusinessAdminLoginId;
+
+
+                var businessProfilePageTypeDetail = businessOwnerService.GetBusinessDetailsDashboard(_BusinessOwnerLoginId);
+
+                apiResponse.status = 1;
+                apiResponse.message = "success";
+                apiResponse.data = businessProfilePageTypeDetail;
+
+                return Request.CreateResponse(HttpStatusCode.OK, apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = -500;
+                apiResponse.message = Resources.ErrorMessage.InternalServerErrorMessage;
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
+            }
+        }
+
 
 
     }
