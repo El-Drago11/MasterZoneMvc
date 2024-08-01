@@ -329,7 +329,7 @@ function swl01() {
 
 }
 
-//Unable to use loader 
+//master: Unable to use loader 
 function getBusinessBackup() {
     //$('#dnwBackup').prop('disabled', true);
     if (global_AdminUserId !== undefined && global_AdminUserId !== null && !isNaN(global_AdminUserId)) {
