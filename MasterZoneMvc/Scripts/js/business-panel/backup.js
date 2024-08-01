@@ -330,7 +330,7 @@ function swl01() {
 }
 
 function getBusinessBackup() {
-    //$('#dnwBackup').prop('disabled', true);
+    $('#dnwBackup').prop('disabled', true);
     if (global_AdminUserId !== undefined && global_AdminUserId !== null && !isNaN(global_AdminUserId)) {
         window.location.href = "/Business/BackupDatabase?userLoginId=" + encodeURIComponent(global_AdminUserId);
     } else {
@@ -340,7 +340,7 @@ function getBusinessBackup() {
             mode: "dark",
         });
     }
-    //$('#dnwBackup').prop('disabled', false);
+    $('#dnwBackup').prop('disabled', false);
 }
 function GetAllMasterIdDetails() {
 
