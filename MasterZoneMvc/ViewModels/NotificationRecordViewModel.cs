@@ -73,6 +73,8 @@ namespace MasterZoneMvc.ViewModels
         public string CreatedOn_FormatDate { get; set; }
         public long SerialNumber { get; set; }
         public long TotalRecords { get; set; }
+        public string ItemTable { get; set; }
+        public long ItemId { get; set; }   
     }
 
     public class NotificationRecordList_Pagination_SQL_Params_VM

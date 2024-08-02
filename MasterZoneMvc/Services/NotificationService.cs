@@ -32,10 +32,11 @@ namespace MasterZoneMvc.Services
                             new SqlParameter("mode", notification_Params_VM.Mode),
                             new SqlParameter("itemId", notification_Params_VM.ItemId),
                             new SqlParameter("itemTable", notification_Params_VM.ItemTable),
-                            new SqlParameter("isNotificationLinkable", notification_Params_VM.IsNotificationLinkable)
+                            new SqlParameter("isNotificationLinkable", notification_Params_VM.IsNotificationLinkable),
+                            new SqlParameter("OrderId",notification_Params_VM.OrderId)
                             };
 
-            var resp = db.Database.SqlQuery<SPResponseViewModel>("exec sp_InsertUpdateNotification @id,@fromUserLoginId,@notificationType,@notificationUsersList,@notificationTitle,@notificationText,@submittedByLoginId,@mode,@itemId,@itemTable,@isNotificationLinkable", queryParams).FirstOrDefault();
+            var resp = db.Database.SqlQuery<SPResponseViewModel>("exec sp_InsertUpdateNotification @id,@fromUserLoginId,@notificationType,@notificationUsersList,@notificationTitle,@notificationText,@submittedByLoginId,@mode,@itemId,@itemTable,@isNotificationLinkable,@OrderId", queryParams).FirstOrDefault();
 
             return resp;
         }

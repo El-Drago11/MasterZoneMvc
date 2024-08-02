@@ -383,7 +383,7 @@ namespace MasterZoneMvc.Services
                         TotalAmount = _TotalAmount,
                         Status = 1,
                         Mode = 1,
-                        OwnerUserLoginId = _EventData.UserLoginId
+                        OwnerUserLoginId = _EventData.UserLoginId,
                     };
                     var order = storedProcedureRepository.SP_InsertUpdateOrder_Get<SPResponseViewModel>(sP_InsertUpdateOrder_Params_VM);
 
@@ -452,7 +452,8 @@ namespace MasterZoneMvc.Services
                         Mode = 1,
                         IsNotificationLinkable = 1,
                         ItemId = eventBooking.Id,
-                        ItemTable = "EventBookings"
+                        ItemTable = "EventBookings",
+                        OrderId = order.Id
                     });
 
                     // send notification to Student/User
@@ -466,7 +467,8 @@ namespace MasterZoneMvc.Services
                         Mode = 1,
                         IsNotificationLinkable = 1,
                         ItemId = eventBooking.Id,
-                        ItemTable = "EventBookings"
+                        ItemTable = "EventBookings",
+                        OrderId = order.Id
                     });
 
                     // Link Student with Business
@@ -883,7 +885,8 @@ namespace MasterZoneMvc.Services
                         Mode = 1,
                         IsNotificationLinkable = 1,
                         ItemId = classBooking.Id,
-                        ItemTable = "ClassBookings"
+                        ItemTable = "ClassBookings",
+                        OrderId = order.Id,
                     });
 
                     // send notification to Student/User
@@ -897,7 +900,8 @@ namespace MasterZoneMvc.Services
                         Mode = 1,
                         IsNotificationLinkable = 1,
                         ItemId = classBooking.Id,
-                        ItemTable = "ClassBookings"
+                        ItemTable = "ClassBookings",
+                        OrderId = order.Id,
                     });
 
                     // Link Student with Business
@@ -1736,7 +1740,6 @@ namespace MasterZoneMvc.Services
                         var consumeCoupon = couponService.AddCouponConsumption(createCourseBooking_VM.CouponId, createCourseBooking_VM.UserLoginId);
                     }
 
-                    // Send Notification to Business Owner
                     var courseData = courseService.GetCourseDataByID(createCourseBooking_VM.CourseId);
                     BasicProfileDetail_VM studentBasicProfileDetail_VM = new BasicProfileDetail_VM();
                     SqlParameter[] queryParams = new SqlParameter[] {
@@ -1748,28 +1751,6 @@ namespace MasterZoneMvc.Services
 
                     var respStudentBasicDetail = db.Database.SqlQuery<BasicProfileDetail_VM>("exec sp_ManageStudentProfile @id,@businessOwnerLoginId,@userLoginId,@mode", queryParams).FirstOrDefault();
                     var studentName = respStudentBasicDetail.FirstName + " " + respStudentBasicDetail.LastName;
-
-                    // send notification to business
-                    notificationService.InsertUpdateNotification(new SPInsertUpdateNotification_Params_VM()
-                    {
-                        NotificationText = String.Format(Resources.NotificationMessage.BusinessNotification_NewCourseBookingMessage, courseData.Name, studentName),
-                        NotificationTitle = String.Format(Resources.NotificationMessage.BusinessNotification_NewCourseBookingTitle, courseData.Name),
-                        NotificationType = "CourseBooking",
-                        NotificationUsersList = courseData.BusinessOwnerLoginId.ToString(),
-                        SubmittedByLoginId = 0,
-                        Mode = 1
-                    });
-
-                    // send notification to Student/User
-                    notificationService.InsertUpdateNotification(new SPInsertUpdateNotification_Params_VM()
-                    {
-                        NotificationText = String.Format(Resources.NotificationMessage.UserNotification_NewCourseBookingMessage, courseData.Name, DateTime.UtcNow.AddMinutes(330).ToString("yyyy-MM-dd")),
-                        NotificationTitle = String.Format(Resources.NotificationMessage.UserNotification_NewCourseBookingTitle, courseData.Name),
-                        NotificationType = "CourseBooking",
-                        NotificationUsersList = createCourseBooking_VM.UserLoginId.ToString(),
-                        SubmittedByLoginId = 0,
-                        Mode = 1
-                    });
 
                     // Link Student with Business
                     var respBusinessStudentLinking = businessStudentService.AddStudentLinkWithBusinessOwner(courseData.BusinessOwnerLoginId, createCourseBooking_VM.UserLoginId);
@@ -1784,6 +1765,39 @@ namespace MasterZoneMvc.Services
                     };
 
                     var courseBooking = storedProcedureRepository.SP_InsertUpdateCourseBooking_Get<SPResponseViewModel>(sp_InsertUpdateCourseBooking_Params_VM);
+
+                    // Send Notification to Business Owner
+                  
+
+                    // send notification to business
+                    notificationService.InsertUpdateNotification(new SPInsertUpdateNotification_Params_VM()
+                    {
+                        NotificationText = String.Format(Resources.NotificationMessage.BusinessNotification_NewCourseBookingMessage, courseData.Name, studentName),
+                        NotificationTitle = String.Format(Resources.NotificationMessage.BusinessNotification_NewCourseBookingTitle, courseData.Name),
+                        NotificationType = "CourseBooking",
+                        NotificationUsersList = courseData.BusinessOwnerLoginId.ToString(),
+                        SubmittedByLoginId = 0,
+                        ItemId = courseBooking.Id,
+                        ItemTable = "CourseBookings",
+                        OrderId = order.Id,
+                        Mode = 1
+                    });
+
+                    // send notification to Student/User
+                    notificationService.InsertUpdateNotification(new SPInsertUpdateNotification_Params_VM()
+                    {
+                        NotificationText = String.Format(Resources.NotificationMessage.UserNotification_NewCourseBookingMessage, courseData.Name, DateTime.UtcNow.AddMinutes(330).ToString("yyyy-MM-dd")),
+                        NotificationTitle = String.Format(Resources.NotificationMessage.UserNotification_NewCourseBookingTitle, courseData.Name),
+                        NotificationType = "CourseBooking",
+                        NotificationUsersList = createCourseBooking_VM.UserLoginId.ToString(),
+                        SubmittedByLoginId = 0,
+                        ItemId = courseBooking.Id,
+                        ItemTable = "CourseBookings",
+                        OrderId = order.Id,
+                        Mode = 1
+                    });
+
+                   
                     //// Add User to Class-Group 
                     //groupService = new GroupService(db);
                     //var addMemberInGroupResponse = groupService.AddMemberInGroup(new AddGroupMember_VM

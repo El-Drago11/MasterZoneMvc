@@ -1483,11 +1483,35 @@ namespace MasterZoneMvc.Controllers
             }
             catch (Exception ex)
             {
+                TempData["ErrorMessage"] = "Unable to take Backup! Please try again later.";
+                string connectionString = ConfigurationManager.ConnectionStrings["MasterZoneDbContext"].ConnectionString;
+                //long userLoginId = 130;
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string databaseName = connection.Database;
+                    string tempDatabaseName = $"UserBackup_{userLoginId}_{DateTime.Now.ToString("yyyy_MM_dd")}";
+                    string backupName = tempDatabaseName + ".bak";
+                    string backupPath = Path.Combine(Server.MapPath("~/Content/Uploads/Backups"), backupName);
+
+                    //delete the temporary database
+                    using (SqlCommand command = new SqlCommand("BackupUserAllData", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@UserLoginId", userLoginId);
+                        command.Parameters.AddWithValue("@BackupPath", backupPath);
+                        command.Parameters.AddWithValue("@mode", 2);
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+
                 // Handle the exception (e.g., log it)
-                return new HttpStatusCodeResult(500, "An error occurred while processing your request: " + ex.Message);
+                //return new HttpStatusCodeResult(500, "An error occurred while processing your request: " + ex.Message);
+                return RedirectToAction("Backup");
             }
 
-            //return View("Backup");
         }
     }
 }

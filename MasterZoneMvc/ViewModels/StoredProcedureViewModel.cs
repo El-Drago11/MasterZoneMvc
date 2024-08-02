@@ -36,6 +36,7 @@ namespace MasterZoneMvc.ViewModels
         public long ItemId { get; set; } // Tables Primary Key
         public string ItemTable { get; set; } // Table Name
         public int IsNotificationLinkable { get; set; } // Is notification linkable
+        public long OrderId { get;set; }
 
         public SPInsertUpdateNotification_Params_VM()
         {

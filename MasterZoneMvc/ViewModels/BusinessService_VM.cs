@@ -128,7 +128,7 @@ namespace MasterZoneMvc.ViewModels
     {
         public long TotalEnrolledStudents { get; set; }
         public long TotalCourseBuyed { get; set; }
-        public long TotalRevenueGenrated { get; set; }
+        public decimal TotalRevenueGenrated { get; set; }
         public long OnGoingCourse { get; set; }
         public long CurrYearEnrolledStudent { get; set; }
 
