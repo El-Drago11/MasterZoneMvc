@@ -126,11 +126,11 @@ namespace MasterZoneMvc.ViewModels
     }
     public class AdminDashBoard_VM
     {
-        public long TotalEnrolledStudents { get; set; }
-        public long TotalCourseBuyed { get; set; }
-        public decimal TotalRevenueGenrated { get; set; }
-        public long OnGoingCourse { get; set; }
-        public long CurrYearEnrolledStudent { get; set; }
+        public long? TotalEnrolledStudents { get; set; }
+        public long? TotalCourseBuyed { get; set; }
+        public decimal? TotalRevenueGenrated { get; set; }
+        public long? OnGoingCourse { get; set; }
+        public long? CurrYearEnrolledStudent { get; set; }
 
     }
 

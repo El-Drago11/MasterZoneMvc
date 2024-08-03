@@ -447,5 +447,58 @@ namespace MasterZoneMvc.WebAPIs
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
             }
         }
+
+        [Authorize(Roles = "BusinessAdmin")]
+        [Route("api/BusinessNotification/GetAllByPagination")]
+        [HttpPost]
+        public HttpResponseMessage GetAllBusinessNotificationsByDataTablePaginationForLoggedInUser()
+        {
+            ApiResponse_VM apiResponse = new ApiResponse_VM();
+            try
+            {
+                var validateResponse = ValidateLoggedInUser();
+                if (validateResponse.ApiResponse_VM.status < 0)
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized, validateResponse.ApiResponse_VM);
+                }
+
+                long _LoginId = validateResponse.UserLoginId;
+                //long _BusinessOwnerLoginId = validateResponse.BusinessAdminLoginId;
+
+                NotificationRecordList_Pagination_SQL_Params_VM _Params_VM = new NotificationRecordList_Pagination_SQL_Params_VM()
+                {
+                    JqueryDataTableParams = new JqueryDataTableParamsViewModel()
+                };
+
+                var HttpRequestParams = HttpContext.Current.Request.Params;
+
+                // Set data
+                _Params_VM.Mode = 3;
+                _Params_VM.LoginId = _LoginId;
+                _Params_VM.ToUserLoginId = _LoginId;
+
+                var paginationResponse = notificationService.GetNotificationsList_Pagination(HttpRequestParams, _Params_VM);
+
+                //--Create response
+                var objResponse = new
+                {
+                    status = 1,
+                    message = "Success",
+                    draw = paginationResponse.draw,
+                    data = paginationResponse.data,
+                    recordsTotal = paginationResponse.recordsTotal,
+                    recordsFiltered = paginationResponse.recordsFiltered
+                };
+
+                return Request.CreateResponse(HttpStatusCode.OK, objResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = -500;
+                apiResponse.message = Resources.ErrorMessage.InternalServerErrorMessage;
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, apiResponse);
+            }
+
+        }
     }
 }

@@ -55,8 +55,7 @@ function getDataForDashBoard() {
                     $('#OnGoingCourse').html(dashDetails.OnGoingCourse)
                     $('#TotalCourseBuyed').html(dashDetails.TotalCourseBuyed)
                     $('#TotalEnrolledStudents').html(dashDetails.TotalEnrolledStudents)
-                    $('#TotalRevenueGenrated').html('Rs. '+dashDetails.TotalRevenueGenrated+'.00')
-
+                    $('#TotalRevenueGenrated').html('Rs. ' + (dashDetails.TotalRevenueGenrated !== null ? dashDetails.TotalRevenueGenrated + '.00' : '0.00'));
                 }
             }
             StopLoading();
@@ -85,7 +84,7 @@ function getDataForDashBoard() {
 
 function GetAllCreatedNotifications() {
     // ---------------- Pagination Data Table --------------------
-    var _url = "/api/Notification/GetAllByPagination";
+    var _url = "/api/BusinessNotification/GetAllByPagination";
     $.ajax({
         type: "POST",
         url: _url,
