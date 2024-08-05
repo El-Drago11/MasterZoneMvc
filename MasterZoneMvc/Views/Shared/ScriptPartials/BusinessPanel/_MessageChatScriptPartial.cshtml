@@ -26,7 +26,7 @@
                 GetStudentDetail();
                 GetAllBusinessGroups();
                 $('#searchvaluegroupnme').addClass('d-none')
-                
+
                 setInterval(() => {
                     if (GroupMessage == 0) {
                         GetAllMessagesById();
@@ -170,7 +170,7 @@
 
     }
 
-    async function GetAllMessagesById() {
+    function GetAllMessagesById() {
         var id = $("#hdnUserloginId").val();
         $('#btnAddMessage').val('');
         $('#ShowChatList').show();
@@ -603,28 +603,26 @@
                 }
             })
     }
-    
+
 
 
     function GetAllMessagesOfGroup(groupId) {
+    let id = BigInt(groupId);
+    $('#hdnUserloginId').val(id);
+    GroupUserId = id;
+    GroupMessage = 1;
+    $('#btnAddMessage').val('');
+    $('#ShowChatList').show();
+    $('#UserViewListForChat').hide();
+    $('#btnAddMessage').show();
 
-        id = BigInt(groupId);
-        $('#hdnUserloginId').val(id);
-        var id = $("#hdnUserloginId").val();
-        GroupUserId = id;
-        GroupMessage = 1;
-        $('#btnAddMessage').val('');
-        $('#ShowChatList').show();
-        $('#UserViewListForChat').hide();
-        $('#btnAddMessage').show();
-
-        var _url = "/api/Message/GetBusinessGroupDetailsById?id=" + id;
+    let _url = `/api/Message/GetBusinessGroupDetailsById?id=${id}`;
 
     $.ajax({
         type: "GET",
         url: _url,
         headers: {
-            "Authorization": "Bearer " + UserToken_Global,
+            "Authorization": `Bearer ${UserToken_Global}`,
             "Content-Type": "application/json"
         },
         contentType: 'application/json',
@@ -637,166 +635,123 @@
                 });
                 return;
             }
-            var htmlData1 = '';
-            var htmlData4 = '';
-            if (response.data.RecevierUserLoginDetail);
-            {
-                        htmlData4 += `<div class="chat-input-container d-flex justify-content-between align-items-center">
-                    <input class="form-control flex-grow-1" type="text" id="MessageBodyText" placeholder="Say something...">
 
-                    <div class="error-class" id="error_MessageBodyText"></div>
-                    <button type="button" class="btn btn-secondary icon-button large" style="margin-right: -185px;" onclick=" btnSubmitGroupMessage();">
-                        <i class="simple-icon-arrow-right"></i>
-                    </button>
-                </div>`;
-            }
-            //$('#Arrow').html(htmlData4);
-
-            var htmlData3 = '';
+            let htmlData1 = '';
+            let htmlData4 = '';
 
             if (response.data.RecevierUserLoginDetail) {
+                htmlData4 += `
+                    <div class="chat-input-container d-flex justify-content-between align-items-center">
+                        <input class="form-control flex-grow-1" type="text" id="MessageBodyText" placeholder="Say something...">
+                        <div class="error-class" id="error_MessageBodyText"></div>
+                        <button type="button" class="btn btn-secondary icon-button large" style="margin-right: -185px;" onclick="btnSubmitGroupMessage();">
+                            <i class="simple-icon-arrow-right"></i>
+                        </button>
+                    </div>`;
+            }
 
+            let htmlData3 = '';
+
+            if (response.data.RecevierUserLoginDetail) {
+                let receiver = response.data.RecevierUserLoginDetail;
                 htmlData3 += `
-
-                     <div class="col-4"><div class="col-md-12">
-                        <div class="d-flex flex-row justify-content-start mb-3">
-                            <div class="d-flex flex-row">
-                                <img alt="Profile Picture" src="${response.data.RecevierUserLoginDetail.GroupProfileImageWithPath}"
-                                     class="img-thumbnail border-0 rounded-circle ml-0 mr-4 list-thumbnail align-self-center small" style="height:50px;width:50px">
-                                <div class=" d-flex min-width-zero">
-                                    <div class=" pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
-                                        <div class="min-width-zero">
-                                            <p class="time-gruop">${response.data.RecevierUserLoginDetail.GroupName}</p
-                                            <p>${response.data.RecevierUserLoginDetail.batchStartTime} to ${response.data.RecevierUserLoginDetail.batchEndTime}</p>
+                    <div class="col-4">
+                        <div class="col-md-12">
+                            <div class="d-flex flex-row justify-content-start mb-3">
+                                <div class="d-flex flex-row">
+                                    <img alt="Profile Picture" src="${receiver.GroupProfileImageWithPath || ''}" class="img-thumbnail border-0 rounded-circle ml-0 mr-4 list-thumbnail align-self-center small" style="height:50px;width:50px">
+                                    <div class="d-flex min-width-zero">
+                                        <div class="pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                            <div class="min-width-zero">
+                                                <p class="time-gruop">${receiver.GroupName || ''}</p>
+                                                <p>${receiver.batchStartTime || ''} ${receiver.batchEndTime ? 'to ' + receiver.batchEndTime : ''}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <div class="col-4 d-flex align-items-center">
+                        <div class="gruop-msg-iner">
+                            ${response.data.CountStudentGroup?.CountStudent || receiver.TotalCountSeat ?
+                                            `<p class="student-in">
+                                student ${response.data.CountStudentGroup?.CountStudent ? `${response.data.CountStudentGroup.CountStudent}` : 0}
+                                ${receiver.TotalCountSeat ? ` / ${receiver.TotalCountSeat}` : ''}
+                            </p>` : ``}
+        
+                            <p>
+                                ${receiver.InstructorName ? `Instructor ${receiver.InstructorName}` : ''}
+                                ${receiver.InstructorMasterId ? receiver.InstructorMasterId : ''}
+                            </p>
+                        </div>
                     </div>
-                     <div class="col-4 d-flex align-items-center">
-                         <div class="gruop-msg-iner">
-                             <p class="student-in">Student ${response.data.CountStudentGroup.CountStudent}/${response.data.RecevierUserLoginDetail.TotalCountSeat !== null ? response.data.RecevierUserLoginDetail.TotalCountSeat : 0}</p>
-                             <p>Instructor  ${response.data.RecevierUserLoginDetail.InstructorName || response.data.SenderUserLoginDetail.InstructorName}  ${response.data.RecevierUserLoginDetail.InstructorMasterId || response.data.SenderUserLoginDetail.CreatedOn.InstructorMasterId}</p>
-                         </div>
-                     </div>
-                      <div class="col-4 d-flex align-items-center">
-                         <div class="gruop-msg-iner">
-                             <p class="student-in">Created On ${response.data.RecevierUserLoginDetail.CreatedOn || response.data.SenderUserLoginDetail.CreatedOn} <br> By ${response.data.RecevierUserLoginDetail.CreatedByMasterId || response.data.SenderUserLoginDetail.CreatedByMasterId}</p>
-                         </div>
-                     </div>
-                    `;
-
+                    <div class="col-4 d-flex align-items-center">
+                        <div class="gruop-msg-iner">
+                            <p class="student-in">
+                                ${receiver.CreatedOn ? `Created On ${receiver.CreatedOn}` : ''}
+                                ${receiver.CreatedByMasterId ? `by ${receiver.CreatedByMasterId}` : ''}
+                            </p>
+                        </div>
+                    </div>`;
             }
 
             $('#chatUserInfo').html(htmlData3);
             $('#MessageView').html('');
 
-            for (var i = 0; i < response.data.MessageList.length; i++) {
-
-                var UserInfo1 = response.data.RecevierUserLoginDetail;
-                if (response.data.MessageList[i].CreatedByLoginId == response.data.MessageList[i].SenderUserloginId) {
-                    htmlData1 += `<div class="card  col-md-8 d-inline-block mb-3 mr-2" style="float: right;">
-                                <div class="position-absolute pt-1 pr-2 r-0">
-                                    <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}    ${response.data.MessageList[i].Time}</span>
-                                </div>
-                                <div class="pt-2">
-                                    <div class="d-flex flex-row pb-2">
-                                        <a class="d-flex" href="#">
-
-                                        </a>
-                                        <div class=" d-flex flex-grow-1 min-width-zero">
-                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
-                                                <div class="min-width-zero">
-                                                    <p class="mb-0 list-item-heading">   ${response.data.MessageList[i].Messagebody}</p>
-                                                </div>
-                                            </div>
+            response.data.MessageList.forEach(message => {
+                let alignment = message.CreatedByLoginId === message.SenderUserloginId ? 'right' : 'left';
+                let profileImage = alignment === 'left' ? `<img alt="Profile Picture" src="${message.StudentProfileImageWithPath}" class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall profile-img">` : '';
+                htmlData1 += `
+                    <div class="card col-md-8 d-inline-block mb-3 mr-2" style="float: ${alignment};">
+                        <div class="position-absolute pt-1 pr-2 r-0">
+                            <span class="text-extra-small text-muted">${message.CreatedOn_FormatDate} ${message.Time}</span>
+                        </div>
+                        <div class="pt-2">
+                            <div class="d-flex flex-row pb-2">
+                                <a class="d-flex" href="#">${profileImage}</a>
+                                <div class="d-flex flex-grow-1 min-width-zero">
+                                    <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
+                                        <div class="min-width-zero">
+                                            <p class="mb-0 list-item-heading">${message.Messagebody}</p>
                                         </div>
                                     </div>
-
-                                    <div class="chat-text-left">
-                                        <p class="mb-0 text-semi-muted">
-
-                                        </p>
-
-                                    </div>
                                 </div>
-                            </div>`;
-                }
+                            </div>
+                            <div class="chat-text-left">
+                                <p class="mb-0 text-semi-muted"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>`;
+            });
 
-                else {
-                    //var UserInfo = response.data.SenderUserLoginDetail;
-
-                    htmlData1 += `<div class="card  col-md-8 d-inline-block mb-3 mr-2" style="float: left;">
-                                <div class="position-absolute pt-1 pr-2 r-0">
-                                    <span class="text-extra-small text-muted">${response.data.MessageList[i].CreatedOn_FormatDate}   ${response.data.MessageList[i].Time}</span>
-                                </div>
-                                <div class="p-2">
-                                    <div class="d-flex flex-row pb-2">
-                                       <a class="d-flex" href="#">
-                                         <img alt="Profile Picture" src="${response.data.MessageList[i].StudentProfileImageWithPath}" class="img-thumbnail border-0 rounded-circle mr-3 list-thumbnail align-self-center xsmall profile-img">
-                                       </a>
-                                        <div class=" d-flex flex-grow-1 min-width-zero">
-                                            <div class="m-2 pl-0 align-self-center d-flex flex-column flex-lg-row justify-content-between min-width-zero">
-                                                <div class="min-width-zero">
-                                                    <p class="mb-0 list-item-heading"> ${response.data.MessageList[i].Messagebody}</p>
-                                                </div>
-                                            </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="chat-text-left">
-                                        <p class="mb-0 text-semi-muted">
-
-                                        </p>
-
-                                    </div>
-                                </div>
-                            </div>`;
-
-                }
-                htmlData1 += `<div class="clearfix"></div>`;
-            }
-
-            if (response.data.MessageList.length <= 0) {
-                htmlData1 = `<div class="w-100 text-center font-italic mt-4"><span class="w-auto py-2 px-5 bg-primary text-white rounded">@(Resources.VisitorPanel.Message_StartANewConversation)</span></div>`;
+            if (response.data.MessageList.length === 0) {
+                htmlData1 = `<div class="w-100 text-center font-italic mt-4"><span class="w-auto py-2 px-5 bg-primary text-white rounded">Start a new conversation</span></div>`;
             }
 
             $('#MessageView').html(htmlData1);
-                // scroll to bottom
 
             if (response.data.MessageList.length > previousGroupMessageList) {
                 previousGroupMessageList = response.data.MessageList.length;
-                $(".chat-app > .scroll").animate({
-                    scrollTop: $('.chat-app > .scroll').get(0).scrollHeight
-                }, 100);
+                $(".chat-app > .scroll").animate({ scrollTop: $('.chat-app > .scroll').get(0).scrollHeight }, 100);
             }
-                // $('#StudentViewMessage').append(htmlData2);
-                btnMarkAsReadOrUnread(id);
-        },
 
+            btnMarkAsReadOrUnread(id);
+        },
         error: function(result) {
             StopLoading();
 
-            if (result["status"] == 401) {
-                $.iaoAlert({
-                    msg: '@(Resources.ErrorMessage.UnAuthorizedErrorMessage)',
-                    type: "error",
-                    mode: "dark",
-                });
-            }
-            else {
-                $.iaoAlert({
-                    msg: '@(Resources.ErrorMessage.TechincalErrorMessage)',
-                    type: "error",
-                    mode: "dark",
-                });
-            }
+            let errorMessage = result.status === 401 ? 'Unauthorized access' : 'Technical error';
+            $.iaoAlert({
+                msg: errorMessage,
+                type: "error",
+                mode: "dark",
+            });
         }
     });
-    }
+}
+
 
 
 
@@ -922,7 +877,7 @@
     }
 }
 
-    
+
 
 
     // Rendering Message of the first user on the list
@@ -953,7 +908,7 @@
                     $('#hdnUserloginId').val(response.data.StudentDetail[0].UserLoginId);
                     //console.log($("#hdnUserloginId").val());
                 }
-               
+
             }
         });
         await GetAllMessagesById();
@@ -970,8 +925,8 @@
     }
 
 
-    
 
-    
+
+
 
 </script>
