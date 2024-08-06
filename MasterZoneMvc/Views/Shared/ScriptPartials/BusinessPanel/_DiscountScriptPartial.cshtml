@@ -17,7 +17,7 @@
     var UserToken_Global = "";
     var DiscountId_Global = 0;
     var _discountTable;
-
+    var _allStudentId = [];
     function initializeDataTable_Discount() {
         _discountTable = $("#ViewForDiscount").DataTable();
     }
@@ -365,7 +365,8 @@
                 $("#ddlSelectedStudentsForDiscount").html('');
                 for (var i = 0; i < response.data.length; i++) {
                     var _studentName = '(' + response.data[i].StudentId + ')' + response.data[i].FirstName + ' ' + response.data[i].LastName;
-                    _selectList += '<option value="' + response.data[i].StudentUserLoginId +'">' + _studentName + '</option>';
+                    _selectList += '<option value="' + response.data[i].StudentUserLoginId + '">' + _studentName + '</option>';
+                    _allStudentId.push(response.data[i].StudentId)
                 }
                 $("#ddlSelectedStudentsForDiscount").html('').append(_selectList); //.select2();
 
@@ -418,8 +419,19 @@
         let _IsFixedamount = $("#ddlDiscount_ManageDiscount").val();
         let _discountvalue = $("#txtDiscountValue").val().trim();
         let _selecteddiscount = $("#ddlDiscount_SelectedDiscount").val().trim();
-        let _selecteddiscountforstudent = $("#ddlSelectedStudentsForDiscount").val();
+        let _selecteddiscountforstudent;
 
+        if ( $('#ddlDiscount_SelectedDiscount').val() == 2 ) {
+            _selecteddiscountforstudent = $("#ddlSelectedStudentsForDiscount").val();
+            console.log("_selecteddiscountforstudent: ", _selecteddiscountforstudent)
+        } else {
+            _selecteddiscountforstudent = _allStudentId;
+            console.log("_allStudentId: ", _allStudentId)
+        }
+
+        //console.log("_selecteddiscountforstudent: ", _selecteddiscountforstudent)
+        //console.log("_allStudentId: ", _allStudentId)
+        //return;
 
         let _error_name = $("#error_txtName");
         let _error_description = $("#error_txtDescription");
@@ -554,7 +566,6 @@
             $('#sectionAddStaff').show();
             $('#btnAddStaff').hide();
             $('#sectionViewStaff').hide();
-            getAllActiveStudentsLists();
             document.getElementById("pageTextchange").innerHTML = "Add Discount";
             document.getElementById("pageStageChange").innerHTML = "Add Discount";
 

@@ -89,14 +89,17 @@ function getAllActiveMenuItems() {
             // --------------------- append parent categories in dropdown
 
             var menuOrderdList = sortByKeyAsc(response.data, "SortOrder");
-
-            for (var i = 0; i < menuOrderdList.length &&  i < 9 && menuOrderdList[i].IsShowOnHomePage == 1; i++) {
-                res_Categories += `
+            console.log("menuOrderList : ",menuOrderdList)
+            for (var i = 0; i < menuOrderdList.length; i++) {
+                if (menuOrderdList[i].IsShowOnHomePage == 1) {
+                    res_Categories += `
                     <div class="link-cards">
                         <img src="${menuOrderdList[i].MenuImageWithPath}">
                         <a href="${menuOrderdList[i].PageLink}">${menuOrderdList[i].Name}</a>
                     </div>
                 `;
+                }
+                if (i >= 8) break;
             }
 
             res_Categories += `
